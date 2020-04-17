@@ -32,7 +32,7 @@ if args.sec == None:
     raise Exception("Security is not defined!")
 
 # Environment check
-if args.env == None:
+if args.env == "practice":
     account = "101-004-11289420-001"
     environment = "practice"
     acces_token = "ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea"
@@ -83,7 +83,11 @@ print("Fetching out open positions...")
 
 open_trades = oanda.trades.get_open_trades(account_id=account).as_dict()
 open_trades_table = pd.DataFrame.from_dict(open_trades["trades"])
-open_trade_id_list = len(list(open_trades_table["id"]))
+
+try:
+    open_trade_id_list = len(list(open_trades_table["id"]))
+except:
+    open_trade_id_list = 0
 
 print("Number of open trades:", open_trade_id_list)
 

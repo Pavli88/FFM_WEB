@@ -14,7 +14,7 @@ parser.add_argument("--ca", help="Close all trades on the account")
 args = parser.parse_args()
 
 # Environment check
-if args.env == None:
+if args.env == "practice":
     account = "101-004-11289420-001"
     environment = "practice"
     acces_token = "ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea"
@@ -27,9 +27,16 @@ print("-----------------------------------")
 print("          TRADE EXECUTION          ")
 print("-----------------------------------")
 print("Environment:", environment)
+
 # Creating an Oanda object
 oanda = oandapy.APIv20(environment=environment, access_token=acces_token)
+
+# Fetching open trades
 open_trades = oanda.trades.get_open_trades(account_id=account).as_dict()
+
+if len(open_trades["trades"]) == 0:
+    raise Exception("There are no open trades! Process is stopped!")
+
 open_trades_table = pd.DataFrame.from_dict(open_trades["trades"])
 open_trade_id_list = list(open_trades_table["id"])
 
