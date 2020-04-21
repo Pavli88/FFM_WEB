@@ -10,17 +10,19 @@ def execute_trade(request):
         message = request.body
         print(message.decode("utf-8"))
 
-        quantity = 2000
-        start_bal = 181
+        env = "live"
+        quantity = 1000
+        start_bal = 132.94
+        sec = "EUR_USD"
         risk_perc = 0.01
-        pl = 3
-        env = "practice"
+        pl = 2
+        sl_prec = 4
 
         if (message.decode("utf-8")) == "BUY":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec EUR_USD --q {quantity} --sl perc --slpv {risk_perc} --pl {pl}'.format(quantity=quantity, start_bal=start_bal, risk_perc=risk_perc, pl=pl, env=env))
+            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q {quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
             return HttpResponse(None)
         elif (message.decode("utf-8")) == "SELL":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec EUR_USD --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl}'.format(quantity=quantity, start_bal=start_bal, risk_perc=risk_perc, pl=pl, env=env))
+            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
             return HttpResponse(None)
         elif (message.decode("utf-8")) == "CLOSE":
             os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/close_positions.py --ca all --env live')

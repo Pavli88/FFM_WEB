@@ -41,7 +41,7 @@ else:
     environment = "live"
     acces_token = "db81a15dc77b29865aac7878a7cb9270-6cceda947c717f9471b5472cb2c2adbd"
 
-daily_risk_limit = 0.05
+daily_risk_limit = 0.10
 
 #Starting balance
 if args.st_bal == None:
