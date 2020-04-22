@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <p>This is a site for robot configuration</p>
+
+    <form action="{% url 'test execution' %}"  method="POST">
+        {% csrf_token %}
+        <p>Robot Parameters</p>
+        <label for="male">Environment:</label>
+        <input type="submit", name="button" value="Execute">
+    </form>
+
+    <form action="{% url 'go to create robot' %}">
+        <input type="submit", name="button" value="Create New Robot">
+    </form>
+
+</body>
+</html>
+

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <p>HOME PAGE</p>
+    <form action="{% url 'robots main' %}">
+        {% csrf_token %}
+        <input type="submit", name="button" value="Robots">
+    </form>
+
+    <form action="{% url 'reports main' %}">
+        {% csrf_token %}
+        <input type="submit", name="button" value="Reports">
+    </form>
+
+    <form action="{% url 'risk main template' %}">
+        {% csrf_token %}
+        <input type="submit", name="button" value="Risk">
+    </form>
+
+</body>
+</html>
