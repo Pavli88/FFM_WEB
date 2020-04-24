@@ -2,6 +2,38 @@
 <html>
 <body>
     <p>Create robot page</p>
+
+    <form action="{% url 'create robot' %}" method="POST">
+
+        {% csrf_token %}
+
+        <label>Robot Name:</label>
+        <input type="text" name="robot_name"><br>
+
+        <label>Strategy Name:</label>
+        <input type="text" name="strategy_name"><br>
+
+        <label>Security:</label>
+        <input type="text" name="security"><br>
+
+        <label>Broker:</label>
+        <input type="text" name="broker"><br>
+
+        <label>Status:</label>
+        <input type="text" name="status"><br>
+
+        <label>Pyramiding Level:</label>
+        <input type="text" name="pyramiding_level"><br>
+
+        <label>Initial Exposure Level:</label>
+        <input type="text" name="init_exp"><br>
+
+        <input type="submit", name="button" value="Add New Robot"><br>
+
+        <label>{{ exist_robots }}</label>
+
+    </form>
+
 </body>
 </html>
 

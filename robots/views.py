@@ -1,11 +1,14 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from robots.models import *
 import os
+
 
 # Main site for robot configuration
 def robots_main(request):
     return render(request, 'robots_app/robots_main.html')
+
 
 # Trade execution based on Tradingviw feed
 @csrf_exempt
@@ -45,9 +48,61 @@ def execute_trade(request):
         return HttpResponse("This site is for trade execution")
 
 
-# Create new robot
-def create_robot(request):
+# Create new robot page
+def create_robot_page(request):
     return render(request, 'robots_app/create_robot.html')
+
+
+def create_robot(request):
+
+    """
+    This function creates new robot entry in the data base
+    :param request:
+    :return:
+    """
+
+    if request.method == "POST":
+
+        robot_name = request.POST.get("robot_name")
+        strategy_name = request.POST.get("strategy_name")
+        security = request.POST.get("security")
+        broker = request.POST.get("broker")
+        status = request.POST.get("status")
+        pyramiding_level = request.POST.get("pyramiding_level")
+        init_exp = request.POST.get("init_exp")
+
+        # Checking if all the fields were filled
+        if robot_name == '' or strategy_name == "" or security == "" \
+                or broker == "" or status == "" \
+                or pyramiding_level == "" or init_exp == "":
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Missing values in form !"})
+
+        # Checking if robot name exists in data base
+        try:
+            existing_robot = Robots.objects.get(name=robot_name).name
+        except:
+            existing_robot = "does not exist"
+
+        if existing_robot == robot_name:
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Robot exists in data base !"})
+
+        # Inserting new robot data to database
+        robot = Robots(name=robot_name,
+                       strategy=strategy_name,
+                       security=security,
+                       broker=broker,
+                       status=status,
+                       pyramiding_level=pyramiding_level,
+                       in_exp=init_exp)
+
+        try:
+            robot.save()
+        except:
+            return render(request, 'robots_app/create_robot.html',
+                          {"exist_robots": "Incorrect data type was given in one of the fields!"})
+
+    return render(request, 'robots_app/robots_main.html')
+
 
 # Test execution
 @csrf_exempt
