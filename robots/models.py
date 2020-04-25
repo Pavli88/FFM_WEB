@@ -3,6 +3,7 @@ from django.db import models
 "Restarting migration"
 "python manage.py migrate --fake robots zero"
 
+
 class Robots(models.Model):
     name = models.CharField(max_length=20)
     strategy = models.CharField(max_length=50, default='')

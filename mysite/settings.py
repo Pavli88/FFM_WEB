@@ -26,7 +26,8 @@ SECRET_KEY = '3u!ch(l*!xyc=&(ans63fc_%b#$3d5vxe4h!jwnpvhqa*tk7y@'
 DEBUG = True
 
 ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
-                 '127.0.0.1']
+                 '127.0.0.1',
+                 ]
 
 
 # Application definition
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     'robots',
     'risk',
     'reports',
+    'signals',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

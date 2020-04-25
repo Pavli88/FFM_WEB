@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('reports.urls')),
     path('', include('robots.urls')),
     path('', include('risk.urls')),
+    path('', include('signals.urls')),
 ]
