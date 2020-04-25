@@ -83,10 +83,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # If I make new migrations in the TEST environment's manage.py file with the production python engine then
 # it will updated ffm_system_test database
 # New comment
-# And new
-# Add new one
-# Adding dev comment
-# fasdf
+# dev to test
 credentials = Credentials().db_parameters
 DATABASES = credentials
 
