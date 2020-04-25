@@ -82,6 +82,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database settings are imported from the credentials file.
 # If I make new migrations in the TEST environment's manage.py file with the production python engine then
 # it will updated ffm_system_test database
+# New comment
+# And new
 credentials = Credentials().db_parameters
 DATABASES = credentials
 
