@@ -85,6 +85,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # New comment
 # And new
 # Add new one
+# Adding dev comment
 credentials = Credentials().db_parameters
 DATABASES = credentials
 
