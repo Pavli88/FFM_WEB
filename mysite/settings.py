@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from mysite.credentials import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +29,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
                  '127.0.0.1',
                  ]
-
 
 # Application definition
 
@@ -79,16 +79,11 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ffm_web',
-        'USER': 'root',
-        'PASSWORD': 'test88',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
+# Database settings are imported from the credentials file.
+# If I make new migrations in the TEST environment's manage.py file with the production python engine then
+# it will updated ffm_system_test database
+credentials = Credentials().db_parameters
+DATABASES = credentials
 
 
 # Password validation
