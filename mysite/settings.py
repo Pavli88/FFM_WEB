@@ -86,6 +86,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # And new
 # Add new one
 # Adding dev comment
+# fasdf
 credentials = Credentials().db_parameters
 DATABASES = credentials
 
