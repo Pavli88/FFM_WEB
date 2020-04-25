@@ -84,6 +84,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # it will updated ffm_system_test database
 # New comment
 # And new
+# Add new one
+# Adding dev comment
 credentials = Credentials().db_parameters
 DATABASES = credentials
 
