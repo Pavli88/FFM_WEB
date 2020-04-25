@@ -63,6 +63,8 @@ def create_robot(request):
 
     if request.method == "POST":
 
+        print("New robot creation request received.")
+
         robot_name = request.POST.get("robot_name")
         strategy_name = request.POST.get("strategy_name")
         security = request.POST.get("security")
@@ -71,11 +73,15 @@ def create_robot(request):
         pyramiding_level = request.POST.get("pyramiding_level")
         init_exp = request.POST.get("init_exp")
 
+        print("Robot parameters:", robot_name, strategy_name, security, broker, status, pyramiding_level, init_exp)
+
         # Checking if all the fields were filled
         if robot_name == '' or strategy_name == "" or security == "" \
                 or broker == "" or status == "" \
                 or pyramiding_level == "" or init_exp == "":
             return render(request, 'robots_app/create_robot.html', {"exist_robots": "Missing values in form !"})
+
+        print("All the field were filled in the entry form.")
 
         # Checking if robot name exists in data base
         try:
@@ -84,9 +90,11 @@ def create_robot(request):
             existing_robot = "does not exist"
 
         if existing_robot == robot_name:
+            print("Robot exists in data base.")
             return render(request, 'robots_app/create_robot.html', {"exist_robots": "Robot exists in data base !"})
 
         # Inserting new robot data to database
+        print("Inserting new record to database")
         robot = Robots(name=robot_name,
                        strategy=strategy_name,
                        security=security,
@@ -98,6 +106,8 @@ def create_robot(request):
         try:
             robot.save()
         except:
+            print("Error occured while inserting data to database. "
+                  "Either data type or server configuration is not correct.")
             return render(request, 'robots_app/create_robot.html',
                           {"exist_robots": "Incorrect data type was given in one of the fields!"})
 
