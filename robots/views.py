@@ -7,7 +7,7 @@ import os
 
 # Main site for robot configuration
 def robots_main(request):
-    return render(request, 'robots_app/robots_main.html')
+    return render(request, 'robots_app/create_robot.html')
 
 
 # Trade execution based on Tradingviw feed
@@ -48,11 +48,6 @@ def execute_trade(request):
         return HttpResponse("This site is for trade execution")
 
 
-# Create new robot page
-def create_robot_page(request):
-    return render(request, 'robots_app/create_robot.html')
-
-
 def create_robot(request):
 
     """
@@ -63,19 +58,30 @@ def create_robot(request):
 
     if request.method == "POST":
 
+        print("New robot creation request received.")
+
+        # String fields
         robot_name = request.POST.get("robot_name")
         strategy_name = request.POST.get("strategy_name")
         security = request.POST.get("security")
         broker = request.POST.get("broker")
         status = request.POST.get("status")
-        pyramiding_level = request.POST.get("pyramiding_level")
-        init_exp = request.POST.get("init_exp")
+        env = request.POST.get("env")
 
-        # Checking if all the fields were filled
-        if robot_name == '' or strategy_name == "" or security == "" \
-                or broker == "" or status == "" \
-                or pyramiding_level == "" or init_exp == "":
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Missing values in form !"})
+        string_parameter_dict = {"robot name": robot_name,
+                                 "strategy name": strategy_name,
+                                 "security": security,
+                                 "broker": broker,
+                                 "status": status,
+                                 "environment": env}
+
+        # Float fields
+        pyramiding_level = float(request.POST.get("pyramiding_level"))
+        init_exp = float(request.POST.get("init_exp"))
+        quantity = float(request.POST.get("quantity"))
+
+        print("Robot parameters:", string_parameter_dict)
+        print("All the field were filled in the entry form.")
 
         # Checking if robot name exists in data base
         try:
@@ -84,20 +90,26 @@ def create_robot(request):
             existing_robot = "does not exist"
 
         if existing_robot == robot_name:
+            print("Robot exists in data base.")
             return render(request, 'robots_app/create_robot.html', {"exist_robots": "Robot exists in data base !"})
 
         # Inserting new robot data to database
+        print("Inserting new record to database")
         robot = Robots(name=robot_name,
                        strategy=strategy_name,
                        security=security,
                        broker=broker,
                        status=status,
                        pyramiding_level=pyramiding_level,
-                       in_exp=init_exp)
+                       in_exp=init_exp,
+                       env=env,
+                       quantity=quantity)
 
         try:
             robot.save()
         except:
+            print("Error occured while inserting data to database. "
+                  "Either data type or server configuration is not correct.")
             return render(request, 'robots_app/create_robot.html',
                           {"exist_robots": "Incorrect data type was given in one of the fields!"})
 
