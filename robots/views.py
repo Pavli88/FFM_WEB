@@ -65,22 +65,33 @@ def create_robot(request):
 
         print("New robot creation request received.")
 
+        # String fields
         robot_name = request.POST.get("robot_name")
         strategy_name = request.POST.get("strategy_name")
         security = request.POST.get("security")
         broker = request.POST.get("broker")
         status = request.POST.get("status")
-        pyramiding_level = request.POST.get("pyramiding_level")
-        init_exp = request.POST.get("init_exp")
+        env = request.POST.get("env")
 
-        print("Robot parameters:", robot_name, strategy_name, security, broker, status, pyramiding_level, init_exp)
+        string_parameter_dict = {"robot name": robot_name,
+                                 "strategy name": strategy_name,
+                                 "security": security,
+                                 "broker": broker,
+                                 "status": status,
+                                 "environment": env}
 
-        # Checking if all the fields were filled
-        if robot_name == '' or strategy_name == "" or security == "" \
-                or broker == "" or status == "" \
-                or pyramiding_level == "" or init_exp == "":
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Missing values in form !"})
+        # Float fields
+        pyramiding_level = float(request.POST.get("pyramiding_level"))
+        init_exp = float(request.POST.get("init_exp"))
+        quantity = float(request.POST.get("quantity"))
 
+        # Checking if all the fields were filled for string inputs
+        for parameter in string_parameter_dict:
+            if string_parameter_dict[parameter] == '' or string_parameter_dict[parameter] is None:
+                return render(request, 'robots_app/create_robot.html', {"exist_robots": "Value is missing for " +
+                                                                                            str(parameter) + "!"})
+
+        print("Robot parameters:", string_parameter_dict)
         print("All the field were filled in the entry form.")
 
         # Checking if robot name exists in data base
@@ -101,7 +112,9 @@ def create_robot(request):
                        broker=broker,
                        status=status,
                        pyramiding_level=pyramiding_level,
-                       in_exp=init_exp)
+                       in_exp=init_exp,
+                       env=env,
+                       quantity=quantity)
 
         try:
             robot.save()
