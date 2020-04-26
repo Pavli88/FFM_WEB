@@ -10,8 +10,10 @@ class Robots(models.Model):
     security = models.CharField(max_length=50, default='')
     broker = models.CharField(max_length=50, default='')
     status = models.CharField(max_length=50, default='')
+    env = models.CharField(max_length=50, default='')
     pyramiding_level = models.FloatField(default=0.0)
     in_exp = models.FloatField(default=0.0)
+    quantity = models.FloatField(default=0.0)
 
 
 

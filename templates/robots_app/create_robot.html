@@ -1,37 +1,83 @@
 <!DOCTYPE html>
 <html>
+<style>
+.container{
+    background-color: linen;
+    width: 250px;
+}
+
+.label_name{
+    font-weight: bold;
+}
+
+.radio_button_container{
+      text-align: left;
+}
+
+.radio_button{
+    text-align: left;
+}
+
+.button{
+  background-color: #008CBA;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+</style>
 <body>
-    <p>Create robot page</p>
-
+    <h1>Robot Entry</h1>
     <form action="{% url 'create robot' %}" method="POST">
-
         {% csrf_token %}
+        <div class="container">
+            <label class="label_name">Robot Name</label>
+            <input type="text" name="robot_name"><br>
 
-        <label>Robot Name:</label>
-        <input type="text" name="robot_name"><br>
+            <label class="label_name">Strategy Name</label>
+            <input type="text" name="strategy_name"><br>
 
-        <label>Strategy Name:</label>
-        <input type="text" name="strategy_name"><br>
+            <label class="label_name">Security</label>
+            <input type="text" name="security"><br>
 
-        <label>Security:</label>
-        <input type="text" name="security"><br>
+            <label class="label_name">Broker</label>
+            <input type="text" name="broker"><br>
 
-        <label>Broker:</label>
-        <input type="text" name="broker"><br>
+            <label class="label_name">Status</label>
 
-        <label>Status:</label>
-        <input type="text" name="status"><br>
+            <div class="radio_button_container">
+                <label for="active">Active</label>
+                <input class="radio_button" type="radio" id="active" name="status" value="active"><br>
+                <label for="inactive">Inactive</label>
+                <input class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
+            </div>
 
-        <label>Pyramiding Level:</label>
-        <input type="text" name="pyramiding_level"><br>
+            <label class="label_name">Environment</label>
 
-        <label>Initial Exposure Level:</label>
-        <input type="text" name="init_exp"><br>
+            <div class="radio_button_container">
+                <label for="live_env">Live</label>
+                <input class="radio_button" type="radio" id="live_env" name="env" value="live"><br>
+                <label for="demo_env">Demo</label>
+                <input class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
+            </div>
 
-        <input type="submit", name="button" value="Add New Robot"><br>
+            <label class="label_name" for="quantity">Quantity</label>
+            <input type="number" id="quantity" name="quantity" min="0" value="0"><br>
 
-        <label>{{ exist_robots }}</label>
+            <label class="label_name" for="pyramiding_level">Pyramiding Level</label>
+            <input type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
 
+            <label class="label_name" for="init_exp">Initial Exposure Level</label>
+            <input type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+
+            <input class="button" type="submit", name="button" value="Add New Robot"><br>
+
+            <label>{{ exist_robots }}</label>
+        </div>
     </form>
 
 </body>
