@@ -2,11 +2,6 @@
 <html>
 <style>
 
-.container_form{
-    width: 250px;
-    margin: 20px;
-}
-
 .label_name{
     font-weight: bold;
 }
@@ -35,42 +30,34 @@ header{
     background:#4682B4;
     height:50px;
     width:1800px;
-    margin:2px;
 }
 
 footer{
     background:#6495ED;
     height:50px;
     width:1800px;
-    margin:2px;
 }
 
 main{
     background:#B0C4DE;
     flex-grow:10;
-    margin:2px;
 
 }
 
 .right_panel{
     background:#87CEFA;
     width: 155px;
-    margin: 2px;
-
 }
 
 .left_panel{
     background:#FAEBD7;
     width:155px;
-    margin:2px;
-    justify-content: center;
 }
 
 .container{
     width: 1800px;
     height:800px;
     display:flex;
-    margin:2px;
 }
 
 .menu_button{
@@ -82,9 +69,35 @@ main{
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  width: 150px;
+  width: 148px;
   margin: 4px;
+  border-radius: 5px;
 }
+
+.header_robot{
+    background:blue;
+    flex-grow:10;
+    height: 50px;
+}
+
+.dashboard{
+    width: 100px;
+    height: 400px;
+    background: white;
+    border-radius: 5px;
+    flex-grow:10;
+}
+
+.content{
+    flex-grow:10;
+    display: flex;
+}
+
+.robot_entry_div{
+    width: 250px;
+    margin: 20px;
+}
+
 </style>
 <body>
     <header></header>
@@ -112,54 +125,66 @@ main{
             </form>
         </aside>
         <main>
-            <h1>Robot Entry</h1>
-            <form action="{% url 'create robot' %}" method="POST">
-                {% csrf_token %}
-                <div class="container_form">
-                    <label class="label_name">Robot Name</label>
-                    <input type="text" name="robot_name"><br>
+            <div class="header_robot">
+                <p>This site is for robot configuration</p>
+            </div>
 
-                    <label class="label_name">Strategy Name</label>
-                    <input type="text" name="strategy_name"><br>
+            <div class="content">
+                <div class="robot_entry_div">
+                    <form action="{% url 'create robot' %}" method="POST">
+                        {% csrf_token %}
 
-                    <label class="label_name">Security</label>
-                    <input type="text" name="security"><br>
+                        <h1 align="center" >Robot Entry</h1>
 
-                    <label class="label_name">Broker</label>
-                    <input type="text" name="broker"><br>
+                        <label class="label_name">Robot Name</label>
+                        <input type="text" name="robot_name" placeholder="robot name" required><br>
 
-                    <label class="label_name">Status</label>
+                        <label class="label_name">Strategy Name</label>
+                        <input type="text" name="strategy_name" placeholder="strategy name" required><br>
 
-                    <div class="radio_button_container">
-                        <label for="active">Active</label>
-                        <input class="radio_button" type="radio" id="active" name="status" value="active"><br>
-                        <label for="inactive">Inactive</label>
-                        <input class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
-                    </div>
+                        <label class="label_name">Security</label>
+                        <input type="text" name="security" placeholder="security" required><br>
 
-                    <label class="label_name">Environment</label>
+                        <label class="label_name">Broker</label>
+                        <input type="text" name="broker" placeholder="broker" required><br>
 
-                    <div class="radio_button_container">
-                        <label for="live_env">Live</label>
-                        <input class="radio_button" type="radio" id="live_env" name="env" value="live"><br>
-                        <label for="demo_env">Demo</label>
-                        <input class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
-                    </div>
+                        <label class="label_name">Status</label>
 
-                    <label class="label_name" for="quantity">Quantity</label>
-                    <input type="number" id="quantity" name="quantity" min="0" value="0"><br>
+                        <div class="radio_button_container">
+                            <label for="active">Active</label>
+                            <input class="radio_button" type="radio" id="active" name="status" value="active" required>
+                            <label for="inactive">Inactive</label>
+                            <input class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
+                        </div>
 
-                    <label class="label_name" for="pyramiding_level">Pyramiding Level</label>
-                    <input type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+                        <label class="label_name">Environment</label>
 
-                    <label class="label_name" for="init_exp">Initial Exposure Level</label>
-                    <input type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+                        <div class="radio_button_container">
+                            <label for="live_env">Live</label>
+                            <input class="radio_button" type="radio" id="live_env" name="env" value="live" required>
+                            <label for="demo_env">Demo</label>
+                            <input class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
+                        </div>
 
-                    <input class="button" type="submit", name="button" value="Add New Robot"><br>
+                        <label class="label_name" for="quantity">Quantity</label>
+                        <input type="number" id="quantity" name="quantity" min="0" value="0"><br>
 
-                    <label>{{ exist_robots }}</label>
+                        <label class="label_name" for="pyramiding_level">Pyramiding Level</label>
+                        <input type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+
+                        <label class="label_name" for="init_exp">Initial Exposure Level</label>
+                        <input type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+
+                        <input class="button" type="submit", name="button" value="Add New Robot"><br>
+
+                        <label>{{ exist_robots }}</label>
+                    </form>
                 </div>
-            </form>
+                <div class="dashboard">
+                    <p>test</p>
+                </div>
+            </div>
+
         </main>
         <aside class="right_panel"></aside>
     </div>
