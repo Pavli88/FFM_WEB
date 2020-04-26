@@ -1,22 +1,85 @@
 <!DOCTYPE html>
 <html>
+<style>
+header{
+    background:#4682B4;
+    height:50px;
+    width:1800px;
+    margin:2px;
+}
+
+footer{
+    background:#6495ED;
+    height:50px;
+    width:1800px;
+    margin:2px;
+}
+
+main{
+    background:#B0C4DE;
+    flex-grow:10;
+    margin:2px;
+}
+
+.right_panel{
+    background:#87CEFA;
+    width: 155px;
+    margin: 2px;
+
+}
+
+.left_panel{
+    background:#FAEBD7;
+    width:155px;
+    margin:2px;
+    justify-content: center;
+}
+
+.container{
+    width: 1800px;
+    height:800px;
+    display:flex;
+    margin:2px;
+}
+
+.menu_button{
+  background-color: #008CBA;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  width: 150px;
+  margin: 4px;
+}
+</style>
 <body>
-    <p>HOME PAGE</p>
-    <p>Dev site</p>
-    <form action="{% url 'robots main' %}">
-        {% csrf_token %}
-        <input type="submit", name="button" value="Robots">
-    </form>
+    <header></header>
+    <div class="container">
+        <aside class="left_panel">
 
-    <form action="{% url 'reports main' %}">
-        {% csrf_token %}
-        <input type="submit", name="button" value="Reports">
-    </form>
+            <form action="{% url 'robots main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Robots">
+            </form>
 
-    <form action="{% url 'risk main template' %}">
-        {% csrf_token %}
-        <input type="submit", name="button" value="Risk">
-    </form>
+            <form action="{% url 'reports main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Reports">
+            </form>
 
+            <form action="{% url 'risk main template' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Risk">
+            </form>
+        </aside>
+        <main>
+            <h1>Dashboard</h1>
+        </main>
+        <aside class="right_panel"></aside>
+    </div>
+    <footer></footer>
 </body>
 </html>
