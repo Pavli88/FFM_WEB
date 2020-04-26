@@ -7,7 +7,7 @@ import os
 
 # Main site for robot configuration
 def robots_main(request):
-    return render(request, 'robots_app/robots_main.html')
+    return render(request, 'robots_app/create_robot.html')
 
 
 # Trade execution based on Tradingviw feed
@@ -48,11 +48,6 @@ def execute_trade(request):
         return HttpResponse("This site is for trade execution")
 
 
-# Create new robot page
-def create_robot_page(request):
-    return render(request, 'robots_app/create_robot.html')
-
-
 def create_robot(request):
 
     """
@@ -84,12 +79,6 @@ def create_robot(request):
         pyramiding_level = float(request.POST.get("pyramiding_level"))
         init_exp = float(request.POST.get("init_exp"))
         quantity = float(request.POST.get("quantity"))
-
-        # Checking if all the fields were filled for string inputs
-        for parameter in string_parameter_dict:
-            if string_parameter_dict[parameter] == '' or string_parameter_dict[parameter] is None:
-                return render(request, 'robots_app/create_robot.html', {"exist_robots": "Value is missing for " +
-                                                                                            str(parameter) + "!"})
 
         print("Robot parameters:", string_parameter_dict)
         print("All the field were filled in the entry form.")
