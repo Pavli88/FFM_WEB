@@ -152,3 +152,16 @@ def test_execution(request):
         print("Trade execution")
         return HttpResponse("This site is for trade execution")
 
+
+def get_robots(request):
+
+    """
+    Queries out all robots from database and passes it back to the html
+    :param request:
+    :return:
+    """
+    robots = Robots.objects.filter().values()
+    print(robots[0])
+    print(len(robots))
+    return render(request, 'robots_app/create_robot.html', {"data": "value is back!"})
+

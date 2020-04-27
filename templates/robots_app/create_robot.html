@@ -86,6 +86,13 @@ entry{
 }
 
 </style>
+<script>
+
+    function myFunction(data){
+        alert(data)
+    }
+
+</script>
 <body>
     <header></header>
     <div class="container">
@@ -114,9 +121,13 @@ entry{
         <main>
             <div class="content">
                 <div class="dashboard_up">
-                    <p>test</p>
+                    <!--Submit form to database to get robot data back-->
+                    <form action="{% url 'get robots' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="submit">
+                    </form>
                 </div>
-
+                <!--Test container-->
                 <div class="dashboard_bottom">
                     <p>test</p>
                 </div>
@@ -128,8 +139,8 @@ entry{
 
         </main>
         <aside class="right_panel">
-
             <div class="robot_entry_div">
+                    <!--New robot creator form-->
                     <form class="entry" action="{% url 'create robot' %}" method="POST">
 
                         {% csrf_token %}
