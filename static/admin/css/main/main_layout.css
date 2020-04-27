@@ -1,14 +1,14 @@
 header{
     background:#4682B4;
     height:50px;
-    width:1850px;
+    width:1800px;
     margin:2px;
 }
 
 footer{
     background:#6495ED;
     height:50px;
-    width:1850px;
+    width:1800px;
     margin:2px;
 }
 
@@ -23,8 +23,9 @@ main{
 
 .right_panel{
     background:white;
-    width: 180px;
+    width: 220px;
     margin: 2px;
+    border: 1px solid #555555;
 
 }
 
