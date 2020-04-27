@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
+</head>
 <style>
 
 .label_name{
+    font-size: 12px;
     font-weight: bold;
 }
 
@@ -26,83 +31,57 @@
   margin: 30px;
 }
 
-header{
-    background:#4682B4;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-footer{
-    background:#6495ED;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-main{
-    background:#B0C4DE;
-    flex-grow:10;
-    margin:2px;
-
-}
-
-.right_panel{
-    background:#87CEFA;
-    width: 155px;
-    margin:2px;
-}
-
-.left_panel{
-    background:#FAEBD7;
-    width:155px;
-    margin:2px;
-}
-
-.container{
-    width: 1800px;
-    height:800px;
-    display:flex;
-    margin:2px;
-}
-
-.menu_button{
-  background-color: #008CBA;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  width: 148px;
-  margin: 4px;
-  border-radius: 5px;
-}
-
 .header_robot{
     background:blue;
     flex-grow:10;
     height: 50px;
 }
 
-.dashboard{
-    width: 100px;
+main{
+    display: flex;
+}
+
+.dashboard_up{
+    width: 500px;
+    height: 350px;
+    background: white;
+    flex-grow:10;
+    margin:2px;
+    border-top: 1px solid grey;
+    border-bottom: 1px solid grey;
+}
+
+.dashboard_bottom{
+    width: 500px;
     height: 400px;
     background: white;
     flex-grow:10;
     margin:2px;
+    border-top: 1px solid grey;
+    border-bottom: 1px solid grey;
 }
 
 .content{
     flex-grow:10;
-    display: flex;
+}
+
+.content_two{
+    width: 970px;
+    height: 785px;
+    background: blue;
+    margin: 2px;
 }
 
 .robot_entry_div{
-    width: 250px;
+    width: 180px;
     margin: 20px;
-    margin:2px;
+    height: 400px;
+}
+
+entry{
+    height: 350px;
+    margin: 1px;
+    width: 180px;
 }
 
 </style>
@@ -133,63 +112,72 @@ main{
         </aside>
         <main>
             <div class="content">
-                <div class="robot_entry_div">
-                    <form action="{% url 'create robot' %}" method="POST">
+                <div class="dashboard_up">
+                    <p>test</p>
+                </div>
+
+                <div class="dashboard_bottom">
+                    <p>test</p>
+                </div>
+            </div>
+
+            <div class="content_two">
+
+            </div>
+
+        </main>
+        <aside class="right_panel">
+
+            <div class="robot_entry_div">
+                    <form class="entry" action="{% url 'create robot' %}" method="POST">
+
                         {% csrf_token %}
+                        <h4>New Robot</h4>
+                        <label class="label_name">Robot Name</label><br>
+                        <input class="input_fields" type="text" name="robot_name" placeholder="robot name" required><br>
 
-                        <h1 align="center" >Robot Entry</h1>
+                        <label class="label_name">Strategy Name</label><br>
+                        <input class="input_fields" type="text" name="strategy_name" placeholder="strategy name" required><br>
 
-                        <label class="label_name">Robot Name</label>
-                        <input type="text" name="robot_name" placeholder="robot name" required><br>
+                        <label class="label_name">Security</label><br>
+                        <input class="input_fields" type="text" name="security" placeholder="security" required><br>
 
-                        <label class="label_name">Strategy Name</label>
-                        <input type="text" name="strategy_name" placeholder="strategy name" required><br>
+                        <label class="label_name">Broker</label><br>
+                        <input class="input_fields" type="text" name="broker" placeholder="broker" required><br>
 
-                        <label class="label_name">Security</label>
-                        <input type="text" name="security" placeholder="security" required><br>
-
-                        <label class="label_name">Broker</label>
-                        <input type="text" name="broker" placeholder="broker" required><br>
-
-                        <label class="label_name">Status</label>
+                        <label class="label_name">Status</label><br>
 
                         <div class="radio_button_container">
-                            <label for="active">Active</label>
-                            <input class="radio_button" type="radio" id="active" name="status" value="active" required>
-                            <label for="inactive">Inactive</label>
-                            <input class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
+                            <label class="normal_text" for="active">Active</label>
+                            <input class="input_fields" class="radio_button" type="radio" id="active" name="status" value="active" required>
+                            <label class="normal_text" for="inactive">Inactive</label>
+                            <input class="input_fields" class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
                         </div>
 
                         <label class="label_name">Environment</label>
 
                         <div class="radio_button_container">
-                            <label for="live_env">Live</label>
-                            <input class="radio_button" type="radio" id="live_env" name="env" value="live" required>
-                            <label for="demo_env">Demo</label>
-                            <input class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
+                            <label class="normal_text" for="live_env">Live</label>
+                            <input class="input_fields" class="radio_button" type="radio" id="live_env" name="env" value="live" required>
+                            <label class="normal_text" for="demo_env">Demo</label>
+                            <input class="input_fields" class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
                         </div>
 
-                        <label class="label_name" for="quantity">Quantity</label>
-                        <input type="number" id="quantity" name="quantity" min="0" value="0"><br>
+                        <label class="label_name" for="quantity">Quantity</label><br>
+                        <input class="input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
 
-                        <label class="label_name" for="pyramiding_level">Pyramiding Level</label>
-                        <input type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+                        <label class="label_name" for="pyramiding_level">Pyramiding Level</label><br>
+                        <input class="input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
 
-                        <label class="label_name" for="init_exp">Initial Exposure Level</label>
-                        <input type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+                        <label class="label_name" for="init_exp">Initial Exposure Level</label><br>
+                        <input class="input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
 
-                        <input class="button" type="submit", name="button" value="Add New Robot"><br>
+                        <input class="input_fields" class="button" type="submit", name="button" value="Add New Robot"><br>
 
                         <label>{{ exist_robots }}</label>
                     </form>
                 </div>
-                <div class="dashboard">
-                    <p>test</p>
-                </div>
-            </div>
-
-        </main>
-        <aside class="right_panel"></aside>
+        </aside>
     </div>
     <footer></footer>
 </body>

@@ -1,60 +1,9 @@
 <!DOCTYPE html>
 <html>
-<style>
-header{
-    background:#4682B4;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-footer{
-    background:#6495ED;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-main{
-    background:#B0C4DE;
-    flex-grow:10;
-    margin:2px;
-}
-
-.right_panel{
-    background:#87CEFA;
-    width: 155px;
-    margin: 2px;
-
-}
-
-.left_panel{
-    background:#FAEBD7;
-    width:155px;
-    margin:2px;
-    justify-content: center;
-}
-
-.container{
-    width: 1800px;
-    height:800px;
-    display:flex;
-    margin:2px;
-}
-
-.menu_button{
-  background-color: #008CBA;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  width: 150px;
-  margin: 4px;
-}
-</style>
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
+</head>
 <body>
     <header></header>
     <div class="container">

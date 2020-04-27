@@ -1,6 +1,40 @@
 <!DOCTYPE html>
 <html>
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
+</head>
 <body>
-    <p>REPORTS MAIN PAGE</p>
+    <header>
+        <h2>Reporting</h2>
+    </header>
+    <div class="container">
+        <aside class="left_panel">
+
+            <form action="{% url 'home_page' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Home">
+            </form>
+
+            <form action="{% url 'robots main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Robots">
+            </form>
+
+            <form action="{% url 'reports main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Reports">
+            </form>
+
+            <form action="{% url 'risk main template' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Risk">
+            </form>
+        </aside>
+        <main>
+        </main>
+        <aside class="right_panel"></aside>
+    </div>
+    <footer></footer>
 </body>
 </html>

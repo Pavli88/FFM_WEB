@@ -1,8 +1,38 @@
 <!DOCTYPE html>
 <html>
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
+</head>
 <body>
-    <p>RISK MAIN PAGE</p>
-    <form action="{% url 'load account' %}" method="GET">
+    <header></header>
+    <div class="container">
+        <aside class="left_panel">
+
+            <form action="{% url 'home_page' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Home">
+            </form>
+
+            <form action="{% url 'robots main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Robots">
+            </form>
+
+            <form action="{% url 'reports main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Reports">
+            </form>
+
+            <form action="{% url 'risk main template' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Risk">
+            </form>
+        </aside>
+        <main>
+            <div>
+        <p>RISK MAIN PAGE</p>
+        <form action="{% url 'load account' %}" method="GET">
         {% csrf_token %}
         <label for="op_bal">Opening Balance:</label>
         <input type="text" name="op_bal" value="{{ open_bal }}"><br>
@@ -26,5 +56,10 @@
         <label>Current NAV: {{ nav }} </label><br>
         <label>Latest Balance: {{ lat_bal }} </label><br>
     </form>
+    </div>
+        </main>
+        <aside class="right_panel"></aside>
+    </div>
+    <footer></footer>
 </body>
 </html>
