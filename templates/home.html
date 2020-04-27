@@ -76,7 +76,13 @@ main{
             </form>
         </aside>
         <main>
-            <h1>Dashboard</h1>
+            <h1>Test configuration</h1>
+
+            <form action="", method="POST">
+                {% csrf_token %}
+                {{ robot_form }}
+            </form>
+
         </main>
         <aside class="right_panel"></aside>
     </div>
