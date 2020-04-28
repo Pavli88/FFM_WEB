@@ -42,45 +42,6 @@
     margin: 2px;
 }
 
-
-.entry_div{
-    width: 180px;
-    margin: 20px;
-    height: 400px;
-}
-
-.entry_input_fields{
-    border: 1px solid #555555;
-    font-size: 12px;
-    width: 180px;
-}
-
-
-.entry_label_name{
-    font-size: 16px;
-    font-weight: bold;
-}
-
-
-.entry_form{
-    height: 350px;
-    margin: 1px;
-    width: 180px;
-}
-
-.normal_text{
-    font-size: 12px;
-}
-
-.radio_button_container{
-      text-align: left;
-}
-
-.radio_button{
-    text-align: left;
-}
-
-
 </style>
 
 <body>
@@ -111,10 +72,8 @@
         <main>
         </main>
         <aside class="right_panel">
-            <div class="entry_div">
-                <!--New robot creator form-->
-                <form action="{% url 'create robot' %}" method="POST">
-
+            <!--New robot creator form-->
+            <form class="entry_form" action="{% url 'create robot' %}" method="POST">
                     {% csrf_token %}
                     <h4>New Robot</h4>
                     <label class="entry_label_name">Robot Name</label><br>
@@ -133,18 +92,18 @@
 
                     <div class="radio_button_container">
                         <label class="normal_text" for="active">Active</label>
-                        <input class="entry_input_fields" class="radio_button" type="radio" id="active" name="status" value="active" required>
+                        <input type="radio" id="active" name="status" value="active" required>
                         <label class="normal_text" for="inactive">Inactive</label>
-                        <input class="entry_input_fields" class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
+                        <input type="radio" id="inactive" name="status" value="inactive"><br>
                     </div>
 
                     <label class="entry_label_name">Environment</label>
 
                     <div class="radio_button_container">
                         <label class="normal_text" for="live_env">Live</label>
-                        <input class="entry_input_fields" class="radio_button" type="radio" id="live_env" name="env" value="live" required>
+                        <input type="radio" id="live_env" name="env" value="live" required>
                         <label class="normal_text" for="demo_env">Demo</label>
-                        <input class="entry_input_fields" class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
+                        <input type="radio" id="demo_env" name="env" value="demo"><br>
                     </div>
 
                     <label class="entry_label_name" for="quantity">Quantity</label><br>
@@ -157,9 +116,9 @@
                     <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
 
                     <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
-
-                    <label>{{ exist_robots }}</label>
                 </form>
+            <div class="right_layout">
+                <p>Content comes here</p>
             </div>
         </aside>
     </div>

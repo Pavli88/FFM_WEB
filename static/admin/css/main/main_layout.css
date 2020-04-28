@@ -1,8 +1,9 @@
 header{
-    background:#4682B4;
+    background:#053752;
     height:50px;
     width:1800px;
     margin:2px;
+
 }
 
 footer{
@@ -13,7 +14,7 @@ footer{
 }
 
 main{
-    background:black;
+    background:white;
     flex-grow:10;
     margin:2px;
     border-left: 1px solid grey;
@@ -23,9 +24,8 @@ main{
 
 .right_panel{
     background:white;
-    width: 300px;
+    width: 250px;
     margin: 2px;
-    border: 1px solid #555555;
 
 }
 
@@ -45,7 +45,8 @@ main{
 }
 
 .menu_button{
-  background-color: blue;
+  border-radius: 5px;
+  background-color: white;
   border: 1px solid #555555;
   color: blue;
   padding: 5px 20px;
@@ -58,17 +59,59 @@ main{
   margin: 1px;
 }
 
-.submit_button{
-  background-color: #008CBA;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 30px;
+.normal_text{
+    font-size: 12px;
 }
 
 
 
+.submit_button{
+  background-color: #008CBA;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+
+  font-size: 16px;
+  margin: 20px;
+}
+
+.radio_button_container{
+      text-align: left;
+}
+
+.entry_input_fields{
+    border: 1px solid #555555;
+    font-size: 12px;
+    width: 236px;
+}
+
+.entry_label_name{
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.entry_form{
+    height: 500px;
+    margin: 5px;
+    width: 240px;
+    display: inline-block;
+    border-up: 1px solid grey;
+    border-bottom: 1px solid grey;
+}
+
+.entry_div{
+    background:green;
+    width: 180px;
+    margin: 20px;
+    height: 400px;
+}
+
+.right_layout{
+    border-bottom: 1px solid grey;
+    height: 100px;
+    margin: 5px;
+    width: 240px;
+    display: inline-block;
+}
