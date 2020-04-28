@@ -54,9 +54,9 @@
                 <input class="menu_button" type="submit", name="button" value="Home">
             </form>
 
-            <form action="{% url 'robots main' %}">
+            <form action="{% url 'portfolio main' %}">
                 {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
+                <input class="menu_button" type="submit", name="button" value="Portfolio">
             </form>
 
             <form action="{% url 'reports main' %}">
@@ -68,6 +68,12 @@
                 {% csrf_token %}
                 <input class="menu_button" type="submit", name="button" value="Risk">
             </form>
+
+            <form action="{% url 'robots main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Robots">
+            </form>
+
         </aside>
         <main>
         </main>
@@ -114,7 +120,10 @@
 
                     <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
                     <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
-
+                    <script>if ("{{ exist_robots }}" == "exists") {
+                        alert("Record already exists in database!");
+                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
+                    </script>
                     <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
                 </form>
             <div class="right_layout">

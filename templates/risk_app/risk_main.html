@@ -14,9 +14,9 @@
                 <input class="menu_button" type="submit", name="button" value="Home">
             </form>
 
-            <form action="{% url 'robots main' %}">
+            <form action="{% url 'portfolio main' %}">
                 {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
+                <input class="menu_button" type="submit", name="button" value="Portfolio">
             </form>
 
             <form action="{% url 'reports main' %}">
@@ -27,6 +27,11 @@
             <form action="{% url 'risk main template' %}">
                 {% csrf_token %}
                 <input class="menu_button" type="submit", name="button" value="Risk">
+            </form>
+
+            <form action="{% url 'robots main' %}">
+                {% csrf_token %}
+                <input class="menu_button" type="submit", name="button" value="Robots">
             </form>
         </aside>
         <main>

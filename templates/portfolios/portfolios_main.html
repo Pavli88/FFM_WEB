@@ -44,28 +44,28 @@
             <!--New robot creator form-->
             <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
                 {% csrf_token %}
-                <h4>New Broker Account</h4>
-                <label class="entry_label_name">Broker Name</label><br>
-                <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>
+                <h4>New Portfolio</h4>
+<!--                <label class="entry_label_name">Broker Name</label><br>-->
+<!--                <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>-->
 
-                <label class="entry_label_name">Account Number</label><br>
-                <input class="entry_input_fields" type="text" name="account_number" placeholder="Account Number" required><br>
+<!--                <label class="entry_label_name">Account Number</label><br>-->
+<!--                <input class="entry_input_fields" type="text" name="account_number" placeholder="Account Number" required><br>-->
 
-                <label class="entry_label_name">Account Token</label><br>
-                <input class="entry_input_fields" type="text" name="token" placeholder="Token" required><br>
+<!--                <label class="entry_label_name">Account Token</label><br>-->
+<!--                <input class="entry_input_fields" type="text" name="token" placeholder="Token" required><br>-->
 
-                <label class="entry_label_name">Environment</label>
-                <div class="radio_button_container">
-                    <label class="normal_text" for="live_env">Live</label>
-                    <input type="radio" id="live_env" name="env" value="live" required>
-                    <label class="normal_text" for="demo_env">Demo</label>
-                    <input type="radio" id="demo_env" name="env" value="demo"><br>
-                </div>
-                <script>if ("{{ exist_robots }}" == "exists") {
-                        alert("Record already exists in database!");
-                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
-                </script>
-                <input class="submit_button" type="submit", name="button" value="Add New Account"><br>
+<!--                <label class="entry_label_name">Environment</label>-->
+<!--                <div class="radio_button_container">-->
+<!--                    <label class="normal_text" for="live_env">Live</label>-->
+<!--                    <input type="radio" id="live_env" name="env" value="live" required>-->
+<!--                    <label class="normal_text" for="demo_env">Demo</label>-->
+<!--                    <input type="radio" id="demo_env" name="env" value="demo"><br>-->
+<!--                </div>-->
+<!--                <script>if ("{{ exist_robots }}" == "exists") {-->
+<!--                        alert("Record already exists in database!");-->
+<!--                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}-->
+<!--                </script>-->
+<!--                <input class="submit_button" type="submit", name="button" value="Add New Account"><br>-->
             </form>
             <div class="right_layout">
                 <p>Content comes here</p>

@@ -82,17 +82,17 @@ def create_robot(request):
         quantity = float(request.POST.get("quantity"))
 
         print("Robot parameters:", string_parameter_dict)
-        print("All the field were filled in the entry form.")
 
         # Checking if robot name exists in data base
+        print("Checking if new record exists in database")
         try:
-            existing_robot = Robots.objects.get(name=robot_name).name
+            data_exists = Robots.objects.get(name=robot_name).name
         except:
-            existing_robot = "does not exist"
+            data_exists = "does not exist"
 
-        if existing_robot == robot_name:
+        if data_exists == robot_name:
             print("Robot exists in data base.")
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Robot exists in data base !"})
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "exists"})
 
         # Inserting new robot data to database
         print("Inserting new record to database")
@@ -108,13 +108,13 @@ def create_robot(request):
 
         try:
             robot.save()
+            print("New record was created with parameters:", string_parameter_dict)
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "created"})
         except:
             print("Error occured while inserting data to database. "
                   "Either data type or server configuration is not correct.")
             return render(request, 'robots_app/create_robot.html',
                           {"exist_robots": "Incorrect data type was given in one of the fields!"})
-
-    return render(request, 'robots_app/robots_main.html')
 
 
 # Test execution
