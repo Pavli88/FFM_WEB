@@ -5,40 +5,10 @@
     <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
 </head>
 <style>
-
-.label_name{
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.radio_button_container{
-      text-align: left;
-}
-
-.radio_button{
-    text-align: left;
-}
-
-.button{
-  background-color: #008CBA;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 30px;
-}
-
 .header_robot{
     background:blue;
     flex-grow:10;
     height: 50px;
-}
-
-main{
-    display: flex;
 }
 
 .dashboard_up{
@@ -72,27 +42,47 @@ main{
     margin: 2px;
 }
 
-.robot_entry_div{
+
+.entry_div{
     width: 180px;
     margin: 20px;
     height: 400px;
-
 }
 
-entry{
+.entry_input_fields{
+    border: 1px solid #555555;
+    font-size: 12px;
+    width: 180px;
+}
+
+
+.entry_label_name{
+    font-size: 16px;
+    font-weight: bold;
+}
+
+
+.entry_form{
     height: 350px;
     margin: 1px;
     width: 180px;
 }
 
+.normal_text{
+    font-size: 12px;
+}
+
+.radio_button_container{
+      text-align: left;
+}
+
+.radio_button{
+    text-align: left;
+}
+
+
 </style>
-<script>
 
-    function myFunction(data){
-        alert(data)
-    }
-
-</script>
 <body>
     <header></header>
     <div class="container">
@@ -119,76 +109,58 @@ entry{
             </form>
         </aside>
         <main>
-            <div class="content">
-                <div class="dashboard_up">
-                    <!--Submit form to database to get robot data back-->
-                    <form action="{% url 'get robots' %}" method="POST">
-                        {% csrf_token %}
-                        <input type="submit">
-                    </form>
-                </div>
-                <!--Test container-->
-                <div class="dashboard_bottom">
-                    <p>test</p>
-                </div>
-            </div>
-
-            <div class="content_two">
-
-            </div>
-
         </main>
         <aside class="right_panel">
-            <div class="robot_entry_div">
-                    <!--New robot creator form-->
-                    <form class="entry" action="{% url 'create robot' %}" method="POST">
+            <div class="entry_div">
+                <!--New robot creator form-->
+                <form action="{% url 'create robot' %}" method="POST">
 
-                        {% csrf_token %}
-                        <h4>New Robot</h4>
-                        <label class="label_name">Robot Name</label><br>
-                        <input class="input_fields" type="text" name="robot_name" placeholder="robot name" required><br>
+                    {% csrf_token %}
+                    <h4>New Robot</h4>
+                    <label class="entry_label_name">Robot Name</label><br>
+                    <input class="entry_input_fields" type="text" name="robot_name" placeholder="robot name" required><br>
 
-                        <label class="label_name">Strategy Name</label><br>
-                        <input class="input_fields" type="text" name="strategy_name" placeholder="strategy name" required><br>
+                    <label class="entry_label_name">Strategy Name</label><br>
+                    <input class="entry_input_fields" type="text" name="strategy_name" placeholder="strategy name" required><br>
 
-                        <label class="label_name">Security</label><br>
-                        <input class="input_fields" type="text" name="security" placeholder="security" required><br>
+                    <label class="entry_label_name">Security</label><br>
+                    <input class="entry_input_fields" type="text" name="security" placeholder="security" required><br>
 
-                        <label class="label_name">Broker</label><br>
-                        <input class="input_fields" type="text" name="broker" placeholder="broker" required><br>
+                    <label class="entry_label_name">Broker</label><br>
+                    <input class="entry_input_fields" type="text" name="broker" placeholder="broker" required><br>
 
-                        <label class="label_name">Status</label><br>
+                    <label class="entry_label_name">Status</label><br>
 
-                        <div class="radio_button_container">
-                            <label class="normal_text" for="active">Active</label>
-                            <input class="input_fields" class="radio_button" type="radio" id="active" name="status" value="active" required>
-                            <label class="normal_text" for="inactive">Inactive</label>
-                            <input class="input_fields" class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
-                        </div>
+                    <div class="radio_button_container">
+                        <label class="normal_text" for="active">Active</label>
+                        <input class="entry_input_fields" class="radio_button" type="radio" id="active" name="status" value="active" required>
+                        <label class="normal_text" for="inactive">Inactive</label>
+                        <input class="entry_input_fields" class="radio_button" type="radio" id="inactive" name="status" value="inactive"><br>
+                    </div>
 
-                        <label class="label_name">Environment</label>
+                    <label class="entry_label_name">Environment</label>
 
-                        <div class="radio_button_container">
-                            <label class="normal_text" for="live_env">Live</label>
-                            <input class="input_fields" class="radio_button" type="radio" id="live_env" name="env" value="live" required>
-                            <label class="normal_text" for="demo_env">Demo</label>
-                            <input class="input_fields" class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
-                        </div>
+                    <div class="radio_button_container">
+                        <label class="normal_text" for="live_env">Live</label>
+                        <input class="entry_input_fields" class="radio_button" type="radio" id="live_env" name="env" value="live" required>
+                        <label class="normal_text" for="demo_env">Demo</label>
+                        <input class="entry_input_fields" class="radio_button" type="radio" id="demo_env" name="env" value="demo"><br>
+                    </div>
 
-                        <label class="label_name" for="quantity">Quantity</label><br>
-                        <input class="input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
+                    <label class="entry_label_name" for="quantity">Quantity</label><br>
+                    <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
 
-                        <label class="label_name" for="pyramiding_level">Pyramiding Level</label><br>
-                        <input class="input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+                    <label class="entry_label_name" for="pyramiding_level">Pyramiding Level</label><br>
+                    <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
 
-                        <label class="label_name" for="init_exp">Initial Exposure Level</label><br>
-                        <input class="input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+                    <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
+                    <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
 
-                        <input class="input_fields" class="button" type="submit", name="button" value="Add New Robot"><br>
+                    <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
 
-                        <label>{{ exist_robots }}</label>
-                    </form>
-                </div>
+                    <label>{{ exist_robots }}</label>
+                </form>
+            </div>
         </aside>
     </div>
     <footer></footer>

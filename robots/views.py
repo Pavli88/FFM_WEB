@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from robots.models import *
@@ -138,9 +139,11 @@ def test_execution(request):
         pl = 4
         sl_prec = 4
 
+        print("trade params")
+
         if message == "BUY":
             os.system('/home/apavlics/FFM_WEB/python_web/venv/bin/python /home/apavlics/FFM_WEB/ffm_web/mysite/processes/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q {quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
+            return render(request, 'robots_app/create_robot.html')
         elif (message.decode("utf-8")) == "SELL":
             os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
             return HttpResponse(None)
@@ -161,7 +164,10 @@ def get_robots(request):
     :return:
     """
     robots = Robots.objects.filter().values()
+    print(robots)
     print(robots[0])
     print(len(robots))
-    return render(request, 'robots_app/create_robot.html', {"data": "value is back!"})
+    robots = []
+    # Create code to give the data back in json
+    return render(request, 'robots_app/create_robot.html', {"json_robot_data": JsonResponse(robots[0])})
 

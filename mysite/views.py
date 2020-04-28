@@ -10,5 +10,16 @@ def home(request):
     return render(request, 'home.html', {"robot_form": robot_form})
 
 
+def create_broker(request):
+
+    """
+    This process creates new broker account record in the broker table.
+    :param request:
+    :return:
+    """
+
+    return render(request, 'home.html')
+
+
 
 

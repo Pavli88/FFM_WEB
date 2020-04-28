@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'risk',
     'reports',
     'signals',
+    'mysite',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

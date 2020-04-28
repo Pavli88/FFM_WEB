@@ -1,7 +1,10 @@
 from signals.processes.signal_processes import *
 from django.http import HttpResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 def incoming_trade_signals(request):
 
     """
@@ -9,6 +12,12 @@ def incoming_trade_signals(request):
     :param request:
     :return:
     """
+
+    if request.method == "POST":
+
+        message = request.body
+        print(message.decode("utf-8"))
+
     strategy_name = "test_strategy"
     security = "EUR_USD"
 
@@ -24,7 +33,7 @@ def incoming_trade_signals(request):
 
     if robot is False:
         print(strategy_name, "is not assigned to any of the robots in the database! Execution stopped !")
-        return HttpResponse(None)
+        return render(request, 'robots_app/create_robot.html')
 
     print("Robot was found with assigned parameters:", strategy_name, security)
     print("Robot name:", robot.name)
@@ -35,5 +44,5 @@ def incoming_trade_signals(request):
     elif robot.status == "inactive":
         print("Robot is inactive trade signal cannot be executed!")
 
-    return HttpResponse(None)
+    return render(request, 'robots_app/create_robot.html')
 
