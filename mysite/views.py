@@ -3,6 +3,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from mysite.forms import RobotParams
 from mysite.models import *
+from robots.processes.robot_processes import *
+from mysite.processes.oanda import *
+import pandas as pd
 
 
 # Home page
@@ -62,6 +65,112 @@ def create_broker(request):
               "Either data type or server configuration is not correct.")
         return render(request, 'robots_app/create_robot.html',
                       {"exist_robots": "Incorrect data type was given in one of the fields!"})
+
+
+# Test execution
+@csrf_exempt
+def test_execution(request):
+
+    """
+    This function executes trade signals coming from Tradingview.com
+    :param request:
+    :return:
+    """
+
+    if request.method == "POST":
+
+        print("------------")
+        print("TRADE SIGNAL")
+        print("------------")
+
+        signal_params = {"security": "EUR_USD",
+                         "trade_side": "BUY",
+                         "strategy": "momentum",
+                         "time_frame": "M5",
+                         "robot_name": "test"}
+
+        print("Signal received. Parameters:", signal_params)
+        print("Looking for robot that is tracking:", signal_params)
+
+        # Gets robot data from database
+        robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
+
+        print("Db response:", robot)
+        print("----------")
+        print("Robot info")
+        print("----------")
+        print("Robot Name:", robot[0]["name"])
+        print("Robot Status:", robot[0]["status"])
+        quantity = robot[0]["quantity"]
+        print("Robot trade size:", quantity)
+        print("-------------")
+        print("Security info")
+        print("-------------")
+        trade_side = signal_params["trade_side"]
+        security = signal_params["security"]
+        print("Security:", security)
+        print("Trade Side:", trade_side)
+        print("")
+        print("Checking robot status...")
+
+        if robot[0]["status"] == "inactive":
+            print("robot is inactive process stopped!")
+        elif robot[0]["status"] == "active":
+            print("Robot is active. Running risk control processes")
+            # RISK CONTROL FLOW
+            # Here comes the risk control process !
+
+            # If process passed the risk layer order generating process can be started.
+            # ORDER GENERATING
+            print("Risk control process passed parameters. Starting order generating process")
+            print("Checking broker environment paramaters...")
+            print("-----------")
+            print("Broker info")
+            print("-----------")
+            broker = robot[0]["broker"]
+            print("Broker:", broker)
+            account_number = robot[0]["account_number"]
+            environment = robot[0]["env"]
+            print("Environment:", environment)
+            print("Account Number:", account_number)
+
+            if broker == "oanda":
+                print("Retrieving access token for", broker, robot[0]["env"],robot[0]["account_number"])
+
+                # Fetching broker parameters from database
+                broker_params = BrokerAccounts.objects.filter(broker_name=broker,
+                                                              account_number=account_number,
+                                                              env=environment).values()
+
+                print("Broker parameters:", broker_params)
+                acces_token = broker_params[0]["access_token"]
+                print("Access Token:", acces_token)
+                print("")
+                print("Creating Oanda connection instance")
+
+                oanda = Oanda(environment="practice",
+                              acces_token=acces_token,
+                              account_number=account_number)
+
+                # Fetching best bid ask prices
+                bid_ask = oanda.bid_ask(security=security)
+
+                # Generating Order
+                order = RobotProcesses().create_order(trade_side=trade_side,
+                                                      quantity=quantity,
+                                                      security=security,
+                                                      bid_ask=bid_ask)
+
+                # Submits order to the appropriate account
+                # .submit_order(order=order)
+                print("Order was submitted successfully!")
+
+
+
+
+
+        return render(request, 'home.html')
+
 
 
 

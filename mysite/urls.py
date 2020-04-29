@@ -11,4 +11,5 @@ urlpatterns = [
     path('', include('risk.urls')),
     path('', include('signals.urls')),
     path('', include('portfolio.urls')),
+    path('test_execution/', views.test_execution, name="test_execution"),
 ]

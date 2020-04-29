@@ -68,13 +68,17 @@ def create_robot(request):
         broker = request.POST.get("broker")
         status = request.POST.get("status")
         env = request.POST.get("env")
+        time_frame = request.POST.get("time_frame")
+        account_number = request.POST.get("account_number")
 
         string_parameter_dict = {"robot name": robot_name,
                                  "strategy name": strategy_name,
                                  "security": security,
                                  "broker": broker,
                                  "status": status,
-                                 "environment": env}
+                                 "environment": env,
+                                 "time_fame:": time_frame,
+                                 "account_number": account_number}
 
         # Float fields
         pyramiding_level = float(request.POST.get("pyramiding_level"))
@@ -104,7 +108,9 @@ def create_robot(request):
                        pyramiding_level=pyramiding_level,
                        in_exp=init_exp,
                        env=env,
-                       quantity=quantity)
+                       quantity=quantity,
+                       time_frame=time_frame,
+                       account_number=account_number)
 
         try:
             robot.save()
@@ -117,46 +123,7 @@ def create_robot(request):
                           {"exist_robots": "Incorrect data type was given in one of the fields!"})
 
 
-# Test execution
-@csrf_exempt
-def test_execution(request):
-
-    """
-    This function executes trade signals coming from Tradingview.com
-    :param request:
-    :return:
-    """
-
-    if request.method == "POST":
-
-        message = "BUY"
-
-        env = "practice"
-        quantity = 1000
-        start_bal = 100000
-        sec = "EUR_USD"
-        risk_perc = 0.01
-        pl = 4
-        sl_prec = 4
-
-        print("trade params")
-
-        if message == "BUY":
-            os.system('/home/apavlics/FFM_WEB/python_web/venv/bin/python /home/apavlics/FFM_WEB/ffm_web/mysite/processes/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q {quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return render(request, 'robots_app/create_robot.html')
-        elif (message.decode("utf-8")) == "SELL":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
-        elif (message.decode("utf-8")) == "CLOSE":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/close_positions.py --ca all --env live')
-            return HttpResponse(None)
-
-    if request.method == "GET":
-        print("Trade execution")
-        return HttpResponse("This site is for trade execution")
-
-
-def get_robots(request):
+def get_all_robots(request):
 
     """
     Queries out all robots from database and passes it back to the html
@@ -170,4 +137,6 @@ def get_robots(request):
     robots = []
     # Create code to give the data back in json
     return render(request, 'robots_app/create_robot.html', {"json_robot_data": JsonResponse(robots[0])})
+
+
 

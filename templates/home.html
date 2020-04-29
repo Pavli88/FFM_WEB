@@ -28,3 +28,8 @@
             </form>
     {% endblock %}
 
+    {% block main_block%}
+    <form action="{% url 'test_execution' %}" method="POST">
+        <input class="submit_button" type="submit", name="button" value="Test Trade Execution"><br>
+    </form>
+    {% endblock %}
