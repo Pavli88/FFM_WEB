@@ -1,44 +1,5 @@
 <!DOCTYPE html>
-<html>
-<head>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
-</head>
-<body>
-    <header>
-    </header>
-    <div class="container">
-        <aside class="left_panel">
-
-            <form action="{% url 'home_page' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Home">
-            </form>
-
-            <form action="{% url 'portfolio main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Portfolio">
-            </form>
-
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
-
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
-            </form>
-
-            <form action="{% url 'robots main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
-        </aside>
-        <main>
-        </main>
-        <aside class="right_panel"></aside>
-    </div>
-    <footer></footer>
-</body>
-</html>
+{% extends "base.html" %}
+    {% block main_block%}
+    <p>Site for reporting</p>
+    {% endblock %}

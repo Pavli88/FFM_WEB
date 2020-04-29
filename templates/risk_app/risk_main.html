@@ -1,70 +1,31 @@
 <!DOCTYPE html>
-<html>
-<head>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
-</head>
-<body>
-    <header></header>
-    <div class="container">
-        <aside class="left_panel">
+{% extends "base.html"%}
+    {% block main_block%}
+    <div>
+                    <p>RISK MAIN PAGE</p>
+                    <form action="{% url 'load account' %}" method="GET">
+                    {% csrf_token %}
+                    <label for="op_bal">Opening Balance:</label>
+                    <input type="text" name="op_bal" value="{{ open_bal }}"><br>
 
-            <form action="{% url 'home_page' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Home">
-            </form>
+                    <label for="live">Live</label>
+                    <input type="radio" name="env_1" value="live">
 
-            <form action="{% url 'portfolio main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Portfolio">
-            </form>
+                    <label for="practice">Practice</label>
+                    <input type="radio" name="env_2" value="practice"><br>
 
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
-
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
-            </form>
-
-            <form action="{% url 'robots main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
-        </aside>
-        <main>
-            <div>
-        <p>RISK MAIN PAGE</p>
-        <form action="{% url 'load account' %}" method="GET">
-        {% csrf_token %}
-        <label for="op_bal">Opening Balance:</label>
-        <input type="text" name="op_bal" value="{{ open_bal }}"><br>
-
-        <label for="live">Live</label>
-        <input type="radio" name="env_1" value="live">
-
-        <label for="practice">Practice</label>
-        <input type="radio" name="env_2" value="practice"><br>
-
-        <input type="submit", name="run_account" value="RUN">
-    </form>
-    <form>
-        <label>-----------------------------------</label><br>
-        <label>          BALANCE SUMMARY          </label><br>
-        <label>-----------------------------------</label><br>
-        <label>Environment: {{ env }} </label><br>
-        <label>Opening Balance: {{ op_bal }} </label><br>
-        <label>Daily Risk Ammount: {{ nav }} </label><br>
-        <label>Daily NAV Down Limit: {{ nav }} </label><br>
-        <label>Current NAV: {{ nav }} </label><br>
-        <label>Latest Balance: {{ lat_bal }} </label><br>
-    </form>
-    </div>
-        </main>
-        <aside class="right_panel"></aside>
-    </div>
-    <footer></footer>
-</body>
-</html>
+                    <input type="submit", name="run_account" value="RUN">
+                    </form>
+                    <form>
+                        <label>-----------------------------------</label><br>
+                        <label>          BALANCE SUMMARY          </label><br>
+                        <label>-----------------------------------</label><br>
+                        <label>Environment: {{ env }} </label><br>
+                        <label>Opening Balance: {{ op_bal }} </label><br>
+                        <label>Daily Risk Ammount: {{ nav }} </label><br>
+                        <label>Daily NAV Down Limit: {{ nav }} </label><br>
+                        <label>Current NAV: {{ nav }} </label><br>
+                        <label>Latest Balance: {{ lat_bal }} </label><br>
+                    </form>
+                </div>
+    {% endblock %}

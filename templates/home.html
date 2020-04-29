@@ -1,48 +1,7 @@
 <!DOCTYPE html>
-<html>
-<head>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
-</head>
-<style>
-
-</style>
-<body>
-    <header></header>
-    <div class="container">
-        <aside class="left_panel">
-
-            <form action="{% url 'home_page' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Home">
-            </form>
-
-            <form action="{% url 'portfolio main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Portfolio">
-            </form>
-
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
-
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
-            </form>
-
-            <form action="{% url 'robots main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
-        </aside>
-        <main>
-            <h1>Test configuration</h1>
-        </main>
-        <aside class="right_panel">
-            <!--New robot creator form-->
-            <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
+{% extends "base.html" %}
+    {% block entry_form %}
+    <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
                 {% csrf_token %}
                 <h4>New Broker Account</h4>
                 <label class="entry_label_name">Broker Name</label><br>
@@ -67,11 +26,5 @@
                 </script>
                 <input class="submit_button" type="submit", name="button" value="Add New Account"><br>
             </form>
-            <div class="right_layout">
-                <p>Content comes here</p>
-            </div>
-        </aside>
-    </div>
-    <footer></footer>
-</body>
-</html>
+    {% endblock %}
+
