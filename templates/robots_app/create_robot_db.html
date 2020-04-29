@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+{% extends "robots_app/create_robot.html" %}
+    {% block value_amend %}
+    <script>
+    console.log('{{ scripts }}')
+    {% for value in scripts %}
+        document.getElementById('robot_name').value = '{{ value }}';
+    {% endfor %}
+
+    </script>
+    {% endblock %}
+

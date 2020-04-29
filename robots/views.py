@@ -8,7 +8,13 @@ import os
 
 # Main site for robot configuration
 def robots_main(request):
-    return render(request, 'robots_app/create_robot.html')
+    robots = Robots.objects.filter().values('name')
+    robot_list = []
+    for robot in robots:
+        robot_list.append(robot["name"])
+
+    print("Robot list:", robot_list)
+    return render(request, 'robots_app/create_robot.html', {"robot_list": robot_list})
 
 
 # Trade execution based on Tradingviw feed
@@ -137,6 +143,24 @@ def get_all_robots(request):
     robots = []
     # Create code to give the data back in json
     return render(request, 'robots_app/create_robot.html', {"json_robot_data": JsonResponse(robots[0])})
+
+
+def return_robot(request):
+    if request.method == "POST":
+        robot_name = request.POST.get("selected")
+        robots = Robots.objects.filter().values()
+        robot_list = []
+        for robot in robots:
+            robot_list.append(robot["name"])
+
+            if robot["name"] == robot_name:
+                print("this")
+                print(robot)
+
+        print("Robot list:", robot_list)
+
+    return render(request, 'robots_app/create_robot_db.html', {"robot_list": robot_list,
+                                                               "scripts": ["pisti"]})
 
 
 

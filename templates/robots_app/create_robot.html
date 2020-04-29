@@ -2,59 +2,76 @@
 {% extends "base.html" %}
     {% block entry_form %}
     <!--New robot creator form-->
+
     <form class="entry_form" action="{% url 'create robot' %}" method="POST">
-                    {% csrf_token %}
-                    <h4>New Robot</h4>
-                    <label class="entry_label_name">Robot Name</label><br>
-                    <input class="entry_input_fields" type="text" name="robot_name" placeholder="test_m5, momentum_h1" required><br>
+        {% csrf_token %}
+        <h4>New Robot</h4>
+        <label class="entry_label_name">Robot Name</label><br>
+        <input id="robot_name" class="entry_input_fields" type="text" name="robot_name"
+               placeholder="test_m5, momentum_h1" required><br>
 
-                    <label class="entry_label_name">Strategy Name</label><br>
-                    <input class="entry_input_fields" type="text" name="strategy_name" placeholder="strategy_momentum" required><br>
+        <label class="entry_label_name">Strategy Name</label><br>
+        <input id="strategy_name" class="entry_input_fields" type="text" name="strategy_name" placeholder="strategy_momentum" required><br>
 
-                    <label class="entry_label_name">Security</label><br>
-                    <input class="entry_input_fields" type="text" name="security" placeholder="EUR_USD, SPX500" required><br>
+        <label class="entry_label_name">Security</label><br>
+        <input id="security" class="entry_input_fields" type="text" name="security" placeholder="EUR_USD, SPX500" required><br>
 
-                    <label class="entry_label_name">Time Frame</label><br>
-                    <input class="entry_input_fields" type="text" name="time_frame" placeholder="M5,H1" required><br>
+        <label class="entry_label_name">Time Frame</label><br>
+        <input id="time_frame" class="entry_input_fields" type="text" name="time_frame" placeholder="M5,H1" required><br>
 
-                    <label class="entry_label_name" for="quantity">Quantity</label><br>
-                    <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
+        <label class="entry_label_name" for="quantity">Quantity</label><br>
+        <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
 
-                    <label class="entry_label_name" for="pyramiding_level">Pyramiding Level</label><br>
-                    <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+        <label class="entry_label_name" for="pyramiding_level">Pyramiding Level</label><br>
+        <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
 
-                    <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
-                    <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+        <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
+        <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
 
-                    <label class="entry_label_name">Status</label><br>
-                    <div class="radio_button_container">
-                        <label class="normal_text" for="active">Active</label>
-                        <input type="radio" id="active" name="status" value="active" required>
-                        <label class="normal_text" for="inactive">Inactive</label>
-                        <input type="radio" id="inactive" name="status" value="inactive"><br>
-                    </div>
+        <label class="entry_label_name">Status</label><br>
+        <div class="radio_button_container">
+            <label class="normal_text" for="active">Active</label>
+            <input type="radio" id="active" name="status" value="active" required>
+            <label class="normal_text" for="inactive">Inactive</label>
+            <input type="radio" id="inactive" name="status" value="inactive"><br>
+        </div>
 
-                    <label class="entry_label_name">Broker</label><br>
-                    <input class="entry_input_fields" type="text" name="broker"
-                           placeholder="oanda, interactive_brokers" required><br>
+        <label class="entry_label_name">Broker</label><br>
+        <input class="entry_input_fields" type="text" name="broker"
+               placeholder="oanda, interactive_brokers" required><br>
 
-                    <label class="entry_label_name">Account Number</label><br>
-                    <input class="entry_input_fields" type="text" name="account_number"
-                           placeholder="334sdfg-egh6633" required><br>
+        <label class="entry_label_name">Account Number</label><br>
+        <input class="entry_input_fields" type="text" name="account_number"
+               placeholder="334sdfg-egh6633" required><br>
 
-                    <label class="entry_label_name">Environment</label>
-                    <div class="radio_button_container">
-                        <label class="normal_text" for="live_env">Live</label>
-                        <input type="radio" id="live_env" name="env" value="live" required>
-                        <label class="normal_text" for="demo_env">Demo</label>
-                        <input type="radio" id="demo_env" name="env" value="demo"><br>
-                    </div>
+        <label class="entry_label_name">Environment</label>
+        <div class="radio_button_container">
+            <label class="normal_text" for="live_env">Live</label>
+            <input type="radio" id="live_env" name="env" value="live" required>
+            <label class="normal_text" for="demo_env">Demo</label>
+            <input type="radio" id="demo_env" name="env" value="demo"><br>
+        </div>
 
-                    <script>if ("{{ exist_robots }}" == "exists") {
+        <script>if ("{{ exist_robots }}" == "exists") {
                         alert("Record already exists in database!");
                     }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
-                    </script>
-                    <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
-                </form>
+        </script>
+        <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
+    </form>
+
+    {% endblock %}
+    {% block sub_form %}
+    <form action="{% url 'return robot' %}" method="POST">
+        {% csrf_token %}
+        <select name="selected" id="form_value_selector">
+            {% for robot in robot_list%}
+                <option value="{{robot}}">{{robot}}</option>
+            {% endfor %}
+        </select>
+        <input class="submit_button" type="submit", name="button" value="Get">
+    </form>
+    {% block value_amend %}
+    {% endblock %}
+
     {% endblock %}
 

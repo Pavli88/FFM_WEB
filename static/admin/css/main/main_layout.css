@@ -87,6 +87,10 @@ main{
     width: 236px;
 }
 
+.entry_input_field_name{
+    width: 100px;
+}
+
 .entry_label_name{
     font-size: 12px;
     font-weight: bold;
