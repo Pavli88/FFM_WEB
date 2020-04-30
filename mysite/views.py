@@ -80,17 +80,19 @@ def test_execution(request):
     if request.method == "POST":
 
         message = request.body
-        print(message.decode("utf-8"))
+        message = str(message.decode("utf-8"))
+        message = message.split()
 
-        print("------------")
+        print("")
+        print("------------------------------------------------------------------------")
         print("TRADE SIGNAL")
-        print("------------")
+        print("------------------------------------------------------------------------")
 
-        signal_params = {"security": "EUR_USD",
-                         "trade_side": "BUY",
-                         "strategy": "momentum",
-                         "time_frame": "M5",
-                         "robot_name": "test"}
+        signal_params = {"security": message[0],
+                         "trade_side": message[1],
+                         "strategy": message[2],
+                         "time_frame": message[3],
+                         "robot_name": message[4]}
 
         print("Signal received. Parameters:", signal_params)
         print("Looking for robot that is tracking:", signal_params)
