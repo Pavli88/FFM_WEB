@@ -79,6 +79,9 @@ def test_execution(request):
 
     if request.method == "POST":
 
+        message = request.body
+        print(message.decode("utf-8"))
+
         print("------------")
         print("TRADE SIGNAL")
         print("------------")
