@@ -14,7 +14,10 @@ class RobotProcesses:
 
     def create_order(self, trade_side, quantity, security, bid_ask):
 
+        print("----------------")
         print("Generating order")
+        print("----------------")
+
         self.bid = bid_ask["bid"]
         self.ask = bid_ask["ask"]
 

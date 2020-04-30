@@ -30,3 +30,23 @@ class Oanda:
 
         return {"ask": self.ask, "bid": self.bid}
 
+    def get_account_data(self):
+
+        """
+        Gets basic account information.
+        :return:
+        """
+
+        self.account_data = self.oanda.account.get_account(account_id=self.account_number).as_dict()
+
+        return self.account_data
+
+    def get_open_trades(self):
+
+        self.open_trades = self.oanda.trades.get_open_trades(account_id=self.account_number).as_dict()
+        self.open_trades_table = pd.DataFrame.from_dict(self.open_trades["trades"])
+
+        print(self.open_trades_table)
+
+        return self.open_trades_table
+

@@ -152,6 +152,69 @@ def test_execution(request):
                               acces_token=acces_token,
                               account_number=account_number)
 
+                print("")
+                account_data = oanda.get_account_data()
+
+                # Basic risk parameters -> Later this section will go to risk checking
+                daily_risk_limit = 0.10
+                starting_balance = 100000.0
+                risk_amount = starting_balance * daily_risk_limit
+
+                print("---------------")
+                print("Risk Parameters")
+                print("---------------")
+                print("Daily Risk Limit:", daily_risk_limit)
+                print("Start Balance:", starting_balance)
+                print("Risk Amount:", risk_amount)
+                print("")
+
+                # Account balance data
+                print("-------------------")
+                print("Account Information")
+                print("-------------------")
+
+                balance = float(account_data["account"]["balance"])
+                nav = float(account_data["account"]["NAV"])
+                unrealized_pnl = float(account_data["account"]["unrealizedPL"])
+                unrealized_return = round(unrealized_pnl / balance, 3)
+
+                print("Opening Balance:", float(starting_balance))
+                print("Daily Risk Amount:", risk_amount)
+                print("Daily NAV Down Limit:", float(starting_balance) - risk_amount)
+                print("Current NAV:", nav)
+                print("Latest Balance", balance)
+                print("")
+
+                print("Evaluating daily daily risk limit.")
+                # Checking if trade can be executed based on daily risk limit
+                if starting_balance - risk_amount > balance:
+                    raise Exception("You have reached your daily risk limit. Trading is not allowed for this day!")
+                else:
+                    print("Trade can be executed ! Balance is not below starting balance.")
+                print("")
+
+                # Fetching out open positions
+                # --> this can be used for risk control later because of the stop lost levels
+                print("Fetching out open positions...")
+                open_trades_table = oanda.get_open_trades()
+                print("")
+
+                # Cheking pyramiding
+                try:
+                    open_trade_id_list = len(list(open_trades_table["id"]))
+                except:
+                    open_trade_id_list = 0
+
+                pyramiding_limit = int(robot[0]["pyramiding_level"])
+                print("Number of open trades:", open_trade_id_list)
+                print("Pyramiding limit:", pyramiding_limit)
+
+                if int(open_trade_id_list) >= pyramiding_limit:
+                    print("New trade breached the pyramiding level execution stopped!")
+                    return HttpResponse(None)
+
+                print("New trade did not breach pyramiding limit. Trade can be executed!")
+
                 # Fetching best bid ask prices
                 bid_ask = oanda.bid_ask(security=security)
 
