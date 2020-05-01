@@ -79,8 +79,11 @@ def test_execution(request):
 
     if request.method == "POST":
 
-        message = request.body
-        message = str(message.decode("utf-8"))
+        # message = request.body
+        # message = str(message.decode("utf-8"))
+        # message = message.split()
+
+        message = "EUR_USD BUY momentum M5 test_3"
         message = message.split()
 
         print("")
@@ -98,7 +101,11 @@ def test_execution(request):
         print("Looking for robot that is tracking:", signal_params)
 
         # Gets robot data from database
-        robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
+        try:
+            robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
+        except:
+            print("Robot does not exists in database! Process stopped!")
+            return HttpResponse(None)
 
         print("Db response:", robot)
         print("----------")
@@ -117,6 +124,12 @@ def test_execution(request):
         print("Trade Side:", trade_side)
         print("")
         print("Checking robot status...")
+
+        if message[0] == robot[0]["security"]:
+            pass
+        else:
+            print("Trade signal was created incorrectly security is not the same that was assigned to the robot!")
+            return HttpResponse(None)
 
         if robot[0]["status"] == "inactive":
             print("robot is inactive process stopped!")
@@ -164,6 +177,7 @@ def test_execution(request):
                 daily_risk_limit = 0.10
                 starting_balance = 100000.0
                 risk_amount = starting_balance * daily_risk_limit
+                initial_exposure = robot[0]["in_exp"]
 
                 print("---------------")
                 print("Risk Parameters")
@@ -171,7 +185,12 @@ def test_execution(request):
                 print("Daily Risk Limit:", daily_risk_limit)
                 print("Start Balance:", starting_balance)
                 print("Risk Amount:", risk_amount)
-                print("")
+                print("Initial Exposure:", initial_exposure)
+                print("Checking initial exposure vs daily risk limit:")
+                if initial_exposure >= daily_risk_limit:
+                    print("Initial exposure is larger than daily risk execution stopped!")
+                    return HttpResponse(None)
+                print("Initial exposure vs daily risk limit check: Passed")
 
                 # Account balance data
                 print("-------------------")
@@ -181,7 +200,6 @@ def test_execution(request):
                 balance = float(account_data["account"]["balance"])
                 nav = float(account_data["account"]["NAV"])
                 unrealized_pnl = float(account_data["account"]["unrealizedPL"])
-                unrealized_return = round(unrealized_pnl / balance, 3)
 
                 print("Opening Balance:", float(starting_balance))
                 print("Daily Risk Amount:", risk_amount)
@@ -193,15 +211,18 @@ def test_execution(request):
                 print("Evaluating daily daily risk limit.")
                 # Checking if trade can be executed based on daily risk limit
                 if starting_balance - risk_amount > balance:
-                    raise Exception("You have reached your daily risk limit. Trading is not allowed for this day!")
+                    print("You have reached your daily risk limit. Trading is not allowed for this day!")
+                    return HttpResponse(None)
                 else:
-                    print("Trade can be executed ! Balance is not below starting balance.")
+                    print("Trade balance check: Passed")
                 print("")
 
                 # Fetching out open positions
                 # --> this can be used for risk control later because of the stop lost levels
                 print("Fetching out open positions...")
                 open_trades_table = oanda.get_open_trades()
+                open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
+                print(open_trades_sec)
                 print("")
 
                 # Cheking pyramiding
@@ -215,10 +236,10 @@ def test_execution(request):
                 print("Pyramiding limit:", pyramiding_limit)
 
                 if int(open_trade_id_list) >= pyramiding_limit:
-                    print("New trade breached the pyramiding level execution stopped!")
+                    print("Pyramiding check: Not Passed! Execution stopped!")
                     return HttpResponse(None)
 
-                print("New trade did not breach pyramiding limit. Trade can be executed!")
+                print("Pyramiding check: Passed")
 
                 # Fetching best bid ask prices
                 bid_ask = oanda.bid_ask(security=security)
@@ -227,17 +248,112 @@ def test_execution(request):
                 order = RobotProcesses().create_order(trade_side=trade_side,
                                                       quantity=quantity,
                                                       security=security,
-                                                      bid_ask=bid_ask)
+                                                      bid_ask=bid_ask,
+                                                      initial_exposure=initial_exposure,
+                                                      balance=balance)
 
                 # Submits order to the appropriate account
-                # .submit_order(order=order)
+                print("Sending order to broker")
+                oanda.submit_order(order=order)
                 print("Order was submitted successfully!")
 
+        return HttpResponse(None)
 
 
+def close_all_trades(request):
 
+    if request.method == "POST":
 
-        return render(request, 'home.html')
+        # message = request.body
+        # message = str(message.decode("utf-8"))
+        # message = message.split()
+
+        message = "EUR_USD CLOSE_ALL momentum M5 test_3"
+        message = message.split()
+
+        print("")
+        print("------------------------------------------------------------------------")
+        print("CLOSE SIGNAL")
+        print("------------------------------------------------------------------------")
+
+        signal_params = {"security": message[0],
+                         "trade_side": message[1],
+                         "strategy": message[2],
+                         "time_frame": message[3],
+                         "robot_name": message[4]}
+
+        print("Signal received. Parameters:", signal_params)
+        print("Looking for robot that is tracking:", signal_params)
+
+        # Gets robot data from database
+        try:
+            robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
+        except:
+            print("Robot does not exists in database! Process stopped!")
+            return HttpResponse(None)
+
+        print("Db response:", robot)
+        print("----------")
+        print("Robot info")
+        print("----------")
+        print("Robot Name:", robot[0]["name"])
+        print("Robot Status:", robot[0]["status"])
+        quantity = robot[0]["quantity"]
+        print("Robot trade size:", quantity)
+        print("-------------")
+        print("Security info")
+        print("-------------")
+        trade_side = signal_params["trade_side"]
+        security = signal_params["security"]
+        print("Security:", security)
+        print("Trade Side:", trade_side)
+        print("")
+        print("Checking robot status...")
+
+        if message[0] == robot[0]["security"]:
+            pass
+        else:
+            print("Trade signal was created incorrectly security is not the same that was assigned to the robot!")
+            return HttpResponse(None)
+
+        print("-----------")
+        print("Broker info")
+        print("-----------")
+        broker = robot[0]["broker"]
+        print("Broker:", broker)
+        account_number = robot[0]["account_number"]
+        environment = robot[0]["env"]
+        print("Environment:", environment)
+        print("Account Number:", account_number)
+
+        if broker == "oanda":
+            print("Retrieving access token for", broker, robot[0]["env"], robot[0]["account_number"])
+
+            # Fetching broker parameters from database
+            broker_params = BrokerAccounts.objects.filter(broker_name=broker,
+                                                          account_number=account_number,
+                                                          env=environment).values()
+            print("Broker parameters:", broker_params)
+
+            acces_token = broker_params[0]["access_token"]
+            print("Access Token:", acces_token)
+            print("")
+
+            print("Creating Oanda connection instance")
+            oanda = Oanda(environment="practice",
+                          acces_token=acces_token,
+                          account_number=account_number)
+
+            print("Fetching out open positions for", message[0])
+            open_trades_table = oanda.get_open_trades()
+            open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
+            print(open_trades_sec)
+            print("")
+
+            oanda.close_all_positions(open_trades_table=open_trades_sec)
+
+        return HttpResponse(None)
+
 
 
 
