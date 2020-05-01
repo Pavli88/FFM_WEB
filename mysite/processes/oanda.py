@@ -50,3 +50,18 @@ class Oanda:
 
         return self.open_trades_table
 
+    def close_all_positions(self, open_trades_table):
+
+        """
+        Closes all trades for a security
+        :param open_trades_table:
+        :return:
+        """
+
+        print("Closing all positions")
+        print("Position:")
+
+        for id in list(open_trades_table["id"]):
+            self.oanda.trades.close_trade(account_id=self.account_number, trade_id=id, units="ALL")
+            print("Trade:", id)
+

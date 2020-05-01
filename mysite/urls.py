@@ -12,4 +12,5 @@ urlpatterns = [
     path('', include('signals.urls')),
     path('', include('portfolio.urls')),
     path('test_execution/', views.test_execution, name="test_execution"),
+    path('close_trades/', views.close_all_trades),
 ]
