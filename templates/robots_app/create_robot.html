@@ -1,6 +1,61 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
+
+    <!--Space for CSS-->
+    {% block style %}
+    .table{
+        background:white;
+        border-bottom: 1px solid grey;
+        border-up: 1px solid grey;
+        width: 100%;
+    }
+
+    .table_header{
+        font-size: 12px;
+    }
+
+    .row_value{
+        font-size: 12px;
+        text-align: left;
+        margin:auto;
+    }
+
+    .amend_button{
+      background-color: #008CBA;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 10px;
+
+    }
+
+    .table_container{
+
+    }
+
+    .table_input_field{
+        width: 40px;
+        border: 0px solid #555555;
+        font-size: 12px;
+        margin: auto;
+    }
+
+    .table_input_quantity{
+        width: 80px;
+        border: 0px solid #555555;
+    }
+
+    {% endblock %}
+
     {% block entry_form %}
+
+<!--Scripts-->
+{% block script %}
+
+{% endblock %}
+
     <!--New robot creator form-->
 
     <form class="entry_form" action="{% url 'create robot' %}" method="POST">
@@ -60,16 +115,83 @@
     </form>
 
     {% endblock %}
-    {% block sub_form %}
-    <form action="{% url 'return robot' %}" method="POST">
+
+    <!--Main block-->
+    {% block main_block%}
+    <div class="table_container">
+        <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
         {% csrf_token %}
-        <select name="selected" id="form_value_selector">
-            {% for robot in robot_list%}
-                <option value="{{robot}}">{{robot}}</option>
-            {% endfor %}
-        </select>
-        <input class="submit_button" type="submit", name="button" value="Get">
-    </form>
+            <h2>Robot Configuration</h2>
+            <input class="submit_button" type="submit", name="button" value="Show Robots">
+        </form>
+        <table class="table">
+            <thead>
+                <tr>
+                <th class="table_header">ID</th>
+                <th class="table_header">Robot</th>
+                <th class="table_header">Strategy</th>
+                <th class="table_header">Security</th>
+                <th class="table_header">Broker</th>
+                <th class="table_header">Status</th>
+                <th class="table_header">Environment</th>
+                <th class="table_header">P Level</th>
+                <th class="table_header">Initial Exp</th>
+                <th class="table_header">Quantity</th>
+                <th class="table_header">Time Frame</th>
+                <th class="table_header">Account Number</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for robot in robots %}
+            <tr>
+                <td class="row_value">{{robot.id}}</td>
+                <td class="row_value">{{robot.name}}</td>
+                <td class="row_value">{{robot.strategy}}</td>
+                <td class="row_value">{{robot.security}}</td>
+                <td class="row_value">{{robot.broker}}</td>
+
+                <td class="row_value"><select>
+                    <option>{{robot.status}}</option>
+
+                    {% if robot.status == "active"%}
+                        <option>inactive</option>
+                    {% else  %}
+                        <option>active</option>
+                    {% endif %}
+                    </select>
+                </td>
+
+                <td class="row_value"><select class="table_input_quantity">
+                    <option>{{robot.env}}</option>
+
+                    {% if robot.env == "demo"%}
+                        <option>live</option>
+                    {% else  %}
+                        <option>demo</option>
+                    {% endif %}
+                    </select></td>
+
+                <td class="row_value"><input class="table_input_field" type="number" name="pyramiding_level"
+                                             min="0" max="10" value="{{robot.pyramiding_level}}"></td>
+                <td class="row_value"><input class="table_input_field" type="number" name="initial_exp"
+                                             min="0" max="10" value="{{robot.in_exp}}"></td>
+                <td class="row_value"><input class="table_input_quantity" type="number" name="quantity"
+                                             min="0" value="{{robot.quantity}}"></td>
+                <td class="row_value">{{robot.time_frame}}</td>
+                <td class="row_value">{{robot.account_number}}</td>
+                <td class="row_value"><input class="amend_button" type="submit" value="Modify"></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+
+    </div>
+
+    {% endblock %}
+
+    <!--Form block-->
+    {% block sub_form %}
+
     {% block value_amend %}
     {% endblock %}
 
