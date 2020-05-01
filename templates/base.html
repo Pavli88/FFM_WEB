@@ -6,6 +6,19 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
 </head>
+
+<script>
+    {% block script %}
+
+    {% endblock %}
+</script>
+
+<style>
+    {% block style %}
+
+    {% endblock %}
+</style>
+
 <body>
     <header></header>
     <div class="container">
@@ -51,6 +64,6 @@
             </div>
         </aside>
     </div>
-    <footer></footer>
+
 </body>
 </html>

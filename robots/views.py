@@ -8,6 +8,7 @@ import os
 
 # Main site for robot configuration
 def robots_main(request):
+
     robots = Robots.objects.filter().values('name')
     robot_list = []
     for robot in robots:
@@ -137,30 +138,15 @@ def get_all_robots(request):
     :return:
     """
     robots = Robots.objects.filter().values()
-    print(robots)
-    print(robots[0])
-    print(len(robots))
-    robots = []
+
+    header_list = []
+    for header in robots[0]:
+        header_list.append(header)
+
     # Create code to give the data back in json
-    return render(request, 'robots_app/create_robot.html', {"json_robot_data": JsonResponse(robots[0])})
+    return render(request, 'robots_app/create_robot.html', {"robots": robots})
 
 
-def return_robot(request):
-    if request.method == "POST":
-        robot_name = request.POST.get("selected")
-        robots = Robots.objects.filter().values()
-        robot_list = []
-        for robot in robots:
-            robot_list.append(robot["name"])
-
-            if robot["name"] == robot_name:
-                print("this")
-                print(robot)
-
-        print("Robot list:", robot_list)
-
-    return render(request, 'robots_app/create_robot_db.html', {"robot_list": robot_list,
-                                                               "scripts": ["pisti"]})
 
 
 
