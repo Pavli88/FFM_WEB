@@ -83,6 +83,14 @@
         <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
         <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
 
+        <label class="entry_label_name" for="sl_policy">Stop Loss Policy</label>
+        <div>
+            <select class="entry_input_fields" id="sl_policy" name="sl_policy">
+              <option value="percentage">percentage</option>
+              <option value="level">level</option>
+            </select>
+        </div>
+
         <label class="entry_label_name">Status</label><br>
         <div class="radio_button_container">
             <label class="normal_text" for="active">Active</label>
@@ -139,48 +147,54 @@
                 <th class="table_header">Quantity</th>
                 <th class="table_header">Time Frame</th>
                 <th class="table_header">Account Number</th>
+                <th class="table_header">SL Policy</th>
             </tr>
             </thead>
             <tbody>
             {% for robot in robots %}
-            <tr>
-                <td class="row_value">{{robot.id}}</td>
-                <td class="row_value">{{robot.name}}</td>
-                <td class="row_value">{{robot.strategy}}</td>
-                <td class="row_value">{{robot.security}}</td>
-                <td class="row_value">{{robot.broker}}</td>
+            <form action="{% url 'amend robot' %}" method="POST">
+                {% csrf_token %}
+                <tr>
+                    <td class="row_value">{{robot.id}}</td>
+                    <td class="row_value">{{robot.name}}</td>
+                    <td class="row_value">{{robot.strategy}}</td>
+                    <td class="row_value">{{robot.security}}</td>
+                    <td class="row_value">{{robot.broker}}</td>
 
-                <td class="row_value"><select>
-                    <option>{{robot.status}}</option>
+                    <td class="row_value"><select>
+                        <option>{{robot.status}}</option>
 
-                    {% if robot.status == "active"%}
-                        <option>inactive</option>
-                    {% else  %}
-                        <option>active</option>
-                    {% endif %}
-                    </select>
-                </td>
+                        {% if robot.status == "active"%}
+                            <option>inactive</option>
+                        {% else  %}
+                            <option>active</option>
+                        {% endif %}
+                        </select>
+                    </td>
 
-                <td class="row_value"><select class="table_input_quantity">
-                    <option>{{robot.env}}</option>
+                    <td class="row_value"><select class="table_input_quantity">
+                        <option>{{robot.env}}</option>
 
-                    {% if robot.env == "demo"%}
-                        <option>live</option>
-                    {% else  %}
-                        <option>demo</option>
-                    {% endif %}
-                    </select></td>
+                        {% if robot.env == "demo"%}
+                            <option>live</option>
+                        {% else  %}
+                            <option>demo</option>
+                        {% endif %}
+                        </select></td>
 
-                <td class="row_value"><input class="table_input_field" type="number" name="pyramiding_level"
-                                             min="0" max="10" value="{{robot.pyramiding_level}}"></td>
-                <td class="row_value"><input class="table_input_field" type="number" name="initial_exp"
-                                             min="0" max="10" value="{{robot.in_exp}}"></td>
-                <td class="row_value"><input class="table_input_quantity" type="number" name="quantity"
-                                             min="0" value="{{robot.quantity}}"></td>
-                <td class="row_value">{{robot.time_frame}}</td>
-                <td class="row_value">{{robot.account_number}}</td>
-                <td class="row_value"><input class="amend_button" type="submit" value="Modify"></td>
-            </tr>
+                    <td class="row_value"><input class="table_input_field" type="number" name="pyramiding_level"
+                                                 min="0" max="10" value="{{robot.pyramiding_level}}"></td>
+                    <td class="row_value"><input class="table_input_field" type="number" name="initial_exp"
+                                                 min="0" max="10" value="{{robot.in_exp}}"></td>
+                    <td class="row_value"><input class="table_input_quantity" type="number" name="quantity"
+                                                 min="0" value="{{robot.quantity}}"></td>
+                    <td class="row_value" name="time_frame">{{robot.time_frame}}</td>
+                    <td class="row_value">{{robot.account_number}}</td>
+                    <td class="row_value" name="sl_policy">{{robot.sl_policy}}</td>
+                    <td class="row_value"><input class="amend_button" type="submit" value="Modify"></td>
+                </tr>
+            </form>
+
         {% endfor %}
         </tbody>
         </table>

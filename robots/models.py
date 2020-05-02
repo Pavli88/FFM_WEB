@@ -16,6 +16,7 @@ class Robots(models.Model):
     quantity = models.FloatField(default=0.0)
     time_frame = models.CharField(max_length=50, default='')
     account_number = models.CharField(max_length=50, default='')
+    sl_policy = models.CharField(max_length=50, default='')
 
 
 

@@ -77,6 +77,7 @@ def create_robot(request):
         env = request.POST.get("env")
         time_frame = request.POST.get("time_frame")
         account_number = request.POST.get("account_number")
+        sl_policy = request.POST.get("sl_policy")
 
         string_parameter_dict = {"robot name": robot_name,
                                  "strategy name": strategy_name,
@@ -85,7 +86,8 @@ def create_robot(request):
                                  "status": status,
                                  "environment": env,
                                  "time_fame:": time_frame,
-                                 "account_number": account_number}
+                                 "account_number": account_number,
+                                 "sl_policy": sl_policy}
 
         # Float fields
         pyramiding_level = float(request.POST.get("pyramiding_level"))
@@ -117,7 +119,8 @@ def create_robot(request):
                        env=env,
                        quantity=quantity,
                        time_frame=time_frame,
-                       account_number=account_number)
+                       account_number=account_number,
+                       sl_policy=sl_policy)
 
         try:
             robot.save()
@@ -147,6 +150,11 @@ def get_all_robots(request):
     return render(request, 'robots_app/create_robot.html', {"robots": robots})
 
 
+def amend_robot(request):
 
+    if request.method == "POST":
+        # String fields
+        robot_name = request.POST.get("robot_name")
+        print(robot_name)
 
 

@@ -8,4 +8,5 @@ urlpatterns = [
     path('robots/create', views.create_robot, name="create robot"),
     path('robots/test_execution', incoming_trade_signals, name="test execution"),
     path('robots/get_robots', views.get_all_robots, name="show robots"),
+    path('robots/amend_robot', views.amend_robot, name="amend robot"),
 ]
