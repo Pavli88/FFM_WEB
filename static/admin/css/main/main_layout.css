@@ -25,14 +25,13 @@ main{
 
 .right_panel{
     background:white;
-    width: 250px;
+    width: 220px;
     margin: 2px;
-
 }
 
 .left_panel{
     background:white;
-    width:155px;
+    width:100%;
     margin:2px;
     justify-content: center;
 }
@@ -97,10 +96,8 @@ main{
 .entry_form{
     height: 500px;
     margin: 5px;
-    width: 240px;
+    width: 220px;
     display: inline-block;
-    border-up: 1px solid grey;
-    border-bottom: 1px solid grey;
 }
 
 .entry_div{
@@ -111,9 +108,8 @@ main{
 }
 
 .right_layout{
-    border-bottom: 1px solid grey;
     height: 100px;
     margin: 5px;
-    width: 240px;
+    width: 220px;
     display: inline-block;
 }

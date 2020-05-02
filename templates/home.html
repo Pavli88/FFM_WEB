@@ -3,7 +3,7 @@
     {% block entry_form %}
     <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
                 {% csrf_token %}
-                <h4>New Broker Account barbi</h4>
+                <h4>New Broker Account</h4>
                 <label class="entry_label_name">Broker Name</label><br>
                 <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>
 

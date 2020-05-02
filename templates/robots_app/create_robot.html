@@ -1,55 +1,63 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-    <!--Space for CSS-->
-    {% block style %}
-    .table{
-        background:white;
-        border-bottom: 1px solid grey;
-        border-up: 1px solid grey;
-        width: 100%;
-    }
+<!--Space for CSS-->
+{% block style %}
 
-    .table_header{
-        font-size: 12px;
-    }
+.amend_button{
+    background-color: #008CBA;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 10px;
+}
 
-    .row_value{
-        font-size: 12px;
-        text-align: left;
-        margin:auto;
-    }
+.table_container{
+    background:white;
+    width: 100%;
+    border-bottom: 1px solid grey;
+    margin:auto;
+}
 
-    .amend_button{
-      background-color: #008CBA;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      font-size: 10px;
+.robot_form{
+    width:100%;
+    background:red;
+    margin:auto;
+}
 
-    }
+.form{
+    width:100%;
+}
 
-    .table_container{
+.table_input_field{
+    width: 100px;
+    border: 0px solid #555555;
+    font-size: 12px;
+    margin: auto;
+    text-align: center;
+    text-decoration: none;
+}
 
-    }
+.table_input_field_2{
+    width: 50px;
+    border: 0px solid #555555;
+    font-size: 12px;
+    text-align: center;
+    text-decoration: none;
+}
+.table_input_text{
+    text-align: left;
+    width: 100%;
+    font-size: 10px;
+    margin:auto;
+}
 
-    .table_input_field{
-        width: 40px;
-        border: 0px solid #555555;
-        font-size: 12px;
-        margin: auto;
-    }
 
-    .table_input_quantity{
-        width: 80px;
-        border: 0px solid #555555;
-    }
+{% endblock %}
 
-    {% endblock %}
-
-    {% block entry_form %}
+{% block entry_form %}
 
 <!--Scripts-->
 {% block script %}
@@ -75,17 +83,17 @@
         <input id="time_frame" class="entry_input_fields" type="text" name="time_frame" placeholder="M5,H1" required><br>
 
         <label class="entry_label_name" for="quantity">Quantity</label><br>
-        <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0"><br>
+        <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0" required><br>
 
         <label class="entry_label_name" for="pyramiding_level">Pyramiding Level</label><br>
-        <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0"><br>
+        <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0" required><br>
 
         <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
-        <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00"><br>
+        <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00" required><br>
 
         <label class="entry_label_name" for="sl_policy">Stop Loss Policy</label>
         <div>
-            <select class="entry_input_fields" id="sl_policy" name="sl_policy">
+            <select class="entry_input_fields" id="sl_policy" name="sl_policy" required>
               <option value="percentage">percentage</option>
               <option value="level">level</option>
             </select>
@@ -132,82 +140,63 @@
             <h2>Robot Configuration</h2>
             <input class="submit_button" type="submit", name="button" value="Show Robots">
         </form>
-        <table class="table">
-            <thead>
-                <tr>
-                <th class="table_header">ID</th>
-                <th class="table_header">Robot</th>
-                <th class="table_header">Strategy</th>
-                <th class="table_header">Security</th>
-                <th class="table_header">Broker</th>
-                <th class="table_header">Status</th>
-                <th class="table_header">Environment</th>
-                <th class="table_header">P Level</th>
-                <th class="table_header">Initial Exp</th>
-                <th class="table_header">Quantity</th>
-                <th class="table_header">Time Frame</th>
-                <th class="table_header">Account Number</th>
-                <th class="table_header">SL Policy</th>
-            </tr>
-            </thead>
-            <tbody>
+        <div class="robot_form">
             {% for robot in robots %}
-            <form action="{% url 'amend robot' %}" method="POST">
+            <form class="form" action="{% url 'amend robot' %}" method="POST">
                 {% csrf_token %}
-                <tr>
-                    <td class="row_value">{{robot.id}}</td>
-                    <td class="row_value">{{robot.name}}</td>
-                    <td class="row_value">{{robot.strategy}}</td>
-                    <td class="row_value">{{robot.security}}</td>
-                    <td class="row_value">{{robot.broker}}</td>
-
-                    <td class="row_value"><select>
-                        <option>{{robot.status}}</option>
-
-                        {% if robot.status == "active"%}
-                            <option>inactive</option>
-                        {% else  %}
-                            <option>active</option>
-                        {% endif %}
-                        </select>
-                    </td>
-
-                    <td class="row_value"><select class="table_input_quantity">
-                        <option>{{robot.env}}</option>
-
-                        {% if robot.env == "demo"%}
-                            <option>live</option>
-                        {% else  %}
-                            <option>demo</option>
-                        {% endif %}
-                        </select></td>
-
-                    <td class="row_value"><input class="table_input_field" type="number" name="pyramiding_level"
-                                                 min="0" max="10" value="{{robot.pyramiding_level}}"></td>
-                    <td class="row_value"><input class="table_input_field" type="number" name="initial_exp"
-                                                 min="0" max="10" value="{{robot.in_exp}}"></td>
-                    <td class="row_value"><input class="table_input_quantity" type="number" name="quantity"
-                                                 min="0" value="{{robot.quantity}}"></td>
-                    <td class="row_value" name="time_frame">{{robot.time_frame}}</td>
-                    <td class="row_value">{{robot.account_number}}</td>
-                    <td class="row_value" name="sl_policy">{{robot.sl_policy}}</td>
-                    <td class="row_value"><input class="amend_button" type="submit" value="Modify"></td>
-                </tr>
+                <input type="hidden" name="robot_name" value="{{robot.name}}">
+                <label class="table_input_text">ID:</label>
+                <label class="table_input_text">{{robot.id}}</label>
+                <label class="table_input_text">Robot:</label>
+                <label class="table_input_text" value="{{robot.name}}">{{robot.name}}</label>
+                <label class="table_input_text">Strategy:</label>
+                <label class="table_input_text" name="strategy">{{robot.strategy}}</label>
+                <label class="table_input_text">Security:</label>
+                <label class="table_input_text">{{robot.security}}</label>
+                <label class="table_input_text">Time Frame:</label>
+                <label class="table_input_text">{{robot.time_frame}}</label>
+                <label class="table_input_text">Broker:</label>
+                <label class="table_input_text">{{robot.broker}}</label>
+                <label class="table_input_text">Env:</label>
+                <select class="table_input_field" name="env">
+                    <option>{{robot.env}}</option>
+                    {% if robot.env == "demo"%}
+                    <option>live</option>
+                    {% else  %}
+                    <option>demo</option>
+                    {% endif %}
+                </select>
+                <label class="table_input_text">Status:</label>
+                <select class="table_input_field" name="status">
+                    <option>{{robot.status}}</option>
+                    {% if robot.status == "active"%}
+                    <option>inactive</option>
+                    {% else  %}
+                    <option>active</option>
+                    {% endif %}
+                </select>
+                <label class="table_input_text">SL Policy:</label>
+                <select class="table_input_field" name="sl_policy">
+                    <option>{{robot.sl_policy}}</option>
+                    {% if robot.sl_policy == "percentage"%}
+                    <option>level</option>
+                    {% else  %}
+                    <option>percentage</option>
+                    {% endif %}
+                </select>
+                <label class="table_input_text">P Level:</label>
+                <input class="table_input_field_2" type="number" name="pyramiding_level" min="0" max="10" value="{{robot.pyramiding_level}}">
+                <label class="table_input_text">Init Exp:</label>
+                <input class="table_input_field_2" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}">
+                <label class="table_input_text">Quantity:</label>
+                <input class="table_input_field" type="number" name="quantity" min="0" value="{{robot.quantity}}">
+                <label class="table_input_text">Acc Nbr:</label>
+                <input class="table_input_field" type="text" name="account_number" placeholder="{{robot.account_number}}">
+                <input class="amend_button" type="submit" value="Modify">
             </form>
-
-        {% endfor %}
-        </tbody>
-        </table>
-
+            {% endfor %}
+        </div>
     </div>
-
     {% endblock %}
 
-    <!--Form block-->
-    {% block sub_form %}
-
-    {% block value_amend %}
-    {% endblock %}
-
-    {% endblock %}
 

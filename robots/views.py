@@ -153,8 +153,35 @@ def get_all_robots(request):
 def amend_robot(request):
 
     if request.method == "POST":
-        # String fields
+
+        """
+        Function to amend existing robot data in the database.
+        """
+
+        # Gets data from html table
         robot_name = request.POST.get("robot_name")
-        print(robot_name)
+        env = request.POST.get("env")
+        status = request.POST.get("status")
+        pyramiding_level = request.POST.get("pyramiding_level")
+        init_exp = request.POST.get("init_exp")
+        quantity = request.POST.get("quantity")
+        account_number = request.POST.get("account_number")
+        print("Request received to amend robot record for", robot_name)
+
+        # Retrieves back amended robot info and refreshes table
+        robot = Robots.objects.get(name=robot_name)
+        robot.quantity = quantity
+        robot.env = env
+        robot.status = status
+        robot.pyramiding_level = pyramiding_level
+        robot.init_exp = init_exp
+        robot.quantity = quantity
+        robot.account_number = account_number
+        robot.save()
+        print("Amended parameters were saved to database.")
+
+        robots = Robots.objects.filter().values()
+
+        return render(request, 'robots_app/create_robot.html', {"robots": robots})
 
 
