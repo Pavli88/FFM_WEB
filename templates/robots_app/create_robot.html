@@ -50,7 +50,7 @@
 .table_input_text{
     text-align: left;
     width: 100%;
-    font-size: 10px;
+    font-size: 12px;
     margin:auto;
 }
 
@@ -141,19 +141,12 @@
             <form class="form" action="{% url 'amend robot' %}" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="robot_name" value="{{robot.name}}">
-                <label class="table_input_text">ID:</label>
                 <label class="table_input_text">{{robot.id}}</label>
-                <label class="table_input_text">Robot:</label>
                 <label class="table_input_text" value="{{robot.name}}">{{robot.name}}</label>
-                <label class="table_input_text">Strategy:</label>
                 <label class="table_input_text" name="strategy">{{robot.strategy}}</label>
-                <label class="table_input_text">Security:</label>
                 <label class="table_input_text">{{robot.security}}</label>
-                <label class="table_input_text">Time Frame:</label>
                 <label class="table_input_text">{{robot.time_frame}}</label>
-                <label class="table_input_text">Broker:</label>
                 <label class="table_input_text">{{robot.broker}}</label>
-                <label class="table_input_text">Env:</label>
                 <select class="table_input_field" name="env">
                     <option>{{robot.env}}</option>
                     {% if robot.env == "demo"%}
@@ -171,7 +164,6 @@
                     <option>active</option>
                     {% endif %}
                 </select>
-                <label class="table_input_text">SL Policy:</label>
                 <select class="table_input_field" name="sl_policy">
                     <option>{{robot.sl_policy}}</option>
                     {% if robot.sl_policy == "percentage"%}
@@ -180,14 +172,10 @@
                     <option>percentage</option>
                     {% endif %}
                 </select>
-                <label class="table_input_text">P Level:</label>
-                <input class="table_input_field_2" type="number" name="pyramiding_level" min="0" max="10" value="{{robot.pyramiding_level}}">
-                <label class="table_input_text">Init Exp:</label>
-                <input class="table_input_field_2" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}">
-                <label class="table_input_text">Quantity:</label>
+                <input class="table_input_field" type="number" name="pyramiding_level" min="0" max="10" value="{{robot.pyramiding_level}}">
+                <input class="table_input_field" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}">
                 <input class="table_input_field" type="number" name="quantity" min="0" value="{{robot.quantity}}">
-                <label class="table_input_text">Acc Nbr:</label>
-                <input class="table_input_field" type="text" name="account_number" placeholder="{{robot.account_number}}">
+                <input class="table_input_field" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
                 <input class="amend_button" type="submit" value="Modify">
             </form>
             {% endfor %}

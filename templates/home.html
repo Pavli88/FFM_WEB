@@ -30,6 +30,9 @@
 
     {% block main_block%}
     <form action="{% url 'test_execution' %}" method="POST">
-        <input class="submit_button" type="submit", name="button" value="Test Trade Execution"><br>
+        <input class="submit_button" type="submit", name="button" value="Test Open Trade Execution"><br>
+    </form>
+    <form action="{% url 'test_close_execution' %}" method="POST">
+        <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
     </form>
     {% endblock %}
