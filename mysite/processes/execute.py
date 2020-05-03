@@ -157,7 +157,9 @@ else:
     print("SELL", float(args.q), r"@", float(list(bids["price"])[-1]), "SL", sl_level)
     print("Trade Market Value:", float(list(bids["price"])[-1])*float(args.q))
 
-# Creating Order
+
+
+# Creating Order ------------------------------------------------
 print("")
 print("Executing order in", environment, "environment")
 

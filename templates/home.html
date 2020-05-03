@@ -1,85 +1,38 @@
 <!DOCTYPE html>
-<html>
-<style>
-header{
-    background:#4682B4;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-footer{
-    background:#6495ED;
-    height:50px;
-    width:1800px;
-    margin:2px;
-}
-
-main{
-    background:#B0C4DE;
-    flex-grow:10;
-    margin:2px;
-}
-
-.right_panel{
-    background:#87CEFA;
-    width: 155px;
-    margin: 2px;
-
-}
-
-.left_panel{
-    background:#FAEBD7;
-    width:155px;
-    margin:2px;
-    justify-content: center;
-}
-
-.container{
-    width: 1800px;
-    height:800px;
-    display:flex;
-    margin:2px;
-}
-
-.menu_button{
-  background-color: #008CBA;
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  width: 150px;
-  margin: 4px;
-}
-</style>
-<body>
-    <header></header>
-    <div class="container">
-        <aside class="left_panel">
-
-            <form action="{% url 'robots main' %}">
+{% extends "base.html" %}
+    {% block entry_form %}
+    <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
                 {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
+                <h4>New Broker Account</h4>
+                <label class="entry_label_name">Broker Name</label><br>
+                <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>
 
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
+                <label class="entry_label_name">Account Number</label><br>
+                <input class="entry_input_fields" type="text" name="account_number" placeholder="Account Number" required><br>
 
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
+                <label class="entry_label_name">Account Token</label><br>
+                <input class="entry_input_fields" type="text" name="token" placeholder="Token" required><br>
+
+                <label class="entry_label_name">Environment</label>
+                <div class="radio_button_container">
+                    <label class="normal_text" for="live_env">Live</label>
+                    <input type="radio" id="live_env" name="env" value="live" required>
+                    <label class="normal_text" for="demo_env">Demo</label>
+                    <input type="radio" id="demo_env" name="env" value="demo"><br>
+                </div>
+                <script>if ("{{ exist_robots }}" == "exists") {
+                        alert("Record already exists in database!");
+                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
+                </script>
+                <input class="submit_button" type="submit", name="button" value="Add New Account"><br>
             </form>
-        </aside>
-        <main>
-            <h1>Dashboard</h1>
-        </main>
-        <aside class="right_panel"></aside>
-    </div>
-    <footer></footer>
-</body>
-</html>
+    {% endblock %}
+
+    {% block main_block%}
+    <form action="{% url 'test_execution' %}" method="POST">
+        <input class="submit_button" type="submit", name="button" value="Test Open Trade Execution"><br>
+    </form>
+    <form action="{% url 'test_close_execution' %}" method="POST">
+        <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
+    </form>
+    {% endblock %}

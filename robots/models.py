@@ -14,6 +14,9 @@ class Robots(models.Model):
     pyramiding_level = models.FloatField(default=0.0)
     in_exp = models.FloatField(default=0.0)
     quantity = models.FloatField(default=0.0)
+    time_frame = models.CharField(max_length=50, default='')
+    account_number = models.CharField(max_length=50, default='')
+    sl_policy = models.CharField(max_length=50, default='')
 
 
 

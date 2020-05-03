@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from robots.models import *
@@ -7,45 +8,14 @@ import os
 
 # Main site for robot configuration
 def robots_main(request):
-    return render(request, 'robots_app/create_robot.html')
 
+    robots = Robots.objects.filter().values('name')
+    robot_list = []
+    for robot in robots:
+        robot_list.append(robot["name"])
 
-# Trade execution based on Tradingviw feed
-@csrf_exempt
-def execute_trade(request):
-
-    """
-    This function executes trade signals coming from Tradingview.com
-    :param request:
-    :return:
-    """
-
-    if request.method == "POST":
-
-        message = request.body
-        print(message.decode("utf-8"))
-
-        env = "practice"
-        quantity = 1000
-        start_bal = 100000
-        sec = "EUR_USD"
-        risk_perc = 0.01
-        pl = 4
-        sl_prec = 4
-
-        if (message.decode("utf-8")) == "BUY":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q {quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
-        elif (message.decode("utf-8")) == "SELL":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
-        elif (message.decode("utf-8")) == "CLOSE":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/close_positions.py --ca all --env live')
-            return HttpResponse(None)
-
-    if request.method == "GET":
-        print("Trade execution")
-        return HttpResponse("This site is for trade execution")
+    print("Robot list:", robot_list)
+    return render(request, 'robots_app/create_robot.html', {"robot_list": robot_list})
 
 
 def create_robot(request):
@@ -67,13 +37,19 @@ def create_robot(request):
         broker = request.POST.get("broker")
         status = request.POST.get("status")
         env = request.POST.get("env")
+        time_frame = request.POST.get("time_frame")
+        account_number = request.POST.get("account_number")
+        sl_policy = request.POST.get("sl_policy")
 
         string_parameter_dict = {"robot name": robot_name,
                                  "strategy name": strategy_name,
                                  "security": security,
                                  "broker": broker,
                                  "status": status,
-                                 "environment": env}
+                                 "environment": env,
+                                 "time_fame:": time_frame,
+                                 "account_number": account_number,
+                                 "sl_policy": sl_policy}
 
         # Float fields
         pyramiding_level = float(request.POST.get("pyramiding_level"))
@@ -81,17 +57,17 @@ def create_robot(request):
         quantity = float(request.POST.get("quantity"))
 
         print("Robot parameters:", string_parameter_dict)
-        print("All the field were filled in the entry form.")
 
         # Checking if robot name exists in data base
+        print("Checking if new record exists in database")
         try:
-            existing_robot = Robots.objects.get(name=robot_name).name
+            data_exists = Robots.objects.get(name=robot_name).name
         except:
-            existing_robot = "does not exist"
+            data_exists = "does not exist"
 
-        if existing_robot == robot_name:
+        if data_exists == robot_name:
             print("Robot exists in data base.")
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "Robot exists in data base !"})
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "exists"})
 
         # Inserting new robot data to database
         print("Inserting new record to database")
@@ -103,52 +79,71 @@ def create_robot(request):
                        pyramiding_level=pyramiding_level,
                        in_exp=init_exp,
                        env=env,
-                       quantity=quantity)
+                       quantity=quantity,
+                       time_frame=time_frame,
+                       account_number=account_number,
+                       sl_policy=sl_policy)
 
         try:
             robot.save()
+            print("New record was created with parameters:", string_parameter_dict)
+            return render(request, 'robots_app/create_robot.html', {"exist_robots": "created"})
         except:
             print("Error occured while inserting data to database. "
                   "Either data type or server configuration is not correct.")
             return render(request, 'robots_app/create_robot.html',
                           {"exist_robots": "Incorrect data type was given in one of the fields!"})
 
-    return render(request, 'robots_app/robots_main.html')
 
-
-# Test execution
-@csrf_exempt
-def test_execution(request):
+def get_all_robots(request):
 
     """
-    This function executes trade signals coming from Tradingview.com
+    Queries out all robots from database and passes it back to the html
     :param request:
     :return:
     """
+    robots = Robots.objects.filter().values()
+
+    header_list = []
+    for header in robots[0]:
+        header_list.append(header)
+
+    # Create code to give the data back in json
+    return render(request, 'robots_app/create_robot.html', {"robots": robots})
+
+
+def amend_robot(request):
 
     if request.method == "POST":
 
-        message = "BUY"
+        """
+        Function to amend existing robot data in the database.
+        """
 
-        env = "practice"
-        quantity = 1000
-        start_bal = 100000
-        sec = "EUR_USD"
-        risk_perc = 0.01
-        pl = 4
-        sl_prec = 4
+        # Gets data from html table
+        robot_name = request.POST.get("robot_name")
+        env = request.POST.get("env")
+        status = request.POST.get("status")
+        pyramiding_level = request.POST.get("pyramiding_level")
+        init_exp = request.POST.get("init_exp")
+        quantity = request.POST.get("quantity")
+        account_number = request.POST.get("account_number")
+        print("Request received to amend robot record for", robot_name)
 
-        if message == "BUY":
-            os.system('/home/apavlics/FFM_WEB/python_web/venv/bin/python /home/apavlics/FFM_WEB/ffm_web/mysite/processes/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q {quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
-        elif (message.decode("utf-8")) == "SELL":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/execute.py --env {env} --st_bal {start_bal} --sec {sec} --q -{quantity} --sl perc --slpv {risk_perc} --pl {pl} --sl_prec {sl_prec}'.format(quantity=quantity, start_bal=start_bal, sec=sec, risk_perc=risk_perc, pl=pl, env=env, sl_prec=sl_prec))
-            return HttpResponse(None)
-        elif (message.decode("utf-8")) == "CLOSE":
-            os.system('/home/pavliati/python3/project/bin/python /home/pavliati/mysite/codes/python/close_positions.py --ca all --env live')
-            return HttpResponse(None)
+        # Retrieves back amended robot info and refreshes table
+        robot = Robots.objects.get(name=robot_name)
+        robot.quantity = quantity
+        robot.env = env
+        robot.status = status
+        robot.pyramiding_level = pyramiding_level
+        robot.init_exp = init_exp
+        robot.quantity = quantity
+        robot.account_number = account_number
+        robot.save()
+        print("Amended parameters were saved to database.")
 
-    if request.method == "GET":
-        print("Trade execution")
-        return HttpResponse("This site is for trade execution")
+        robots = Robots.objects.filter().values()
+
+        return render(request, 'robots_app/create_robot.html', {"robots": robots})
+
 
