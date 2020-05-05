@@ -4,56 +4,6 @@
 <!--Space for CSS-->
 {% block style %}
 
-.amend_button{
-    background-color: #008CBA;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 10px;
-}
-
-.table_container{
-    background:white;
-    width: 100%;
-    border-bottom: 1px solid grey;
-    margin:auto;
-}
-
-.robot_form{
-    width:100%;
-    background:red;
-    margin:auto;
-}
-
-.form{
-    width:100%;
-}
-
-.table_input_field{
-    width: 100px;
-    border: 0px solid #555555;
-    font-size: 12px;
-    margin: auto;
-    text-align: center;
-    text-decoration: none;
-}
-
-.table_input_field_2{
-    width: 50px;
-    border: 0px solid #555555;
-    font-size: 12px;
-    text-align: center;
-    text-decoration: none;
-}
-.table_input_text{
-    text-align: left;
-    width: 100%;
-    font-size: 12px;
-    margin:auto;
-}
-
 {% endblock %}
 
 <!--Scripts-->
@@ -65,65 +15,71 @@
 <form class="entry_form" action="{% url 'create robot' %}" method="POST">
     {% csrf_token %}
     <h4>New Robot</h4>
-    <label class="entry_label_name">Robot Name</label><br>
-    <input id="robot_name" class="entry_input_fields" type="text" name="robot_name"
-               placeholder="test_m5, momentum_h1" required><br>
+    <div class="form-group">
+        <input id="robot_name" class="form-control form-control-sm" type="text" name="robot_name"
+                   placeholder="Robot Name" required>
+    </div>
+    <div class="form-group">
+        <input id="strategy_name" class="form-control form-control-sm" type="text" name="strategy_name" placeholder="Strategy" required>
+    </div>
+    <div class="form-group">
+        <input id="security" class="form-control form-control-sm" type="text" name="security" placeholder="Security" required>
+    </div>
+    <div class="form-group">
+        <input id="time_frame" class="form-control form-control-sm" type="text" name="time_frame" placeholder="Timeframe" required>
+    </div>
+    <div class="form-group">
+        <input class="form-control form-control-sm" type="text" name="broker"
+               placeholder="Broker" required>
+    </div>
+    <div class="form-group">
+        <input class="form-control form-control-sm" type="text" name="account_number"
+               placeholder="Account Number" required>
+    </div>
+    <div class="form-group">
+        <label for="quantity">Quantity</label>
+        <input class="form-control form-control-sm" type="number" id="quantity" name="quantity" min="0" value="0" required>
+    </div>
+    <div class="form-group">
+        <label for="pyramiding_level">Pyramiding Level</label>
+        <input class="form-control form-control-sm" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0" required>
+    </div>
+    <div class="form-group">
+        <label for="init_exp">Initial Exposure Level</label>
+        <input class="form-control form-control-sm" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00" required>
+    </div>
 
-    <label class="entry_label_name">Strategy Name</label><br>
-    <input id="strategy_name" class="entry_input_fields" type="text" name="strategy_name" placeholder="strategy_momentum" required><br>
-
-    <label class="entry_label_name">Security</label><br>
-    <input id="security" class="entry_input_fields" type="text" name="security" placeholder="EUR_USD, SPX500" required><br>
-
-    <label class="entry_label_name">Time Frame</label><br>
-    <input id="time_frame" class="entry_input_fields" type="text" name="time_frame" placeholder="M5,H1" required><br>
-
-    <label class="entry_label_name" for="quantity">Quantity</label><br>
-    <input class="entry_input_fields" type="number" id="quantity" name="quantity" min="0" value="0" required><br>
-
-    <label class="entry_label_name" for="pyramiding_level">Pyramiding Level</label><br>
-    <input class="entry_input_fields" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0" required><br>
-
-    <label class="entry_label_name" for="init_exp">Initial Exposure Level</label><br>
-    <input class="entry_input_fields" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00" required><br>
-
-    <label class="entry_label_name" for="sl_policy">Stop Loss Policy</label>
-    <div>
-        <select class="entry_input_fields" id="sl_policy" name="sl_policy" required>
+    <div class="form-group">
+        <label for="sl_policy">Stop Loss Policy</label>
+        <select class="form-control form-control-sm" id="sl_policy" name="sl_policy" required>
             <option value="percentage">percentage</option>
             <option value="level">level</option>
         </select>
     </div>
 
-    <label class="entry_label_name">Status</label><br>
-    <div class="radio_button_container">
+    <div class="form-group">
+        <label>Status</label><br>
         <label class="normal_text" for="active">Active</label>
         <input type="radio" id="active" name="status" value="active" required>
         <label class="normal_text" for="inactive">Inactive</label>
-        <input type="radio" id="inactive" name="status" value="inactive"><br>
+        <input type="radio" id="inactive" name="status" value="inactive">
     </div>
 
-    <label class="entry_label_name">Broker</label><br>
-    <input class="entry_input_fields" type="text" name="broker"
-               placeholder="oanda, interactive_brokers" required><br>
-
-    <label class="entry_label_name">Account Number</label><br>
-    <input class="entry_input_fields" type="text" name="account_number"
-               placeholder="334sdfg-egh6633" required><br>
-
-    <label class="entry_label_name">Environment</label>
-    <div class="radio_button_container">
-        <label class="normal_text" for="live_env">Live</label>
-        <input type="radio" id="live_env" name="env" value="live" required>
-        <label class="normal_text" for="demo_env">Demo</label>
-        <input type="radio" id="demo_env" name="env" value="demo"><br>
+    <div class="form-group">
+        <label class="entry_label_name">Environment</label>
+        <div class="form-group">
+            <label class="normal_text" for="live_env">Live</label>
+            <input type="radio" id="live_env" name="env" value="live" required>
+            <label class="normal_text" for="demo_env">Demo</label>
+            <input type="radio" id="demo_env" name="env" value="demo">
+        </div>
     </div>
 
     <script>if ("{{ exist_robots }}" == "exists") {
                         alert("Record already exists in database!");
                     }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
     </script>
-    <input class="submit_button" type="submit", name="button" value="Add New Robot"><br>
+    <input class="btn btn-primary submit_button" type="submit", name="button" value="Add New Robot"><br>
 </form>
 {% endblock %}
 
@@ -134,12 +90,83 @@
         <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
         {% csrf_token %}
             <h2>Robot Configuration</h2>
-            <input class="submit_button" type="submit", name="button" value="Show Robots">
+            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots">
         </form>
+        <form action="{% url 'amend robot' %}" method="POST">
+            {% csrf_token %}
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-sm tables">
+                            <thead >
+                                <tr >
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Robot Name</th>
+                                    <th scope="col">Strategy</th>
+                                    <th scope="col">Security</th>
+                                    <th scope="col">Time Frame</th>
+                                    <th scope="col">Broker</th>
+                                    <th scope="col">Environment</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Sl Policy</th>
+                                    <th scope="col">Pyramiding Level</th>
+                                    <th scope="col">Initial Exposure</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Account Number</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for robot in robots %}
+                                <tr>
+                                    <th scope="row" name="robot_name" value="{{robot.name}}">{{robot.id}}</th>
+                                    <td value="{{robot.name}}">{{robot.name}}</td>
+                                    <td name="strategy">{{robot.strategy}}</td>
+                                    <td>{{robot.security}}</td>
+                                    <td>{{robot.time_frame}}</td>
+                                    <td>{{robot.broker}}</td>
+                                    <td><select name="env">
+                                        <option>{{robot.env}}</option>
+                                        {% if robot.env == "demo"%}
+                                        <option>live</option>
+                                        {% else  %}
+                                        <option>demo</option>
+                                        {% endif %}
+                                        </select>
+                                    </td>
+                                    <td><select name="sl_policy">
+                                        <option>{{robot.sl_policy}}</option>
+                                        {% if robot.sl_policy == "percentage"%}
+                                        <option>level</option>
+                                        {% else  %}
+                                        <option>percentage</option>
+                                        {% endif %}
+                                        </select>
+                                    </td>
+                                    <td><select name="sl_policy">
+                                        <option>{{robot.sl_policy}}</option>
+                                        {% if robot.sl_policy == "percentage"%}
+                                        <option>level</option>
+                                        {% else  %}
+                                        <option>percentage</option>
+                                        {% endif %}
+                                        </select>
+                                    </td>
+                                    <td><input class="form-control" type="number" name="pyramiding_level" min="0" max="10" value="{{robot.pyramiding_level}}"></td>
+                                    <td><input class="form-control" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}"></td>
+                                    <td><input class="form-control" type="number" name="quantity" min="0" value="{{robot.quantity}}"></td>
+                                    <td><input class="form-control" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}"></td>
+                                    <td><input class="btn btn-primary btn-sm submit_button_2" type="submit" name="button" value="Modify"></button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        </form>
+
         <div class="robot_form">
-            {% for robot in robots %}
-            <form class="form" action="{% url 'amend robot' %}" method="POST">
-                {% csrf_token %}
+
+            <form class="form" >
+
                 <input type="hidden" name="robot_name" value="{{robot.name}}">
                 <label class="table_input_text">{{robot.id}}</label>
                 <label class="table_input_text" value="{{robot.name}}">{{robot.name}}</label>
@@ -147,14 +174,7 @@
                 <label class="table_input_text">{{robot.security}}</label>
                 <label class="table_input_text">{{robot.time_frame}}</label>
                 <label class="table_input_text">{{robot.broker}}</label>
-                <select class="table_input_field" name="env">
-                    <option>{{robot.env}}</option>
-                    {% if robot.env == "demo"%}
-                    <option>live</option>
-                    {% else  %}
-                    <option>demo</option>
-                    {% endif %}
-                </select>
+
                 <label class="table_input_text">Status:</label>
                 <select class="table_input_field" name="status">
                     <option>{{robot.status}}</option>
@@ -178,7 +198,7 @@
                 <input class="table_input_field" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
                 <input class="amend_button" type="submit" value="Modify">
             </form>
-            {% endfor %}
+
         </div>
     </div>
 {% endblock %}

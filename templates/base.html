@@ -1,59 +1,3 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="en">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <title>Title</title>-->
-<!--    {% load static %}-->
-<!--    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">-->
-<!--    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>-->
-<!--</head>-->
-
-<!--<script>-->
-<!--    {% block script %}-->
-
-<!--    {% endblock %}-->
-<!--</script>-->
-
-<!--<style>-->
-<!--    {% block style %}-->
-
-<!--    {% endblock %}-->
-<!--</style>-->
-
-<!--<body>-->
-<!--    <header></header>-->
-<!--    <div class="container">-->
-<!--        <aside class="left_panel">-->
-<!--            <form action="{% url 'home_page' %}">-->
-<!--                {% csrf_token %}-->
-<!--                <input class="menu_button" type="submit", name="button" value="Home">-->
-<!--            </form>-->
-<!--            <form action="{% url 'portfolio main' %}">-->
-<!--                {% csrf_token %}-->
-<!--                <input class="menu_button" type="submit", name="button" value="Portfolio">-->
-<!--            </form>-->
-<!--            <form action="{% url 'reports main' %}">-->
-<!--                {% csrf_token %}-->
-<!--                <input class="menu_button" type="submit", name="button" value="Reports">-->
-<!--            </form>-->
-<!--            <form action="{% url 'risk main template' %}">-->
-<!--                {% csrf_token %}-->
-<!--                <input class="menu_button" type="submit", name="button" value="Risk">-->
-<!--            </form>-->
-<!--            <form action="{% url 'robots main' %}">-->
-<!--                {% csrf_token %}-->
-<!--                <input class="menu_button" type="submit", name="button" value="Robots">-->
-<!--            </form>-->
-<!--        </aside>-->
-<!--        <main>-->
-<!--            {% block main_block%}-->
-<!--            {% endblock %}-->
-<!--        </main>-->
-<!--
-    </div>-->
-<!--</body>-->
-<!--</html>-->
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -69,80 +13,133 @@
         .my_container{
             width:1800px;
             height:2000px;
-            background: red;
-
+            background: white;
         }
 
         .left{
             width:30%;
-            background:white;
+            background: #E9E7E0;
             border-right: 1px solid grey;
+            margin-top: 2px;
+        }
+
+        .right{
+            background: #E9E7E0;
+            margin-top: 2px;
+
         }
 
         .main_panel{
-            background: white;
+            background: #E9E7E0;
+            margin-top: 2px;
         }
 
         .nav_bar{
+            background: #19393D;
             position: fixed;
             top: 0;
             right: 0;
             left: 0;
             z-index: 1030;
             box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-            margin-left: 10px;
-            margin-right: 10px;
-
         }
 
         .side_bar{
-            padding-top: 90px;
-            font-size: 12px;
+            padding-top: 10px;
+            font-size: 14px;
+            color: #49B0C2;
         }
 
         .entry_form{
-            font-size: 12px;
-            margin:auto;
+            font-size: 14px;
+            color: #19393D;
+            background: #B5A22A;
+            padding: 20px;
+            margin-left: 20px;
+            border-radius: 5px;
+
+        }
+
+        .submit_button{
+            background: #AC5C26;
+            outline: 0;
+            border-style: none !important;
+        }
+
+        .submit_button_2{
+            background: #49B0C2;
+            outline: 0;
+            border-style: none !important;
+        }
+
+        .row_nav_bar{
+            height: 65px;
+            }
+
+        .main_area{
+            height: 100%;
+        }
+
+        .link_color{
+            color: #19393D;
+        }
+
+        .tables{
+            max-width: none;
+            table-layout: fixed;
+            padding: auto;
+            margin: auto;
+            font-size: 10px;
+
+        }
+
+        th {
+            background-color: #19393D;
+            color: white;
         }
 
     </style>
   </head>
   <body>
-    <div>
-        <nav class="navbar navbar-dark bg-primary nav_bar">
-        <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
-        <form class="form-inline">
-            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-        </form>
-    </nav>
-    </div>
-
     <div class="container-fluid my_container">
-        <div class="row">
-            <div class="col-2 left">
-                <div class="nav flex-column nav-pills  side_bar" id="v-pills-tab" role="navigation" aria-orientation="vertical">
-                    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="{% url 'home_page' %}" role="tab" aria-controls="v-pills-home" aria-selected="true">Home</a>
-                    <a class="nav-link navbar-brand" id="v-pills-profile-tab" data-toggle="pill" href="{% url 'portfolio main' %}" role="navigation" aria-controls="v-pills-profile" aria-selected="false">Portfolio</a>
-                    <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">Risk</a>
-                    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Robots</a>
-                    <a class="nav-link" id="settings" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a>
+<!--        NAV Bar-->
+        <div>
+            <nav class="navbar navbar-dark nav_bar">
+                <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
+                <form class="form-inline">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                </form>
+            </nav>
+        </div>
+        <div class="container-fluid my_container row_nav_bar">
+            <div class="col"></div>
+        </div>
+        <div class="row main_area">
+<!--            Left Panel-->
+            <div class="col-1 left">
+                <div class="nav flex-column nav-pills side_bar">
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'home_page' %}">Home</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'portfolio main' %}">Portfolio</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'reports main' %}">Reports</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'risk main template' %}">Risk</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'robots main' %}">Robots</a>
+                    <a class="nav-link link_color font-weight-bold" href="#v-pills-settings">Settings</a>
                 </div>
+            </div>
+<!--            Main Panel-->
+            <main class="col-9 main_panel">
+                {% block main_block%}
+                {% endblock %}
+            </main>
+            <div class="col-2 right">
                 <div class="navbar-brand" role="tablist" aria-orientation="vertical">
+<!--                    Place for entry box-->
+                    {% block entry_form %}
 
-                    <form class="nav flex-column nav-pills side_bar form-group entry_form" action="{% url 'create broker account' %}" method="POST">
-                        {% block entry_form %}
-
-                        {% endblock %}
-                    </form>
-
+                    {% endblock %}
                 </div>
-
             </div>
-            <div class="col-10 main_panel">
-
-            </div>
-
         </div>
     </div>
 
@@ -154,3 +151,15 @@
 
   </body>
 </html>
+
+
+<!----
+
+background color: E9E7E0
+blue: 49B0C2
+yellow:B5A22A
+red like : AC5C26
+strong green : 19393D
+
+
+>

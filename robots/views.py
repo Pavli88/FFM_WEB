@@ -122,6 +122,7 @@ def amend_robot(request):
 
         # Gets data from html table
         robot_name = request.POST.get("robot_name")
+        print(robot_name)
         env = request.POST.get("env")
         status = request.POST.get("status")
         pyramiding_level = request.POST.get("pyramiding_level")
