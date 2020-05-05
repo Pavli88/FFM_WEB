@@ -1,4 +1,4 @@
 node_modules/
 *.pyc
-mysite/credentials.py
+#mysite/credentials.py
 __pycache__/
