@@ -90,36 +90,54 @@
             left: 0;
             z-index: 1030;
             box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+            margin-left: 10px;
+            margin-right: 10px;
 
         }
 
         .side_bar{
             padding-top: 90px;
+            font-size: 12px;
+        }
+
+        .entry_form{
+            font-size: 12px;
+            margin:auto;
         }
 
     </style>
   </head>
   <body>
-    <nav class="navbar navbar-dark bg-primary nav_bar">
+    <div>
+        <nav class="navbar navbar-dark bg-primary nav_bar">
         <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
         <form class="form-inline">
             <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
         </form>
     </nav>
+    </div>
+
     <div class="container-fluid my_container">
         <div class="row">
             <div class="col-2 left">
-                <div class="nav flex-column nav-pills side_bar" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Home</a>
-                    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">Portfolio</a>
+                <div class="nav flex-column nav-pills  side_bar" id="v-pills-tab" role="navigation" aria-orientation="vertical">
+                    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="{% url 'home_page' %}" role="tab" aria-controls="v-pills-home" aria-selected="true">Home</a>
+                    <a class="nav-link navbar-brand" id="v-pills-profile-tab" data-toggle="pill" href="{% url 'portfolio main' %}" role="navigation" aria-controls="v-pills-profile" aria-selected="false">Portfolio</a>
                     <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">Risk</a>
                     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Robots</a>
                     <a class="nav-link" id="settings" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a>
                 </div>
-                {% block entry_form %}
+                <div class="navbar-brand" role="tablist" aria-orientation="vertical">
 
-                {% endblock %}
+                    <form class="nav flex-column nav-pills side_bar form-group entry_form" action="{% url 'create broker account' %}" method="POST">
+                        {% block entry_form %}
+
+                        {% endblock %}
+                    </form>
+
+                </div>
+
             </div>
             <div class="col-10 main_panel">
 
