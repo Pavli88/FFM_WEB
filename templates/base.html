@@ -1,57 +1,138 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <title>Title</title>-->
+<!--    {% load static %}-->
+<!--    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>-->
+<!--</head>-->
+
+<!--<script>-->
+<!--    {% block script %}-->
+
+<!--    {% endblock %}-->
+<!--</script>-->
+
+<!--<style>-->
+<!--    {% block style %}-->
+
+<!--    {% endblock %}-->
+<!--</style>-->
+
+<!--<body>-->
+<!--    <header></header>-->
+<!--    <div class="container">-->
+<!--        <aside class="left_panel">-->
+<!--            <form action="{% url 'home_page' %}">-->
+<!--                {% csrf_token %}-->
+<!--                <input class="menu_button" type="submit", name="button" value="Home">-->
+<!--            </form>-->
+<!--            <form action="{% url 'portfolio main' %}">-->
+<!--                {% csrf_token %}-->
+<!--                <input class="menu_button" type="submit", name="button" value="Portfolio">-->
+<!--            </form>-->
+<!--            <form action="{% url 'reports main' %}">-->
+<!--                {% csrf_token %}-->
+<!--                <input class="menu_button" type="submit", name="button" value="Reports">-->
+<!--            </form>-->
+<!--            <form action="{% url 'risk main template' %}">-->
+<!--                {% csrf_token %}-->
+<!--                <input class="menu_button" type="submit", name="button" value="Risk">-->
+<!--            </form>-->
+<!--            <form action="{% url 'robots main' %}">-->
+<!--                {% csrf_token %}-->
+<!--                <input class="menu_button" type="submit", name="button" value="Robots">-->
+<!--            </form>-->
+<!--        </aside>-->
+<!--        <main>-->
+<!--            {% block main_block%}-->
+<!--            {% endblock %}-->
+<!--        </main>-->
+<!--
+    </div>-->
+<!--</body>-->
+<!--</html>-->
+
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
-</head>
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<script>
-    {% block script %}
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    {% endblock %}
-</script>
+    <title>Hello, world!</title>
+    <style>
+        .my_container{
+            width:1800px;
+            height:2000px;
+            background: red;
 
-<style>
-    {% block style %}
+        }
 
-    {% endblock %}
-</style>
+        .left{
+            width:30%;
+            background:white;
+            border-right: 1px solid grey;
+        }
 
-<body>
-    <header></header>
-    <div class="container">
-        <aside class="left_panel">
-            <form action="{% url 'home_page' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Home">
-            </form>
-            <form action="{% url 'portfolio main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Portfolio">
-            </form>
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
-            </form>
-            <form action="{% url 'robots main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
-        </aside>
-        <main>
-            {% block main_block%}
-            {% endblock %}
-        </main>
-        <aside class="right_panel">
-            {% block entry_form %}
-            {% endblock %}
-        </aside>
+        .main_panel{
+            background: white;
+        }
+
+        .nav_bar{
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+
+        }
+
+        .side_bar{
+            padding-top: 90px;
+        }
+
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-dark bg-primary nav_bar">
+        <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
+        <form class="form-inline">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </nav>
+    <div class="container-fluid my_container">
+        <div class="row">
+            <div class="col-2 left">
+                <div class="nav flex-column nav-pills side_bar" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Home</a>
+                    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">Portfolio</a>
+                    <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">Risk</a>
+                    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Robots</a>
+                    <a class="nav-link" id="settings" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a>
+                </div>
+                {% block entry_form %}
+
+                {% endblock %}
+            </div>
+            <div class="col-10 main_panel">
+
+            </div>
+
+        </div>
     </div>
-</body>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+  </body>
 </html>

@@ -4,8 +4,10 @@
     <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
                 {% csrf_token %}
                 <h4>New Broker Account</h4>
-                <label class="entry_label_name">Broker Name</label><br>
-                <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>
+        <div class="form-group row">
+            <label class="entry_label_name">Broker Name</label><br>
+            <input  type="text" name="broker_name" placeholder="Broker name" required><br>
+        </div>
 
                 <label class="entry_label_name">Account Number</label><br>
                 <input class="entry_input_fields" type="text" name="account_number" placeholder="Account Number" required><br>
@@ -24,7 +26,7 @@
                         alert("Record already exists in database!");
                     }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
                 </script>
-                <input class="submit_button" type="submit", name="button" value="Add New Account"><br>
+                <input class="submit_button" type="submit" name="button" value="Add New Account"><br>
             </form>
     {% endblock %}
 
@@ -35,4 +37,28 @@
     <form action="{% url 'test_close_execution' %}" method="POST">
         <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
     </form>
+    <canvas id="line_chart" width="100" height="50">
+        <script>
+            var ctx = document.getElementById('line_chart').getContext('2d');
+            var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'My First dataset',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [0, 10, 5, 2, 20, 30, 45]
+                }]
+            },
+
+            // Configuration options go here
+            options: {}
+            });
+        </script>
+
+    </canvas>
     {% endblock %}
