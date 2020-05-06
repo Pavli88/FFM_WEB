@@ -92,13 +92,13 @@
             <h2>Robot Configuration</h2>
             <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots">
         </form>
-        <form action="{% url 'amend robot' %}" method="POST">
+        <form id="amend_form" action="{% url 'amend robot' %}" method="POST">
             {% csrf_token %}
                 <div class="row">
                     <div class="col-12">
                         <table class="table table-sm tables">
                             <thead >
-                                <tr >
+                                <tr>
                                     <th scope="col">ID</th>
                                     <th scope="col">Robot Name</th>
                                     <th scope="col">Strategy</th>
@@ -116,14 +116,14 @@
                             </thead>
                             <tbody>
                                 {% for robot in robots %}
-                                <tr>
-                                    <th scope="row" name="robot_name" value="{{robot.name}}">{{robot.id}}</th>
-                                    <td value="{{robot.name}}">{{robot.name}}</td>
+                                <tr class="row'{{robot.id}}'">
+                                    <th scope="row">{{robot.id}}</th>
+                                    <td><input class="form-control" type="text" name="robot_name" value="{{robot.name}}">{{robot.name}}</td>
                                     <td name="strategy">{{robot.strategy}}</td>
                                     <td>{{robot.security}}</td>
                                     <td>{{robot.time_frame}}</td>
                                     <td>{{robot.broker}}</td>
-                                    <td><select name="env">
+                                    <td><select name="env" value="{{robot.env}}">
                                         <option>{{robot.env}}</option>
                                         {% if robot.env == "demo"%}
                                         <option>live</option>
@@ -132,12 +132,12 @@
                                         {% endif %}
                                         </select>
                                     </td>
-                                    <td><select name="sl_policy">
-                                        <option>{{robot.sl_policy}}</option>
-                                        {% if robot.sl_policy == "percentage"%}
-                                        <option>level</option>
+                                    <td><select name="status" value="{{robot.status}}">
+                                        <option>{{robot.status}}</option>
+                                        {% if robot.env == "active"%}
+                                        <option>active</option>
                                         {% else  %}
-                                        <option>percentage</option>
+                                        <option>inactive</option>
                                         {% endif %}
                                         </select>
                                     </td>
@@ -154,7 +154,8 @@
                                     <td><input class="form-control" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}"></td>
                                     <td><input class="form-control" type="number" name="quantity" min="0" value="{{robot.quantity}}"></td>
                                     <td><input class="form-control" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}"></td>
-                                    <td><input class="btn btn-primary btn-sm submit_button_2" type="submit" name="button" value="Modify"></button></td>
+                                    <td><button class="btn btn-primary btn-sm submit_button_2" id="button{{robot.id}}"></button>Modify</td>
+
                                 </tr>
                                 {% endfor %}
                             </tbody>

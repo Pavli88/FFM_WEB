@@ -122,14 +122,22 @@ def amend_robot(request):
 
         # Gets data from html table
         robot_name = request.POST.get("robot_name")
-        print(robot_name)
         env = request.POST.get("env")
         status = request.POST.get("status")
         pyramiding_level = request.POST.get("pyramiding_level")
         init_exp = request.POST.get("init_exp")
         quantity = request.POST.get("quantity")
         account_number = request.POST.get("account_number")
+
         print("Request received to amend robot record for", robot_name)
+        print("New Robot Parameters:")
+        print("Robot Name:", robot_name)
+        print("Environment:", env)
+        print("Status:", status)
+        print("P Level:", pyramiding_level)
+        print("Initial Exp:", init_exp)
+        print("Quantity", quantity)
+        print("Account Number", account_number)
 
         # Retrieves back amended robot info and refreshes table
         robot = Robots.objects.get(name=robot_name)
