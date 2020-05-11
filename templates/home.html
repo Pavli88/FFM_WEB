@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
+
     {% block entry_form %}
     <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
-                {% csrf_token %}
-                <h4>New Broker Account</h4>
-                <label class="entry_label_name">Broker Name</label><br>
-                <input class="entry_input_fields" type="text" name="broker_name" placeholder="Broker name" required><br>
+        {% csrf_token %}
+        <h4>New Account</h4>
+        <div class="form-group">
+            <input class="form-control form-control-sm" type="text" name="broker_name" placeholder="Broker Name" required>
+        </div>
+        <div class="form-group">
+            <input class="form-control form-control-sm" type="text" name="account_number" placeholder="Account Number" required>
+        </div>
+        <div class="form-group">
+            <input class="form-control form-control-sm" type="text" name="token" placeholder="Account Token" required>
+        </div>
+        <div class="form-group">
+            <label>Environment</label>
+            <div class="radio_button_container">
+                <label for="live_env">Live</label>
+                <input type="radio" id="live_env" name="env" value="live" required>
+                <label for="demo_env">Demo</label>
+                <input type="radio" id="demo_env" name="env" value="demo"><br>
+            </div>
+        </div>
 
-                <label class="entry_label_name">Account Number</label><br>
-                <input class="entry_input_fields" type="text" name="account_number" placeholder="Account Number" required><br>
-
-                <label class="entry_label_name">Account Token</label><br>
-                <input class="entry_input_fields" type="text" name="token" placeholder="Token" required><br>
-
-                <label class="entry_label_name">Environment</label>
-                <div class="radio_button_container">
-                    <label class="normal_text" for="live_env">Live</label>
-                    <input type="radio" id="live_env" name="env" value="live" required>
-                    <label class="normal_text" for="demo_env">Demo</label>
-                    <input type="radio" id="demo_env" name="env" value="demo"><br>
-                </div>
-                <script>if ("{{ exist_robots }}" == "exists") {
-                        alert("Record already exists in database!");
-                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
-                </script>
-                <input class="submit_button" type="submit", name="button" value="Add New Account"><br>
-            </form>
+        <script>if ("{{ exist_robots }}" == "exists") {
+                                alert("Record already exists in database!");
+                            }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
+        </script>
+        <input class="btn btn-primary btn-sm submit_button" type="submit" name="button" value="Add New Account">
+    </form>
     {% endblock %}
 
     {% block main_block%}
@@ -35,4 +39,28 @@
     <form action="{% url 'test_close_execution' %}" method="POST">
         <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
     </form>
+    <canvas id="line_chart" width="100" height="50">
+        <script>
+            var ctx = document.getElementById('line_chart').getContext('2d');
+            var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'My First dataset',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [0, 10, 5, 2, 20, 30, 45]
+                }]
+            },
+
+            // Configuration options go here
+            options: {}
+            });
+        </script>
+
+    </canvas>
     {% endblock %}

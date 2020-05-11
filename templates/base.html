@@ -1,57 +1,174 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/main/main_layout.css' %}">
-</head>
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<script>
-    {% block script %}
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    {% endblock %}
-</script>
+    <!--JQuery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <title>Hello, world!</title>
+    <style>
+        .my_container{
+            width:1800px;
+            height:2000px;
+            background: white;
+        }
 
-<style>
-    {% block style %}
+        .left{
+            width:30%;
+            background: #E9E7E0;
+            border-right: 1px solid grey;
+            margin-top: 2px;
+        }
 
-    {% endblock %}
-</style>
+        .right{
+            background: #E9E7E0;
+            margin-top: 2px;
 
-<body>
-    <header></header>
-    <div class="container">
-        <aside class="left_panel">
-            <form action="{% url 'home_page' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Home">
-            </form>
-            <form action="{% url 'portfolio main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Portfolio">
-            </form>
-            <form action="{% url 'reports main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Reports">
-            </form>
-            <form action="{% url 'risk main template' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Risk">
-            </form>
-            <form action="{% url 'robots main' %}">
-                {% csrf_token %}
-                <input class="menu_button" type="submit", name="button" value="Robots">
-            </form>
-        </aside>
-        <main>
-            {% block main_block%}
-            {% endblock %}
-        </main>
-        <aside class="right_panel">
-            {% block entry_form %}
-            {% endblock %}
-        </aside>
+        }
+
+        .main_panel{
+            background: #E9E7E0;
+            margin-top: 2px;
+        }
+
+        .nav_bar{
+            background: #19393D;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+        .side_bar{
+            padding-top: 10px;
+            font-size: 14px;
+            color: #49B0C2;
+        }
+
+        .entry_form{
+            font-size: 14px;
+            color: #19393D;
+            background: #B5A22A;
+            padding: 20px;
+            margin-left: 20px;
+            border-radius: 5px;
+
+        }
+
+        .submit_button{
+            background: #AC5C26;
+            outline: 0;
+            border-style: none !important;
+        }
+
+        .submit_button_2{
+            background: #49B0C2;
+            outline: 0;
+            border-style: none !important;
+        }
+
+        .row_nav_bar{
+            height: 65px;
+            }
+
+        .main_area{
+            height: 100%;
+        }
+
+        .link_color{
+            color: #19393D;
+        }
+
+        .tables{
+            max-width: none;
+            table-layout: fixed;
+            padding: auto;
+            margin: auto;
+            font-size: 10px;
+
+        }
+
+        th {
+            background-color: #19393D;
+            color: white;
+        }
+
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid my_container">
+<!--        NAV Bar-->
+        <div>
+            <nav class="navbar navbar-dark nav_bar">
+                <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
+                <form class="form-inline">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                </form>
+            </nav>
+        </div>
+        <div class="container-fluid my_container row_nav_bar">
+            <div class="col"></div>
+        </div>
+        <div class="row main_area">
+<!--            Left Panel-->
+            <div class="col-1 left">
+                <div class="nav flex-column nav-pills side_bar">
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'home_page' %}">Home</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'portfolio main' %}">Portfolio</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'reports main' %}">Reports</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'risk main template' %}">Risk</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'robots main' %}">Robots</a>
+                    <a class="nav-link link_color font-weight-bold" href="#v-pills-settings">Settings</a>
+                </div>
+            </div>
+<!--            Main Panel-->
+            <main class="col-9 main_panel">
+                {% block main_block%}
+                {% endblock %}
+            </main>
+            <div class="col-2 right">
+                <div class="navbar-brand" role="tablist" aria-orientation="vertical">
+<!--                    Place for entry box-->
+                    {% block entry_form %}
+
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
     </div>
-</body>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!--    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script>
+    $("button").click(function(){
+        var $row = $(this).closest("tr"),
+            $tds = $row.find("td");
+        $.each($tds, function() {
+            console.log($(this).children().val());});
+        });
+    </script>
+  </body>
 </html>
+
+
+<!----
+
+background color: E9E7E0
+blue: 49B0C2
+yellow:B5A22A
+red like : AC5C26
+strong green : 19393D
+
+
+>
