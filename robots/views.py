@@ -119,6 +119,9 @@ def amend_robot(request):
         """
         Function to amend existing robot data in the database.
         """
+        message = request.body
+        message = str(message.decode("utf-8"))
+        print("Ajax", message)
 
         # Gets data from html table
         robot_name = request.POST.get("robot_name")

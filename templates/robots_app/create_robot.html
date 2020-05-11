@@ -92,7 +92,7 @@
             <h2>Robot Configuration</h2>
             <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots">
         </form>
-<!--        <form id="amend_form" action="{% url 'amend robot' %}" method="POST">-->
+        <form id="amend_form" action="{% url 'amend robot' %}" method="POST">
             {% csrf_token %}
                 <div class="row">
                     <div class="col-12">
@@ -162,7 +162,7 @@
                         </table>
                     </div>
                 </div>
-<!--        </form>-->
+        </form>
         <p>this is a paragraph</p>
         <div class="robot_form">
 
