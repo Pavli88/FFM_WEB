@@ -92,7 +92,7 @@
             <h2>Robot Configuration</h2>
             <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots">
         </form>
-        <form id="amend_form" action="{% url 'amend robot' %}" method="POST">
+<!--        <form id="amend_form" action="{% url 'amend robot' %}" method="POST">-->
             {% csrf_token %}
                 <div class="row">
                     <div class="col-12">
@@ -116,9 +116,9 @@
                             </thead>
                             <tbody>
                                 {% for robot in robots %}
-                                <tr class="row'{{robot.id}}'">
+                                <tr>
                                     <th scope="row">{{robot.id}}</th>
-                                    <td><input class="form-control" type="text" name="robot_name" value="{{robot.name}}">{{robot.name}}</td>
+                                    <td><input class="form-control" type="text" name="robot_name" value="{{robot.name}}"></td>
                                     <td name="strategy">{{robot.strategy}}</td>
                                     <td>{{robot.security}}</td>
                                     <td>{{robot.time_frame}}</td>
@@ -154,7 +154,7 @@
                                     <td><input class="form-control" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}"></td>
                                     <td><input class="form-control" type="number" name="quantity" min="0" value="{{robot.quantity}}"></td>
                                     <td><input class="form-control" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}"></td>
-                                    <td><button class="btn btn-primary btn-sm submit_button_2" id="button{{robot.id}}"></button>Modify</td>
+                                    <td><button class="btn btn-primary btn-sm submit_button_2"></button>Modify</td>
 
                                 </tr>
                                 {% endfor %}
@@ -162,8 +162,8 @@
                         </table>
                     </div>
                 </div>
-        </form>
-
+<!--        </form>-->
+        <p>this is a paragraph</p>
         <div class="robot_form">
 
             <form class="form" >
@@ -202,6 +202,10 @@
 
         </div>
     </div>
+
+
 {% endblock %}
+
+
 
 
