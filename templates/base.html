@@ -72,6 +72,7 @@
             background: #49B0C2;
             outline: 0;
             border-style: none !important;
+            margin-left:20px;
         }
 
         .row_nav_bar{
@@ -89,10 +90,10 @@
         .tables{
             max-width: none;
             table-layout: fixed;
-            padding: auto;
+            padding: 0;
             margin: auto;
-            font-size: 10px;
-
+            font-size: 12px;
+            text-align: center;
         }
 
         th {
@@ -100,6 +101,10 @@
             color: white;
         }
 
+
+    {% block css_place %}
+
+    {% endblock %}
     </style>
   </head>
   <body>
