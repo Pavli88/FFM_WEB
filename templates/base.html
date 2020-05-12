@@ -10,7 +10,10 @@
 
     <!--JQuery-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <title>Hello, world!</title>
+    {% block title %}
+
+    {% endblock %}
+    <title>Home Page</title>
     <style>
         .my_container{
             width:1800px;
@@ -156,23 +159,7 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script>
-    $("button").click(function(){
 
-        var $row = $(this).closest("tr"),
-            $tds = $row.find("td");
-
-        var robotDict = {}
-
-        $.each($tds, function() {
-            var dictVal = $(this).children().val();
-            var dictKey = $(this).children().attr("name");
-            console.log("attr:", dictKey);
-            console.log("value:", dictVal);
-            robotDict[dictKey] = dictVal;
-            });
-        console.log("This is the final dict:", robotDict);
-        $("#amend_form").submit(robotDict);
-        });
     </script>
   </body>
 </html>
