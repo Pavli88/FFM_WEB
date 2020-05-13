@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-    {% block entry_form %}
-    <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
+{% block entry_form %}
+<form class="entry_form" action="{% url 'create broker account' %}" method="POST">
         {% csrf_token %}
         <h4>New Account</h4>
         <div class="form-group">
@@ -31,8 +31,60 @@
         </script>
         <input class="btn btn-primary btn-sm submit_button" type="submit" name="button" value="Add New Account">
     </form>
-    {% endblock %}
+{% endblock %}
 
-    {% block main_block%}
+{% block main_block%}
+<div class="container-fluid">
+    <!--Form to get back all robots-->
+    <div class="row" style="padding:15px;">
+        <form style="display:flex;" action="{% url 'show accounts' %}" method="POST">
+        {% csrf_token %}
+            <h2>Account Configuration</h2>
+            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Accounts">
+        </form>
+    </div>
 
-    {% endblock %}
+    <div class="row">
+        <table class="table table-striped tables">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Broker Name</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col">Token</th>
+                    <th scope="col">Environment</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for account in accounts %}
+                <tr style="height:10px;">
+                    <form action="{% url 'amend robot' %}" method="POST">
+                        {% csrf_token %}
+                        <td>
+                            <label>{{account.id}}</label>
+                        </td>
+                        <td>
+                            <label>{{account.broker_name}}</label>
+                        </td>
+                        <td>
+                            <label>{{account.account_number}}</label>
+                        </td>
+                        <td>
+                            <label>{{account.acces_token}}</label>
+                        </td>
+                        <td>
+                            <label>{{account.env}}</label>
+                        </td>
+
+                        <td>
+                            <button class="btn btn-primary mb-2">Modify</button>
+                        </td>
+                    </form>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

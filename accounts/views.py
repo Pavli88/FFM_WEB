@@ -58,3 +58,19 @@ def create_broker(request):
         print("Error occured while inserting data to database. "
               "Either data type or server configuration is not correct.")
         return render(request, 'accounts/accounts_main.html', {"exist_broker": "issue"})
+
+
+def get_all_accounts(request):
+
+    """
+    Queries out all accounts from database and passes it back to the html
+    :param request:
+    :return:
+    """
+    accounts = BrokerAccounts.objects.filter().values()
+
+    header_list = []
+    for header in accounts[0]:
+        header_list.append(header)
+
+    return render(request, 'accounts/accounts_main.html', {"accounts": accounts})
