@@ -19,10 +19,10 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        message = request.body
-        message = str(message.decode("utf-8"))
+        # message = request.body
+        # message = str(message.decode("utf-8"))
 
-        #message = "EUR_USD BUY momentum M5 test"
+        message = "BUY test"
         message = message.split()
 
         print("")
@@ -30,11 +30,8 @@ def new_execution(request):
         print("TRADE SIGNAL")
         print("------------------------------------------------------------------------")
 
-        signal_params = {"security": message[0],
-                         "trade_side": message[1],
-                         "strategy": message[2],
-                         "time_frame": message[3],
-                         "robot_name": message[4]}
+        signal_params = {"trade_side": message[0],
+                         "robot_name": message[1]}
 
         print("Signal received. Parameters:", signal_params)
         print("Looking for robot that is tracking:", signal_params)
@@ -42,7 +39,6 @@ def new_execution(request):
         # Gets robot data from database
         try:
             robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
-            print(robot[0])
         except:
             print("Robot does not exists in database! Process stopped!")
             return HttpResponse(None)
@@ -59,13 +55,13 @@ def new_execution(request):
         print("Security info")
         print("-------------")
         trade_side = signal_params["trade_side"]
-        security = signal_params["security"]
+        security = robot[0]["security"]
         print("Security:", security)
         print("Trade Side:", trade_side)
         print("")
         print("Checking robot status...")
 
-        if message[0] == robot[0]["security"]:
+        if message[0] == "BUY" or message[0] == "SELL":
             pass
         else:
             print("Trade signal was created incorrectly security is not the same that was assigned to the robot!")
@@ -94,7 +90,7 @@ def new_execution(request):
             print("Account Number:", account_number)
 
             if broker == "oanda":
-                print("Retrieving access token for", broker, robot[0]["env"],robot[0]["account_number"])
+                print("Retrieving access token for", broker, robot[0]["env"], robot[0]["account_number"])
 
                 # Fetching broker parameters from database
 
@@ -113,7 +109,14 @@ def new_execution(request):
                 print("")
                 print("Creating Oanda connection instance")
 
-                oanda = Oanda(environment="practice",
+                if environment == "demo":
+                    oanda_env = "practice"
+                else:
+                    oanda_env = "live"
+
+                print("Oanda environment:", oanda_env)
+
+                oanda = Oanda(environment=oanda_env,
                               acces_token=acces_token,
                               account_number=account_number)
 
@@ -155,7 +158,7 @@ def new_execution(request):
                 print("Latest Balance", balance)
                 print("")
 
-                print("Evaluating daily daily risk limit.")
+                print("Evaluating daily risk limit.")
                 # Checking if trade can be executed based on daily risk limit
                 if starting_balance - risk_amount > balance:
                     print("You have reached your daily risk limit. Trading is not allowed for this day!")
@@ -170,7 +173,7 @@ def new_execution(request):
                 # Cheking pyramiding
                 try:
                     open_trades_table = oanda.get_open_trades()
-                    open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
+                    open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
 
                     print(open_trades_sec)
                     print("")
@@ -202,7 +205,7 @@ def new_execution(request):
                                                       balance=balance)
 
                 if float(order["stopLossOnFill"]["price"]) < 0:
-                    print("Stopp Loss level is below 0. Trade execution stopped!")
+                    print("Stop Loss level is below 0. Trade execution stopped!")
                     return HttpResponse(None)
 
                 # Saving trade to Database
@@ -220,7 +223,7 @@ def new_execution(request):
                                status="OPEN",
                                open_price=open_price,
                                time_frame=robot[0]["time_frame"],
-                               side=message[1]
+                               side=message[0]
                                )
                 trade.save()
 
@@ -235,32 +238,29 @@ def new_execution(request):
 @csrf_exempt
 def close_all_trades(request):
 
+    """
+    This process closes all trades on a security regardless a robot currently
+    :param request:
+    :return:
+    """
+
     if request.method == "POST":
 
-        message = request.body
-        message = str(message.decode("utf-8"))
+        # message = request.body
+        # message = str(message.decode("utf-8"))
 
-        #message = "EUR_USD CLOSE_ALL momentum M5 test"
-        message = message.split()
+        message = "test"
 
         print("")
         print("------------------------------------------------------------------------")
         print("CLOSE SIGNAL")
         print("------------------------------------------------------------------------")
-
-        signal_params = {"security": message[0],
-                         "trade_side": message[1],
-                         "strategy": message[2],
-                         "time_frame": message[3],
-                         "robot_name": message[4]}
-
-        print("Signal received. Parameters:", signal_params)
-        print("Looking for robot that is tracking:", signal_params)
+        print("Closing trades for robot:", message)
+        print("Looking for robot in database...")
 
         # Gets robot data from database
         try:
-            robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
-            print(robot[0])
+            robot = RobotProcesses().get_robot(name=message)
         except:
             print("Robot does not exists in database! Process stopped!")
             return HttpResponse(None)
@@ -276,18 +276,9 @@ def close_all_trades(request):
         print("-------------")
         print("Security info")
         print("-------------")
-        trade_side = signal_params["trade_side"]
-        security = signal_params["security"]
+        security = robot[0]["security"]
         print("Security:", security)
-        print("Trade Side:", trade_side)
         print("")
-        print("Checking robot status...")
-
-        if message[0] == robot[0]["security"]:
-            pass
-        else:
-            print("Trade signal was created incorrectly security is not the same that was assigned to the robot!")
-            return HttpResponse(None)
 
         print("-----------")
         print("Broker info")
@@ -313,18 +304,25 @@ def close_all_trades(request):
             print("")
 
             print("Creating Oanda connection instance")
-            oanda = Oanda(environment="practice",
+
+            if environment == "demo":
+                oanda_env = "practice"
+            else:
+                oanda_env = "live"
+
+            print("Oanda environment:", oanda_env)
+
+            oanda = Oanda(environment=oanda_env,
                           acces_token=acces_token,
                           account_number=account_number)
 
-            print("Fetching out open positions from broker for", message[0])
+            print("Fetching out open positions from broker for", security)
             open_trades_table = oanda.get_open_trades()
-            open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
-            print(open_trades_sec)
-            print("")
+            open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
 
             print("Fetching out open trades from database...")
             trade = Trades.objects.filter(robot=robot[0]["name"])
+
             for trd in trade:
                 trd.status = "CLOSE"
                 trd.save()
