@@ -4,8 +4,8 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
+from accounts.models import *
 from mysite.models import *
-
 
 # Test execution
 @csrf_exempt
@@ -19,11 +19,10 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
-        # message = message.split()
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "EUR_USD BUY momentum M5 test"
+        #message = "EUR_USD BUY momentum M5 test"
         message = message.split()
 
         print("")
@@ -168,15 +167,17 @@ def new_execution(request):
                 # Fetching out open positions
                 # --> this can be used for risk control later because of the stop lost levels
                 print("Fetching out open positions...")
-                open_trades_table = oanda.get_open_trades()
-                open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
-                print(open_trades_sec)
-                print("")
-
                 # Cheking pyramiding
                 try:
+                    open_trades_table = oanda.get_open_trades()
+                    open_trades_sec = open_trades_table[open_trades_table["instrument"] == message[0]]
+
+                    print(open_trades_sec)
+                    print("")
+
                     open_trade_id_list = len(list(open_trades_table["id"]))
                 except:
+                    print("There are no open trades on the account.")
                     open_trade_id_list = 0
 
                 pyramiding_limit = int(robot[0]["pyramiding_level"])
@@ -199,6 +200,10 @@ def new_execution(request):
                                                       bid_ask=bid_ask,
                                                       initial_exposure=initial_exposure,
                                                       balance=balance)
+
+                if float(order["stopLossOnFill"]["price"]) < 0:
+                    print("Stopp Loss level is below 0. Trade execution stopped!")
+                    return HttpResponse(None)
 
                 # Saving trade to Database
                 print("Saving trade details to database")
@@ -232,11 +237,10 @@ def close_all_trades(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
-        # message = message.split()
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "EUR_USD CLOSE_ALL momentum M5 test"
+        #message = "EUR_USD CLOSE_ALL momentum M5 test"
         message = message.split()
 
         print("")
