@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
 from . import views
-from signals.views import *
 
 urlpatterns = [
     path('', views.home, name="home_page"),
@@ -12,6 +11,6 @@ urlpatterns = [
     path('', include('risk.urls')),
     path('', include('signals.urls')),
     path('', include('portfolio.urls')),
-    path('new_trade/', new_execution, name="test_execution"),
-    path('close_trade', close_all_trades, name="test_close_execution"),
+    path('', include('accounts.urls')),
+
 ]
