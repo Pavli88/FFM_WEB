@@ -24,9 +24,10 @@
             </div>
         </div>
 
-        <script>if ("{{ exist_robots }}" == "exists") {
+        <script>if ("{{ exist_broker }}" == "exists") {
                                 alert("Record already exists in database!");
-                            }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
+                            }else if ("{{ exist_broker }}" == "created") { alert("New record was created!")}
+                            else if ("{{ exist_broker }}" == "issue") { alert("Incorrect data type was given in one of the fields!")}
         </script>
         <input class="btn btn-primary btn-sm submit_button" type="submit" name="button" value="Add New Account">
     </form>
