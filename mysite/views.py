@@ -9,8 +9,24 @@ import pandas as pd
 
 # Home page
 def home(request):
-    robot_form = RobotParams()
-    return render(request, 'home.html', {"robot_form": robot_form})
+    return render(request, 'home.html')
+
+
+def get_results(request):
+
+    trades = Trades.objects.filter(status="CLOSE").values()
+    trade_df = pd.DataFrame(list(trades))
+    pnls = list(trade_df["open_price"]-trade_df["close_price"])
+    pnl_label = [label for label in range(len(pnls))]
+
+    print(pnls)
+    print(pnl_label)
+
+
+
+
+    return render(request, 'home.html', {"pnls": pnls,
+                                         "pnl_label": pnl_label})
 
 
 

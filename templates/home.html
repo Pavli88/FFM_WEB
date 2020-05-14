@@ -186,6 +186,10 @@ h5{
         <form action="{% url 'test_close_execution' %}" method="POST">
             <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
         </form>
+        <form action="{% url 'get_results' %}" method="POST">
+            {% csrf_token %}
+            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Get"><br>
+        </form>
     </div>
 
     <div class="row chart_area">
@@ -199,12 +203,12 @@ h5{
 
                 // The data for our dataset
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    labels: {{ pnl_label }},
                     datasets: [{
                         label: 'My First dataset',
-                        backgroundColor: 'rgb(255, 99, 132)',
-                        borderColor: 'rgb(255, 99, 132)',
-                        data: [0, 10, 5, 2, 20, 30, 45]
+                        backgroundColor: '#19393D',
+                        borderColor: '#19393D',
+                        data: {{ pnls }}
                     }]
                 },
 
@@ -224,12 +228,12 @@ h5{
 
                 // The data for our dataset
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    labels: ['1', '2', '3'],
                     datasets: [{
                         label: 'My First dataset',
                         backgroundColor: 'rgb(255, 99, 132)',
                         borderColor: 'rgb(255, 99, 132)',
-                        data: [0, 10, 5, 2, 20, 30, 45]
+                        data: [0, 10, 5,]
                     }]
                 },
 

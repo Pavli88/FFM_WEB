@@ -11,5 +11,6 @@ urlpatterns = [
     path('', include('signals.urls')),
     path('', include('portfolio.urls')),
     path('', include('accounts.urls')),
+    path('trade_results', views.get_results, name="get_results"),
 
 ]
