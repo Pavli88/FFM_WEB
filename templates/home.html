@@ -1,18 +1,183 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-    {% block entry_form %}
+{% block css_place %}
 
+.trade_log{
+    height:500px;
+    width: 100%;
+    background: white;
+    font-size: 12px;
+    border-bottom: 1px solid grey;
+}
+
+thead, tbody tr {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+    line-height: 5px;
+    height:5px;
+    text-align:center;
+}
+
+tbody {
+    display:block;
+    height:460px;
+    overflow:auto;
+}
+
+h5{
+    margin:5px;
+}
+
+{% endblock %}
+
+    {% block entry_form %}
+    <h5 class="nav-link link_color font-weight-bold">
+        Trade Log
+    </h5>
+    <div class="trade_log">
+        <table class="table">
+          <thead>
+            <tr>
+                <th>Robot</th>
+                <th>Security</th>
+                <th>Action</th>
+                <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+            <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
     {% endblock %}
 
     {% block main_block%}
-    <form action="{% url 'test_execution' %}" method="POST">
-        <input class="submit_button" type="submit", name="button" value="Test Open Trade Execution"><br>
-    </form>
-    <form action="{% url 'test_close_execution' %}" method="POST">
-        <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
-    </form>
-    <canvas id="line_chart" width="100" height="50">
+    <div class="row">
+        <form action="{% url 'test_execution' %}" method="POST">
+            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Open Trade Execution"><br>
+        </form>
+        <form action="{% url 'test_close_execution' %}" method="POST">
+            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
+        </form>
+    </div>
+    <div class="row" style="background:green;">
+        <div class="col" style="width:50%; background:red;">
+            <canvas id="line_chart" width="100%" height="20">
         <script>
             var ctx = document.getElementById('line_chart').getContext('2d');
             var chart = new Chart(ctx, {
@@ -36,4 +201,33 @@
         </script>
 
     </canvas>
+        </div>
+        <div class="col" style="width:50%; background:yellow;">
+            <canvas id="line_chart_2" width="100%" height="20">
+        <script>
+            var ctx = document.getElementById('line_chart').getContext('2d');
+            var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'My First dataset',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [0, 10, 5, 2, 20, 30, 45]
+                }]
+            },
+
+            // Configuration options go here
+            options: {}
+            });
+        </script>
+
+    </canvas>
+        </div>
+    </div>
+
     {% endblock %}
