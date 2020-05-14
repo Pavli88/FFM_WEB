@@ -186,9 +186,30 @@ h5{
         <form action="{% url 'test_close_execution' %}" method="POST">
             <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
         </form>
-        <form action="{% url 'get_results' %}" method="POST">
+
+<!--        Form for submiting robot results-->
+        <form class="form-inline" action="{% url 'get_results' %}" method="POST">
             {% csrf_token %}
-            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Get"><br>
+
+                <label class="col-sm-2 col-form-label">Trade</label>
+                <div class="col-auto">
+                    <select class="form-control">
+                        <option selected>BUY</option>
+                        <option>SELL</option>
+                        <option>ALL</option>
+                    </select>
+                </div>
+
+                <label>Robot</label>
+                <div class="col-auto">
+                    <select class="form-control">
+                        <option>test</option>
+                        <option>test_2</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary mb-2">Submit</button>
+
         </form>
     </div>
 
