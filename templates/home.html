@@ -30,6 +30,18 @@ h5{
     margin:5px;
 }
 
+.menu_bar{
+    height:50px;
+    margin:auto;
+    border-bottom: 1px solid grey;
+}
+
+.chart_area{
+    margin:auto;
+    height:500px;
+    border-bottom: 1px solid grey;
+}
+
 {% endblock %}
 
     {% block entry_form %}
@@ -167,7 +179,7 @@ h5{
     {% endblock %}
 
     {% block main_block%}
-    <div class="row">
+    <div class="row menu_bar">
         <form action="{% url 'test_execution' %}" method="POST">
             <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Open Trade Execution"><br>
         </form>
@@ -175,59 +187,60 @@ h5{
             <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
         </form>
     </div>
-    <div class="row" style="background:green;">
-        <div class="col" style="width:50%; background:red;">
-            <canvas id="line_chart" width="100%" height="20">
-        <script>
-            var ctx = document.getElementById('line_chart').getContext('2d');
-            var chart = new Chart(ctx, {
-            // The type of chart we want to create
-            type: 'line',
 
-            // The data for our dataset
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                datasets: [{
-                    label: 'My First dataset',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: [0, 10, 5, 2, 20, 30, 45]
-                }]
-            },
+    <div class="row chart_area">
+        <div class="col" style="width:50%;">
+            <canvas id="line_chart" width="50%" height="20">
+            <script>
+                var ctx = document.getElementById('line_chart').getContext('2d');
+                var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'line',
 
-            // Configuration options go here
-            options: {}
-            });
-        </script>
+                // The data for our dataset
+                data: {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    datasets: [{
+                        label: 'My First dataset',
+                        backgroundColor: 'rgb(255, 99, 132)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: [0, 10, 5, 2, 20, 30, 45]
+                    }]
+                },
 
-    </canvas>
+                // Configuration options go here
+                options: {}
+                });
+            </script>
+            </canvas>
         </div>
-        <div class="col" style="width:50%; background:yellow;">
-            <canvas id="line_chart_2" width="100%" height="20">
-        <script>
-            var ctx = document.getElementById('line_chart').getContext('2d');
-            var chart = new Chart(ctx, {
-            // The type of chart we want to create
-            type: 'line',
+        <div class="col" style="width:50%;">
+            <canvas id="line_chart_2" width="50%" height="20">
+            <script>
+                var ctx = document.getElementById('line_chart_2').getContext('2d');
+                var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'line',
 
-            // The data for our dataset
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                datasets: [{
-                    label: 'My First dataset',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: [0, 10, 5, 2, 20, 30, 45]
-                }]
-            },
+                // The data for our dataset
+                data: {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                    datasets: [{
+                        label: 'My First dataset',
+                        backgroundColor: 'rgb(255, 99, 132)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: [0, 10, 5, 2, 20, 30, 45]
+                    }]
+                },
 
-            // Configuration options go here
-            options: {}
-            });
-        </script>
-
-    </canvas>
+                // Configuration options go here
+                options: {}
+                });
+            </script>
+            </canvas>
         </div>
     </div>
+
+
 
     {% endblock %}
