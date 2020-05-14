@@ -19,10 +19,10 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "BUY test"
+        #message = "BUY test"
         message = message.split()
 
         print("")
@@ -246,10 +246,10 @@ def close_all_trades(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "test"
+        #message = "test"
 
         print("")
         print("------------------------------------------------------------------------")
@@ -321,10 +321,23 @@ def close_all_trades(request):
             open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
 
             print("Fetching out open trades from database...")
-            trade = Trades.objects.filter(robot=robot[0]["name"])
+            trade = Trades.objects.filter(robot=robot[0]["name"],
+                                          status="OPEN")
+
+            # Fetching best bid ask prices
+            print("Retrieving bid ask prices from Oanda")
+            bid_ask = oanda.bid_ask(security=security)
+
+            print("BID:", bid_ask["bid"])
+            print("ASK:", bid_ask["ask"])
+
+            closing_price = (float(bid_ask["bid"]) + float(bid_ask["ask"]))/2
+
+            print("Closing Price:", closing_price)
 
             for trd in trade:
                 trd.status = "CLOSE"
+                trd.close_price = closing_price
                 trd.save()
 
             # Reaching out oanda for closing positions
