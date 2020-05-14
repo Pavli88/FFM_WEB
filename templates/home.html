@@ -206,7 +206,7 @@ h5{
                     labels: {{ pnl_label }},
                     datasets: [{
                         label: 'My First dataset',
-                        backgroundColor: '#19393D',
+                        backgroundColor: '#49B0C2',
                         borderColor: '#19393D',
                         data: {{ pnls }}
                     }]
@@ -228,12 +228,12 @@ h5{
 
                 // The data for our dataset
                 data: {
-                    labels: ['1', '2', '3'],
+                    labels: {{ pnl_label }},
                     datasets: [{
                         label: 'My First dataset',
-                        backgroundColor: 'rgb(255, 99, 132)',
-                        borderColor: 'rgb(255, 99, 132)',
-                        data: [0, 10, 5,]
+                        backgroundColor: '#49B0C2',
+                        borderColor: '#19393D',
+                        data: {{ cum_pnl }}
                     }]
                 },
 
