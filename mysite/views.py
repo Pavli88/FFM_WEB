@@ -30,6 +30,7 @@ def get_results(request):
 
     print(pnls)
     print(pnl_label)
+    print("Cum PNL:", cum_pnl)
 
     return render(request, 'home.html', {"pnls": pnls,
                                          "pnl_label": pnl_label,
