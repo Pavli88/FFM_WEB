@@ -205,9 +205,14 @@ h5{
                         </select>
                     </div>
 
-                    <label for="start">Start date:</label>
+                    <label for="start">Start Date:</label>
                     <div class="col-auto">
-                        <input class="form-control" type="date" id="start" name="start_date" value="{{ today }}" min="2020-01-01">
+                        <input class="form-control" type="date" id="start" name="start_date" value="{{ beg_month }}" min="2020-01-01">
+                    </div>
+
+                    <label for="end">End Date:</label>
+                    <div class="col-auto">
+                        <input class="form-control" type="date" id="end" name="end_date" value="{{ today }}" min="2020-01-01">
                     </div>
 
                 <button type="submit" class="btn btn-primary">Submit</button>

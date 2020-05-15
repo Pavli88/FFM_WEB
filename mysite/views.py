@@ -4,6 +4,7 @@ from django.shortcuts import render
 from mysite.models import *
 import pandas as pd
 from datetime import date
+import datetime
 from robots.models import *
 
 
@@ -33,6 +34,19 @@ def get_today():
     return str(today)
 
 
+def get_beg_month():
+
+    """
+    Function to get the first day of the month as date
+    :return:
+    """
+
+    today = date.today()
+    datem = datetime.datetime(today.year, today.month, 1)
+
+    return str(datem)[0:10]
+
+
 def get_robot_list():
 
     """
@@ -53,7 +67,8 @@ def home(request):
 
     print("Loading robot list from db:", get_robot_list())
 
-    return render(request, 'home.html', {"today": get_today(),
+    return render(request, 'home.html', {"beg_month": get_beg_month(),
+                                         "today": get_today(),
                                          "robots": get_robot_list(),
                                          "message": ""})
 
@@ -90,6 +105,7 @@ def get_results(request):
     if trade_df.empty is True:
         print("Empty Dataframe")
         return render(request, 'home.html', {"today": get_today(),
+                                             "beg_month": get_beg_month(),
                                              "robots": get_robot_list(),
                                              "message": "Record does not exists"})
 
@@ -120,6 +136,7 @@ def get_results(request):
                                          "pnl_label": pnl_label,
                                          "cum_pnl": cum_pnl,
                                          "today": get_today(),
+                                         "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
                                          "message": ""})
 
