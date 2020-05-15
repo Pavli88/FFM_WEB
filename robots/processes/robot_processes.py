@@ -18,7 +18,7 @@ class RobotProcesses:
         self.robot = Robots.objects.filter(name=name).values()
         return self.robot
 
-    def create_order(self, trade_side, quantity, security, bid_ask, initial_exposure, balance):
+    def create_order(self, trade_side, quantity, security, bid_ask, initial_exposure, balance, precision):
 
         """
         Function that generates order based on risk parameters
@@ -67,7 +67,7 @@ class RobotProcesses:
         self.order = {"instrument": str(security),
                       "units": str(self.units),
                       "type": "MARKET",
-                      "stopLossOnFill": {"price": str(round(sl_level, 4))}
+                      "stopLossOnFill": {"price": str(round(sl_level, precision))}
                       }
 
         print("Order:", self.order)
