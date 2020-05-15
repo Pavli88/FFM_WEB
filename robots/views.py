@@ -40,6 +40,7 @@ def create_robot(request):
         time_frame = request.POST.get("time_frame")
         account_number = request.POST.get("account_number")
         sl_policy = request.POST.get("sl_policy")
+        precision = request.POST.get("precision")
 
         string_parameter_dict = {"robot name": robot_name,
                                  "strategy name": strategy_name,
@@ -49,7 +50,8 @@ def create_robot(request):
                                  "environment": env,
                                  "time_fame:": time_frame,
                                  "account_number": account_number,
-                                 "sl_policy": sl_policy}
+                                 "sl_policy": sl_policy,
+                                 "precision": precision}
 
         # Float fields
         pyramiding_level = float(request.POST.get("pyramiding_level"))
@@ -82,7 +84,8 @@ def create_robot(request):
                        quantity=quantity,
                        time_frame=time_frame,
                        account_number=account_number,
-                       sl_policy=sl_policy)
+                       sl_policy=sl_policy,
+                       prec=precision)
 
         try:
             robot.save()
@@ -121,7 +124,6 @@ def amend_robot(request):
         """
         message = request.body
         message = str(message.decode("utf-8"))
-        print("Ajax", message)
 
         # Gets data from html table
         robot_name = request.POST.get("robot_name")
@@ -131,6 +133,7 @@ def amend_robot(request):
         init_exp = request.POST.get("init_exp")
         quantity = request.POST.get("quantity")
         account_number = request.POST.get("account_number")
+        precision = request.POST.get("precision")
 
         print("Request received to amend robot record for", robot_name)
         print("New Robot Parameters:")
@@ -139,8 +142,9 @@ def amend_robot(request):
         print("Status:", status)
         print("P Level:", pyramiding_level)
         print("Initial Exp:", init_exp)
-        print("Quantity", quantity)
-        print("Account Number", account_number)
+        print("Quantity:", quantity)
+        print("Account Number:", account_number)
+        print("Precision:", precision)
 
         # Retrieves back amended robot info and refreshes table
         robot = Robots.objects.get(name=robot_name)
@@ -151,6 +155,7 @@ def amend_robot(request):
         robot.init_exp = init_exp
         robot.quantity = quantity
         robot.account_number = account_number
+        robot.prec = precision
         robot.save()
         print("Amended parameters were saved to database.")
 

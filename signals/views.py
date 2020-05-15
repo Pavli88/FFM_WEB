@@ -22,7 +22,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        # message = "SELL test"
+        # message = "SELL spx_test_m1"
         message = message.split()
 
         print("")
@@ -56,8 +56,10 @@ def new_execution(request):
         print("-------------")
         trade_side = signal_params["trade_side"]
         security = robot[0]["security"]
+        precision = robot[0]["prec"]
         print("Security:", security)
         print("Trade Side:", trade_side)
+        print("Precision:", precision)
         print("")
         print("Checking robot status...")
 
@@ -202,7 +204,8 @@ def new_execution(request):
                                                       security=security,
                                                       bid_ask=bid_ask,
                                                       initial_exposure=initial_exposure,
-                                                      balance=balance)
+                                                      balance=balance,
+                                                      precision=precision)
 
                 if float(order["stopLossOnFill"]["price"]) < 0:
                     print("Stop Loss level is below 0. Trade execution stopped!")

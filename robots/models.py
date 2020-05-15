@@ -17,6 +17,7 @@ class Robots(models.Model):
     time_frame = models.CharField(max_length=50, default='')
     account_number = models.CharField(max_length=50, default='')
     sl_policy = models.CharField(max_length=50, default='')
+    prec = models.IntegerField(default=1)
 
 
 

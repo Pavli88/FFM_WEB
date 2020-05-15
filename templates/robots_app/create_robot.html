@@ -49,6 +49,10 @@ td {
         <input class="form-control form-control-sm" type="number" id="quantity" name="quantity" min="0" value="0" required>
     </div>
     <div class="form-group">
+        <label for="prec">SL Precision</label>
+        <input class="form-control form-control-sm" type="number" id="prec" name="precision" min="1" value="1" required>
+    </div>
+    <div class="form-group">
         <label for="pyramiding_level">Pyramiding Level</label>
         <input class="form-control form-control-sm" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0" required>
     </div>
@@ -121,6 +125,7 @@ td {
                     <th scope="col">Pyramiding Level</th>
                     <th scope="col">Initial Exposure</th>
                     <th scope="col">Quantity</th>
+                    <th scope="col">Precision</th>
                     <th scope="col">Account Number</th>
                     <th scope="col"></th>
                 </tr>
@@ -187,6 +192,9 @@ td {
                         </td>
                         <td>
                             <input class="form-control form-control-sm" type="number" name="quantity" min="0" value="{{robot.quantity}}">
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" type="number" name="precision" min="1" value="{{robot.prec}}">
                         </td>
                         <td>
                             <input class="form-control form-control-sm" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
