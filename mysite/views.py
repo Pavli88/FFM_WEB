@@ -8,6 +8,38 @@ import datetime
 from robots.models import *
 
 
+def pnl_generator(trades):
+
+    trade_df = pd.DataFrame(list(trades))
+
+    if trade_df.empty is True:
+        return "empty"
+
+    open_prices = list(trade_df["open_price"])
+    close_prices = list(trade_df["close_price"])
+    units = list(trade_df["quantity"])
+    actions = list(trade_df["side"])
+
+    pnls = []
+
+    for open, close, unit, action in zip(open_prices, close_prices, units, actions):
+
+        if action == "BUY":
+            pnl = (close-open)*unit
+            pnls.append(pnl)
+        elif action == "SELL":
+            pnl = ((close-open)*unit)*-1
+            pnls.append(pnl)
+
+    pnl_label = [label for label in range(len(pnls))]
+    cum_pnl = cumulative(pnls)
+
+    print(pnl_label)
+    print("PNLs:", pnls)
+    print("Cum PNL:", cum_pnl)
+
+    return pnl_label, pnls, cum_pnl
+
 # Python code to get the Cumulative sum of a list
 def cumulative(lists):
 
@@ -102,45 +134,27 @@ def get_results(request):
                                        robot=robot_name,
                                        close_time__range=[start_date, end_date]).values()
 
-    trade_df = pd.DataFrame(list(trades))
+    all_trades = Trades.objects.filter(status="CLOSE",
+                                       close_time__range=[start_date, end_date]).values()
 
-    if trade_df.empty is True:
+    all_pnls = pnl_generator(trades=trades)
+
+    # If there is no record for the robot for the preiod the codes goes to this line
+    if all_pnls == "empty":
         print("Empty Dataframe")
         return render(request, 'home.html', {"today": get_today(),
                                              "beg_month": get_beg_month(),
                                              "robots": get_robot_list(),
                                              "message": "Record does not exists"})
 
-    open_prices = list(trade_df["open_price"])
-    close_prices = list(trade_df["close_price"])
-    units = list(trade_df["quantity"])
-    actions = list(trade_df["side"])
-
-    pnls = []
-
-    for open, close, unit, action in zip(open_prices, close_prices, units, actions):
-        print(open, close, unit, action)
-        if action == "BUY":
-            pnl = (close-open)*unit
-            pnls.append(pnl)
-        elif action == "SELL":
-            pnl = ((close-open)*unit)*-1
-            pnls.append(pnl)
-
-    pnl_label = [label for label in range(len(pnls))]
-    cum_pnl = cumulative(pnls)
-
-    print(pnl_label)
-    print("PNLs:", pnls)
-    print("Cum PNL:", cum_pnl)
-
-    return render(request, 'home.html', {"pnls": pnls,
-                                         "pnl_label": pnl_label,
-                                         "cum_pnl": cum_pnl,
+    return render(request, 'home.html', {"pnls": all_pnls[1],
+                                         "pnl_label": all_pnls[0],
+                                         "cum_pnl": all_pnls[2],
                                          "today": get_today(),
                                          "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
-                                         "message": ""})
+                                         "message": "",
+                                         })
 
 
 

@@ -19,10 +19,10 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        message = request.body
-        message = str(message.decode("utf-8"))
+        # message = request.body
+        # message = str(message.decode("utf-8"))
 
-        # message = "SELL spx_test_m1"
+        message = "SELL test" #spx_test_m1
         message = message.split()
 
         print("")
