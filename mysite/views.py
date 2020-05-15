@@ -121,10 +121,10 @@ def get_results(request):
     for open, close, unit, action in zip(open_prices, close_prices, units, actions):
         print(open, close, unit, action)
         if action == "BUY":
-            pnl = (open-close)*unit
+            pnl = (close-open)*unit
             pnls.append(pnl)
         elif action == "SELL":
-            pnl = ((open-close)*unit)*-1
+            pnl = ((close-open)*unit)*-1
             pnls.append(pnl)
 
     pnl_label = [label for label in range(len(pnls))]
