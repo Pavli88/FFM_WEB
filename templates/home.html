@@ -44,6 +44,9 @@ h5{
 
 {% endblock %}
 
+{% block my_scripts %}
+
+{% endblock %}
     {% block entry_form %}
     <h5 class="nav-link link_color font-weight-bold">
         Trade Log
@@ -180,40 +183,43 @@ h5{
 
     {% block main_block%}
     <div class="row menu_bar">
-        <form action="{% url 'test_execution' %}" method="POST">
-            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Open Trade Execution"><br>
-        </form>
-        <form action="{% url 'test_close_execution' %}" method="POST">
-            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
-        </form>
-
 <!--        Form for submiting robot results-->
-        <form class="form-inline" action="{% url 'get_results' %}" method="POST">
-            {% csrf_token %}
+        <div  style="height:50px; width:80%;">
+            <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
+                {% csrf_token %}
+                    <label class="col-form-label">Trade</label>
+                    <div class="col-auto">
+                        <select class="form-control" name="side">
+                            <option selected>BUY</option>
+                            <option>SELL</option>
+                            <option>ALL</option>
+                        </select>
+                    </div>
 
-                <label class="col-sm-2 col-form-label">Trade</label>
-                <div class="col-auto">
-                    <select class="form-control" name="side">
-                        <option selected>BUY</option>
-                        <option>SELL</option>
-                        <option>ALL</option>
-                    </select>
-                </div>
+                    <label>Robot</label>
+                    <div class="col-auto">
+                        <select class="form-control" name="robot_name">
+                            {% for robot in robots %}
+                            <option>{{robot}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <label>Robot</label>
-                <div class="col-auto">
-                    <select class="form-control" name="robot_name">
-                        <option>test</option>
-                        <option>test_2</option>
-                    </select>
-                </div>
+                    <label for="start">Start date:</label>
+                    <div class="col-auto">
+                        <input class="form-control" type="date" id="start" name="start_date" value="{{ today }}" min="2020-01-01">
+                    </div>
 
-                <button type="submit" class="btn btn-primary mb-2">Submit</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
 
-        </form>
-        <script>if ("{{ message }}" == "true") {
-                        alert("There are no records in the database for this query!");}
-        </script>
+            </form>
+            <script>if ("{{ message }}" == "true") {
+                            alert("There are no records in the database for this query!");}
+            </script>
+        </div>
+        <div style=" width:20%; height:50px;">
+            <p>here comes some content</p>
+        </div>
     </div>
 
     <div class="row chart_area">
@@ -229,7 +235,7 @@ h5{
                 data: {
                     labels: {{ pnl_label }},
                     datasets: [{
-                        label: 'My First dataset',
+                        label: 'P&L by Trades',
                         backgroundColor: '#49B0C2',
                         borderColor: '#19393D',
                         data: {{ pnls }}
@@ -244,6 +250,7 @@ h5{
         </div>
         <div class="col" style="width:50%;">
             <canvas id="line_chart_2" width="50%" height="20">
+
             <script>
                 var ctx = document.getElementById('line_chart_2').getContext('2d');
                 var chart = new Chart(ctx, {
@@ -254,7 +261,7 @@ h5{
                 data: {
                     labels: {{ pnl_label }},
                     datasets: [{
-                        label: 'My First dataset',
+                        label: 'Cumulative P&L',
                         backgroundColor: '#49B0C2',
                         borderColor: '#19393D',
                         data: {{ cum_pnl }}
@@ -269,6 +276,12 @@ h5{
         </div>
     </div>
 
-
-
+    <div class="row">
+        <form action="{% url 'test_execution' %}" method="POST">
+            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Open Trade Execution"><br>
+        </form>
+        <form action="{% url 'test_close_execution' %}" method="POST">
+            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
+        </form>
+    </div>
     {% endblock %}

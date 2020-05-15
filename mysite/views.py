@@ -1,10 +1,10 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from mysite.forms import RobotParams
 from mysite.models import *
-from robots.processes.robot_processes import *
 import pandas as pd
+from datetime import date
+from robots.models import *
 
 
 # Python code to get the Cumulative sum of a list
@@ -17,7 +17,16 @@ def cumulative(lists):
 
 # Home page
 def home(request):
-    return render(request, 'home.html')
+    today = date.today()
+    robots = Robots.objects.filter().values()
+    robot_df = pd.DataFrame(list(robots))
+    robot_list = list(robot_df["name"])
+    robot_list.append("ALL")
+
+    print("Loading robot list from db:", robot_list)
+
+    return render(request, 'home.html', {"today": str(today),
+                                         "robots": robot_list})
 
 
 def get_results(request):
@@ -25,13 +34,26 @@ def get_results(request):
     if request.method == "POST":
         trade_side = request.POST.get("side")
         robot_name = request.POST.get("robot_name")
+        start_date = request.POST.get("start_date")
 
         print("Parameters received:")
         print("Trade Side:", trade_side)
+        print("Robot Name:", robot_name)
+        print("Start Date: ", start_date)
 
-    trades = Trades.objects.filter(status="CLOSE",
-                                   side=trade_side,
-                                   robot=robot_name).values()
+    today = date.today()
+    print("Today's date:", today)
+
+    if trade_side == "ALL" and robot_name == "ALL":
+        trades = Trades.objects.filter(status="CLOSE").values()
+    elif robot_name == "ALL":
+        trades = Trades.objects.filter(status="CLOSE",
+                                       side=trade_side).values()
+    else:
+        trades = Trades.objects.filter(status="CLOSE",
+                                       side=trade_side,
+                                       robot=robot_name,
+                                       close_time__range=[start_date, str(today)]).values()
 
     trade_df = pd.DataFrame(list(trades))
 
