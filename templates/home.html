@@ -193,7 +193,7 @@ h5{
 
                 <label class="col-sm-2 col-form-label">Trade</label>
                 <div class="col-auto">
-                    <select class="form-control">
+                    <select class="form-control" name="side">
                         <option selected>BUY</option>
                         <option>SELL</option>
                         <option>ALL</option>
@@ -211,6 +211,9 @@ h5{
                 <button type="submit" class="btn btn-primary mb-2">Submit</button>
 
         </form>
+        <script>if ("{{ message }}" == "true") {
+                        alert("There are no records in the database for this query!");}
+        </script>
     </div>
 
     <div class="row chart_area">

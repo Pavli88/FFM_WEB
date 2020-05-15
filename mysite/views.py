@@ -22,8 +22,20 @@ def home(request):
 
 def get_results(request):
 
-    trades = Trades.objects.filter(status="CLOSE").values()
+    if request.method == "POST":
+        trade_side = request.POST.get("side")
+
+        print("Parameters received:")
+        print("Trade Side:", trade_side)
+
+    trades = Trades.objects.filter(status="CLOSE",
+                                   side=trade_side).values()
     trade_df = pd.DataFrame(list(trades))
+
+    if trade_df.empty is True:
+        print("Empty Dataframe")
+        return render(request, 'home.html', {"message": "true"})
+
     open_prices = list(trade_df["open_price"])
     close_prices = list(trade_df["close_price"])
     units = list(trade_df["quantity"])
