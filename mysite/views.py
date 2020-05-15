@@ -37,7 +37,7 @@ def get_results(request):
             pnl = (open-close)*unit
             pnls.append(pnl)
         elif action == "SELL":
-            pnl = (close-open)*unit
+            pnl = ((open-close)*unit)*-1
             pnls.append(pnl)
 
     pnl_label = [label for label in range(len(pnls))]
