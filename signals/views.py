@@ -22,7 +22,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        #message = "BUY test"
+        # message = "SELL test"
         message = message.split()
 
         print("")

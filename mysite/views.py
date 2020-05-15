@@ -79,6 +79,7 @@ def get_results(request):
         trade_side = request.POST.get("side")
         robot_name = request.POST.get("robot_name")
         start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
 
         print("Parameters received:")
         print("Trade Side:", trade_side)
@@ -89,16 +90,17 @@ def get_results(request):
 
     if trade_side == "ALL" and robot_name == "ALL":
         trades = Trades.objects.filter(status="CLOSE",
-                                       close_time__range=[start_date, get_today()]).values()
+                                       close_time__range=[start_date, end_date]).values()
     elif robot_name == "ALL":
         trades = Trades.objects.filter(status="CLOSE",
                                        side=trade_side,
-                                       close_time__range=[start_date, get_today()]).values()
+                                       close_time__range=[start_date, end_date]).values()
     else:
+        print("Robot+Side parameters")
         trades = Trades.objects.filter(status="CLOSE",
                                        side=trade_side,
                                        robot=robot_name,
-                                       close_time__range=[start_date, get_today()]).values()
+                                       close_time__range=[start_date, end_date]).values()
 
     trade_df = pd.DataFrame(list(trades))
 
