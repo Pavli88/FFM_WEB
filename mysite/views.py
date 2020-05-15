@@ -24,12 +24,27 @@ def get_results(request):
 
     trades = Trades.objects.filter(status="CLOSE").values()
     trade_df = pd.DataFrame(list(trades))
-    pnls = list(trade_df["open_price"]-trade_df["close_price"])
+    open_prices = list(trade_df["open_price"])
+    close_prices = list(trade_df["close_price"])
+    units = list(trade_df["quantity"])
+    actions = list(trade_df["side"])
+
+    pnls = []
+
+    for open, close, unit, action in zip(open_prices, close_prices, units, actions):
+        print(open, close, unit, action)
+        if action == "BUY":
+            pnl = (open-close)*unit
+            pnls.append(pnl)
+        elif action == "SELL":
+            pnl = (close-open)*unit
+            pnls.append(pnl)
+
     pnl_label = [label for label in range(len(pnls))]
     cum_pnl = cumulative(pnls)
 
-    print(pnls)
     print(pnl_label)
+    print("PNLs:", pnls)
     print("Cum PNL:", cum_pnl)
 
     return render(request, 'home.html', {"pnls": pnls,
