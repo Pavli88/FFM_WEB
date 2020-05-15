@@ -196,7 +196,7 @@ h5{
                         </select>
                     </div>
 
-                    <label>Robot</label>
+                    <label class="col-form-label">Robot</label>
                     <div class="col-auto">
                         <select class="form-control" name="robot_name">
                             {% for robot in robots %}
@@ -211,11 +211,10 @@ h5{
                     </div>
 
                 <button type="submit" class="btn btn-primary">Submit</button>
+                <label class="col-form-label">{{ message }}</label>
 
             </form>
-            <script>if ("{{ message }}" == "true") {
-                            alert("There are no records in the database for this query!");}
-            </script>
+
         </div>
         <div style=" width:20%; height:50px;">
             <p>here comes some content</p>
