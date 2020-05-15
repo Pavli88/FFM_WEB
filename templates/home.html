@@ -202,7 +202,7 @@ h5{
 
                 <label>Robot</label>
                 <div class="col-auto">
-                    <select class="form-control">
+                    <select class="form-control" name="robot_name">
                         <option>test</option>
                         <option>test_2</option>
                     </select>
@@ -223,7 +223,7 @@ h5{
                 var ctx = document.getElementById('line_chart').getContext('2d');
                 var chart = new Chart(ctx, {
                 // The type of chart we want to create
-                type: 'line',
+                type: 'bar',
 
                 // The data for our dataset
                 data: {

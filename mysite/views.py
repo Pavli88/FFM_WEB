@@ -24,12 +24,15 @@ def get_results(request):
 
     if request.method == "POST":
         trade_side = request.POST.get("side")
+        robot_name = request.POST.get("robot_name")
 
         print("Parameters received:")
         print("Trade Side:", trade_side)
 
     trades = Trades.objects.filter(status="CLOSE",
-                                   side=trade_side).values()
+                                   side=trade_side,
+                                   robot=robot_name).values()
+
     trade_df = pd.DataFrame(list(trades))
 
     if trade_df.empty is True:
