@@ -17,3 +17,7 @@ class Trades(models.Model):
     close_time = models.DateTimeField(auto_now=True)
     time_frame = models.CharField(max_length=30, default="")
     side = models.CharField(max_length=30, default="")
+
+
+class HomePageDefault(models.Model):
+    account_number = models.CharField(max_length=30, default="")

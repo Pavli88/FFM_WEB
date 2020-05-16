@@ -185,22 +185,36 @@ h5{
 
     {% block main_block%}
     <div class="row menu_bar">
-<!--        Form for submiting robot results-->
+        <!--Form for submiting robot results-->
+        <div style="height:50px; width:20%; background:red;">
+            <form class="form-inline input-sm" style="padding:5px;">
+                {% csrf_token %}
+                <label class="col-form-label">Accounts</label>
+                <div>
+                    <select class="form-control input-sm" style="height:30px;" name="side">
+                        <option >BUY</option>
+                        <option>SELL</option>
+                        <option selected>ALL</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
+            </form>
+        </div>
         <div  style="height:50px; width:80%;">
             <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
                 {% csrf_token %}
                     <label class="col-form-label">Trade</label>
                     <div class="col-auto">
-                        <select class="form-control" name="side">
-                            <option selected>BUY</option>
+                        <select class="form-control" style="height:30px;" name="side">
+                            <option >BUY</option>
                             <option>SELL</option>
-                            <option>ALL</option>
+                            <option selected>ALL</option>
                         </select>
                     </div>
 
                     <label class="col-form-label">Robot</label>
                     <div class="col-auto">
-                        <select class="form-control" name="robot_name">
+                        <select class="form-control" style="height:30px;" name="robot_name">
                             {% for robot in robots %}
                             <option>{{robot}}</option>
                             {% endfor %}
@@ -209,19 +223,18 @@ h5{
 
                     <label for="start">Start Date:</label>
                     <div class="col-auto">
-                        <input class="form-control" type="date" id="start" name="start_date" value="{{ beg_month }}" min="2020-01-01">
+                        <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ beg_month }}" min="2020-01-01">
                     </div>
 
                     <label for="end">End Date:</label>
                     <div class="col-auto">
-                        <input class="form-control" type="date" id="end" name="end_date" value="{{ today }}" min="2020-01-01">
+                        <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ today }}" min="2020-01-01">
                     </div>
 
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
                 <label class="col-form-label">{{ message }}</label>
 
             </form>
-
         </div>
     </div>
 
