@@ -79,6 +79,13 @@ def get_beg_month():
     return str(datem)[0:10]
 
 
+def get_open_trades():
+
+    open_trades = Trades.objects.filter(status="OPEN").values()
+
+    return open_trades
+
+
 def get_robot_list():
 
     """
@@ -102,6 +109,7 @@ def home(request):
     return render(request, 'home.html', {"beg_month": get_beg_month(),
                                          "today": get_today(),
                                          "robots": get_robot_list(),
+                                         "open_trades": get_open_trades(),
                                          "message": ""})
 
 

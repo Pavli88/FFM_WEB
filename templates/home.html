@@ -17,7 +17,9 @@ thead, tbody tr {
     line-height: 5px;
     height:5px;
     text-align:center;
+
 }
+
 
 tbody {
     display:block;
@@ -221,9 +223,6 @@ h5{
             </form>
 
         </div>
-        <div style=" width:20%; height:50px;">
-
-        </div>
     </div>
 
     <div class="row chart_area">
@@ -343,128 +342,32 @@ h5{
         <div class="trade_log" style="height:300px;">
             <table class="table trade_table">
           <thead>
-            <tr>
+            <tr class="align-middle">
                 <th>Robot</th>
                 <th>Security</th>
                 <th>Action</th>
                 <th>Quantity</th>
+                <th>Open Price</th>
+                <th>Time Frame</th>
+                <th>P&L</th>
+                <th>P&L %</th>
+                <th></th>
             </tr>
           </thead>
           <tbody style="height:250px;">
-            <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
+          {% for trade in open_trades %}
+            <tr class="align-middle">
+                <td class="align-middle">{{trade.robot}}</td>
+                <td class="align-middle">{{trade.security}}</td>
+                <td class="align-middle">{{trade.side}}</td>
+                <td class="align-middle">{{trade.quantity}}</td>
+                <td class="align-middle">{{trade.open_price}}</td>
+                <td class="align-middle">{{trade.time_frame}}</td>
+                <td class="align-middle">30.23</td>
+                <td class="align-middle">2.4</td>
+                <td class="align-middle"><button class="btn btn-primary btn-sm">Close</button></td>
             </tr>
-            <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
+          {% endfor %}
           </tbody>
         </table>
         </div>
