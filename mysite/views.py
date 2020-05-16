@@ -171,7 +171,8 @@ def get_results(request):
         return render(request, 'home.html', {"today": get_today(),
                                              "beg_month": get_beg_month(),
                                              "robots": get_robot_list(),
-                                             "message": "Record does not exists"})
+                                             "message": "Record does not exists",
+                                             "accounts": get_account_data()})
 
     return render(request, 'home.html', {"pnls": all_pnls[1],
                                          "pnl_label": all_pnls[0],
@@ -179,6 +180,7 @@ def get_results(request):
                                          "today": get_today(),
                                          "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
+                                         "accounts": get_account_data(),
                                          "message": "",
                                          })
 
