@@ -186,21 +186,22 @@ h5{
     {% block main_block%}
     <div class="row menu_bar">
         <!--Form for submiting robot results-->
-        <div style="height:50px; width:20%; background:red;">
+        <div style="height:50px; width:25%;  border-right: 1px solid grey;">
+            <!--Form to load all accounts-->
             <form class="form-inline input-sm" style="padding:5px;">
                 {% csrf_token %}
                 <label class="col-form-label">Accounts</label>
-                <div>
-                    <select class="form-control input-sm" style="height:30px;" name="side">
-                        <option >BUY</option>
-                        <option>SELL</option>
-                        <option selected>ALL</option>
+                <div class="col-auto">
+                    <select class="form-control input-sm" style="height:30px; width:150px;" name="side">
+                        {% for account in accounts %}
+                        <option >{{account.account_number}}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Default</button>
             </form>
         </div>
-        <div  style="height:50px; width:80%;">
+        <div  style="height:50px; width:75%;">
             <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
                 {% csrf_token %}
                     <label class="col-form-label">Trade</label>
@@ -214,7 +215,7 @@ h5{
 
                     <label class="col-form-label">Robot</label>
                     <div class="col-auto">
-                        <select class="form-control" style="height:30px;" name="robot_name">
+                        <select class="form-control" style="height:30px; width:80px;" name="robot_name">
                             {% for robot in robots %}
                             <option>{{robot}}</option>
                             {% endfor %}

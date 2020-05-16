@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import date
 import datetime
 from robots.models import *
-
+from accounts.models import *
 
 def pnl_generator(trades):
 
@@ -40,7 +40,7 @@ def pnl_generator(trades):
 
     return pnl_label, pnls, cum_pnl
 
-# Python code to get the Cumulative sum of a list
+
 def cumulative(lists):
 
     """
@@ -79,7 +79,24 @@ def get_beg_month():
     return str(datem)[0:10]
 
 
+def get_account_data():
+
+    """
+    Function to get all account data
+    :return:
+    """
+
+    accounts = BrokerAccounts.objects.filter().values()
+
+    return accounts
+
+
 def get_open_trades():
+
+    """
+    Function to get open trades
+    :return:
+    """
 
     open_trades = Trades.objects.filter(status="OPEN").values()
 
@@ -110,6 +127,7 @@ def home(request):
                                          "today": get_today(),
                                          "robots": get_robot_list(),
                                          "open_trades": get_open_trades(),
+                                         "accounts": get_account_data(),
                                          "message": ""})
 
 
