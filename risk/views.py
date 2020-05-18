@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from risk.processes.account import *
+from mysite.processes.oanda import *
 
 
 # Main site for risk management
@@ -10,7 +11,6 @@ def risk_main(request):
     :param request:
     :return:
     """
-
     return render(request, 'risk_app/risk_main.html')
 
 

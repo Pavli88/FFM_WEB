@@ -7,6 +7,8 @@ from datetime import date
 import datetime
 from robots.models import *
 from accounts.models import *
+from mysite.processes.oanda import *
+
 
 def pnl_generator(trades):
 
@@ -39,6 +41,37 @@ def pnl_generator(trades):
     print("Cum PNL:", cum_pnl)
 
     return pnl_label, pnls, cum_pnl
+
+
+def get_balance_history(start_date, end_date):
+
+    print("")
+    print("RETREIVING BALANCE HISTORY FROM BROKER")
+
+    default_account = HomePageDefault.objects.filter().values()
+    print("Account Number:", default_account[0]["account_number"])
+    account = BrokerAccounts.objects.filter(account_number=default_account[0]["account_number"]).values()
+
+    print("Token:", account[0]["access_token"])
+
+    if account[0]["env"] == "demo":
+        env = "practice"
+    else:
+        env = "live"
+
+    print("Environment:", env)
+
+    oanda = Oanda(environment=env,
+                  acces_token=account[0]["access_token"],
+                  account_number=default_account[0]["account_number"])
+
+    transactions = oanda.get_transactions(start_date=start_date, end_date=end_date)
+    balance = list(transactions[["accountBalance"]].dropna()["accountBalance"].astype(float))
+    balance_label = [bal for bal in range(len(balance))]
+
+    print("")
+
+    return balance, balance_label
 
 
 def cumulative(lists):
@@ -128,7 +161,36 @@ def home(request):
                                          "robots": get_robot_list(),
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
-                                         "message": ""})
+                                         "pnl_label": [],
+                                         "pnls": [],
+                                         "cum_pnl": [],
+                                         "balance": [],
+                                         "balance_label": [],
+                                         })
+
+
+def save_layout(request):
+
+    print("Saving home page layout")
+
+    if request.method == "POST":
+        account = request.POST.get("account")
+
+    HomePageDefault(account_number=account).save()
+
+    print("Account:", account)
+
+    return render(request, 'home.html', {"beg_month": get_beg_month(),
+                                         "today": get_today(),
+                                         "robots": get_robot_list(),
+                                         "open_trades": get_open_trades(),
+                                         "accounts": get_account_data(),
+                                         "pnl_label": [],
+                                         "pnls": [],
+                                         "cum_pnl": [],
+                                         "balance": [],
+                                         "balance_label": [],
+                                         })
 
 
 def get_results(request):
@@ -165,14 +227,25 @@ def get_results(request):
 
     all_pnls = pnl_generator(trades=trades)
 
+    # Loading account balane from broker
+    print("Get account history from broker")
+    balance_list = get_balance_history(start_date=start_date, end_date=end_date)
+
     # If there is no record for the robot for the preiod the codes goes to this line
     if all_pnls == "empty":
+
         print("Empty Dataframe")
         return render(request, 'home.html', {"today": get_today(),
                                              "beg_month": get_beg_month(),
                                              "robots": get_robot_list(),
-                                             "message": "Record does not exists",
-                                             "accounts": get_account_data()})
+                                             "message": "empty",
+                                             "accounts": get_account_data(),
+                                             "balance": balance_list[0],
+                                             "balance_label": balance_list[1],
+                                             "pnl_label": [],
+                                             "pnls": [],
+                                             "cum_pnl": [],
+                                             })
 
     return render(request, 'home.html', {"pnls": all_pnls[1],
                                          "pnl_label": all_pnls[0],
@@ -181,6 +254,8 @@ def get_results(request):
                                          "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
                                          "accounts": get_account_data(),
+                                         "balance": balance_list[0],
+                                         "balance_label": balance_list[1],
                                          "message": "",
                                          })
 

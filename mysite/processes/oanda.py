@@ -1,6 +1,12 @@
 import oandapy
 import pandas as pd
 
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', -1)
+
+
 class Oanda:
 
     def __init__(self, environment, acces_token, account_number):
@@ -64,4 +70,53 @@ class Oanda:
         for id in list(open_trades_table["id"]):
             self.oanda.trades.close_trade(account_id=self.account_number, trade_id=id, units="ALL")
             print("Trade:", id)
+
+    def account_summary(self):
+
+        self.account_summary = self.oanda.account.get_account_summary(account_id=self.account_number).as_dict()
+        self.account_summary_table = pd.DataFrame.from_dict(self.account_summary)
+        print(self.account_summary_table)
+
+
+    def get_transactions(self, start_date, end_date):
+
+        """
+        Function to get back all the transactions between the start and ending period.
+        :param start_date:
+        :param end_date:
+        :return:
+        """
+
+        self.transactions = self.oanda.transactions.get_transactions(account_id=self.account_number,
+                                                                     from_date=start_date,
+                                                                     to_date=end_date,
+                                                                     page_size=1000).as_dict()
+
+        print("Pages:")
+        print(self.transactions["pages"])
+
+        self.transactions_df = pd.DataFrame()
+
+        for page in self.transactions["pages"]:
+            self.tr_request = self.oanda.make_request(method_name="GET",
+                                                      endpoint=page.partition("v3/")[2])
+            self.tr_df = pd.DataFrame.from_dict(self.tr_request.json()["transactions"])
+            self.transactions_df = self.transactions_df.append(self.tr_df)
+
+        return self.transactions_df
+
+    def get_transaction_sinceid(self):
+
+        self.transactions = self.oanda.transactions.get_transaction_sinceid(account_id=self.account_number,
+                                                                            last_transaction_id=991).as_dict()
+
+        self.transactions_table = pd.DataFrame.from_dict(self.transactions)
+        print(self.transactions_table)
+
+
+    def get_all_trades(self):
+
+        self.trades = self.oanda.trades.get_trades(account_id=self.account_number,
+                                                   instrument="EUR_USD").as_dict()
+        print(self.trades)
 

@@ -188,11 +188,11 @@ h5{
         <!--Form for submiting robot results-->
         <div style="height:50px; width:25%;  border-right: 1px solid grey;">
             <!--Form to load all accounts-->
-            <form class="form-inline input-sm" style="padding:5px;">
+            <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
                 {% csrf_token %}
                 <label class="col-form-label">Accounts</label>
                 <div class="col-auto">
-                    <select class="form-control input-sm" style="height:30px; width:150px;" name="side">
+                    <select class="form-control input-sm" style="height:30px; width:150px;" name="account">
                         {% for account in accounts %}
                         <option >{{account.account_number}}</option>
                         {% endfor %}
@@ -233,8 +233,6 @@ h5{
                     </div>
 
                 <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
-                <label class="col-form-label">{{ message }}</label>
-
             </form>
         </div>
     </div>
@@ -300,17 +298,17 @@ h5{
                 var ctx = document.getElementById('bar_chart_2').getContext('2d');
                 var chart = new Chart(ctx, {
                 // The type of chart we want to create
-                type: 'bar',
+                type: 'line',
 
                 // The data for our dataset
                 data: {
 
-                    labels: ['wew', 'erert'],
+                    labels: [],
                     datasets: [{
                         label: 'P&L by Trades',
                         backgroundColor: '#49B0C2',
                         borderColor: '#19393D',
-                        data: [2,3,5,6]
+                        data: []
                     }]
                 },
 
@@ -324,19 +322,19 @@ h5{
             <canvas id="line_chart_4" width="50%" height="20">
 
             <script>
-                var ctx = document.getElementById('line_chart_2').getContext('2d');
+                var ctx = document.getElementById('line_chart_4').getContext('2d');
                 var chart = new Chart(ctx, {
                 // The type of chart we want to create
                 type: 'line',
 
                 // The data for our dataset
                 data: {
-                    labels: {{ pnl_label }},
+                    labels: {{ balance_label }},
                     datasets: [{
-                        label: 'Cumulative P&L',
+                        label: 'Balance History',
                         backgroundColor: '#49B0C2',
                         borderColor: '#19393D',
-                        data: {{ cum_pnl }}
+                        data: {{ balance }}
                     }]
                 },
 
@@ -396,3 +394,7 @@ h5{
         </form>
     </div>
     {% endblock %}
+    <script>if ({{ message }} == "empty"){
+        alert("There is no record for this period!");
+        }
+    </script>
