@@ -267,11 +267,14 @@ def go_to_settings(request):
 
     print("Load settings")
 
-    settings = Settings.objects.filter(id=1).values()
-    st_time = settings[0]["ov_st_time"].strftime("%H:%M")
-    en_time = settings[0]["ov_en_time"].strftime("%H:%M")
-    print(settings[0])
-    print(st_time)
+    try:
+        settings = Settings.objects.filter(id=1).values()
+        st_time = settings[0]["ov_st_time"].strftime("%H:%M")
+        en_time = settings[0]["ov_en_time"].strftime("%H:%M")
+        print(settings[0])
+        print(st_time)
+    except:
+        return render(request, 'settings.html')
 
     return render(request, 'settings.html', {"st_time": st_time,
                                              "en_time": en_time})
