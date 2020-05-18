@@ -6,6 +6,8 @@ from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
 from accounts.models import *
 from mysite.models import *
+from datetime import datetime
+
 
 # Test execution
 @csrf_exempt
@@ -22,7 +24,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        #message = "SELL test" #spx_test_m1
+        # message = "SELL test" #spx_test_m1
         message = message.split()
 
         print("")
@@ -34,6 +36,28 @@ def new_execution(request):
                          "robot_name": message[1]}
 
         print("Signal received. Parameters:", signal_params)
+
+        now = datetime.now().time()
+        print("Current Time:", now)
+        print("Checking if new trading is enabled")
+        print("Loading settings")
+        settings = Settings.objects.filter(id=1).values()
+        ov_status = settings[0]["ov_status"]
+        st_time = settings[0]["ov_st_time"]
+        en_time = settings[0]["ov_en_time"]
+        print("Restricted Time Status:", ov_status)
+        print("Restriction Start Time:", st_time.strftime("%H:%M"))
+        print("Restriction End Time:", en_time.strftime("%H:%M"))
+
+        if st_time < now and ov_status is True:
+            print("Trading is not allowed due to restricted time period")
+            return HttpResponse(None)
+        elif now < en_time and ov_status is True:
+            print("Trading is not allowed due to restricted time period")
+            return HttpResponse(None)
+        else:
+            print("Trading is not restricted due to time. ")
+
         print("Looking for robot that is tracking:", signal_params)
 
         # Gets robot data from database

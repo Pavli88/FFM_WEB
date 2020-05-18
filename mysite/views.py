@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from mysite.models import *
 import pandas as pd
 from datetime import date
@@ -264,7 +264,17 @@ def get_results(request):
 
 # Settings
 def go_to_settings(request):
-    return render(request, 'settings.html')
+
+    print("Load settings")
+
+    settings = Settings.objects.filter(id=1).values()
+    st_time = settings[0]["ov_st_time"].strftime("%H:%M")
+    en_time = settings[0]["ov_en_time"].strftime("%H:%M")
+    print(settings[0])
+    print(st_time)
+
+    return render(request, 'settings.html', {"st_time": st_time,
+                                             "en_time": en_time})
 
 
 def save_settings(request):
@@ -307,7 +317,7 @@ def save_settings(request):
         settings.save()
         print("Record has been saved")
 
-    return render(request, 'settings.html')
+    return redirect('settings main')
 
 
 
