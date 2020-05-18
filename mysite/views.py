@@ -136,14 +136,16 @@ def get_open_trades():
     return open_trades
 
 
-def get_robot_list():
+def get_robot_list(account=None):
 
     """
     Function to get a list of robots from the db.
     :return:
     """
 
-    robots = Robots.objects.filter().values()
+    if account is None:
+        robots = Robots.objects.filter().values()
+
     robot_df = pd.DataFrame(list(robots))
     robot_list = list(robot_df["name"])
     robot_list.append("ALL")
@@ -227,7 +229,7 @@ def get_results(request):
 
     all_pnls = pnl_generator(trades=trades)
 
-    # Loading account balane from broker
+    # Loading account balance from broker
     print("Get account history from broker")
     balance_list = get_balance_history(start_date=start_date, end_date=end_date)
 
@@ -259,6 +261,9 @@ def get_results(request):
                                          "message": "",
                                          })
 
+
+def go_to_settings(request):
+    return render(request, 'settings.html')
 
 
 
