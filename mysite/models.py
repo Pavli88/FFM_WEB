@@ -21,3 +21,9 @@ class Trades(models.Model):
 
 class HomePageDefault(models.Model):
     account_number = models.CharField(max_length=30, default="")
+
+
+class Settings(models.Model):
+    ov_status = models.BooleanField()
+    ov_st_time = models.TimeField()
+    ov_en_time = models.TimeField()

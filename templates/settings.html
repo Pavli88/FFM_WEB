@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
     {% block main_block%}
-    <div class="row" style="width:100%; background:green; margin-left: 1px;">
+    <div class="row" style="width:100%; margin-left: 1px;">
         <div class="col">
-            <form>
+            <form action="{% url 'save settings' %}" method="POST">
+                {% csrf_token %}
                 <div class="row" style="padding:5px;">
                     <div>
-                        <label class="checkbox-inline">Overnight Trading</label>
-                        <input type="checkbox" checked data-toggle="toggle" data-onstyle="danger">
-                    </div>
-
-
-                    <div style="display:flex;">
-                        <label class="my-1 mr-2" style="width:150px; padding-left: 10px;">Start Time</label>
-                        <input class="form-control" type="time" value="22:00:00">
+                        <label class="checkbox-inline" style="text-align: center; vertical-align: middle;">Overnight Trading</label>
+                        <input type="checkbox" checked data-toggle="toggle" data-onstyle="danger" style="padding-left:20px;" name="switch">
                     </div>
 
                     <div style="display:flex;">
-                        <label class="my-1 mr-2" style="width:150px; padding-left: 10px;">End Time</label>
-                        <input class="form-control" type="time" value="06:00:00">
+                        <label class="my-1 mr-2" style="width:100px; padding-left: 10px; text-align: center; vertical-align: middle;">Start Time</label>
+                        <input class="form-control" type="time" value="22:00:00" style="width:100px;" name="st_time">
                     </div>
-                    <div>
-                        <button type="submit" class="btn btn-primary">Save</button>
+
+                    <div style="display:flex;">
+                        <label class="my-1 mr-2" style="width:100px; padding-left: 10px; text-align: center; vertical-align: middle; margin:auto;">End Time</label>
+                        <input class="form-control" type="time" value="06:00:00" style="width:100px;" name="en_time">
+                    </div>
+                    <div style="padding-left: 20px;">
+                        <button type="submit" class="btn btn-primary" >Save</button>
                     </div>
                 </div>
             </form>

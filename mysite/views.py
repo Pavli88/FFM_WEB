@@ -262,7 +262,51 @@ def get_results(request):
                                          })
 
 
+# Settings
 def go_to_settings(request):
+    return render(request, 'settings.html')
+
+
+def save_settings(request):
+
+    if request.method == "POST":
+        switch = request.POST.get("switch")
+        st_time = request.POST.get("st_time")
+        en_time = request.POST.get("en_time")
+
+    print("Amending settings")
+    print("")
+    print("Overnight trading:", switch)
+    print("Start Time:", st_time)
+    print("End Time:", en_time)
+
+    print("Saving settings to data base")
+
+    if switch == "on":
+        ov_status = True
+    else:
+        ov_status = False
+
+    try:
+        print("Amending existing settings in database")
+        settings = Settings.objects.get(id=1)
+        settings.ov_status = ov_status
+        settings.ov_st_time = st_time
+        settings.ov_en_time = en_time
+        settings.save()
+        print("Settings has been amended")
+
+    except:
+        print("Settings is empty first record is being created")
+
+        print("Saving first record to database")
+        settings = Settings(ov_status=ov_status,
+                            ov_st_time=st_time,
+                            ov_en_time=en_time)
+
+        settings.save()
+        print("Record has been saved")
+
     return render(request, 'settings.html')
 
 
