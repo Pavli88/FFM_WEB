@@ -4,7 +4,7 @@
 {% block css_place %}
 
 .trade_log{
-    height:550px;
+    height:560px;
     width: 100%;
     font-size: 12px;
     border-bottom: 1px solid grey;
@@ -23,7 +23,7 @@ thead, tbody tr {
 
 tbody {
     display:block;
-    height:500px;
+    height:525px;
     overflow:auto;
     background: white;
 }
@@ -35,13 +35,18 @@ h5{
 .menu_bar{
     height:50px;
     margin:auto;
-    border-bottom: 1px solid grey;
+
 }
 
 .chart_area{
     margin:auto;
     height:250px;
     border-bottom: 1px solid grey;
+}
+
+.chart_header{
+    height:25px;
+    font-size:12px;
 }
 
 {% endblock %}
@@ -57,8 +62,7 @@ h5{
                     <h5 class="nav-link link_color font-weight-bold">Comments</h5>
                     <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px; margin:10px;">Save</button>
                 </div>
-
-                <textarea class="form-control" rows="3" style="width:100%; height:235px;"></textarea>
+                <textarea class="form-control" rows="3" style="width:100%; height:275px;"></textarea>
             </div>
         </form>
     </div>
@@ -196,13 +200,13 @@ h5{
     {% endblock %}
 
     {% block main_block%}
-    <div class="row menu_bar">
+    <div class="row menu_bar" style="border-bottom: 1px solid grey;">
         <!--Form for submiting robot results-->
         <div style="height:50px; width:25%;  border-right: 1px solid grey;">
             <!--Form to load all accounts-->
             <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
                 {% csrf_token %}
-                <label class="col-form-label">Accounts</label>
+                <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:60px;">Accounts</label>
                 <div class="col-auto">
                     <select class="form-control input-sm" style="height:30px; width:150px;" name="account">
                         {% for account in accounts %}
@@ -216,8 +220,8 @@ h5{
         <div  style="height:50px; width:75%;">
             <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
                 {% csrf_token %}
-                    <label class="col-form-label">Trade</label>
-                    <div class="col-auto">
+                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:40px; padding:1px;">Trade</label>
+                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
                         <select class="form-control" style="height:30px;" name="side">
                             <option >BUY</option>
                             <option>SELL</option>
@@ -225,8 +229,8 @@ h5{
                         </select>
                     </div>
 
-                    <label class="col-form-label">Robot</label>
-                    <div class="col-auto">
+                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:40px; padding:1px;">Robot</label>
+                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
                         <select class="form-control" style="height:30px; width:80px;" name="robot_name">
                             {% for robot in robots %}
                             <option>{{robot}}</option>
@@ -234,19 +238,23 @@ h5{
                         </select>
                     </div>
 
-                    <label for="start">Start Date:</label>
-                    <div class="col-auto">
+                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">Start Date:</label>
+                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
                         <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ beg_month }}" min="2020-01-01">
                     </div>
 
-                    <label for="end">End Date:</label>
-                    <div class="col-auto">
+                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">End Date:</label>
+                    <div class="col-auto" style="padding-left:5px; padding-right:15px;">
                         <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ today }}" min="2020-01-01">
                     </div>
 
                 <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
             </form>
         </div>
+    </div>
+
+    <div class="row menu_bar chart_header">
+        <label class="nav-link link_color font-weight-bold">Robot</label>
     </div>
 
     <div class="row chart_area">
@@ -301,6 +309,10 @@ h5{
             </script>
             </canvas>
         </div>
+    </div>
+
+    <div class="row menu_bar chart_header">
+        <label class="nav-link link_color font-weight-bold">Account</label>
     </div>
 
     <div class="row chart_area">
