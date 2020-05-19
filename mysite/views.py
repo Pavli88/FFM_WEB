@@ -14,6 +14,8 @@ def pnl_generator(trades):
 
     trade_df = pd.DataFrame(list(trades))
 
+    print(trade_df)
+
     if trade_df.empty is True:
         return "empty"
 
@@ -35,10 +37,6 @@ def pnl_generator(trades):
 
     pnl_label = [label for label in range(len(pnls))]
     cum_pnl = cumulative(pnls)
-
-    print(pnl_label)
-    print("PNLs:", pnls)
-    print("Cum PNL:", cum_pnl)
 
     return pnl_label, pnls, cum_pnl
 
@@ -66,12 +64,15 @@ def get_balance_history(start_date, end_date):
                   account_number=default_account[0]["account_number"])
 
     transactions = oanda.get_transactions(start_date=start_date, end_date=end_date)
+    transactions = transactions[transactions["reason"] == "MARKET_ORDER_TRADE_CLOSE"]
+
     balance = list(transactions[["accountBalance"]].dropna()["accountBalance"].astype(float))
     balance_label = [bal for bal in range(len(balance))]
+    number_of_trades = len(balance)
 
     print("")
 
-    return balance, balance_label
+    return balance, balance_label, number_of_trades
 
 
 def cumulative(lists):
@@ -213,9 +214,9 @@ def get_results(request):
     if trade_side == "ALL" and robot_name == "ALL":
         trades = Trades.objects.filter(status="CLOSE",
                                        close_time__range=[start_date, end_date]).values()
-    elif robot_name == "ALL":
+    elif trade_side == "ALL":
         trades = Trades.objects.filter(status="CLOSE",
-                                       side=trade_side,
+                                       robot=robot_name,
                                        close_time__range=[start_date, end_date]).values()
     else:
         print("Robot+Side parameters")
@@ -226,6 +227,7 @@ def get_results(request):
 
     all_trades = Trades.objects.filter(status="CLOSE",
                                        close_time__range=[start_date, end_date]).values()
+
 
     all_pnls = pnl_generator(trades=trades)
 
@@ -244,6 +246,7 @@ def get_results(request):
                                              "accounts": get_account_data(),
                                              "balance": balance_list[0],
                                              "balance_label": balance_list[1],
+                                             "nmbr_trades_bal": balance_list[2],
                                              "pnl_label": [],
                                              "pnls": [],
                                              "cum_pnl": [],
@@ -255,9 +258,13 @@ def get_results(request):
                                          "today": get_today(),
                                          "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
+                                         "robot_name": robot_name,
                                          "accounts": get_account_data(),
                                          "balance": balance_list[0],
                                          "balance_label": balance_list[1],
+                                         "nmbr_trades_bal": balance_list[2],
+                                         "number_of_trades": len(all_pnls[0]),
+                                         "side": trade_side,
                                          "message": "",
                                          })
 
