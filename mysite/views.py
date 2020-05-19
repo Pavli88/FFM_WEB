@@ -10,37 +10,6 @@ from accounts.models import *
 from mysite.processes.oanda import *
 
 
-def pnl_generator(trades):
-
-    trade_df = pd.DataFrame(list(trades))
-
-    print(trade_df)
-
-    if trade_df.empty is True:
-        return "empty"
-
-    open_prices = list(trade_df["open_price"])
-    close_prices = list(trade_df["close_price"])
-    units = list(trade_df["quantity"])
-    actions = list(trade_df["side"])
-
-    pnls = []
-
-    for open, close, unit, action in zip(open_prices, close_prices, units, actions):
-
-        if action == "BUY":
-            pnl = (close-open)*unit
-            pnls.append(pnl)
-        elif action == "SELL":
-            pnl = ((close-open)*unit)*-1
-            pnls.append(pnl)
-
-    pnl_label = [label for label in range(len(pnls))]
-    cum_pnl = cumulative(pnls)
-
-    return pnl_label, pnls, cum_pnl
-
-
 def get_balance_history(start_date, end_date):
 
     print("")
@@ -196,6 +165,21 @@ def save_layout(request):
                                          })
 
 
+def get_trade_pnls(trades):
+
+    trade_df = pd.DataFrame(list(trades))
+    print(trade_df)
+
+    if trade_df.empty is True:
+        return "empty"
+
+    pnls = list(trade_df["pnl"])
+    pnl_label = [label for label in range(len(pnls))]
+    cum_pnl = cumulative(pnls)
+
+    return pnl_label, pnls, cum_pnl
+
+
 def get_results(request):
 
     if request.method == "POST":
@@ -228,8 +212,7 @@ def get_results(request):
     all_trades = Trades.objects.filter(status="CLOSE",
                                        close_time__range=[start_date, end_date]).values()
 
-
-    all_pnls = pnl_generator(trades=trades)
+    all_pnls = get_trade_pnls(trades=trades)
 
     # Loading account balance from broker
     print("Get account history from broker")

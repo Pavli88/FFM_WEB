@@ -271,12 +271,20 @@ h5{
                 // The data for our dataset
                 data: {
                     labels: {{ pnl_label }},
-                    datasets: [{
-                        label: 'P&L by Trades',
-                        backgroundColor: '#49B0C2',
-                        borderColor: '#19393D',
+                    datasets: [
+                    {
+                        label: 'Buy Trades',
+                        backgroundColor: '#405347',
+                        borderColor: '#405347',
                         data: {{ pnls }}
-                    }]
+                    },
+                    {
+                        label: 'Sell Trades',
+                        backgroundColor: '#842518',
+                        borderColor: '#842518',
+                        data: {{ pnls }}
+                    }
+                    ]
                 },
 
                 // Configuration options go here
@@ -299,7 +307,7 @@ h5{
                     labels: {{ pnl_label }},
                     datasets: [{
                         label: 'Cumulative P&L',
-                        backgroundColor: '#49B0C2',
+                        backgroundColor: '#B5A22A',
                         borderColor: '#19393D',
                         data: {{ cum_pnl }}
                     }]
@@ -333,7 +341,7 @@ h5{
                     labels: [],
                     datasets: [{
                         label: 'P&L by Trades',
-                        backgroundColor: '#49B0C2',
+                        backgroundColor: '#B5A22A',
                         borderColor: '#19393D',
                         data: []
                     }]
@@ -359,8 +367,9 @@ h5{
                     labels: {{ balance_label }},
                     datasets: [{
                         label: 'Balance History',
-                        backgroundColor: '#49B0C2',
+                        backgroundColor: '#B5A22A',
                         borderColor: '#19393D',
+                        borderWidth: 1,
                         data: {{ balance }}
                     }]
                 },

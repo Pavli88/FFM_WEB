@@ -24,7 +24,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        # message = "SELL test" #spx_test_m1
+        # message = "BUY test"
         message = message.split()
 
         print("")
@@ -276,7 +276,7 @@ def close_all_trades(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        #message = "test"
+        # message = "test"
 
         print("")
         print("------------------------------------------------------------------------")
@@ -344,8 +344,13 @@ def close_all_trades(request):
                           account_number=account_number)
 
             print("Fetching out open positions from broker for", security)
-            open_trades_table = oanda.get_open_trades()
-            open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
+
+            try:
+                open_trades_table = oanda.get_open_trades()
+                open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
+            except:
+                print("There are no open positions for this security")
+                return HttpResponse(None)
 
             print("Fetching out open trades from database...")
             trade = Trades.objects.filter(robot=robot[0]["name"],
@@ -363,8 +368,17 @@ def close_all_trades(request):
             print("Closing Price:", closing_price)
 
             for trd in trade:
+
+                if trd.side == "SELL":
+                    pnl = ((closing_price - trd.open_price)*trd.quantity)*-1
+                else:
+                    pnl = (closing_price - trd.open_price)*trd.quantity
+
+                print(trd.side, "PNL:", round(pnl, 2))
+
                 trd.status = "CLOSE"
                 trd.close_price = closing_price
+                trd.pnl = round(pnl, 2)
                 trd.save()
 
             # Reaching out oanda for closing positions
