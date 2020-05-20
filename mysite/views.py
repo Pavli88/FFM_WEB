@@ -39,7 +39,11 @@ def get_balance_history(start_date, end_date):
     balance_label = [bal for bal in range(len(balance))]
 
     trades = list(transactions["pl"])
+
     trades_label = [trd for trd in range(len(trades))]
+
+    total_pnl = round(sum([float(i) for i in trades]), 2)
+    trade_return = round((total_pnl / float(balance[0]))*100, 2)
 
     trade_colors = []
 
@@ -58,7 +62,9 @@ def get_balance_history(start_date, end_date):
 
     trades_dict = {"trades": trades,
                    "label": trades_label,
-                   "colors": trade_colors}
+                   "colors": trade_colors,
+                   "total_pnl": total_pnl,
+                   "return": trade_return}
 
     return balance, balance_label, number_of_trades, trades_dict
 
