@@ -256,7 +256,7 @@ h5{
     <div class="row menu_bar chart_header">
         <label class="nav-link link_color font-weight-bold">Robot: {{robot_name}}</label>
         <label class="nav-link link_color font-weight-bold">Side: {{side}}</label>
-        <label class="nav-link link_color font-weight-bold">Number of Trades: {{number_of_trades}}</label>
+        <label class="nav-link link_color font-weight-bold">Number of Trades: {{pnl.number_of_trades}}</label>
     </div>
 
     <div class="row chart_area">
@@ -270,20 +270,15 @@ h5{
 
                 // The data for our dataset
                 data: {
-                    labels: {{ pnl_label }},
+                    labels: {{ pnl.labels }},
                     datasets: [
                     {
                         label: 'Buy Trades',
-                        backgroundColor: '#405347',
+                        backgroundColor: {{ pnl.colors|safe }},
                         borderColor: '#405347',
-                        data: {{ pnls }}
+                        data: {{ pnl.pnls }}
                     },
-                    {
-                        label: 'Sell Trades',
-                        backgroundColor: '#842518',
-                        borderColor: '#842518',
-                        data: {{ pnls }}
-                    }
+
                     ]
                 },
 
@@ -304,12 +299,12 @@ h5{
 
                 // The data for our dataset
                 data: {
-                    labels: {{ pnl_label }},
+                    labels: {{ pnl.labels }},
                     datasets: [{
                         label: 'Cumulative P&L',
                         backgroundColor: '#B5A22A',
                         borderColor: '#19393D',
-                        data: {{ cum_pnl }}
+                        data: {{ pnl.cum_pnl }}
                     }]
                 },
 
@@ -333,17 +328,17 @@ h5{
                 var ctx = document.getElementById('bar_chart_2').getContext('2d');
                 var chart = new Chart(ctx, {
                 // The type of chart we want to create
-                type: 'line',
+                type: 'bar',
 
                 // The data for our dataset
                 data: {
 
-                    labels: [],
+                    labels: {{ robot_perf.robot_label|safe }},
                     datasets: [{
                         label: 'P&L by Trades',
                         backgroundColor: '#B5A22A',
                         borderColor: '#19393D',
-                        data: []
+                        data: {{ robot_perf.robot_pnl }}
                     }]
                 },
 

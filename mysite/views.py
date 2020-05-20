@@ -170,14 +170,41 @@ def get_trade_pnls(trades):
     trade_df = pd.DataFrame(list(trades))
     print(trade_df)
 
+    color_list = []
+
+    for side in list(trade_df["side"]):
+        if side == "SELL":
+            color_list.append('#842518')
+        elif side == "BUY":
+            color_list.append('#405347')
+
     if trade_df.empty is True:
         return "empty"
+
+    robots = get_robot_list()
+
+    robot_pnl_list = []
+
+    for robot in robots:
+        robot_df = trade_df[trade_df["robot"] == robot]
+        robot_pnl_list.append(round(robot_df["pnl"].sum(), 2))
+
+    print(robot_pnl_list)
 
     pnls = list(trade_df["pnl"])
     pnl_label = [label for label in range(len(pnls))]
     cum_pnl = cumulative(pnls)
 
-    return pnl_label, pnls, cum_pnl
+    pnl_dict = {"pnls": pnls,
+                "labels": pnl_label,
+                "cum_pnl": cum_pnl,
+                "colors": color_list,
+                "number_of_trades": len(pnls)}
+
+    robot_pnls = {"robot_pnl": robot_pnl_list,
+                  "robot_label": robots}
+
+    return pnl_dict, robot_pnls
 
 
 def get_results(request):
@@ -235,9 +262,8 @@ def get_results(request):
                                              "cum_pnl": [],
                                              })
 
-    return render(request, 'home.html', {"pnls": all_pnls[1],
-                                         "pnl_label": all_pnls[0],
-                                         "cum_pnl": all_pnls[2],
+    print(all_pnls[0])
+    return render(request, 'home.html', {
                                          "today": get_today(),
                                          "beg_month": get_beg_month(),
                                          "robots": get_robot_list(),
@@ -246,8 +272,9 @@ def get_results(request):
                                          "balance": balance_list[0],
                                          "balance_label": balance_list[1],
                                          "nmbr_trades_bal": balance_list[2],
-                                         "number_of_trades": len(all_pnls[0]),
                                          "side": trade_side,
+                                         "robot_perf": all_pnls[1],
+                                         "pnl": all_pnls[0],
                                          "message": "",
                                          })
 
