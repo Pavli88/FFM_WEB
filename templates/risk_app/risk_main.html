@@ -1,31 +1,27 @@
 <!DOCTYPE html>
 {% extends "base.html"%}
-    {% block main_block%}
-    <div>
-                    <p>RISK MAIN PAGE</p>
-                    <form action="{% url 'load account' %}" method="GET">
-                    {% csrf_token %}
-                    <label for="op_bal">Opening Balance:</label>
-                    <input type="text" name="op_bal" value="{{ open_bal }}"><br>
 
-                    <label for="live">Live</label>
-                    <input type="radio" name="env_1" value="live">
+{% block css_place %}
 
-                    <label for="practice">Practice</label>
-                    <input type="radio" name="env_2" value="practice"><br>
+{% endblock %}
 
-                    <input type="submit", name="run_account" value="RUN">
-                    </form>
-                    <form>
-                        <label>-----------------------------------</label><br>
-                        <label>          BALANCE SUMMARY          </label><br>
-                        <label>-----------------------------------</label><br>
-                        <label>Environment: {{ env }} </label><br>
-                        <label>Opening Balance: {{ op_bal }} </label><br>
-                        <label>Daily Risk Ammount: {{ nav }} </label><br>
-                        <label>Daily NAV Down Limit: {{ nav }} </label><br>
-                        <label>Current NAV: {{ nav }} </label><br>
-                        <label>Latest Balance: {{ lat_bal }} </label><br>
-                    </form>
-                </div>
-    {% endblock %}
+{% block main_block%}
+<div class="row" style="height:50px; background:green;">
+    <h5>Risk Parameters</h5><br>
+</div>
+<div class="row" style="height:100px; background:green;">
+    <h5>Account Level</h5><br>
+    <p>Max drawdown on account</p><br>
+    <p>Max Risk Exposure on account</p><br>
+</div>
+<div class="row" style="height:100px; background:blue;">
+    <h5>Robot Level</h5><br>
+    <p>Max Drawdown on robot</p><br>
+    <p>Pyramiding Level</p><br>
+    <p>Stop Loss Policy</p><br>
+    <p>Pyramiding Level</p><br>
+</div>
+<div class="row" style="height:100px; background:red;">
+
+</div>
+{% endblock %}

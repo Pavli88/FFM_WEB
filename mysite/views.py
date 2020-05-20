@@ -197,14 +197,14 @@ def get_trade_pnls(trades):
 
     color_list = []
 
+    if trade_df.empty is True:
+        return "empty"
+
     for side in list(trade_df["side"]):
         if side == "SELL":
             color_list.append('#842518')
         elif side == "BUY":
             color_list.append('#405347')
-
-    if trade_df.empty is True:
-        return "empty"
 
     robots = get_robot_list()
 
@@ -267,9 +267,6 @@ def get_results(request):
         trades = Trades.objects.filter(status="CLOSE",
                                        side=trade_side,
                                        robot=robot_name,
-                                       close_time__range=[start_date, end_date]).values()
-
-    all_trades = Trades.objects.filter(status="CLOSE",
                                        close_time__range=[start_date, end_date]).values()
 
     all_pnls = get_trade_pnls(trades=trades)
