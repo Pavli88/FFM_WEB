@@ -37,11 +37,30 @@ def get_balance_history(start_date, end_date):
 
     balance = list(transactions[["accountBalance"]].dropna()["accountBalance"].astype(float))
     balance_label = [bal for bal in range(len(balance))]
+
+    trades = list(transactions["pl"])
+    trades_label = [trd for trd in range(len(trades))]
+
+    trade_colors = []
+
+    for trade in trades:
+        if float(trade) < 0:
+            trade_colors.append('#842518')
+        else:
+            trade_colors.append('#405347')
+
     number_of_trades = len(balance)
 
     print("")
 
-    return balance, balance_label, number_of_trades
+    balance_dict = {"balance": balance,
+                    "label": balance_label}
+
+    trades_dict = {"trades": trades,
+                   "label": trades_label,
+                   "colors": trade_colors}
+
+    return balance, balance_label, number_of_trades, trades_dict
 
 
 def cumulative(lists):
@@ -184,10 +203,17 @@ def get_trade_pnls(trades):
     robots = get_robot_list()
 
     robot_pnl_list = []
+    robot_color_list = []
 
     for robot in robots:
         robot_df = trade_df[trade_df["robot"] == robot]
-        robot_pnl_list.append(round(robot_df["pnl"].sum(), 2))
+        robot_pnl = round(robot_df["pnl"].sum(), 2)
+        robot_pnl_list.append(robot_pnl)
+
+        if float(robot_pnl) < 0:
+            robot_color_list.append('#842518')
+        else:
+            robot_color_list.append('#405347')
 
     print(robot_pnl_list)
 
@@ -202,7 +228,8 @@ def get_trade_pnls(trades):
                 "number_of_trades": len(pnls)}
 
     robot_pnls = {"robot_pnl": robot_pnl_list,
-                  "robot_label": robots}
+                  "robot_label": robots,
+                  "color": robot_color_list}
 
     return pnl_dict, robot_pnls
 
@@ -257,9 +284,9 @@ def get_results(request):
                                              "balance": balance_list[0],
                                              "balance_label": balance_list[1],
                                              "nmbr_trades_bal": balance_list[2],
-                                             "pnl_label": [],
-                                             "pnls": [],
-                                             "cum_pnl": [],
+                                             "robot_perf": [],
+                                             "pnl": [],
+
                                              })
 
     print(all_pnls[0])
@@ -275,6 +302,7 @@ def get_results(request):
                                          "side": trade_side,
                                          "robot_perf": all_pnls[1],
                                          "pnl": all_pnls[0],
+                                         "br_trades": balance_list[3],
                                          "message": "",
                                          })
 
