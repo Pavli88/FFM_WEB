@@ -4,6 +4,7 @@ from mysite.processes.oanda import *
 from mysite.views import *
 from risk.models import *
 
+
 # Main site for risk management
 def risk_main(request):
 
@@ -30,12 +31,16 @@ def get_balance(request):
     return render(request, 'risk_app/risk_main.html', {"env": env,
                                                        "nav": float(account["nav"]),
                                                        "op_bal": opening_bal,
-                                                       "lat_bal": float(account["latest_bal"]),
-                                              }
-                  )
+                                                       "lat_bal": float(account["latest_bal"]), })
 
 
 def save_account_risk(request):
+
+    """
+    Process to updated account level risk parameters
+    :param request:
+    :return:
+    """
 
     if request.method == "POST":
         account = request.POST.get("account")
@@ -45,6 +50,18 @@ def save_account_risk(request):
         print("Account:", account)
         print("Daily Risk Limit:", daily_risk_limit)
 
-    account_risk_params = AccountRisk.objects.get(id=1)
+    try:
+        print("Updating account level risk parameters for", account)
+        account_risk_params = AccountRisk.objects.get(account=account)
+        account_risk_params.account = account
+        account_risk_params.daily_risk_limit = daily_risk_limit
+        account_risk_params.save()
+        print("Record has been updated!")
+    except:
+        print("Risk account record does not exists for this account. Creating first risk record for account")
+        account_risk_params = AccountRisk(account=account,
+                                          daily_risk_limit=daily_risk_limit)
+        account_risk_params.save()
+        print("New record has been created")
 
     return redirect('risk main template')
