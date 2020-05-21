@@ -38,8 +38,13 @@
                 <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Risk Exposure</label>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
+                <button id="acc_sub" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
             </div>
+            <script>
+                $("#acc_sub").on("click", function(){
+                    alert('Record has been updated!');
+                })
+            </script>
         </form>
     </div>
 
