@@ -240,17 +240,21 @@ h5{
 
                     <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">Start Date:</label>
                     <div class="col-auto" style="padding-left:5px; padding-right:5px;">
-                        <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ beg_month }}" min="2020-01-01">
+                        <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ dates.today }}" min="2020-01-01">
                     </div>
 
                     <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">End Date:</label>
                     <div class="col-auto" style="padding-left:5px; padding-right:15px;">
-                        <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ today }}" min="2020-01-01">
+                        <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ dates.next_day }}" min="2020-01-01">
                     </div>
 
                 <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
             </form>
         </div>
+    </div>
+    <!--Performance-->
+    <div class="row">
+        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
     </div>
 
     <!--Robots summary statistics-->
@@ -413,6 +417,70 @@ h5{
         </div>
     </div>
 
+    <div class="row">
+        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Risk</h5>
+    </div>
+
+    <!--Account statistics-->
+    <div class="row menu_bar chart_header">
+        <label class="nav-link link_color font-weight-bold">Total SL Risk: {{ risk.sum_risk }}</label>
+        <label class="nav-link link_color font-weight-bold">Total SL Risk %:</label>
+    </div>
+    <div class="row chart_area">
+        <div class="col" style="width:50%;">
+            <canvas id="bar_chart_6" width="50%" height="20">
+            <script>
+                var ctx = document.getElementById('bar_chart_6').getContext('2d');
+                var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'bar',
+
+                // The data for our dataset
+                data: {
+
+                    labels: {{ br_trades.label|safe }},
+                    datasets: [{
+                        label: 'All Trades on Account',
+                        backgroundColor: {{ br_trades.colors|safe }},
+                        borderColor: '#19393D',
+                        data: {{ br_trades.trades|safe }}
+                    }]
+                },
+
+                // Configuration options go here
+                options: {}
+                });
+            </script>
+            </canvas>
+        </div>
+        <div class="col" style="width:50%;">
+            <canvas id="bar_chart_7" width="50%" height="20">
+
+            <script>
+                var ctx = document.getElementById('bar_chart_7').getContext('2d');
+                var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'bar',
+
+                // The data for our dataset
+                data: {
+                    labels: {{ balance_label }},
+                    datasets: [{
+                        label: 'Balance History',
+                        backgroundColor: '#405347',
+                        borderColor: '#19393D',
+                        borderWidth: 1,
+                        data: {{ balance }}
+                    }]
+                },
+
+                // Configuration options go here
+                options: {}
+                });
+            </script>
+            </canvas>
+        </div>
+    </div>
     <!--Open trades Table-->
     <div class="row" style="height:350px; margin-right: 0px; margin-left:0px;">
         <h5 class="nav-link link_color font-weight-bold">

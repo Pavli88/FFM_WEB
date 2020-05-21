@@ -83,7 +83,7 @@ def cumulative(lists):
     return cu_list[1:]
 
 
-def get_today():
+def get_days():
 
     """
     This function gets today's value and returns it back as a string
@@ -91,7 +91,14 @@ def get_today():
     """
 
     today = date.today()
-    return str(today)
+    t_plus_one = today + datetime.timedelta(days=1)
+    datem = datetime.datetime(today.year, today.month, 1)
+
+    dates = {"today": str(today),
+             "next_day": str(t_plus_one),
+             "beg_month": str(datem)}
+
+    return dates
 
 
 def get_beg_month():
@@ -131,6 +138,36 @@ def get_open_trades():
     return open_trades
 
 
+def calculate_risk_exposure():
+
+    """
+    This function calculates SL exposure and gives back the list of these ammounts
+    :return:
+    """
+
+    open_trades = pd.DataFrame(list(get_open_trades()))
+    sl_list = list(open_trades["sl"])
+    open_price_list = list(open_trades["open_price"])
+    side_list = list(open_trades["side"])
+    quantity_list = list(open_trades["quantity"])
+
+    risk_list = []
+
+    for sl, price, side, qt in zip(sl_list, open_price_list, side_list, quantity_list):
+        if side == "SELL":
+            risk = (sl - price)*-1*qt
+        else:
+            risk = (sl - price) * qt
+
+        risk_list.append(round(risk, 2))
+
+    print(sum(risk_list))
+    risk_dict = {"sum_risk": sum(risk_list),
+                 "risk_list": risk_list}
+
+    return risk_dict
+
+
 def get_robot_list(account=None):
 
     """
@@ -153,8 +190,7 @@ def home(request):
 
     print("Loading robot list from db:", get_robot_list())
 
-    return render(request, 'home.html', {"beg_month": get_beg_month(),
-                                         "today": get_today(),
+    return render(request, 'home.html', {"dates": get_days(),
                                          "robots": get_robot_list(),
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
@@ -177,8 +213,7 @@ def save_layout(request):
 
     print("Account:", account)
 
-    return render(request, 'home.html', {"beg_month": get_beg_month(),
-                                         "today": get_today(),
+    return render(request, 'home.html', {"dates": get_days(),
                                          "robots": get_robot_list(),
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
@@ -253,7 +288,7 @@ def get_results(request):
         print("Robot Name:", robot_name)
         print("Start Date: ", start_date)
 
-    print("Today's date:", get_today())
+    print("Today's date:", get_days()["today"])
 
     if trade_side == "ALL" and robot_name == "ALL":
         trades = Trades.objects.filter(status="CLOSE",
@@ -275,12 +310,14 @@ def get_results(request):
     print("Get account history from broker")
     balance_list = get_balance_history(start_date=start_date, end_date=end_date)
 
+    # SL Exposure
+    sl_exposure_list = calculate_risk_exposure()
+
     # If there is no record for the robot for the preiod the codes goes to this line
     if all_pnls == "empty":
 
         print("Empty Dataframe")
-        return render(request, 'home.html', {"today": get_today(),
-                                             "beg_month": get_beg_month(),
+        return render(request, 'home.html', {"dates": get_days(),
                                              "robots": get_robot_list(),
                                              "message": "empty",
                                              "accounts": get_account_data(),
@@ -292,10 +329,7 @@ def get_results(request):
 
                                              })
 
-    print(all_pnls[0])
-    return render(request, 'home.html', {
-                                         "today": get_today(),
-                                         "beg_month": get_beg_month(),
+    return render(request, 'home.html', {"dates": get_days(),
                                          "robots": get_robot_list(),
                                          "robot_name": robot_name,
                                          "accounts": get_account_data(),
@@ -306,6 +340,7 @@ def get_results(request):
                                          "robot_perf": all_pnls[1],
                                          "pnl": all_pnls[0],
                                          "br_trades": balance_list[3],
+                                         "risk": sl_exposure_list,
                                          "message": "",
                                          })
 
