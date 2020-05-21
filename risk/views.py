@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from risk.processes.account import *
 from mysite.processes.oanda import *
-
+from mysite.views import *
+from risk.models import *
 
 # Main site for risk management
 def risk_main(request):
@@ -11,7 +12,10 @@ def risk_main(request):
     :param request:
     :return:
     """
-    return render(request, 'risk_app/risk_main.html')
+
+    print("Loading all accounts from database...")
+
+    return render(request, 'risk_app/risk_main.html', {"accounts": get_account_data()})
 
 
 def get_balance(request):
@@ -29,3 +33,18 @@ def get_balance(request):
                                                        "lat_bal": float(account["latest_bal"]),
                                               }
                   )
+
+
+def save_account_risk(request):
+
+    if request.method == "POST":
+        account = request.POST.get("account")
+        daily_risk_limit = request.POST.get("loss_limit")
+
+        print("Request received to amend account level risk parameters")
+        print("Account:", account)
+        print("Daily Risk Limit:", daily_risk_limit)
+
+    account_risk_params = AccountRisk.objects.get(id=1)
+
+    return redirect('risk main template')
