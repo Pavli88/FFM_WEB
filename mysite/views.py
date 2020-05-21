@@ -101,19 +101,6 @@ def get_days():
     return dates
 
 
-def get_beg_month():
-
-    """
-    Function to get the first day of the month as date
-    :return:
-    """
-
-    today = date.today()
-    datem = datetime.datetime(today.year, today.month, 1)
-
-    return str(datem)[0:10]
-
-
 def get_account_data():
 
     """
