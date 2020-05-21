@@ -21,16 +21,16 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        message = request.body
-        message = str(message.decode("utf-8"))
+        # message = request.body
+        # message = str(message.decode("utf-8"))
 
-        # message = "SELL test"
+        message = "SELL test"
         message = message.split()
 
         print("")
-        print("------------------------------------------------------------------------")
-        print("TRADE SIGNAL")
-        print("------------------------------------------------------------------------")
+        print("------------------------------------")
+        print("|  ***      TRADE SIGNAL      ***  |")
+        print("------------------------------------")
 
         signal_params = {"trade_side": message[0],
                          "robot_name": message[1]}
@@ -40,7 +40,6 @@ def new_execution(request):
         now = datetime.now().time()
         print("Current Time:", now)
         print("Checking if new trading is enabled")
-        print("Loading settings")
 
         settings = Settings.objects.filter(id=1).values()
         ov_status = settings[0]["ov_status"]
@@ -60,6 +59,9 @@ def new_execution(request):
         else:
             print("Trading is not restricted due to time. ")
 
+        print("------------------------")
+        print("        Robot info      ")
+        print("------------------------")
         print("Looking for robot that is tracking:", signal_params)
 
         # Gets robot data from database
@@ -72,26 +74,27 @@ def new_execution(request):
 
         quantity = robot[0]["quantity"]
 
-        print("Db response:", robot)
-        print("----------")
-        print("Robot info")
-        print("----------")
-        print("Robot Name:", robot[0]["name"])
-        print("Robot Status:", robot[0]["status"])
-        print("Robot trade size:", quantity)
+        print("Robot Name:", robot[0]["name"],
+              "| Robot ID:", robot[0]["id"],
+              "| Robot Status:", robot[0]["status"],
+              "| Robot trade size:", quantity)
 
         trade_side = signal_params["trade_side"]
         security = robot[0]["security"]
         precision = robot[0]["prec"]
 
-        print("-------------")
-        print("Security info")
-        print("-------------")
-        print("Security:", security)
-        print("Trade Side:", trade_side)
-        print("Precision:", precision)
         print("")
-        print("Checking robot status...")
+        print("------------------------")
+        print("      Security info     ")
+        print("------------------------")
+        print("Security:", security,
+              "| Trade Side:", trade_side,
+              "| Precision:", precision)
+
+        print("")
+        print("------------------------")
+        print(" Checking robot status ")
+        print("------------------------")
 
         if message[0] == "BUY" or message[0] == "SELL":
             pass
@@ -112,19 +115,22 @@ def new_execution(request):
 
             print("Risk control process passed parameters. Starting order generating process")
             print("Checking broker environment paramaters...")
-            print("-----------")
-            print("Broker info")
-            print("-----------")
+
+            print("")
+            print("------------------------")
+            print("      Broker info       ")
+            print("------------------------")
 
             broker = robot[0]["broker"]
             account_number = robot[0]["account_number"]
             environment = robot[0]["env"]
 
-            print("Broker:", broker)
-            print("Environment:", environment)
-            print("Account Number:", account_number)
+            print("Broker:", broker,
+                  "| Environment:", environment,
+                  "| Account Number:", account_number)
 
             if broker == "oanda":
+
                 print("Retrieving access token for", broker, robot[0]["env"], robot[0]["account_number"])
 
                 # Fetching broker parameters from database
@@ -133,8 +139,6 @@ def new_execution(request):
                                                               account_number=account_number,
                                                               env=environment).values()
 
-                print("Broker parameters:", broker_params)
-
                 try:
                     acces_token = broker_params[0]["access_token"]
                 except:
@@ -142,8 +146,11 @@ def new_execution(request):
                     return HttpResponse(None)
 
                 print("Access Token:", acces_token)
+
                 print("")
+                print("------------------------")
                 print("Creating Oanda connection instance")
+                print("------------------------")
 
                 if environment == "demo":
                     oanda_env = "practice"
@@ -167,13 +174,14 @@ def new_execution(request):
                 risk_amount = starting_balance * daily_risk_limit
                 initial_exposure = robot[0]["in_exp"]
 
-                print("---------------")
-                print("Risk Parameters")
-                print("---------------")
-                print("Daily Risk Limit:", daily_risk_limit)
-                print("Start Balance:", starting_balance)
-                print("Risk Amount:", risk_amount)
-                print("Initial Exposure:", initial_exposure)
+                print("------------------------")
+                print("    Risk Parameters     ")
+                print("------------------------")
+                print("Daily Risk Limit:", daily_risk_limit,
+                      "| Start Balance:", starting_balance,
+                      "| Risk Amount:", risk_amount,
+                      "| Initial Exposure:", initial_exposure)
+
                 print("Checking initial exposure vs daily risk limit:")
 
                 if initial_exposure >= daily_risk_limit:
@@ -183,22 +191,26 @@ def new_execution(request):
                 print("Initial exposure vs daily risk limit check: Passed")
 
                 # Account balance data
-                print("-------------------")
-                print("Account Information")
-                print("-------------------")
+
+                print("")
+                print("------------------------")
+                print("   Account Information  ")
+                print("------------------------")
 
                 balance = float(account_data["account"]["balance"])
                 nav = float(account_data["account"]["NAV"])
                 unrealized_pnl = float(account_data["account"]["unrealizedPL"])
 
-                print("Opening Balance:", float(starting_balance))
-                print("Daily Risk Amount:", risk_amount)
-                print("Daily NAV Down Limit:", float(starting_balance) - risk_amount)
-                print("Current NAV:", nav)
-                print("Latest Balance", balance)
-                print("")
+                print("Opening Balance:", float(starting_balance),
+                      "| Daily Risk Amount:", risk_amount,
+                      "| Daily NAV Down Limit:", float(starting_balance) - risk_amount,
+                      "| Current NAV:", nav,
+                      "| Latest Balance", balance)
 
-                print("Evaluating daily risk limit.")
+                print("")
+                print("============================")
+                print("   Daily risk limit check   ")
+                print("============================")
                 # Checking if trade can be executed based on daily risk limit
 
                 if starting_balance - risk_amount > balance:
@@ -211,7 +223,10 @@ def new_execution(request):
                 # Fetching out open positions
                 # --> this can be used for risk control later because of the stop lost levels
 
-                print("Fetching out open positions...")
+                print("============================")
+                print("      Pyramiding Check      ")
+                print("============================")
+                print("Fetching out open positions")
 
                 # Cheking pyramiding
 
@@ -248,7 +263,9 @@ def new_execution(request):
                                                       balance=balance,
                                                       precision=precision)
 
-                if float(order["stopLossOnFill"]["price"]) < 0:
+                sl = float(order["stopLossOnFill"]["price"])
+
+                if sl < 0:
                     print("Stop Loss level is below 0. Trade execution stopped!")
                     return HttpResponse(None)
 
@@ -270,8 +287,6 @@ def new_execution(request):
 
                 open_trades = oanda.get_open_trades()[["id", "instrument", "price", ]]
 
-                print(open_trades)
-                print("")
                 print("Checking if trade id exists in FFM SYSTEM db")
 
                 for id, open_price in zip(open_trades["id"], open_trades["price"]):
@@ -299,12 +314,12 @@ def new_execution(request):
                                        side=message[0],
                                        broker=broker,
                                        broker_id=id,
+                                       sl=sl,
                                        )
                         trade.save()
 
                         print("New trade record was saved to FFM SYSTEM db with ID:", id)
                         print("---------")
-                        print("")
                     else:
                         print("Trade id exists in FFM SYSTEM db")
 

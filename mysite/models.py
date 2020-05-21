@@ -19,6 +19,7 @@ class Trades(models.Model):
     side = models.CharField(max_length=30, default="")
     broker_id = models.IntegerField(default=0)
     broker = models.CharField(max_length=30, default="")
+    sl = models.FloatField(default=0.0)
 
 
 class HomePageDefault(models.Model):

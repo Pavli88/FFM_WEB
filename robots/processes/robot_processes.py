@@ -34,6 +34,7 @@ class RobotProcesses:
         print("----------------")
         print("Generating order")
         print("----------------")
+        print("Checking SL policy.Fetching out risk parameters from database")
 
         self.bid = bid_ask["bid"]
         self.ask = bid_ask["ask"]
@@ -50,12 +51,11 @@ class RobotProcesses:
 
         print("QUANTITY:", self.units)
         print("Calculation SL")
-        print("Checking SL policy...")
 
         # Generating stop loss level
         print("Generating stop loss level")
+
         sl_risk_amount = balance * initial_exposure
-        print("SL Risk Amount:", balance * initial_exposure)
 
         if self.units > 0:
             sl_level = float(self.ask) - (sl_risk_amount / abs(self.units))
@@ -63,6 +63,7 @@ class RobotProcesses:
             sl_level = float(self.bid) + (sl_risk_amount / abs(self.units))
 
         print("SL Level:", sl_level)
+        print("SL Risk Amount:", balance * initial_exposure)
 
         self.order = {"instrument": str(security),
                       "units": str(self.units),

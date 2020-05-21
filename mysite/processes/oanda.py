@@ -49,10 +49,13 @@ class Oanda:
 
     def get_open_trades(self):
 
+        """
+        Function to get all open trades for an account
+        :return:
+        """
+
         self.open_trades = self.oanda.trades.get_open_trades(account_id=self.account_number).as_dict()
         self.open_trades_table = pd.DataFrame.from_dict(self.open_trades["trades"])
-
-        print(self.open_trades_table)
 
         return self.open_trades_table
 
@@ -132,4 +135,27 @@ class Oanda:
                                                                trade_id=trade_id).as_dict()
 
         return self.trd_details
+
+    def get_risk_list(self):
+
+        self.op_trd_table = self.get_open_trades()
+
+        self.df_lenght = range(len(self.op_trd_table["id"]))
+        self.price_list = list(self.op_trd_table["price"])
+        self.quantity = list(self.op_trd_table["initialUnits"])
+
+        self.risk_list = []
+
+        for i, price, qt in zip(self.df_lenght, self.price_list, self.quantity):
+
+            sl_price = self.open_trades["trades"][i]["stopLossOrder"]["price"]
+
+            if float(qt) < 0:
+                self.trd_risk = (float(sl_price) - float(price)) * float(qt)
+            else:
+                self.trd_risk = (float(price) - float(sl_price)) * float(qt)
+
+            self.risk_list.append(self.trd_risk)
+
+            print("Stopp Loss Price:", sl_price, "Trade Price:", price, "Quantity:", qt, "Risk:", self.trd_risk)
 
