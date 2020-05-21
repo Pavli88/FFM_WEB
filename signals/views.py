@@ -21,10 +21,10 @@ def new_execution(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "SELL test"
+        #message = "SELL test"
         message = message.split()
 
         print("")
