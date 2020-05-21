@@ -120,3 +120,16 @@ class Oanda:
                                                    instrument="EUR_USD").as_dict()
         print(self.trades)
 
+    def trade_details(self, trade_id):
+
+        """
+        Function to get trade details for a specific transaction by trade ID
+        :param trade_id:
+        :return:
+        """
+
+        self.trd_details = self.oanda.trades.get_trade_details(account_id=self.account_number,
+                                                               trade_id=trade_id).as_dict()
+
+        return self.trd_details
+

@@ -24,7 +24,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        #message = "SELL test"
+        # message = "SELL test"
         message = message.split()
 
         print("")
@@ -41,10 +41,12 @@ def new_execution(request):
         print("Current Time:", now)
         print("Checking if new trading is enabled")
         print("Loading settings")
+
         settings = Settings.objects.filter(id=1).values()
         ov_status = settings[0]["ov_status"]
         st_time = settings[0]["ov_st_time"]
         en_time = settings[0]["ov_en_time"]
+
         print("Restricted Time Status:", ov_status)
         print("Restriction Start Time:", st_time.strftime("%H:%M"))
         print("Restriction End Time:", en_time.strftime("%H:%M"))
@@ -61,11 +63,14 @@ def new_execution(request):
         print("Looking for robot that is tracking:", signal_params)
 
         # Gets robot data from database
+
         try:
             robot = RobotProcesses().get_robot(name=signal_params["robot_name"])
         except:
             print("Robot does not exists in database! Process stopped!")
             return HttpResponse(None)
+
+        quantity = robot[0]["quantity"]
 
         print("Db response:", robot)
         print("----------")
@@ -73,14 +78,15 @@ def new_execution(request):
         print("----------")
         print("Robot Name:", robot[0]["name"])
         print("Robot Status:", robot[0]["status"])
-        quantity = robot[0]["quantity"]
         print("Robot trade size:", quantity)
-        print("-------------")
-        print("Security info")
-        print("-------------")
+
         trade_side = signal_params["trade_side"]
         security = robot[0]["security"]
         precision = robot[0]["prec"]
+
+        print("-------------")
+        print("Security info")
+        print("-------------")
         print("Security:", security)
         print("Trade Side:", trade_side)
         print("Precision:", precision)
@@ -103,15 +109,18 @@ def new_execution(request):
             # If process passed the risk layer order generating process can be started.
 
             # ORDER GENERATING
+
             print("Risk control process passed parameters. Starting order generating process")
             print("Checking broker environment paramaters...")
             print("-----------")
             print("Broker info")
             print("-----------")
+
             broker = robot[0]["broker"]
-            print("Broker:", broker)
             account_number = robot[0]["account_number"]
             environment = robot[0]["env"]
+
+            print("Broker:", broker)
             print("Environment:", environment)
             print("Account Number:", account_number)
 
@@ -125,6 +134,7 @@ def new_execution(request):
                                                               env=environment).values()
 
                 print("Broker parameters:", broker_params)
+
                 try:
                     acces_token = broker_params[0]["access_token"]
                 except:
@@ -147,9 +157,11 @@ def new_execution(request):
                               account_number=account_number)
 
                 print("")
+
                 account_data = oanda.get_account_data()
 
                 # Basic risk parameters -> Later this section will go to risk checking
+
                 daily_risk_limit = 0.10
                 starting_balance = 100000.0
                 risk_amount = starting_balance * daily_risk_limit
@@ -163,9 +175,11 @@ def new_execution(request):
                 print("Risk Amount:", risk_amount)
                 print("Initial Exposure:", initial_exposure)
                 print("Checking initial exposure vs daily risk limit:")
+
                 if initial_exposure >= daily_risk_limit:
                     print("Initial exposure is larger than daily risk execution stopped!")
                     return HttpResponse(None)
+
                 print("Initial exposure vs daily risk limit check: Passed")
 
                 # Account balance data
@@ -186,6 +200,7 @@ def new_execution(request):
 
                 print("Evaluating daily risk limit.")
                 # Checking if trade can be executed based on daily risk limit
+
                 if starting_balance - risk_amount > balance:
                     print("You have reached your daily risk limit. Trading is not allowed for this day!")
                     return HttpResponse(None)
@@ -195,21 +210,21 @@ def new_execution(request):
 
                 # Fetching out open positions
                 # --> this can be used for risk control later because of the stop lost levels
+
                 print("Fetching out open positions...")
+
                 # Cheking pyramiding
+
                 try:
                     open_trades_table = oanda.get_open_trades()
                     open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
-
-                    print(open_trades_sec)
-                    print("")
-
                     open_trade_id_list = len(list(open_trades_table["id"]))
                 except:
                     print("There are no open trades on the account.")
                     open_trade_id_list = 0
 
                 pyramiding_limit = int(robot[0]["pyramiding_level"])
+
                 print("Number of open trades:", open_trade_id_list)
                 print("Pyramiding limit:", pyramiding_limit)
 
@@ -220,9 +235,11 @@ def new_execution(request):
                 print("Pyramiding check: Passed")
 
                 # Fetching best bid ask prices
+
                 bid_ask = oanda.bid_ask(security=security)
 
                 # Generating Order
+
                 order = RobotProcesses().create_order(trade_side=trade_side,
                                                       quantity=quantity,
                                                       security=security,
@@ -235,29 +252,61 @@ def new_execution(request):
                     print("Stop Loss level is below 0. Trade execution stopped!")
                     return HttpResponse(None)
 
-                # Saving trade to Database
-                print("Saving trade details to database")
-
-                if message[1] == "BUY":
-                    open_price = bid_ask["ask"]
-                else:
-                    open_price = bid_ask["bid"]
-
-                trade = Trades(security=security,
-                               robot=robot[0]["name"],
-                               quantity=quantity,
-                               strategy=robot[0]["strategy"],
-                               status="OPEN",
-                               open_price=open_price,
-                               time_frame=robot[0]["time_frame"],
-                               side=message[0]
-                               )
-                trade.save()
-
                 # Submits order to the appropriate account
+
                 print("Sending order to broker")
-                oanda.submit_order(order=order)
-                print("Order was submitted successfully!")
+
+                try:
+                    oanda.submit_order(order=order)
+                except:
+                    print("Order submission was not successfull.")
+                    return HttpResponse(None)
+
+                print("Order was submitted to broker successfully!")
+
+                # Saving trade record to FFM SYSTEM db
+
+                print("Saving open trades data to FFM SYSTEM")
+
+                open_trades = oanda.get_open_trades()[["id", "instrument", "price", ]]
+
+                print(open_trades)
+                print("")
+                print("Checking if trade id exists in FFM SYSTEM db")
+
+                for id, open_price in zip(open_trades["id"], open_trades["price"]):
+
+                    print("Oanda ID:", id)
+                    print("Open Price:", open_price)
+
+                    trd = Trades.objects.filter(broker_id=id).count()
+
+                    print("FFM SYSTEM Record:", trd)
+
+                    if trd == 0:
+
+                        print("---------")
+                        print("Trade does not exists in FFM SYSTEM db")
+                        print("Saving trade to db")
+
+                        trade = Trades(security=security,
+                                       robot=robot[0]["name"],
+                                       quantity=quantity,
+                                       strategy=robot[0]["strategy"],
+                                       status="OPEN",
+                                       open_price=open_price,
+                                       time_frame=robot[0]["time_frame"],
+                                       side=message[0],
+                                       broker=broker,
+                                       broker_id=id,
+                                       )
+                        trade.save()
+
+                        print("New trade record was saved to FFM SYSTEM db with ID:", id)
+                        print("---------")
+                        print("")
+                    else:
+                        print("Trade id exists in FFM SYSTEM db")
 
         return HttpResponse(None)
 
@@ -348,41 +397,48 @@ def close_all_trades(request):
             try:
                 open_trades_table = oanda.get_open_trades()
                 open_trades_sec = open_trades_table[open_trades_table["instrument"] == security]
+
+                # Reaching out oanda for closing positions
+
+                print("Closing positions at Oanda's side")
+                oanda.close_all_positions(open_trades_table=open_trades_sec)
+                print("Positions have been closed!")
+
             except:
                 print("There are no open positions for this security")
                 return HttpResponse(None)
 
-            print("Fetching out open trades from database...")
+            # Updating FFM SYSTEM db trades
+
+            print("Fetching out open trades from FFM SYSTEM database...")
             trade = Trades.objects.filter(robot=robot[0]["name"],
                                           status="OPEN")
 
-            # Fetching best bid ask prices
-            print("Retrieving bid ask prices from Oanda")
-            bid_ask = oanda.bid_ask(security=security)
+            open_trade_df = pd.DataFrame(list(trade.values()))
+            open_trade_id_list = list(open_trade_df["broker_id"])
 
-            print("BID:", bid_ask["bid"])
-            print("ASK:", bid_ask["ask"])
+            print("Open trade IDs in FFM SYSTEM")
+            print(open_trade_id_list)
 
-            closing_price = (float(bid_ask["bid"]) + float(bid_ask["ask"]))/2
+            for id ,trd in zip(open_trade_id_list, trade):
 
-            print("Closing Price:", closing_price)
+                print("Oanda ID", id)
+                print("FFM record", trd.broker_id)
+                print("Fetching trade details from Oanda")
 
-            for trd in trade:
+                trd_details = oanda.trade_details(trade_id=id)["trade"]
 
-                if trd.side == "SELL":
-                    pnl = ((closing_price - trd.open_price)*trd.quantity)*-1
-                else:
-                    pnl = (closing_price - trd.open_price)*trd.quantity
-
-                print(trd.side, "PNL:", round(pnl, 2))
+                print("Oanda Close Price", trd_details["averageClosePrice"])
+                print(trd_details["realizedPL"])
+                print("Updating FFM SYSTEM trade record")
 
                 trd.status = "CLOSE"
-                trd.close_price = closing_price
-                trd.pnl = round(pnl, 2)
+                trd.close_price = float(trd_details["averageClosePrice"])
+                trd.pnl = float(trd_details["realizedPL"])
                 trd.save()
 
-            # Reaching out oanda for closing positions
-            oanda.close_all_positions(open_trades_table=open_trades_sec)
+                print("Record has been updated!")
+                print("")
 
         return HttpResponse(None)
 
