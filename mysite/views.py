@@ -168,8 +168,12 @@ def get_robot_list(account=None):
         robots = Robots.objects.filter(account_number=account).values()
 
     robot_df = pd.DataFrame(list(robots))
-    robot_list = list(robot_df["name"])
-    robot_list.append("ALL")
+
+    try:
+        robot_list = list(robot_df["name"])
+        robot_list.append("ALL")
+    except:
+        robot_list = []
 
     return robot_list
 
@@ -183,13 +187,17 @@ def home(request):
     default_data = HomePageDefault.objects.filter().values()
     default_account = default_data[0]["account_number"]
     robot_list = get_robot_list(account=default_account)
+    broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+
     print("Default Account:", default_account)
     print("Loading robot list from db:", robot_list)
+    print("Loading broker account information")
 
     return render(request, 'home.html', {"dates": get_days(),
                                          "robots": robot_list,
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
+                                         "broker": broker_account,
                                          "pnl_label": [],
                                          "pnls": [],
                                          "cum_pnl": [],
@@ -205,20 +213,13 @@ def save_layout(request):
     if request.method == "POST":
         account = request.POST.get("account")
 
-    HomePageDefault(account_number=account).save()
+    default = HomePageDefault.objects.filter()[0]
+    default.account_number = account
+    default.save()
 
     print("Account:", account)
 
-    return render(request, 'home.html', {"dates": get_days(),
-                                         "robots": get_robot_list(),
-                                         "open_trades": get_open_trades(),
-                                         "accounts": get_account_data(),
-                                         "pnl_label": [],
-                                         "pnls": [],
-                                         "cum_pnl": [],
-                                         "balance": [],
-                                         "balance_label": [],
-                                         })
+    return redirect('home_page')
 
 
 def get_trade_pnls(trades):
@@ -279,8 +280,11 @@ def get_results(request):
     default_data = HomePageDefault.objects.filter().values()
     default_account = default_data[0]["account_number"]
     robot_list = get_robot_list(account=default_account)
+    broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+
     print("Default Account:", default_account)
     print("Loading robot list from db:", robot_list)
+    print("Loading broker account information")
 
     if request.method == "POST":
         trade_side = request.POST.get("side")
@@ -329,6 +333,7 @@ def get_results(request):
                                              "balance": balance_list[0],
                                              "balance_label": balance_list[1],
                                              "nmbr_trades_bal": balance_list[2],
+                                             "broker": broker_account,
                                              "robot_perf": [],
                                              "pnl": [],
 
@@ -342,6 +347,7 @@ def get_results(request):
                                          "balance_label": balance_list[1],
                                          "nmbr_trades_bal": balance_list[2],
                                          "side": trade_side,
+                                         "broker": broker_account,
                                          "robot_perf": all_pnls[1],
                                          "pnl": all_pnls[0],
                                          "br_trades": balance_list[3],

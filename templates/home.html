@@ -200,15 +200,16 @@ h5{
     {% endblock %}
 
     {% block main_block%}
-    <div class="row menu_bar" style="border-bottom: 1px solid grey;">
-        <!--Form for submiting robot results-->
-        <div style="height:50px; width:25%;  border-right: 1px solid grey;">
+    <div class="row" style="height:40px; border-bottom: 1px solid grey; margin:auto;">
+        <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: {{ broker.account_number}}</label>
+        <label class="nav-link link_color font-weight-bold">Environment: {{ broker.env}}</label>
+        <label class="nav-link link_color font-weight-bold">Broker: {{ broker.broker_name}}</label>
+        <div style="height:50px; width:25%;">
             <!--Form to load all accounts-->
             <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
                 {% csrf_token %}
-                <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:60px;">Accounts</label>
                 <div class="col-auto">
-                    <select class="form-control input-sm" style="height:30px; width:150px;" name="account">
+                    <select class="form-control input-sm" style="height:30px;" name="account">
                         {% for account in accounts %}
                         <option >{{account.account_number}}</option>
                         {% endfor %}
@@ -222,20 +223,14 @@ h5{
             </script>
             </form>
         </div>
-        <div  style="height:50px; width:75%;">
+    </div>
+    <div class="row menu_bar" style="height:40px; border-bottom: 1px solid grey;">
+        <!--Form for submiting robot results-->
+        <div style="height:40px;">
             <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
                 {% csrf_token %}
-                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:40px; padding:1px;">Trade</label>
-                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
-                        <select class="form-control" style="height:30px;" name="side">
-                            <option >BUY</option>
-                            <option>SELL</option>
-                            <option selected>ALL</option>
-                        </select>
-                    </div>
-
-                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:40px; padding:1px;">Robot</label>
-                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
+                <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Robot</label>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
                         <select class="form-control" style="height:30px; width:80px;" name="robot_name">
                             {% for robot in robots %}
                             <option>{{robot}}</option>
@@ -243,13 +238,22 @@ h5{
                         </select>
                     </div>
 
-                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">Start Date:</label>
-                    <div class="col-auto" style="padding-left:5px; padding-right:5px;">
+                <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Trade</label>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                        <select class="form-control" style="height:30px;" name="side">
+                            <option >BUY</option>
+                            <option>SELL</option>
+                            <option selected>ALL</option>
+                        </select>
+                    </div>
+
+                <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">Start Date:</label>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
                         <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ dates.today }}" min="2020-01-01">
                     </div>
 
-                    <label class="nav-link link_color font-weight-bold" style="font-size:12px; width:100px; padding:1px;">End Date:</label>
-                    <div class="col-auto" style="padding-left:5px; padding-right:15px;">
+                <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">End Date:</label>
+                <div class="col-auto" style="padding-left:5px; padding-right:15px;">
                         <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ dates.next_day }}" min="2020-01-01">
                     </div>
 
@@ -257,6 +261,7 @@ h5{
             </form>
         </div>
     </div>
+
     <!--Performance-->
     <div class="row">
         <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
@@ -264,7 +269,6 @@ h5{
 
     <!--Robots summary statistics-->
     <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Account</label>
         <label class="nav-link link_color font-weight-bold">Number of Trades: {{ nmbr_trades_bal }}</label>
     </div>
     <div class="row chart_area">
@@ -361,7 +365,6 @@ h5{
 
     <!--Account statistics-->
     <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Account</label>
         <label class="nav-link link_color font-weight-bold">Number of Trades: {{ nmbr_trades_bal }}</label>
         <label class="nav-link link_color font-weight-bold">P&L: {{ br_trades.total_pnl }}</label>
         <label class="nav-link link_color font-weight-bold">Return: {{ br_trades.return }} %</label>
@@ -486,6 +489,7 @@ h5{
             </canvas>
         </div>
     </div>
+
     <!--Open trades Table-->
     <div class="row" style="height:350px; margin-right: 0px; margin-left:0px;">
         <h5 class="nav-link link_color font-weight-bold">
