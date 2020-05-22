@@ -320,7 +320,10 @@ def get_results(request):
     balance_list = get_balance_history(start_date=start_date, end_date=end_date)
 
     # SL Exposure
-    sl_exposure_list = calculate_risk_exposure()
+    try:
+        sl_exposure_list = calculate_risk_exposure()
+    except:
+        print("There are no open trades. SL Exposure cannot be calculated")
 
     # If there is no record for the robot for the preiod the codes goes to this line
     if all_pnls == "empty":
