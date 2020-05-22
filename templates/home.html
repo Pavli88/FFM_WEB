@@ -214,7 +214,12 @@ h5{
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Default</button>
+                <button id="def_but_main" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Default</button>
+                <script>
+                $("#def_but_main").on("click", function(){
+                    alert('Default account has been saved!');
+                })
+            </script>
             </form>
         </div>
         <div  style="height:50px; width:75%;">

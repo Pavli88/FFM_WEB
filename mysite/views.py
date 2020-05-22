@@ -164,6 +164,8 @@ def get_robot_list(account=None):
 
     if account is None:
         robots = Robots.objects.filter().values()
+    else:
+        robots = Robots.objects.filter(account_number=account).values()
 
     robot_df = pd.DataFrame(list(robots))
     robot_list = list(robot_df["name"])
@@ -175,10 +177,17 @@ def get_robot_list(account=None):
 # Home page
 def home(request):
 
-    print("Loading robot list from db:", get_robot_list())
+    print("")
+    print("Loading default settings")
+
+    default_data = HomePageDefault.objects.filter().values()
+    default_account = default_data[0]["account_number"]
+    robot_list = get_robot_list(account=default_account)
+    print("Default Account:", default_account)
+    print("Loading robot list from db:", robot_list)
 
     return render(request, 'home.html', {"dates": get_days(),
-                                         "robots": get_robot_list(),
+                                         "robots": robot_list,
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
                                          "pnl_label": [],
@@ -264,6 +273,15 @@ def get_trade_pnls(trades):
 
 def get_results(request):
 
+    print("")
+    print("Loading default settings")
+
+    default_data = HomePageDefault.objects.filter().values()
+    default_account = default_data[0]["account_number"]
+    robot_list = get_robot_list(account=default_account)
+    print("Default Account:", default_account)
+    print("Loading robot list from db:", robot_list)
+
     if request.method == "POST":
         trade_side = request.POST.get("side")
         robot_name = request.POST.get("robot_name")
@@ -305,7 +323,7 @@ def get_results(request):
 
         print("Empty Dataframe")
         return render(request, 'home.html', {"dates": get_days(),
-                                             "robots": get_robot_list(),
+                                             "robots": robot_list,
                                              "message": "empty",
                                              "accounts": get_account_data(),
                                              "balance": balance_list[0],
@@ -317,7 +335,7 @@ def get_results(request):
                                              })
 
     return render(request, 'home.html', {"dates": get_days(),
-                                         "robots": get_robot_list(),
+                                         "robots": robot_list,
                                          "robot_name": robot_name,
                                          "accounts": get_account_data(),
                                          "balance": balance_list[0],
