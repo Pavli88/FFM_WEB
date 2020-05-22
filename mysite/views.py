@@ -323,6 +323,7 @@ def get_results(request):
     try:
         sl_exposure_list = calculate_risk_exposure()
     except:
+        sl_exposure_list = []
         print("There are no open trades. SL Exposure cannot be calculated")
 
     # If there is no record for the robot for the preiod the codes goes to this line
