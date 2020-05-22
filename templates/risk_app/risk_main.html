@@ -10,7 +10,6 @@
     <h4 class="nav-link link_color font-weight-bold">Risk Parameters</h4><br>
 </div>
 <div class="row" style="border-bottom: 1px solid grey; margin-left:5px;  margin-right:5px;">
-
     <div class="col-3">
         <div>
             <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Account Level</h5>
@@ -47,15 +46,60 @@
             </script>
         </form>
     </div>
-
-</div>
-<div class="row" style="height:100px; border-bottom: 1px solid grey;  margin-left:5px; margin-right:5px;">
-    <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Robot Level</h5><br>
-    <p>Max Drawdown on robot</p><br>
-    <p>Pyramiding Level</p><br>
-    <p>Stop Loss Policy</p><br>
-    <p>Pyramiding Level</p><br>
 </div>
 
+<div class="col-3">
+        <div>
+            <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Robot Level</h5>
+        </div>
+        <form class=" input-sm" style="padding:10px;" action="{% url 'save_robot_risk' %}" method="POST">
+            {% csrf_token %}
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Robots</label>
+            <div class="col-auto">
+                <select class="form-control input-sm" name="robot">
+                    {% for robot in robots %}
+                    <option >{{robot}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Stop Loss Policy</label>
+            <div class="col-auto">
+                <select class="form-control input-sm" name="sl_policy">
+                    <option >percentage</option>
+                    <option >fixed</option>
+                    <option >quantity</option>
+                </select>
+            </div>
+
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Initial Exposure</label>
+            <div class="col-auto">
+                <input class="form-control input-sm" type="number" name="in_exp" min="0.00" step="0.01" value="0.05">
+            </div>
+
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Quantity</label>
+            <div class="col-auto">
+                <input class="form-control input-sm" type="number" name="qt" min="0" step="1" value="0">
+            </div>
+
+            <div>
+                <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Pyramiding Level</label>
+            </div>
+
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Drawdown</label>
+            <div class="col-auto">
+                <input class="form-control input-sm" type="number" name="max_dd" min="0.00" step="0.01" value="0.05">
+            </div>
+
+            <div class="col-auto">
+                <button id="rob_sub" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
+            </div>
+            <script>
+                $("#rob_sub").on("click", function(){
+                    alert('Record has been updated!');
+                })
+            </script>
+        </form>
+    </div>
 </div>
 {% endblock %}

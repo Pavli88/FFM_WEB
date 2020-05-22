@@ -15,8 +15,12 @@ def risk_main(request):
     """
 
     print("Loading all accounts from database...")
+    print("Loading all robots from database")
 
-    return render(request, 'risk_app/risk_main.html', {"accounts": get_account_data()})
+    robots = get_robot_list()
+
+    return render(request, 'risk_app/risk_main.html', {"accounts": get_account_data(),
+                                                       "robots": robots[:-1]})
 
 
 def get_balance(request):
@@ -64,4 +68,8 @@ def save_account_risk(request):
         account_risk_params.save()
         print("New record has been created")
 
+    return redirect('risk main template')
+
+
+def save_robot_risk(request):
     return redirect('risk main template')
