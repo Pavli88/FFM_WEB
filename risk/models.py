@@ -12,3 +12,4 @@ class RobotRisk(models.Model):
     in_exp = models.FloatField(default=0.00)
     sl_policy = models.CharField(max_length=20, default="")
     quantity = models.IntegerField(default=0)
+    m_dd = models.FloatField(default=0.00)

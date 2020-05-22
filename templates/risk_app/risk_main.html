@@ -10,7 +10,7 @@
     <h4 class="nav-link link_color font-weight-bold">Risk Parameters</h4><br>
 </div>
 <div class="row" style="border-bottom: 1px solid grey; margin-left:5px;  margin-right:5px;">
-    <div class="col-3">
+    <div class="col" style="border-right: 1px solid grey; margin-top: 15px; margin-bottom:15px;">
         <div>
             <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Account Level</h5>
         </div>
@@ -46,13 +46,13 @@
             </script>
         </form>
     </div>
-</div>
 
-<div class="col-3">
+    <div class="col" style="border-right: 1px solid grey; margin-top:15px; margin-bottom:15px;">
         <div>
-            <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Robot Level</h5>
-        </div>
-        <form class=" input-sm" style="padding:10px;" action="{% url 'save_robot_risk' %}" method="POST">
+        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Robot Level</h5>
+    </div>
+        <div>
+            <form class=" input-sm" style="padding:10px;" action="{% url 'save_robot_risk' %}" method="POST">
             {% csrf_token %}
             <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Robots</label>
             <div class="col-auto">
@@ -82,8 +82,9 @@
                 <input class="form-control input-sm" type="number" name="qt" min="0" step="1" value="0">
             </div>
 
-            <div>
-                <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Pyramiding Level</label>
+            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Pyramiding Level</label>
+            <div class="col-auto">
+                <input class="form-control input-sm" type="number" name="p_level" min="1" step="1" value="1">
             </div>
 
             <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Drawdown</label>
@@ -91,7 +92,7 @@
                 <input class="form-control input-sm" type="number" name="max_dd" min="0.00" step="0.01" value="0.05">
             </div>
 
-            <div class="col-auto">
+            <div class="col-auto" style="padding-top:15px;">
                 <button id="rob_sub" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
             </div>
             <script>
@@ -100,6 +101,10 @@
                 })
             </script>
         </form>
+        </div>
     </div>
 </div>
+
+
+
 {% endblock %}

@@ -72,4 +72,47 @@ def save_account_risk(request):
 
 
 def save_robot_risk(request):
+
+    print("Request to amend robot risk parameters")
+
+    if request.method == "POST":
+        robot = request.POST.get("robot")
+        sl_policy = request.POST.get("sl_policy")
+        init_exp = request.POST.get("in_exp")
+        quantity = request.POST.get("qt")
+        p_level = request.POST.get("p_level")
+        m_dd = request.POST.get("max_dd")
+
+    print("------------------")
+    print("Updated Parameters")
+    print("------------------")
+    print("Robot:", robot)
+    print("SL Policy:", sl_policy)
+    print("Initial Exposure:", init_exp)
+    print("Quantity:", quantity)
+    print("Pyramiding Level:", p_level)
+    print("Maximum Drawdown:", m_dd)
+
+    print("Updating robot parameters in database")
+
+    try:
+        robot_risk = RobotRisk.objects.get(robot=robot)
+        robot_risk.p_level = p_level
+        robot_risk.in_exp = init_exp
+        robot_risk.sl_policy = sl_policy
+        robot_risk.m_dd = m_dd
+        robot_risk.quantity = quantity
+        robot_risk.save()
+        print("Parameters have been updated!")
+    except:
+        robot_risk = RobotRisk(robot=robot,
+                               p_level=p_level,
+                               in_exp=init_exp,
+                               sl_policy=sl_policy,
+                               m_dd=m_dd,
+                               quantity=quantity)
+
+        robot_risk.save()
+        print("New parameters have been saved!")
+
     return redirect('risk main template')
