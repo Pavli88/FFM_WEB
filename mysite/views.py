@@ -16,9 +16,9 @@ def get_balance_history(start_date, end_date):
     print("RETREIVING BALANCE HISTORY FROM BROKER")
 
     default_account = HomePageDefault.objects.filter().values()
-    print("Account Number:", default_account[0]["account_number"])
     account = BrokerAccounts.objects.filter(account_number=default_account[0]["account_number"]).values()
 
+    print("Account Number:", default_account[0]["account_number"])
     print("Token:", account[0]["access_token"])
 
     if account[0]["env"] == "demo":
@@ -34,6 +34,9 @@ def get_balance_history(start_date, end_date):
 
     transactions = oanda.get_transactions(start_date=start_date, end_date=end_date)
     transactions = transactions[transactions["reason"] == "MARKET_ORDER_TRADE_CLOSE"]
+
+    # This part is for Oanda account information
+    account_info = oanda.get_account_data()["account"]
 
     #print(transactions[["accountBalance", "pl"]])
 
@@ -68,7 +71,10 @@ def get_balance_history(start_date, end_date):
                    "total_pnl": total_pnl,
                    "return": trade_return}
 
-    return balance, balance_label, number_of_trades, trades_dict
+    account_dict = {"nav": round(float(account_info["NAV"]), 2),
+                    "un_pnl": round(float(account_info["unrealizedPL"]), 2)}
+
+    return balance, balance_label, number_of_trades, trades_dict, account_dict
 
 
 def cumulative(lists):
@@ -367,6 +373,7 @@ def get_results(request):
                                              "robots": robot_list,
                                              "message": "empty",
                                              "accounts": get_account_data(),
+                                             "account_info": balance_list[4],
                                              "balance": balance_list[0],
                                              "balance_label": balance_list[1],
                                              "nmbr_trades_bal": balance_list[2],
@@ -380,6 +387,7 @@ def get_results(request):
                                          "robots": robot_list,
                                          "robot_name": robot_name,
                                          "accounts": get_account_data(),
+                                         "account_info": balance_list[4],
                                          "balance": balance_list[0],
                                          "balance_label": balance_list[1],
                                          "nmbr_trades_bal": balance_list[2],

@@ -204,6 +204,8 @@ h5{
         <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: {{ broker.account_number}}</label>
         <label class="nav-link link_color font-weight-bold">Environment: {{ broker.env}}</label>
         <label class="nav-link link_color font-weight-bold">Broker: {{ broker.broker_name}}</label>
+        <label class="nav-link link_color font-weight-bold">NAV: {{ account_info.nav}}</label>
+        <label class="nav-link link_color font-weight-bold">Unrealized P&L: {{ account_info.un_pnl }}</label>
         <div style="height:50px; width:25%;">
             <!--Form to load all accounts-->
             <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
@@ -266,7 +268,9 @@ h5{
     <div class="row">
         <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
     </div>
-
+    <div class="row">
+        <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
+    </div>
     <!--Robots summary statistics-->
     <div class="row menu_bar chart_header">
         <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe }}</label>
@@ -334,9 +338,6 @@ h5{
     </div>
 
     <!--Robots statistics-->
-    <div class="row">
-        <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
-    </div>
     <div class="row menu_bar chart_header">
         <label class="nav-link link_color font-weight-bold">Robot: {{robot_name}}</label>
         <label class="nav-link link_color font-weight-bold">Side: {{side}}</label>
