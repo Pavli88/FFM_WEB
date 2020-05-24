@@ -407,7 +407,7 @@ def close_all_trades(request):
                           acces_token=acces_token,
                           account_number=account_number)
 
-            print("Fetching out open positions from broker for", security)
+            print("Fetching out open positions to close from broker for", security)
 
             try:
                 open_trades_table = oanda.get_open_trades()
@@ -421,7 +421,6 @@ def close_all_trades(request):
 
             except:
                 print("There are no open positions for this security")
-                return HttpResponse(None)
 
             # Updating FFM SYSTEM db trades
 

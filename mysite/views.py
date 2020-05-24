@@ -35,7 +35,7 @@ def get_balance_history(start_date, end_date):
     transactions = oanda.get_transactions(start_date=start_date, end_date=end_date)
     transactions = transactions[transactions["reason"] == "MARKET_ORDER_TRADE_CLOSE"]
 
-    print(transactions[["accountBalance", "pl"]])
+    #print(transactions[["accountBalance", "pl"]])
 
     balance = list(transactions[["accountBalance"]].dropna()["accountBalance"].astype(float))
     balance_label = [bal for bal in range(len(balance))]
@@ -226,8 +226,15 @@ def save_layout(request):
 
 def get_trade_pnls(trades):
 
+    """
+    Function to calculate aggregated pnl on robots and winning and losing % on robots
+    :param trades:
+    :return:
+    """
+
+    print("Calculating Robot P&Ls")
+
     trade_df = pd.DataFrame(list(trades))
-    print(trade_df)
 
     color_list = []
 
@@ -244,18 +251,30 @@ def get_trade_pnls(trades):
 
     robot_pnl_list = []
     robot_color_list = []
+    winner_perc_list = []
+    loser_perc_list = []
 
     for robot in robots:
-        robot_df = trade_df[trade_df["robot"] == robot]
+
+        if robot == "ALL":
+            robot_df = trade_df
+        else:
+            robot_df = trade_df[trade_df["robot"] == robot]
+
+        total_trades = len(list(robot_df["pnl"]))
+        winning_nmr = len(list(trade_df[trade_df["pnl"] > 0]["pnl"]))
+        losing_nmr = len(list(trade_df[trade_df["pnl"] < 0]["pnl"]))
+        win_per = round(int(winning_nmr)/int(total_trades), 2)*100
+        los_per = round(int(losing_nmr) / int(total_trades), 2)*100*-1
         robot_pnl = round(robot_df["pnl"].sum(), 2)
         robot_pnl_list.append(robot_pnl)
+        winner_perc_list.append(win_per)
+        loser_perc_list.append(los_per)
 
         if float(robot_pnl) < 0:
             robot_color_list.append('#842518')
         else:
             robot_color_list.append('#405347')
-
-    print(robot_pnl_list)
 
     pnls = list(trade_df["pnl"])
     pnl_label = [label for label in range(len(pnls))]
@@ -271,7 +290,11 @@ def get_trade_pnls(trades):
                   "robot_label": robots,
                   "color": robot_color_list}
 
-    return pnl_dict, robot_pnls
+    win_lose = {"winners": winner_perc_list,
+                "losers": loser_perc_list,
+                "robot_label": robots}
+
+    return pnl_dict, robot_pnls, win_lose
 
 
 def get_results(request):
@@ -362,6 +385,7 @@ def get_results(request):
                                          "pnl": all_pnls[0],
                                          "br_trades": balance_list[3],
                                          "risk": sl_exposure_list,
+                                         "win_lose": all_pnls[2],
                                          "message": "",
                                          })
 
