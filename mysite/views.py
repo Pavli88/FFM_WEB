@@ -261,11 +261,15 @@ def get_trade_pnls(trades):
         else:
             robot_df = trade_df[trade_df["robot"] == robot]
 
-        total_trades = len(list(robot_df["pnl"]))
-        winning_nmr = len(list(trade_df[trade_df["pnl"] > 0]["pnl"]))
-        losing_nmr = len(list(trade_df[trade_df["pnl"] < 0]["pnl"]))
-        win_per = round(int(winning_nmr)/int(total_trades), 2)*100
-        los_per = round(int(losing_nmr) / int(total_trades), 2)*100*-1
+        try:
+            total_trades = len(list(robot_df["pnl"]))
+            winning_nmr = len(list(trade_df[trade_df["pnl"] > 0]["pnl"]))
+            losing_nmr = len(list(trade_df[trade_df["pnl"] < 0]["pnl"]))
+            win_per = round(int(winning_nmr)/int(total_trades), 2)*100
+            los_per = round(int(losing_nmr) / int(total_trades), 2)*100*-1
+        except:
+            win_per = 0
+            los_per = 0
         robot_pnl = round(robot_df["pnl"].sum(), 2)
         robot_pnl_list.append(robot_pnl)
         winner_perc_list.append(win_per)
