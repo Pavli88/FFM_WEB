@@ -315,18 +315,15 @@ h5{
                         backgroundColor: {{ robot_perf.color|safe }},
                         borderColor: '#19393D',
                         data: {{ robot_perf.robot_pnl }}
-                    }]
-                },
-                {
-
-                    labels: {{  robot_perf.robot_label|safe }},
-                    datasets: [{
-                        label: 'Loser %',
+                    },
+                    {
+                        label: 'Winner %',
                         backgroundColor: {{ robot_perf.color|safe }},
                         borderColor: '#19393D',
                         data: {{ robot_perf.robot_pnl }}
                     }]
                 },
+
 
                 // Configuration options go here
                 options: {}
