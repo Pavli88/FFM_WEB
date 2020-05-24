@@ -35,6 +35,8 @@ def get_balance_history(start_date, end_date):
     transactions = oanda.get_transactions(start_date=start_date, end_date=end_date)
     transactions = transactions[transactions["reason"] == "MARKET_ORDER_TRADE_CLOSE"]
 
+    print(transactions[["accountBalance", "pl"]])
+
     balance = list(transactions[["accountBalance"]].dropna()["accountBalance"].astype(float))
     balance_label = [bal for bal in range(len(balance))]
 
@@ -317,7 +319,11 @@ def get_results(request):
 
     # Loading account balance from broker
     print("Get account history from broker")
-    balance_list = get_balance_history(start_date=start_date, end_date=end_date)
+
+    try:
+        balance_list = get_balance_history(start_date=start_date, end_date=end_date)
+    except:
+        balance_list = []
 
     # SL Exposure
     try:

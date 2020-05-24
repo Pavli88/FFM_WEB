@@ -272,8 +272,8 @@ h5{
         <label class="nav-link link_color font-weight-bold">Number of Trades: {{ nmbr_trades_bal }}</label>
     </div>
     <div class="row chart_area">
-        <div class="col" style="width:100%;">
-            <canvas id="bar_chart_2" width="100%" height="20">
+        <div class="col" style="width:50%;">
+            <canvas id="bar_chart_2" width="50%" height="20">
             <script>
                 var ctx = document.getElementById('bar_chart_2').getContext('2d');
                 var chart = new Chart(ctx, {
@@ -286,6 +286,42 @@ h5{
                     labels: {{  robot_perf.robot_label|safe }},
                     datasets: [{
                         label: 'P&L by Robots',
+                        backgroundColor: {{ robot_perf.color|safe }},
+                        borderColor: '#19393D',
+                        data: {{ robot_perf.robot_pnl }}
+                    }]
+                },
+
+                // Configuration options go here
+                options: {}
+                });
+            </script>
+            </canvas>
+        </div>
+        <div class="col" style="width:50%;">
+            <canvas id="bar_chart_0" width="50%" height="20">
+            <script>
+                var ctx = document.getElementById('bar_chart_0').getContext('2d');
+                var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'bar',
+
+                // The data for our dataset
+                data: {
+
+                    labels: {{  robot_perf.robot_label|safe }},
+                    datasets: [{
+                        label: 'Winner %',
+                        backgroundColor: {{ robot_perf.color|safe }},
+                        borderColor: '#19393D',
+                        data: {{ robot_perf.robot_pnl }}
+                    }]
+                },
+                {
+
+                    labels: {{  robot_perf.robot_label|safe }},
+                    datasets: [{
+                        label: 'Loser %',
                         backgroundColor: {{ robot_perf.color|safe }},
                         borderColor: '#19393D',
                         data: {{ robot_perf.robot_pnl }}
