@@ -24,7 +24,7 @@ def new_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
 
-        #message = "SELL test"
+        # message = "BUY live_test"
         message = message.split()
 
         print("")
@@ -184,9 +184,9 @@ def new_execution(request):
 
                 print("Checking initial exposure vs daily risk limit:")
 
-                if initial_exposure >= daily_risk_limit:
-                    print("Initial exposure is larger than daily risk execution stopped!")
-                    return HttpResponse(None)
+                # if initial_exposure >= daily_risk_limit:
+                #     print("Initial exposure is larger than daily risk execution stopped!")
+                #     return HttpResponse(None)
 
                 print("Initial exposure vs daily risk limit check: Passed")
 
@@ -211,14 +211,16 @@ def new_execution(request):
                 print("============================")
                 print("   Daily risk limit check   ")
                 print("============================")
+
                 # Checking if trade can be executed based on daily risk limit
 
-                if starting_balance - risk_amount > balance:
-                    print("You have reached your daily risk limit. Trading is not allowed for this day!")
-                    return HttpResponse(None)
-                else:
-                    print("Trade balance check: Passed")
-                print("")
+                # Here comes risk management section
+                # if starting_balance - risk_amount > balance:
+                #     print("You have reached your daily risk limit. Trading is not allowed for this day!")
+                #     return HttpResponse(None)
+                # else:
+                #     print("Trade balance check: Passed")
+                # print("")
 
                 # Fetching out open positions
                 # --> this can be used for risk control later because of the stop lost levels
