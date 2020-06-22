@@ -5,6 +5,5 @@ from signals.views import *
 # Signals can be trade signals, or any kind of data feeds that arrive to ffm system
 
 urlpatterns = [
-    path('new_trade/', new_execution, name="test_execution"),
-    path('close_trade/', close_all_trades, name="test_close_execution"),
+    path('trade/', incoming_trade, name="test_execution"),
 ]
