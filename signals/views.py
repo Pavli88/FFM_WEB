@@ -462,11 +462,12 @@ def incoming_trade(request):
 
     if request.method == "POST":
 
-        # message = request.body
-        # message = str(message.decode("utf-8"))
+        message = request.body
+        message = str(message.decode("utf-8"))
 
-        message = "test buy 1 SPX500_USD Close"
+        #message = "test buy 1 SPX500_USD Close"
         message = message.split()
+
         print(message)
         print("")
         print("------------------------------------")
