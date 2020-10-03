@@ -69,8 +69,4 @@ def get_all_accounts(request):
     """
     accounts = BrokerAccounts.objects.filter().values()
 
-    header_list = []
-    for header in accounts[0]:
-        header_list.append(header)
-
     return render(request, 'accounts/accounts_main.html', {"accounts": accounts})

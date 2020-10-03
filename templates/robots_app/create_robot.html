@@ -16,10 +16,21 @@ td {
 
 <!--Scripts-->
 {% block script %}
+
 {% endblock %}
 
 <!--New robot creator form-->
 {% block entry_form %}
+<script>
+    $(".modify_btn").on("click", function(){
+        alert("Robot has been updated !");
+    })
+    $(".delete_btn").on("click", function () {
+        alert("Robot has been deleted !");
+    })
+
+</script>
+
 <form class="entry_form" action="{% url 'create robot' %}" method="POST">
     {% csrf_token %}
     <h4>New Robot</h4>
@@ -105,12 +116,12 @@ td {
         <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
         {% csrf_token %}
             <h2>Robot Configuration</h2>
-            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots">
+            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots" id="get_robots">
         </form>
     </div>
 
     <div class="row">
-        <table class="table table-striped tables">
+        <table class="table table-striped tables" id="robot_table">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
@@ -128,6 +139,7 @@ td {
                     <th scope="col">Precision</th>
                     <th scope="col">Account Number</th>
                     <th scope="col"></th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
@@ -136,6 +148,7 @@ td {
                     <form action="{% url 'amend robot' %}" method="POST">
                         {% csrf_token %}
                         <td>
+                            <input type="hidden" name="robot_id" value="{{robot.id}}">
                             <label>{{robot.id}}</label>
                         </td>
                         <td>
@@ -200,16 +213,15 @@ td {
                             <input class="form-control form-control-sm" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
                         </td>
                         <td>
-                            <button class="btn btn-primary mb-2">Modify</button>
+                            <button type="submit" class="btn btn-primary mb-2 modify_btn">Modify</button>
+                        </td>
+                        <td>
+                            <button type="submit" class="btn btn-primary mb-2 delete_button delete_btn" formaction="{% url 'delete robot' %}">Delete</button>
                         </td>
                     </form>
                 </tr>
             {% endfor %}
-            <script>
-                $("button").on("click", function(){
-                    alert("Robot has been updated !");
-                })
-            </script>
+
             </tbody>
         </table>
     </div>

@@ -15,6 +15,7 @@ def robots_main(request):
         robot_list.append(robot["name"])
 
     print("Robot list:", robot_list)
+
     return render(request, 'robots_app/create_robot.html', {"robot_list": robot_list})
 
 
@@ -105,14 +106,48 @@ def get_all_robots(request):
     :param request:
     :return:
     """
+
+    print("Request received to load all robot data on Robots page.")
+    print("Loading robot data")
+
     robots = Robots.objects.filter().values()
 
-    header_list = []
-    for header in robots[0]:
-        header_list.append(header)
+    print("ROBOTS:")
+    print(robots)
 
     # Create code to give the data back in json
-    return render(request, 'robots_app/create_robot.html', {"robots": robots})
+    if len(robots) == 0:
+        return render(request, 'robots_app/create_robot.html')
+    else:
+        return render(request, 'robots_app/create_robot.html', {"robots": robots})
+
+
+def delete_robot(request):
+
+    """
+    Deletes existing robot from database
+    :param request:
+    :return:
+    """
+
+    print("")
+    print("New request has arrived to delete existing robot from database")
+
+    if request.method == "POST":
+
+        message = request.body
+        message = str(message.decode("utf-8"))
+
+        robot_id = request.POST.get("robot_id")
+
+        print("Robot ID:", robot_id)
+        print("Deleting from database...")
+
+        Robots.objects.filter(id=robot_id).delete()
+
+        print("Record has been deleted")
+
+    return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
 
 def amend_robot(request):
@@ -159,8 +194,6 @@ def amend_robot(request):
         robot.save()
         print("Amended parameters were saved to database.")
 
-        robots = Robots.objects.filter().values()
-
-        return render(request, 'robots_app/create_robot.html', {"robots": robots})
+        return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
 

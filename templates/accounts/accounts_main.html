@@ -34,13 +34,14 @@
 {% endblock %}
 
 {% block main_block%}
+
 <div class="container-fluid">
     <!--Form to get back all robots-->
     <div class="row" style="padding:15px;">
         <form style="display:flex;" action="{% url 'show accounts' %}" method="POST">
         {% csrf_token %}
             <h2>Account Configuration</h2>
-            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Accounts">
+            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Accounts" id="acc_btn">
         </form>
     </div>
 
@@ -87,4 +88,15 @@
         </table>
     </div>
 </div>
+<script>
+    function f(){
+        $("#acc_btn").on("click", function () {
+            alert('Button was clicked')
+            // console.log(a)
+        })
+    }
+
+    f();
+
+</script>
 {% endblock %}

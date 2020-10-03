@@ -193,9 +193,16 @@ def home(request):
     print("Loading default settings")
 
     default_data = HomePageDefault.objects.filter().values()
-    default_account = default_data[0]["account_number"]
-    robot_list = get_robot_list(account=default_account)
-    broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+
+    if len(default_data) == 0:
+        print("No default account has been set.")
+        robot_list = []
+        broker_account = []
+        default_account = "-"
+    else:
+        default_account = default_data[0]["account_number"]
+        robot_list = get_robot_list(account=default_account)
+        broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
 
     print("Default Account:", default_account)
     print("Loading robot list from db:", robot_list)
