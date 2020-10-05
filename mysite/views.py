@@ -184,17 +184,17 @@ def get_robot_list(account=None):
     else:
         robots = Robots.objects.filter(account_number=account).values()
 
-    robot_df = pd.DataFrame(list(robots))
+    # robot_df = pd.DataFrame(list(robots))
+    #
+    # try:
+    #     robot_list = list(robot_df["name"])
+    #     robot_list.append("ALL")
+    # except:
+    #     robot_list = []
 
-    try:
-        robot_list = list(robot_df["name"])
-        robot_list.append("ALL")
-    except:
-        robot_list = []
+    print("Robots:", robots)
 
-    print("Robots:", robot_list)
-
-    return robot_list
+    return robots
 
 
 # Home page
@@ -486,12 +486,18 @@ def save_settings(request):
 
     return redirect('settings main')
 
+
 def switch_account(request):
 
     if request.method == "POST":
-        account = get_account_data(account_number=request.POST.get("data"))
-        print(account)
-        response = {"account data": list(account)}
+        account = request.POST.get("data")
+        account_data = get_account_data(account_number=account)
+        robot_list = get_robot_list(account=account)
+
+        print(robot_list)
+
+        response = {"account data": list(account_data),
+                    "robots": list(robot_list)}
 
     return JsonResponse(response, safe=False)
 

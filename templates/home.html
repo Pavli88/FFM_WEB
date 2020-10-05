@@ -132,7 +132,7 @@ h5{
                 {% csrf_token %}
                 <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Robot</label>
                 <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                        <select class="form-control" style="height:30px; width:80px;" name="robot_name">
+                        <select class="form-control" style="height:30px; width:80px;" name="robot_name" id="robot_selector">
                             {% for robot in robots %}
                             <option>{{robot}}</option>
                             {% endfor %}
@@ -158,7 +158,7 @@ h5{
                         <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ dates.next_day }}" min="2020-01-01">
                     </div>
 
-                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;">Submit</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="get_robot_data_btn">Submit</button>
             </form>
         </div>
     </div>
@@ -176,55 +176,7 @@ h5{
     </div>
     <div class="row chart_area">
         <div class="col" style="width:50%;">
-            <canvas id="bar_chart_2" width="50%" height="20">
-            <script>
-                function chart(tagId, type, labels, label, bgColor, borderColor, data) {
-
-                    let ctx = document.getElementById(tagId).getContext('2d');
-                    let chart = new Chart(ctx, {
-                        // The type of chart we want to create
-                        type: type,
-                        // The data for our dataset
-                        data: {
-                            labels: labels,
-                            datasets: [{label: label,
-                                backgroundColor: bgColor,
-                                borderColor: borderColor,
-                                data: data
-                            }]
-                        },
-                        // Configuration options go here
-                        options: {}
-                        })
-                }
-                chart(
-                    tagId='bar_chart_2',
-                    type='bar',
-                    labels="{{robot_perf.robot_label|safe}}",
-                    label='P&L by Robots',
-                    bgColor="{{ robot_perf.color|safe }}",
-                    borderColor='#19393D', data="{{ robot_perf.robot_pnl }}")
-
-                // let ctx = document.getElementById('bar_chart_2').getContext('2d');
-                // let chart = new Chart(ctx, {
-                // // The type of chart we want to create
-                // type: 'bar',
-                //
-                // // The data for our dataset
-                // data: {
-                //     labels: {{robot_perf.robot_label|safe}},
-                //     datasets: [{label: 'P&L by Robots',
-                //         backgroundColor: {{ robot_perf.color|safe }},
-                //         borderColor: ,
-                //         data: {{ robot_perf.robot_pnl }}
-                //     }]
-                // },
-                //
-                // // Configuration options go here
-                // options: {}
-                // })
-            </script>
-            </canvas>
+            <canvas id="bar_chart_2" width="50%" height="20"></canvas>
         </div>
         <div class="col" style="width:50%;">
             <canvas id="bar_chart_0" width="50%" height="20">
@@ -460,6 +412,16 @@ h5{
         <h5 class="nav-link link_color font-weight-bold">
         Active Robots
         </h5>
+        <div>
+            <table class="table trade_table">
+                <thead>
+                    <tr class="align-middle" id="a_r_header">
+
+                    </tr>
+                </thead>
+                <tbody id="a_r_body"></tbody>
+            </table>
+        </div>
     </div>
 
     <!--Open trades Table-->
@@ -510,7 +472,7 @@ h5{
         </form>
     </div>
     {% load static %}
-    <script src="{% static 'js/home_page.js.js' %}"></script>
+    <script src="{% static 'admin/js/home_page.js' %}"></script>
     {% endblock %}
 
 
