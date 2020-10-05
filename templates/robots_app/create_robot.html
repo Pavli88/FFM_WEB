@@ -111,122 +111,129 @@ td {
 {% block main_block%}
 <div class="container-fluid">
 
-        <!--Form to get back all robots-->
+    <!--Form to get back all robots-->
     <div class="row" style="padding:15px;">
         <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
-        {% csrf_token %}
+            {% csrf_token %}
             <h2>Robot Configuration</h2>
-            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Robots" id="get_robots">
+            <input class="btn btn-primary btn-sm submit_button_2" type="submit" , name="button" value="Show Robots"
+                   id="get_robots">
         </form>
     </div>
 
     <div class="row">
         <table class="table table-striped tables" id="robot_table">
             <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Robot Name</th>
-                    <th scope="col">Strategy</th>
-                    <th scope="col">Security</th>
-                    <th scope="col">Time Frame</th>
-                    <th scope="col">Broker</th>
-                    <th scope="col">Environment</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Sl Policy</th>
-                    <th scope="col">Pyramiding Level</th>
-                    <th scope="col">Initial Exposure</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Precision</th>
-                    <th scope="col">Account Number</th>
-                    <th scope="col"></th>
-                    <th scope="col"></th>
-                </tr>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Robot Name</th>
+                <th scope="col">Strategy</th>
+                <th scope="col">Security</th>
+                <th scope="col">Time Frame</th>
+                <th scope="col">Broker</th>
+                <th scope="col">Environment</th>
+                <th scope="col">Status</th>
+                <th scope="col">Sl Policy</th>
+                <th scope="col">Pyramiding Level</th>
+                <th scope="col">Initial Exposure</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Precision</th>
+                <th scope="col">Account Number</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
             </thead>
             <tbody>
             {% for robot in robots %}
-                <tr style="height:10px;">
-                    <form action="{% url 'amend robot' %}" method="POST">
-                        {% csrf_token %}
-                        <td>
-                            <input type="hidden" name="robot_id" value="{{robot.id}}">
-                            <label>{{robot.id}}</label>
-                        </td>
-                        <td>
-                            <input type="hidden" name="robot_name" value="{{robot.name}}">
-                            <label>{{robot.name}}</label>
-                        </td>
-                        <td>
-                            <label>{{robot.strategy}}</label>
-                        </td>
-                        <td>
-                            <label>{{robot.security}}</label>
-                        </td>
-                        <td>
-                            <label>{{robot.time_frame}}</label>
-                        </td>
-                        <td>
-                            <label>{{robot.broker}}</label>
-                        </td>
-                        <td>
-                            <select class="form-control form-control-sm" name="env" value="{{robot.env}}">
-                                <option>{{robot.env}}</option>
-                                {% if robot.env == "demo"%}
-                                <option>live</option>
-                                {% else  %}
-                                <option>demo</option>
-                                {% endif %}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control form-control-sm" name="status" value="{{robot.status}}">
-                                <option>{{robot.status}}</option>
-                                {% if robot.env == "active"%}
-                                <option>active</option>
-                                {% else  %}
-                                <option>inactive</option>
-                                {% endif %}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control form-control-sm" name="sl_policy">
-                                <option>{{robot.sl_policy}}</option>
-                                {% if robot.sl_policy == "percentage"%}
-                                <option>level</option>
-                                {% else  %}
-                                <option>percentage</option>
-                                {% endif %}
-                            </select>
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="number" name="pyramiding_level" min="0" max="10" value="{{robot.pyramiding_level}}">
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="number" name="init_exp" min="0.00" step="0.01" value="{{robot.in_exp}}">
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="number" name="quantity" min="0" value="{{robot.quantity}}">
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" type="number" name="precision" min="1" value="{{robot.prec}}">
-                        </td>
-                        <td>
-                            <input class="form-control form-control-sm" width="10" type="text" name="account_number" value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
-                        </td>
-                        <td>
-                            <button type="submit" class="btn btn-primary mb-2 modify_btn">Modify</button>
-                        </td>
-                        <td>
-                            <button type="submit" class="btn btn-primary mb-2 delete_button delete_btn" formaction="{% url 'delete robot' %}">Delete</button>
-                        </td>
-                    </form>
-                </tr>
+            <tr style="height:10px;">
+                <form action="{% url 'amend robot' %}" method="POST">
+                    {% csrf_token %}
+                    <td>
+                        <input type="hidden" name="robot_id" value="{{robot.id}}">
+                        <label>{{robot.id}}</label>
+                    </td>
+                    <td>
+                        <input type="hidden" name="robot_name" value="{{robot.name}}">
+                        <label>{{robot.name}}</label>
+                    </td>
+                    <td>
+                        <label>{{robot.strategy}}</label>
+                    </td>
+                    <td>
+                        <label>{{robot.security}}</label>
+                    </td>
+                    <td>
+                        <label>{{robot.time_frame}}</label>
+                    </td>
+                    <td>
+                        <label>{{robot.broker}}</label>
+                    </td>
+                    <td>
+                        <select class="form-control form-control-sm" name="env" value="{{robot.env}}">
+                            <option>{{robot.env}}</option>
+                            {% if robot.env == "demo"%}
+                            <option>live</option>
+                            {% else %}
+                            <option>demo</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control form-control-sm" name="status" value="{{robot.status}}">
+                            <option>{{robot.status}}</option>
+                            {% if robot.env == "active"%}
+                            <option>active</option>
+                            {% else %}
+                            <option>inactive</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control form-control-sm" name="sl_policy">
+                            <option>{{robot.sl_policy}}</option>
+                            {% if robot.sl_policy == "percentage"%}
+                            <option>level</option>
+                            {% else %}
+                            <option>percentage</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <input class="form-control form-control-sm" type="number" name="pyramiding_level" min="0"
+                               max="10" value="{{robot.pyramiding_level}}">
+                    </td>
+                    <td>
+                        <input class="form-control form-control-sm" type="number" name="init_exp" min="0.00" step="0.01"
+                               value="{{robot.in_exp}}">
+                    </td>
+                    <td>
+                        <input class="form-control form-control-sm" type="number" name="quantity" min="0"
+                               value="{{robot.quantity}}">
+                    </td>
+                    <td>
+                        <input class="form-control form-control-sm" type="number" name="precision" min="1"
+                               value="{{robot.prec}}">
+                    </td>
+                    <td>
+                        <input class="form-control form-control-sm" width="10" type="text" name="account_number"
+                               value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-primary mb-2 modify_btn">Modify</button>
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-primary mb-2 delete_button delete_btn"
+                                formaction="{% url 'delete robot' %}">Delete
+                        </button>
+                    </td>
+                </form>
+            </tr>
             {% endfor %}
 
             </tbody>
         </table>
     </div>
 </div>
-
 
 {% endblock %}
 

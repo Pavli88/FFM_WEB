@@ -1,5 +1,36 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
-    {% block main_block%}
-    <p>Site for portfolios</p>
-    {% endblock %}
+
+{% block main_block%}
+<p>Site for portfolios</p>
+{% endblock %}
+
+<!--New portfolio creator form-->
+{% block entry_form %}
+<script>
+    $(".modify_btn").on("click", function(){
+        alert("Robot has been updated !");
+    })
+    $(".delete_btn").on("click", function () {
+        alert("Robot has been deleted !");
+    })
+
+</script>
+
+<form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
+    {% csrf_token %}
+    <h4>New Portfolio</h4>
+    <div class="form-group">
+        <input id="robot_name" class="form-control form-control-sm" type="text" name="portfolio_name"
+               placeholder="Portfolio Name" required>
+    </div>
+
+    <script>if ("{{ exist_robots }}" == "exists") {
+        alert("Record already exists in database!");
+    } else if ("{{ exist_robots }}" == "created") {
+        alert("New record was created!")
+    }
+    </script>
+    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add New Robot"><br>
+</form>
+{% endblock %}
