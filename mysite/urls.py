@@ -15,5 +15,6 @@ urlpatterns = [
     path('save_home/', views.save_layout, name="make_default"),
     path('settings/', views.go_to_settings, name="settings main"),
     path('settings/save/', views.save_settings, name="save settings"),
+    path('switch_account/', views.switch_account),
 
 ]

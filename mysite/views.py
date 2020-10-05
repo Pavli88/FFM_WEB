@@ -8,6 +8,7 @@ import datetime
 from robots.models import *
 from accounts.models import *
 from mysite.processes.oanda import *
+from django.http import JsonResponse
 
 
 def get_balance_history(start_date, end_date):
@@ -109,14 +110,17 @@ def get_days():
     return dates
 
 
-def get_account_data():
+def get_account_data(account_number="All"):
 
     """
     Function to get all account data
     :return:
     """
 
-    accounts = BrokerAccounts.objects.filter().values()
+    if account_number == "All":
+        accounts = BrokerAccounts.objects.filter().values()
+    else:
+        accounts = BrokerAccounts.objects.filter(account_number=account_number).values()
 
     return accounts
 
@@ -170,6 +174,11 @@ def get_robot_list(account=None):
     :return:
     """
 
+    print("======================")
+    print("GET ROBOTS FOR ACCOUNT")
+    print("======================")
+    print("Account:", account)
+
     if account is None:
         robots = Robots.objects.filter().values()
     else:
@@ -183,28 +192,36 @@ def get_robot_list(account=None):
     except:
         robot_list = []
 
+    print("Robots:", robot_list)
+
     return robot_list
 
 
 # Home page
-def home(request):
+def home(request, default_load=None):
 
-    print("")
-    print("Loading default settings")
+    print("=========")
+    print("HOME PAGE")
+    print("=========")
 
-    default_data = HomePageDefault.objects.filter().values()
+    if default_load is None:
+        print("Loading default settings")
+        default_data = HomePageDefault.objects.filter().values()
 
-    if len(default_data) == 0:
-        print("No default account has been set.")
-        robot_list = []
-        broker_account = []
-        default_account = "-"
+        if len(default_data) == 0:
+            print("No default account has been set.")
+            robot_list = []
+            broker_account = []
+            default_account = "-"
+        else:
+            default_account = default_data[0]["account_number"]
+            robot_list = get_robot_list(account=default_account)
+            broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
     else:
-        default_account = default_data[0]["account_number"]
-        robot_list = get_robot_list(account=default_account)
-        broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+        print("Loading account parameters for", default_load)
+        robot_list = get_robot_list(account=default_load)
+        broker_account = BrokerAccounts.objects.filter(account_number=default_load).values()[0]
 
-    print("Default Account:", default_account)
     print("Loading robot list from db:", robot_list)
     print("Loading broker account information")
 
@@ -468,6 +485,15 @@ def save_settings(request):
         print("Record has been saved")
 
     return redirect('settings main')
+
+def switch_account(request):
+
+    if request.method == "POST":
+        account = get_account_data(account_number=request.POST.get("data"))
+        print(account)
+        response = {"account data": list(account)}
+
+    return JsonResponse(response, safe=False)
 
 
 

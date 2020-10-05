@@ -1,5 +1,10 @@
 import oandapy
 import pandas as pd
+from oandapyV20 import API
+import oandapyV20.endpoints.trades as trades
+import oandapyV20.endpoints.pricing as pricing
+import oandapyV20.endpoints.orders as orders
+import json
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -158,4 +163,96 @@ class Oanda:
             self.risk_list.append(self.trd_risk)
 
             print("Stopp Loss Price:", sl_price, "Trade Price:", price, "Quantity:", qt, "Risk:", self.trd_risk)
+
+    def pricing_stream(self):
+        self.oanda.make_request(method_name="GET", endpoint="accounts/001-004-2840244-004/pricing/stream?instruments=XAG_USD", stream=True)
+        print("PRICING STREAM")
+
+
+class OandaV20:
+
+    """
+    Oanda V20 API
+    """
+
+    def __init__(self, access_token, account_id):
+
+        """
+        OandaV20 API connection with the access token and the account number
+        :param access_token:
+        :param account_id:
+        """
+
+        self.api = API(access_token=access_token)
+        self.account_id = account_id
+
+    def pricing_stream(self, instrument):
+
+        """
+        Pricing stream on a given instrument
+        :param instrument:
+        :return:
+        """
+
+        params ={"instruments": instrument}
+
+        r = pricing.PricingStream(accountID=self.account_id, params=params)
+        rv = self.api.request(r)
+        maxrecs = 12
+
+        for ticks in rv:
+            print(ticks)
+            # print(json.dumps(ticks, indent=4), ",")
+            if maxrecs == 0:
+                r.terminate("maxrecs records received")
+
+    def submit_market_order(self, security, sl_price, quantity):
+
+        print("============")
+        print("MARKET ORDER")
+        print("============")
+
+        data = {
+            "order": {
+                "stopLossOnFill": {
+                    "price": sl_price
+                },
+                "instrument": security,
+                "units": quantity,
+                "type": "MARKET",
+                "positionFill": "DEFAULT"
+            }
+        }
+        print("ORDER:", data)
+
+        r = orders.OrderCreate(self.account_id, data=data)
+        self.api.request(r)
+
+        print("Market Order was executed succesfully!")
+        print("")
+
+    def get_open_trades(self):
+
+        print("===========")
+        print("OPEN TRADES")
+        print("===========")
+
+        r = trades.OpenTrades(accountID=self.account_id)
+        self.api.request(r)
+
+        open_trades_df = pd.DataFrame.from_dict(r.response["trades"])
+
+        print(open_trades_df)
+
+        return open_trades_df
+
+
+if __name__ == "__main__":
+    #.pricing_stream(instrument="XAG_USD")
+    #.submit_market_order(security="XAG_USD", sl_price="24.15", quantity="-10")
+    OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
+             account_id="101-004-11289420-001").get_open_trades()
+
+
+
 

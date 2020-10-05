@@ -92,108 +92,7 @@ h5{
                 <td>BUY</td>
                 <td>10000</td>
             </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-          <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
+
           </tbody>
         </table>
     </div>
@@ -201,9 +100,9 @@ h5{
 
     {% block main_block%}
     <div class="row" style="height:40px; border-bottom: 1px solid grey; margin:auto;">
-        <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: {{ broker.account_number}}</label>
-        <label class="nav-link link_color font-weight-bold">Environment: {{ broker.env}}</label>
-        <label class="nav-link link_color font-weight-bold">Broker: {{ broker.broker_name}}</label>
+        <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: <label id="acc_name">{{ broker.account_number}}</label></label>
+        <label class="nav-link link_color font-weight-bold">Environment: <label id="env">{{ broker.env}}</label></label>
+        <label class="nav-link link_color font-weight-bold">Broker: <label id="broker">{{ broker.broker_name}}</label></label>
         <label class="nav-link link_color font-weight-bold">NAV: {{ account_info.nav}}</label>
         <label class="nav-link link_color font-weight-bold">Unrealized P&L: {{ account_info.un_pnl }}</label>
         <div style="height:50px; width:25%;">
@@ -211,7 +110,7 @@ h5{
             <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
                 {% csrf_token %}
                 <div class="col-auto">
-                    <select class="form-control input-sm" style="height:30px;" name="account">
+                    <select class="form-control input-sm" style="height:30px;" name="account" id="account_selector">
                         {% for account in accounts %}
                         <option >{{account.account_number}}</option>
                         {% endfor %}
@@ -279,26 +178,51 @@ h5{
         <div class="col" style="width:50%;">
             <canvas id="bar_chart_2" width="50%" height="20">
             <script>
-                var ctx = document.getElementById('bar_chart_2').getContext('2d');
-                var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                function chart(tagId, type, labels, label, bgColor, borderColor, data) {
 
-                // The data for our dataset
-                data: {
+                    let ctx = document.getElementById(tagId).getContext('2d');
+                    let chart = new Chart(ctx, {
+                        // The type of chart we want to create
+                        type: type,
+                        // The data for our dataset
+                        data: {
+                            labels: labels,
+                            datasets: [{label: label,
+                                backgroundColor: bgColor,
+                                borderColor: borderColor,
+                                data: data
+                            }]
+                        },
+                        // Configuration options go here
+                        options: {}
+                        })
+                }
+                chart(
+                    tagId='bar_chart_2',
+                    type='bar',
+                    labels="{{robot_perf.robot_label|safe}}",
+                    label='P&L by Robots',
+                    bgColor="{{ robot_perf.color|safe }}",
+                    borderColor='#19393D', data="{{ robot_perf.robot_pnl }}")
 
-                    labels: {{  robot_perf.robot_label|safe }},
-                    datasets: [{
-                        label: 'P&L by Robots',
-                        backgroundColor: {{ robot_perf.color|safe }},
-                        borderColor: '#19393D',
-                        data: {{ robot_perf.robot_pnl }}
-                    }]
-                },
-
-                // Configuration options go here
-                options: {}
-                });
+                // let ctx = document.getElementById('bar_chart_2').getContext('2d');
+                // let chart = new Chart(ctx, {
+                // // The type of chart we want to create
+                // type: 'bar',
+                //
+                // // The data for our dataset
+                // data: {
+                //     labels: {{robot_perf.robot_label|safe}},
+                //     datasets: [{label: 'P&L by Robots',
+                //         backgroundColor: {{ robot_perf.color|safe }},
+                //         borderColor: ,
+                //         data: {{ robot_perf.robot_pnl }}
+                //     }]
+                // },
+                //
+                // // Configuration options go here
+                // options: {}
+                // })
             </script>
             </canvas>
         </div>
@@ -531,6 +455,12 @@ h5{
             </canvas>
         </div>
     </div>
+    <!--    Active Robots Table-->
+    <div class="row" style="height:200px; margin-right: 0px; margin-left:0px;">
+        <h5 class="nav-link link_color font-weight-bold">
+        Active Robots
+        </h5>
+    </div>
 
     <!--Open trades Table-->
     <div class="row" style="height:350px; margin-right: 0px; margin-left:0px;">
@@ -579,8 +509,9 @@ h5{
             <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
         </form>
     </div>
+    {% load static %}
+    <script src="{% static 'js/home_page.js.js' %}"></script>
     {% endblock %}
-    <script>if ({{ message }} == "empty"){
-        alert("There is no record for this period!");
-        }
-    </script>
+
+
+
