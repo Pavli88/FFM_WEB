@@ -19,8 +19,10 @@ def risk_main(request):
 
     robots = get_robot_list()
 
-    return render(request, 'risk_app/risk_main.html', {"accounts": get_account_data(),
-                                                       "robots": robots[:-1]})
+    # , {"accounts": get_account_data(),
+    #    "robots": robots[:-1]}
+
+    return render(request, 'risk_app/risk_main.html')
 
 
 def get_balance(request):
