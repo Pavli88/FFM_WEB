@@ -131,7 +131,7 @@ class Oanda:
     def trade_details(self, trade_id):
 
         """
-        Function to get trade details for a specific transaction by trade ID
+        Function to get trade_app details for a specific transaction by trade_app ID
         :param trade_id:
         :return:
         """

@@ -14,7 +14,7 @@ from datetime import datetime
 def new_execution(signal_parameters):
 
     """
-    This function executes trade signals coming from Tradingview.com
+    This function executes trade_app signals coming from Tradingview.com
     :param request:
     :return:
     """
@@ -75,7 +75,7 @@ def new_execution(signal_parameters):
     print("Robot Name:", robot[0]["name"],
           "| Robot ID:", robot[0]["id"],
           "| Robot Status:", robot[0]["status"],
-          "| Robot trade size:", quantity)
+          "| Robot trade_app size:", quantity)
 
     trade_side = str(signal_params["trade_side"]).upper()
     security = robot[0]["security"]
@@ -210,7 +210,7 @@ def new_execution(signal_parameters):
             print("   Daily risk limit check   ")
             print("============================")
 
-            # Checking if trade can be executed based on daily risk limit
+            # Checking if trade_app can be executed based on daily risk limit
 
             # Here comes risk management section
             # if starting_balance - risk_amount > balance:
@@ -281,13 +281,13 @@ def new_execution(signal_parameters):
 
             print("Order was submitted to broker successfully!")
 
-            # Saving trade record to FFM SYSTEM db
+            # Saving trade_app record to FFM SYSTEM db
 
             print("Saving open trades data to FFM SYSTEM")
 
             open_trades = oanda.get_open_trades()[["id", "instrument", "price", ]]
 
-            print("Checking if trade id exists in FFM SYSTEM db")
+            print("Checking if trade_app id exists in FFM SYSTEM db")
 
             for id, open_price in zip(open_trades["id"], open_trades["price"]):
 
@@ -302,7 +302,7 @@ def new_execution(signal_parameters):
 
                     print("---------")
                     print("Trade does not exists in FFM SYSTEM db")
-                    print("Saving trade to db")
+                    print("Saving trade_app to db")
 
                     trade = Trades(security=security,
                                    robot=robot[0]["name"],
@@ -318,7 +318,7 @@ def new_execution(signal_parameters):
                                    )
                     trade.save()
 
-                    print("New trade record was saved to FFM SYSTEM db with ID:", id)
+                    print("New trade_app record was saved to FFM SYSTEM db with ID:", id)
                     print("---------")
                 else:
                     print("Trade id exists in FFM SYSTEM db")
@@ -363,7 +363,7 @@ def close_all_trades(close_robot):
     print("Robot Name:", robot[0]["name"])
     print("Robot Status:", robot[0]["status"])
     quantity = robot[0]["quantity"]
-    print("Robot trade size:", quantity)
+    print("Robot trade_app size:", quantity)
     print("-------------")
     print("Security info")
     print("-------------")
@@ -431,20 +431,20 @@ def close_all_trades(close_robot):
         open_trade_df = pd.DataFrame(list(trade.values()))
         open_trade_id_list = list(open_trade_df["broker_id"])
 
-        print("Open trade IDs in FFM SYSTEM")
+        print("Open trade_app IDs in FFM SYSTEM")
         print(open_trade_id_list)
 
         for id ,trd in zip(open_trade_id_list, trade):
 
             print("Oanda ID", id)
             print("FFM record", trd.broker_id)
-            print("Fetching trade details from Oanda")
+            print("Fetching trade_app details from Oanda")
 
-            trd_details = oanda.trade_details(trade_id=id)["trade"]
+            trd_details = oanda.trade_details(trade_id=id)["trade_app"]
 
             print("Oanda Close Price", trd_details["averageClosePrice"])
             print(trd_details["realizedPL"])
-            print("Updating FFM SYSTEM trade record")
+            print("Updating FFM SYSTEM trade_app record")
 
             trd.status = "CLOSE"
             trd.close_price = float(trd_details["averageClosePrice"])
@@ -503,7 +503,7 @@ def incoming_trade(request):
         else:
             print("Trading is not restricted due to time. ")
 
-        # Checking action type if it is a new trade or closing trades
+        # Checking action type if it is a new trade_app or closing trades
         print("Evaluating signal action")
 
         if signal_params["action"] == "Close":
@@ -512,7 +512,7 @@ def incoming_trade(request):
             return close_all_trades(close_robot=signal_params["robot_name"])
         else:
             print("Action: New Trade")
-            print("Executing new trade function")
+            print("Executing new trade_app function")
             return new_execution(signal_parameters=signal_params)
 
 
