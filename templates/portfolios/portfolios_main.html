@@ -2,7 +2,29 @@
 {% extends "base.html" %}
 
 {% block main_block%}
-<p>Site for portfolios</p>
+<div style="width: 100%; height: 50px; background: #ba2121">
+   <div class="form-group">
+        <label>Portfolio</label>
+        <select class="form-control-sm" name="port_name" required>
+            {% for portfolio in portfolios %}
+            <option>{{portfolio.portfolio_name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<div style="width: 100%; height: 200px; background: #5b80b2">
+    <h1>Portfolio Process Management</h1>
+</div>
+<div style="width: 100%; height: 200px; background: #49B0C2">
+    <h1>Portfolio Trade</h1>
+</div>
+<div style="width: 100%; height: 400px; background: #B5A22A">
+    <h1>Portfolio Charts</h1>
+</div>
+<div style="width: 100%; height: 200px; background: #AC5C26">
+    <h1>Portfolio Table</h1>
+</div>
+
 {% endblock %}
 
 <!--New portfolio creator form-->
@@ -16,21 +38,74 @@
     })
 
 </script>
-
+<br>
 <form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
+
     {% csrf_token %}
     <h4>New Portfolio</h4>
     <div class="form-group">
-        <input id="robot_name" class="form-control form-control-sm" type="text" name="portfolio_name"
+        <input id="robot_name" class="form-control form-control-sm" type="text" name="port_name"
                placeholder="Portfolio Name" required>
     </div>
+    <div class="form-group">
+        <label>Portfolio Type</label>
+        <select class="form-control form-control-sm" name="port_type" required>
+            <option>Trade</option>
+            <option>Investment</option>
+        </select>
+    </div>
+    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Create"><br>
+</form>
+<br>
+<form class="entry_form" action="{% url 'create port cash flow' %}" method="POST">
 
-    <script>if ("{{ exist_robots }}" == "exists") {
-        alert("Record already exists in database!");
-    } else if ("{{ exist_robots }}" == "created") {
-        alert("New record was created!")
-    }
-    </script>
-    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add New Robot"><br>
+    {% csrf_token %}
+    <h4>New Cash FLow</h4>
+
+    <div class="form-group">
+        <label>Portfolio</label>
+        <select class="form-control form-control-sm" name="port_name" required>
+            {% for portfolio in portfolios %}
+            <option>{{portfolio.portfolio_name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Type</label>
+        <select class="form-control form-control-sm" name="type" required>
+            <option>INFLOW</option>
+            <option>OUTFLOW</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <input type="number" class="form-control form-control-sm" min="0.0" step="10.0" name="amount" required>
+    </div>
+    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add"><br>
+</form>
+<br>
+<form class="entry_form" action="{% url 'create instrument' %}" method="POST">
+
+    {% csrf_token %}
+    <h4>New Instrument</h4>
+    <div class="form-group">
+        <input type="text" class="form-control form-control-sm" name="instrument_name" required value="Instrument Name">
+    </div>
+    <div class="form-group">
+        <label>Instrument Type</label>
+        <select class="form-control form-control-sm" name="instrument_type" required>
+            <option>Equity</option>
+            <option>Commodity</option>
+            <option>Currency</option>
+            <option>Bond</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Source</label>
+        <select class="form-control form-control-sm" name="source" required>
+            <option>oanda</option>
+            <option>MAP</option>
+        </select>
+    </div>
+    <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"><br>
 </form>
 {% endblock %}
