@@ -5,7 +5,7 @@ from django.db import models
 
 
 class Robots(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, unique=True)
     strategy = models.CharField(max_length=50, default='')
     security = models.CharField(max_length=50, default='')
     broker = models.CharField(max_length=50, default='')
@@ -20,6 +20,18 @@ class Robots(models.Model):
     prec = models.IntegerField(default=1)
 
 
+class CashFlow(models.Model):
+    robot_name = models.CharField(max_length=20)
+    cash_flow = models.FloatField(default=0.0)
+    date = models.DateTimeField(auto_now=True)
+
+
+class Balance(models.Model):
+    robot_name = models.CharField(max_length=20)
+    daily_pnl = models.FloatField(default=0.0)
+    daily_cash_flow = models.FloatField(default=0.0)
+    balance = models.FloatField(default=0.0)
+    date = models.DateTimeField(auto_now=True)
 
 
 

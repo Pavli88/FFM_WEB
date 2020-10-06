@@ -2,10 +2,11 @@
 {% extends "base.html" %}
 
 {% block main_block%}
+<br>
 <div style="width: 100%; height: 50px; background: #ba2121">
    <div class="form-group">
         <label>Portfolio</label>
-        <select class="form-control-sm" name="port_name" required>
+        <select class="form-control-sm" name="port_name" id="port_selector" required>
             {% for portfolio in portfolios %}
             <option>{{portfolio.portfolio_name}}</option>
             {% endfor %}
@@ -19,11 +20,19 @@
     <h1>Portfolio Trade</h1>
 </div>
 <div style="width: 100%; height: 400px; background: #B5A22A">
-    <h1>Portfolio Charts</h1>
+    <div style="width: 100%; height: 50px; background: #ba2121">
+        <button class="btn btn-primary submit_button" id="get_chart">Get Chart</button>
+    </div>
+    <div style="width: 100%; height: 100%; background: #49B0C2; display: flex">
+        <div style="width: 50%; height: 100%; background: #447e9b">
+
+        </div>
+        <div style="width: 50%; height: 100%; background: #666666">
+            <canvas style="width: 100%; height: 100%;" id="pie_chart"></canvas>
+        </div>
+    </div>
 </div>
-<div style="width: 100%; height: 200px; background: #AC5C26">
-    <h1>Portfolio Table</h1>
-</div>
+
 
 {% endblock %}
 
@@ -108,4 +117,6 @@
     </div>
     <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"><br>
 </form>
+{% load static %}
+<script src="{% static 'admin/js/portfolios_main.js' %}"></script>
 {% endblock %}

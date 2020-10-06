@@ -1,9 +1,9 @@
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from robots.models import *
-import os
+from portfolio.models import *
 
 
 # Main site for robot configuration
@@ -29,9 +29,10 @@ def create_robot(request):
 
     if request.method == "POST":
 
-        print("New robot creation request received.")
+        print("==================")
+        print("NEW ROBOT CREATION")
+        print("==================")
 
-        # String fields
         robot_name = request.POST.get("robot_name")
         strategy_name = request.POST.get("strategy_name")
         security = request.POST.get("security")
@@ -42,61 +43,38 @@ def create_robot(request):
         account_number = request.POST.get("account_number")
         sl_policy = request.POST.get("sl_policy")
         precision = request.POST.get("precision")
-
-        string_parameter_dict = {"robot name": robot_name,
-                                 "strategy name": strategy_name,
-                                 "security": security,
-                                 "broker": broker,
-                                 "status": status,
-                                 "environment": env,
-                                 "time_fame:": time_frame,
-                                 "account_number": account_number,
-                                 "sl_policy": sl_policy,
-                                 "precision": precision}
-
-        # Float fields
         pyramiding_level = float(request.POST.get("pyramiding_level"))
         init_exp = float(request.POST.get("init_exp"))
         quantity = float(request.POST.get("quantity"))
 
-        print("Robot parameters:", string_parameter_dict)
-
-        # Checking if robot name exists in data base
-        print("Checking if new record exists in database")
         try:
-            data_exists = Robots.objects.get(name=robot_name).name
+            Robots(name=robot_name,
+                   strategy=strategy_name,
+                   security=security,
+                   broker=broker,
+                   status=status,
+                   pyramiding_level=pyramiding_level,
+                   in_exp=init_exp,
+                   env=env,
+                   quantity=quantity,
+                   time_frame=time_frame,
+                   account_number=account_number,
+                   sl_policy=sl_policy,
+                   prec=precision).save()
+
+            print("Inserting new robot to database")
+
+            Balance(robot_name=robot_name,
+                    daily_pnl=0.0,
+                    daily_cash_flow=0.0).save()
+
+            print("Setting up initial balance to 0")
+
         except:
-            data_exists = "does not exist"
+            print("Robot exists in database")
+            return render(request, 'robots_app/create_robot.html', {"robot_exists": "yes"})
 
-        if data_exists == robot_name:
-            print("Robot exists in data base.")
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "exists"})
-
-        # Inserting new robot data to database
-        print("Inserting new record to database")
-        robot = Robots(name=robot_name,
-                       strategy=strategy_name,
-                       security=security,
-                       broker=broker,
-                       status=status,
-                       pyramiding_level=pyramiding_level,
-                       in_exp=init_exp,
-                       env=env,
-                       quantity=quantity,
-                       time_frame=time_frame,
-                       account_number=account_number,
-                       sl_policy=sl_policy,
-                       prec=precision)
-
-        try:
-            robot.save()
-            print("New record was created with parameters:", string_parameter_dict)
-            return render(request, 'robots_app/create_robot.html', {"exist_robots": "created"})
-        except:
-            print("Error occured while inserting data to database. "
-                  "Either data type or server configuration is not correct.")
-            return render(request, 'robots_app/create_robot.html',
-                          {"exist_robots": "Incorrect data type was given in one of the fields!"})
+        return redirect('robots main')
 
 
 def get_all_robots(request):
@@ -131,7 +109,9 @@ def delete_robot(request):
     """
 
     print("")
-    print("New request has arrived to delete existing robot from database")
+    print("============")
+    print("DELETE ROBOT")
+    print("============")
 
     if request.method == "POST":
 
@@ -195,5 +175,4 @@ def amend_robot(request):
         print("Amended parameters were saved to database.")
 
         return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
-
 

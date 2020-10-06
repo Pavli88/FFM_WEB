@@ -1,17 +1,23 @@
-asgiref==3.2.7
-certifi==2020.4.5.1
-chardet==3.0.4
-Django==3.0.5
-idna==2.9
-mysqlclient==1.4.6
-numpy==1.18.3
-oandapy==0.0.9
-pandas==1.0.3
-pysimplemodel==2.3.3
-python-dateutil==2.8.1
-python-status==1.0.1
-pytz==2019.3
-requests==2.23.0
-six==1.14.0
-sqlparse==0.3.1
-urllib3==1.25.9
+Package         Version
+--------------- ----------
+asgiref         3.2.7
+certifi         2020.4.5.1
+chardet         3.0.4
+Django          3.0.5
+idna            2.9
+mysqlclient     1.4.6
+numpy           1.18.3
+oandapy         0.0.9
+oandapyV20      0.6.3
+pandas          1.0.3
+pip             20.2.3
+pkg-resources   0.0.0
+pysimplemodel   2.3.3
+python-dateutil 2.8.1
+python-status   1.0.1
+pytz            2019.3
+requests        2.23.0
+setuptools      50.3.0
+six             1.14.0
+sqlparse        0.3.1
+urllib3         1.25.9

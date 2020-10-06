@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from portfolio.models import *
+from django.http import JsonResponse
 
 
 # Main site for portfolios
@@ -76,3 +77,20 @@ def get_portfolios():
     portfolios = Portfolio.objects.filter().values()
 
     return portfolios
+
+
+def load_chart(request):
+
+    print("=========================")
+    print("CHART LOADER AND SELECTOR")
+    print("=========================")
+
+    if request.method == "POST":
+        account = request.POST.get("portfolio")
+        print(account)
+        print(request.POST.get("chartname"))
+        print("Loading Chart")
+
+        response = {"account data": [30, 20, 10, 40]}
+
+    return JsonResponse(response, safe=False)
