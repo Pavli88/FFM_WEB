@@ -6,7 +6,14 @@ from django.http import JsonResponse
 # Main site for portfolios
 def portfolios_main(request):
 
-    portfolios = get_portfolios()
+    print("===================")
+    print("PORTFOLIO MAIN PAGE")
+    print("===================")
+
+    try:
+        portfolios = get_portfolios()
+    except:
+        portfolios = []
 
     return render(request, 'portfolios/portfolios_main.html', {"portfolios": portfolios})
 
