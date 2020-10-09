@@ -146,3 +146,73 @@ def get_securities_by_type(request):
     print("Sending data to front end")
 
     return JsonResponse(response, safe=False)
+
+
+def trade(request):
+
+    print("===============")
+    print("PORTFOLIO TRADE")
+    print("===============")
+
+    if request.method == "POST":
+        quantity = request.POST.get("quantity")
+        price = request.POST.get("price")
+        portfolio = request.POST.get("portfolio")
+        security = request.POST.get("security")
+        security_type = request.POST.get("secType")
+        market_value = float(quantity) * float(price)
+
+        if float(quantity) > 0:
+            cash_flow = market_value
+        else:
+            cash_flow = market_value *1
+
+        if security_type == "Robot":
+            source = "ffm_system"
+        else:
+            source = "oanda"
+
+        print("QUANTITY:", quantity)
+        print("PRICE:", price)
+        print("PORTFOLIO:", portfolio)
+        print("SECURITY:", security)
+        print("SECURITY TYPE:", security_type)
+        print("MARKET VALUE:", market_value)
+        print("CASH FLOW:", cash_flow)
+        print("SOURCE:", source)
+
+        Trade(portfolio_name=portfolio,
+              quantity=quantity,
+              price=price,
+              mv=market_value,
+              sec_type=security_type,
+              security=security,
+              source=source).save()
+
+        print("Saving new trade record to", portfolio)
+
+        CashFlow(portfolio_name=portfolio,
+                 amount=cash_flow,
+                 type="TRADE").save()
+
+        print("Amending cash flow table for", portfolio)
+
+    response = {"securities": [0]}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def process_hub(request):
+
+    print("=====================")
+    print("PORTFOLIO PROCESS HUB")
+    print("=====================")
+
+    response = {"securities": [0]}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+

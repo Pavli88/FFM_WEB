@@ -9,4 +9,6 @@ urlpatterns = [
     path('portfolios/create/instrument/', create_instrument, name="create instrument"),
     path('portfolios/load_chart/', load_chart),
     path('portfolios/sec_types/', get_securities_by_type),
+    path('portfolios/trade_port/', trade),
+    path('portfolios/process_hub/', process_hub),
 ]

@@ -7,9 +7,27 @@ let price = $("#price")
 let quantity = $("#qty")
 let marketValue = $("#mv")
 let availableCash = $("#available_cash")
+let portfolio = $("#port_selector")
+let security = $("#secs")
+let tradePanel = $("#trade_panel")
+
+// Adding All option to portfolio drop down menu
+let newOpt = document.createElement("option")
+newOpt.innerHTML = "All"
+portfolio.append(newOpt)
 
 price.keyup(calcMv)
 quantity.keyup(calcMv)
+
+// Allowing trading on portfolio and disable on All
+portfolio.change(function () {
+    if (portfolio.val() === "All"){
+        tradePanel.hide()
+    }else {
+        tradePanel.show()
+    }
+
+})
 
 // Calculates market value of the trade
 function calcMv() {
@@ -50,6 +68,26 @@ function loadSecurities() {
         }
     })
 
+}
+
+// Executing portfolio trade
+let tradeButton = $("#trade_btn")
+tradeButton.click(trade)
+
+function trade() {
+    $.ajax({
+        type: "POST",
+        url: "trade_port/",
+        data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
+            quantity: quantity.val(),
+            price:price.val(),
+            portfolio: portfolio.val(),
+            security: security.val(),
+            secType: secTypeSelector.value},
+        success: function (quantity, price, portfolio, security, secType) {
+            console.log("success")
+        }
+    })
 }
 
 

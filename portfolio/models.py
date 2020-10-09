@@ -21,9 +21,12 @@ class Nav(models.Model):
 
 class Trade(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
+    security = models.CharField(max_length=30, default="")
+    sec_type = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
+    source = models.CharField(max_length=30, default="")
     date = models.DateTimeField(auto_now=True)
 
 
@@ -31,3 +34,13 @@ class Instruments(models.Model):
     instrument_name = models.CharField(max_length=30, default="")
     instrument_type = models.CharField(max_length=30, default="")
     source = models.CharField(max_length=30, default="")
+
+
+class Positions():
+    portfolio_name = models.CharField(max_length=30, default="")
+    security = models.CharField(max_length=30, default="")
+    sec_type = models.CharField(max_length=30, default="")
+    quantity = models.FloatField(default=0.0)
+    price = models.FloatField(default=0.0)
+    mv = models.FloatField(default=0.0)
+    date = models.DateTimeField(auto_now=True)
