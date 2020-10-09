@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
+{% block head %}
+
+{% endblock %}
+
 {% block main_block%}
 <br>
-<div style="width: 100%; height: 50px; background: #ba2121">
+<div style="width: 100%; height: 50px; background: #5b80b2">
+    <h1>Portfolio Management</h1>
+</div>
+
+<div style="width: 100%; height: 50px; background: #ba2121; display: flex">
    <div class="form-group">
         <label>Portfolio</label>
         <select class="form-control-sm" name="port_name" id="port_selector" required>
@@ -12,19 +20,71 @@
             {% endfor %}
         </select>
     </div>
+
+    <div>
+        <label>NAV</label>
+        <label id="nav_value">1000</label>
+        <label>$</label>
+    </div>
+
+    <div>
+        <label>Available Cash</label>
+        <label id="available_cash">500</label>
+        <label>$</label>
+    </div>
 </div>
+
 <div style="width: 100%; height: 200px; background: #5b80b2">
-    <h1>Portfolio Process Management</h1>
+    <h1>Process Management</h1>
 </div>
-<div style="width: 100%; height: 200px; background: #49B0C2">
-    <h1>Portfolio Trade</h1>
+
+<div style="width: 100%; height: 500px; background: #49B0C2">
+
+    <h1>Trade</h1>
+
+    <div class="form-group">
+        <label>Security Type</label>
+        <select class="form-control form-control-sm" name="sec_type" id="sec_select" required>
+            <option>Robot</option>
+            <option>Equity</option>
+            <option>Commodity</option>
+            <option>Bond</option>
+            <option>Currency</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Security</label>
+        <select class="form-control form-control-sm" name="security" id="secs" required>
+            <option class="securities">Robot</option>
+            <option class="securities">Investment</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty" required>
+    </div>
+
+    <div class="form-group">
+        <label>Price</label>
+        <input type="number" class="form-control form-control-sm" min="0.0", step="10.0" name="price" id="price" required>
+    </div>
+
+    <div class="form-group" style="display: flex">
+        <label>Market Value:</label>
+        <label id="mv">1230</label>
+    </div>
+
+    <button style="width: 100px; height: 50px;" id="trade_btn">Trade</button>
 </div>
+
 <div style="width: 100%; height: 400px; background: #B5A22A">
     <div style="width: 100%; height: 50px; background: #ba2121">
         <button class="btn btn-primary submit_button" id="get_chart">Get Chart</button>
     </div>
-    <div style="width: 100%; height: 100%; background: #49B0C2; display: flex">
-        <div style="width: 50%; height: 100%; background: #447e9b">
+    <div style="width: 100%; height: 100%; background: #49B0C2; display: flex" >
+        <div style="width: 50%; height: 100%; background: #447e9b" >
 
         </div>
         <div style="width: 50%; height: 100%; background: #666666">
@@ -32,21 +92,16 @@
         </div>
     </div>
 </div>
+<div id="d_table"></div>
 
+{% load static %}
+<script src="{% static 'admin/js/portfolios_main.js' %}"></script>
 
 {% endblock %}
 
 <!--New portfolio creator form-->
 {% block entry_form %}
-<script>
-    $(".modify_btn").on("click", function(){
-        alert("Robot has been updated !");
-    })
-    $(".delete_btn").on("click", function () {
-        alert("Robot has been deleted !");
-    })
 
-</script>
 <br>
 <form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
 
@@ -65,6 +120,7 @@
     </div>
     <input class="btn btn-primary submit_button" type="submit" , name="button" value="Create"><br>
 </form>
+
 <br>
 <form class="entry_form" action="{% url 'create port cash flow' %}" method="POST">
 
@@ -91,13 +147,14 @@
     </div>
     <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add"><br>
 </form>
+
 <br>
 <form class="entry_form" action="{% url 'create instrument' %}" method="POST">
 
     {% csrf_token %}
     <h4>New Instrument</h4>
     <div class="form-group">
-        <input type="text" class="form-control form-control-sm" name="instrument_name" required value="Instrument Name">
+        <input type="text" class="form-control form-control-sm" name="instrument_name" required>
     </div>
     <div class="form-group">
         <label>Instrument Type</label>
@@ -117,6 +174,7 @@
     </div>
     <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"><br>
 </form>
-{% load static %}
-<script src="{% static 'admin/js/portfolios_main.js' %}"></script>
+
 {% endblock %}
+
+

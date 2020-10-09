@@ -1,47 +1,55 @@
+// Updating Securities on selected security type
 
-function Charting(id, data) {
-    let ctx = document.getElementById(id).getContext('2d');
-    let chart = new Chart(ctx, data);
+let secTypeSelector = document.querySelector("#sec_select")
+secTypeSelector.addEventListener("change", loadSecurities)
+
+let price = $("#price")
+let quantity = $("#qty")
+let marketValue = $("#mv")
+let availableCash = $("#available_cash")
+
+price.keyup(calcMv)
+quantity.keyup(calcMv)
+
+// Calculates market value of the trade
+function calcMv() {
+    let mv = quantity.val()*price.val()
+    marketValue.html(mv)
+
+    if (mv > Number(availableCash.html())){
+        alert("Market value is greater than available cash in the portfolio!")
+        price.val(1)
+    }
 }
 
-let chartButton = document.querySelector("#get_chart")
-chartButton.addEventListener("click",loadChartData)
-
-function loadChartData() {
-    let portfolio = document.querySelector("#port_selector").value
-
-    let sentData = {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'), portfolio: portfolio, chartname: "pie"}
-
-    // Submitting request to backend
+// Loading securities for the selected security type
+function loadSecurities() {
     $.ajax({
         type: "POST",
-        url: "load_chart/",
-        data: sentData,
+        url: "sec_types/",
+        data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'), data: secTypeSelector.value},
         success: function (data) {
 
-            // Here comes the execution if ajax is succesfull
-            console.log(data)
-            let data1 = {
-                // The type of chart we want to create
-                type: 'pie',
+            let securities = document.querySelector('#secs')
+            let allSecurities = securities.querySelectorAll('.securities')
 
-                // The data for our dataset
-                data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                    datasets: [{
-                        label: 'My First dataset',
+            allSecurities.forEach(k => k.remove())
 
-                        data: data["account data"]
-                    }]
-                },
-
-                // Configuration options go here
-                options: {}
+            for (let sec of data["securities"]){
+                console.log(sec)
+                let opt = document.createElement("option")
+                opt.innerHTML = sec["instrument_name"]
+                opt.classList.add("securities")
+                securities.appendChild(opt)
             }
-            Charting('pie_chart', data1)
+
+            if (secTypeSelector.value === "Robot"){
+                console.log("price")
+                $("#price").val(1)
+            }
         }
     })
-}
 
+}
 
 

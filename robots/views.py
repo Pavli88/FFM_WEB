@@ -70,6 +70,12 @@ def create_robot(request):
 
             print("Setting up initial balance to 0")
 
+            Instruments(instrument_name=robot_name,
+                        instrument_type="Robot",
+                        source=broker).save()
+
+            print("Saving down robot to instruments table")
+
         except:
             print("Robot exists in database")
             return render(request, 'robots_app/create_robot.html', {"robot_exists": "yes"})

@@ -12,6 +12,7 @@ def portfolios_main(request):
 
     try:
         portfolios = get_portfolios()
+        print("Loading portfolios to main page")
     except:
         portfolios = []
 
@@ -59,10 +60,16 @@ def create_portfolio(request):
             Portfolio(portfolio_name=port_name,
                       portfolio_type=port_type).save()
             print("New Portfolio was created!")
+
+            print("Creating nav record for the portfolio")
+
+            Nav(portfolio_name=port_name,
+                amount=0.0).save()
+
         except:
             print("Portfolio exists in database!")
 
-    return render(request, 'portfolios/portfolios_main.html')
+    return redirect('portfolio main')
 
 
 def create_instrument(request):
@@ -70,6 +77,22 @@ def create_instrument(request):
     print("==============")
     print("NEW INSTRUMENT")
     print("==============")
+
+    if request.method == "POST":
+        instrument_name = request.POST.get("instrument_name")
+        instrument_type = request.POST.get("instrument_type")
+        source = request.POST.get("source")
+
+        print("INSTRUMENT NAME:", instrument_name)
+        print("INSTRUMENT TYPE:", instrument_type)
+        print("SOURCE:", source)
+
+        print("Saving new instrument to database")
+        Instruments(instrument_name=instrument_name,
+                    instrument_type=instrument_type,
+                    source=source).save()
+
+        print("New instrument was saved successfully")
 
     return redirect('portfolio main')
 
@@ -99,5 +122,27 @@ def load_chart(request):
         print("Loading Chart")
 
         response = {"account data": [30, 20, 10, 40]}
+
+    return JsonResponse(response, safe=False)
+
+
+def get_securities_by_type(request):
+
+    print("==============================")
+    print("LOADING SECURITIES BY SEC TYPE")
+    print("==============================")
+
+    if request.method == "POST":
+        security_type = request.POST.get("data")
+
+        print("SECURITY TYPE:", security_type)
+
+        instruments = Instruments.objects.filter(instrument_type=security_type).values()
+
+        print(instruments)
+
+    response = {"securities": list(instruments)}
+
+    print("Sending data to front end")
 
     return JsonResponse(response, safe=False)

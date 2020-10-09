@@ -54,384 +54,471 @@ h5{
 {% block my_scripts %}
 
 {% endblock %}
-    {% block entry_form %}
-    <div class="row">
-        <form style="width:100%">
-            <div class="form-group" style="width:100%; padding-left:5px; padding-right:5px;">
-                <div style="display:flex;">
-                    <h5 class="nav-link link_color font-weight-bold">Comments</h5>
-                    <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px; margin:10px;">Save</button>
-                </div>
-                <textarea class="form-control" rows="3" style="width:100%; height:275px;"></textarea>
+{% block entry_form %}
+<div class="row">
+    <form style="width:100%">
+        <div class="form-group" style="width:100%; padding-left:5px; padding-right:5px;">
+            <div style="display:flex;">
+                <h5 class="nav-link link_color font-weight-bold">Comments</h5>
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px; margin:10px;">
+                    Save
+                </button>
             </div>
-        </form>
-    </div>
-    <h5 class="nav-link link_color font-weight-bold">
-        Trade Log
-    </h5>
-    <div class="trade_log">
-        <table class="table">
-          <thead>
-            <tr>
-                <th>Robot</th>
-                <th>Security</th>
-                <th>Action</th>
-                <th>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
-            <tr>
-                <td>test</td>
-                <td>EUR_USD</td>
-                <td>BUY</td>
-                <td>10000</td>
-            </tr>
+            <textarea class="form-control" rows="3" style="width:100%; height:275px;"></textarea>
+        </div>
+    </form>
+</div>
+<h5 class="nav-link link_color font-weight-bold">
+    Trade Log
+</h5>
+<div class="trade_log">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Robot</th>
+            <th>Security</th>
+            <th>Action</th>
+            <th>Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>test</td>
+            <td>EUR_USD</td>
+            <td>BUY</td>
+            <td>10000</td>
+        </tr>
+        <tr>
+            <td>test</td>
+            <td>EUR_USD</td>
+            <td>BUY</td>
+            <td>10000</td>
+        </tr>
 
-          </tbody>
-        </table>
-    </div>
-    {% endblock %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
 
-    {% block main_block%}
-    <div class="row" style="height:40px; border-bottom: 1px solid grey; margin:auto;">
-        <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: <label id="acc_name">{{ broker.account_number}}</label></label>
-        <label class="nav-link link_color font-weight-bold">Environment: <label id="env">{{ broker.env}}</label></label>
-        <label class="nav-link link_color font-weight-bold">Broker: <label id="broker">{{ broker.broker_name}}</label></label>
-        <label class="nav-link link_color font-weight-bold">NAV: {{ account_info.nav}}</label>
-        <label class="nav-link link_color font-weight-bold">Unrealized P&L: {{ account_info.un_pnl }}</label>
-        <div style="height:50px; width:25%;">
-            <!--Form to load all accounts-->
-            <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
-                {% csrf_token %}
-                <div class="col-auto">
-                    <select class="form-control input-sm" style="height:30px;" name="account" id="account_selector">
-                        {% for account in accounts %}
-                        <option >{{account.account_number}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button id="def_but_main" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Default</button>
-                <script>
-                $("#def_but_main").on("click", function(){
+{% block main_block%}
+<div class="row" style="height:40px; border-bottom: 1px solid grey; margin:auto;">
+    <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: <label id="acc_name">{{
+        broker.account_number}}</label></label>
+    <label class="nav-link link_color font-weight-bold">Environment: <label id="env">{{ broker.env}}</label></label>
+    <label class="nav-link link_color font-weight-bold">Broker: <label id="broker">{{
+        broker.broker_name}}</label></label>
+    <label class="nav-link link_color font-weight-bold">NAV: {{ account_info.nav}}</label>
+    <label class="nav-link link_color font-weight-bold">Unrealized P&L: {{ account_info.un_pnl }}</label>
+    <div style="height:50px; width:25%;">
+        <!--Form to load all accounts-->
+        <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
+            {% csrf_token %}
+            <div class="col-auto">
+                <select class="form-control input-sm" style="height:30px;" name="account" id="account_selector">
+                    {% for account in accounts %}
+                    <option>{{account.account_number}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button id="def_but_main" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">
+                Default
+            </button>
+            <script>
+                $("#def_but_main").on("click", function () {
                     alert('Default account has been saved!');
                 })
             </script>
-            </form>
-        </div>
+        </form>
     </div>
-    <div class="row menu_bar" style="height:40px; border-bottom: 1px solid grey;">
-        <!--Form for submiting robot results-->
-        <div style="height:40px;">
-            <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
-                {% csrf_token %}
-                <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Robot</label>
-                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                        <select class="form-control" style="height:30px; width:80px;" name="robot_name" id="robot_selector">
-                            {% for robot in robots %}
-                            <option>{{robot}}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+</div>
+<div class="row menu_bar" style="height:40px; border-bottom: 1px solid grey;">
+    <!--Form for submiting robot results-->
+    <div style="height:40px;">
+        <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
+            {% csrf_token %}
+            <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Robot</label>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <select class="form-control" style="height:30px; width:80px;" name="robot_name" id="robot_selector">
+                    {% for robot in robots %}
+                    <option>{{robot}}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Trade</label>
-                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                        <select class="form-control" style="height:30px;" name="side">
-                            <option >BUY</option>
-                            <option>SELL</option>
-                            <option selected>ALL</option>
-                        </select>
-                    </div>
+            <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Trade</label>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <select class="form-control" style="height:30px;" name="side">
+                    <option>BUY</option>
+                    <option>SELL</option>
+                    <option selected>ALL</option>
+                </select>
+            </div>
 
-                <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">Start Date:</label>
-                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                        <input class="form-control" style="height:30px;" type="date" id="start" name="start_date" value="{{ dates.today }}" min="2020-01-01">
-                    </div>
+            <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">Start Date:</label>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <input class="form-control" style="height:30px;" type="date" id="start" name="start_date"
+                       value="{{ dates.today }}" min="2020-01-01">
+            </div>
 
-                <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">End Date:</label>
-                <div class="col-auto" style="padding-left:5px; padding-right:15px;">
-                        <input class="form-control" style="height:30px;" type="date" id="end" name="end_date" value="{{ dates.next_day }}" min="2020-01-01">
-                    </div>
+            <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">End Date:</label>
+            <div class="col-auto" style="padding-left:5px; padding-right:15px;">
+                <input class="form-control" style="height:30px;" type="date" id="end" name="end_date"
+                       value="{{ dates.next_day }}" min="2020-01-01">
+            </div>
 
-                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="get_robot_data_btn">Submit</button>
-            </form>
-        </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="get_robot_data_btn">Submit
+            </button>
+        </form>
     </div>
+</div>
 
-    <!--Performance-->
-    <div class="row">
-        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
+<!--Performance-->
+<div class="row">
+    <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
+</div>
+<div class="row">
+    <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
+</div>
+<!--Robots summary statistics-->
+<div class="row menu_bar chart_header">
+    <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe }}</label>
+</div>
+<div class="row chart_area">
+    <div class="col" style="width:50%;">
+        <canvas id="bar_chart_2" width="50%" height="20"></canvas>
     </div>
-    <div class="row">
-        <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
-    </div>
-    <!--Robots summary statistics-->
-    <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe }}</label>
-    </div>
-    <div class="row chart_area">
-        <div class="col" style="width:50%;">
-            <canvas id="bar_chart_2" width="50%" height="20"></canvas>
-        </div>
-        <div class="col" style="width:50%;">
-            <canvas id="bar_chart_0" width="50%" height="20">
+    <div class="col" style="width:50%;">
+        <canvas id="bar_chart_0" width="50%" height="20">
             <script>
                 var ctx = document.getElementById('bar_chart_0').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                    // The type of chart we want to create
+                    type: 'bar',
 
-                // The data for our dataset
-                data: {
+                    // The data for our dataset
+                    data: {
 
-                    labels: {{  robot_perf.robot_label|safe }},
-                    datasets: [{
-                        label: 'Winner %',
-                        backgroundColor: '#405347',
-                        borderColor: '#19393D',
-                        data: {{ win_lose.winners|safe }}
-                    },
+                        labels: {
+                {
+                    robot_perf.robot_label | safe
+                }
+                },
+                datasets: [{
+                    label: 'Winner %',
+                    backgroundColor: '#405347',
+                    borderColor: '#19393D',
+                    data: {{win_lose.winners | safe}
+                }
+                },
+                {
+                    label: 'Loser %',
+                        backgroundColor
+                :
+                    '#842518',
+                        borderColor
+                :
+                    '#19393D',
+                        data
+                :
                     {
-                        label: 'Loser %',
-                        backgroundColor: '#842518',
-                        borderColor: '#19393D',
-                        data: {{ win_lose.losers|safe }}
-                    }]
+                        {
+                            win_lose.losers | safe
+                        }
+                    }
+                }
+                ]
                 },
 
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
+        </canvas>
     </div>
+</div>
 
-    <!--Robots statistics-->
-    <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Robot: {{robot_name}}</label>
-        <label class="nav-link link_color font-weight-bold">Side: {{side}}</label>
-        <label class="nav-link link_color font-weight-bold">Number of Trades: {{pnl.number_of_trades}}</label>
-    </div>
-    <div class="row chart_area">
-        <div class="col" style="width:50%;">
-            <canvas id="line_chart" width="50%" height="20">
+<!--Robots statistics-->
+<div class="row menu_bar chart_header">
+    <label class="nav-link link_color font-weight-bold">Robot: {{robot_name}}</label>
+    <label class="nav-link link_color font-weight-bold">Side: {{side}}</label>
+    <label class="nav-link link_color font-weight-bold">Number of Trades: {{pnl.number_of_trades}}</label>
+</div>
+<div class="row chart_area">
+    <div class="col" style="width:50%;">
+        <canvas id="line_chart" width="50%" height="20">
             <script>
                 var ctx = document.getElementById('line_chart').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                    // The type of chart we want to create
+                    type: 'bar',
 
-                // The data for our dataset
-                data: {
-                    labels: {{ pnl.labels }},
-                    datasets: [
+                    // The data for our dataset
+                    data: {
+                        labels: {
+                {
+                    pnl.labels
+                }
+                },
+                datasets: [
                     {
                         label: 'Buy Trades',
-                        backgroundColor: {{ pnl.colors|safe }},
-                        borderColor: '#405347',
-                        data: {{ pnl.pnls }}
-                    },
+                        backgroundColor: {{pnl.colors | safe}
+                },
+                borderColor: '#405347',
+                    data
+                :
+                {
+                    {
+                        pnl.pnls
+                    }
+                }
+                },
 
-                    ]
+                ]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
-        <div class="col" style="width:50%;">
-            <canvas id="line_chart_2" width="50%" height="20">
+        </canvas>
+    </div>
+    <div class="col" style="width:50%;">
+        <canvas id="line_chart_2" width="50%" height="20">
 
             <script>
                 var ctx = document.getElementById('line_chart_2').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'line',
+                    // The type of chart we want to create
+                    type: 'line',
 
-                // The data for our dataset
-                data: {
-                    labels: {{ pnl.labels }},
-                    datasets: [{
-                        label: 'Cumulative P&L',
-                        backgroundColor: '#405347',
-                        borderColor: '#19393D',
-                        radius: 0,
-                        data: {{ pnl.cum_pnl }}
-                    }]
+                    // The data for our dataset
+                    data: {
+                        labels: {
+                {
+                    pnl.labels
+                }
+                },
+                datasets: [{
+                    label: 'Cumulative P&L',
+                    backgroundColor: '#405347',
+                    borderColor: '#19393D',
+                    radius: 0,
+                    data: {{pnl.cum_pnl}
+                }
+                }]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
+        </canvas>
     </div>
+</div>
 
-    <!--Account statistics-->
-    <div class="row">
-        <h6 class="nav-link link_color font-weight-bold" >Account Level</h6>
-    </div>
-    <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Number of Trades: {{ nmbr_trades_bal }}</label>
-        <label class="nav-link link_color font-weight-bold">P&L: {{ br_trades.total_pnl }}</label>
-        <label class="nav-link link_color font-weight-bold">Return: {{ br_trades.return }} %</label>
-    </div>
-    <div class="row chart_area">
-        <div class="col" style="width:50%;">
-            <canvas id="bar_chart_3" width="50%" height="20">
+<!--Account statistics-->
+<div class="row">
+    <h6 class="nav-link link_color font-weight-bold">Account Level</h6>
+</div>
+<div class="row menu_bar chart_header">
+    <label class="nav-link link_color font-weight-bold">Number of Trades: {{ nmbr_trades_bal }}</label>
+    <label class="nav-link link_color font-weight-bold">P&L: {{ br_trades.total_pnl }}</label>
+    <label class="nav-link link_color font-weight-bold">Return: {{ br_trades.return }} %</label>
+</div>
+<div class="row chart_area">
+    <div class="col" style="width:50%;">
+        <canvas id="bar_chart_3" width="50%" height="20">
             <script>
                 var ctx = document.getElementById('bar_chart_3').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                    // The type of chart we want to create
+                    type: 'bar',
 
-                // The data for our dataset
-                data: {
+                    // The data for our dataset
+                    data: {
 
-                    labels: {{ br_trades.label|safe }},
-                    datasets: [{
-                        label: 'All Trades on Account',
-                        backgroundColor: {{ br_trades.colors|safe }},
-                        borderColor: '#19393D',
-                        data: {{ br_trades.trades|safe }}
-                    }]
+                        labels: {
+                {
+                    br_trades.label | safe
+                }
+                },
+                datasets: [{
+                    label: 'All Trades on Account',
+                    backgroundColor: {{br_trades.colors | safe}
+                },
+                borderColor: '#19393D',
+                    data
+                :
+                {
+                    {
+                        br_trades.trades | safe
+                    }
+                }
+                }]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
-        <div class="col" style="width:50%;">
-            <canvas id="line_chart_5" width="50%" height="20">
+        </canvas>
+    </div>
+    <div class="col" style="width:50%;">
+        <canvas id="line_chart_5" width="50%" height="20">
 
             <script>
                 var ctx = document.getElementById('line_chart_5').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'line',
+                    // The type of chart we want to create
+                    type: 'line',
 
-                // The data for our dataset
-                data: {
-                    labels: {{ balance_label }},
-                    datasets: [{
-                        label: 'Balance History',
-                        backgroundColor: '#405347',
-                        borderColor: '#19393D',
-                        borderWidth: 1,
-                        radius: 0,
-                        data: {{ balance }}
-                    }]
+                    // The data for our dataset
+                    data: {
+                        labels: {
+                {
+                    balance_label
+                }
+                },
+                datasets: [{
+                    label: 'Balance History',
+                    backgroundColor: '#405347',
+                    borderColor: '#19393D',
+                    borderWidth: 1,
+                    radius: 0,
+                    data: {{balance}
+                }
+                }]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
+        </canvas>
     </div>
+</div>
 
-    <div class="row">
-        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Risk</h5>
-    </div>
+<div class="row">
+    <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Risk</h5>
+</div>
 
-    <!--Account statistics-->
-    <div class="row menu_bar chart_header">
-        <label class="nav-link link_color font-weight-bold">Total SL Risk: {{ risk.sum_risk }}</label>
-        <label class="nav-link link_color font-weight-bold">Total SL Risk %:</label>
-    </div>
-    <div class="row chart_area">
-        <div class="col" style="width:50%;">
-            <canvas id="bar_chart_6" width="50%" height="20">
+<!--Account statistics-->
+<div class="row menu_bar chart_header">
+    <label class="nav-link link_color font-weight-bold">Total SL Risk: {{ risk.sum_risk }}</label>
+    <label class="nav-link link_color font-weight-bold">Total SL Risk %:</label>
+</div>
+<div class="row chart_area">
+    <div class="col" style="width:50%;">
+        <canvas id="bar_chart_6" width="50%" height="20">
             <script>
                 var ctx = document.getElementById('bar_chart_6').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                    // The type of chart we want to create
+                    type: 'bar',
 
-                // The data for our dataset
-                data: {
+                    // The data for our dataset
+                    data: {
 
-                    labels: {{ br_trades.label|safe }},
-                    datasets: [{
-                        label: 'All Trades on Account',
-                        backgroundColor: {{ br_trades.colors|safe }},
-                        borderColor: '#19393D',
-                        data: {{ br_trades.trades|safe }}
-                    }]
+                        labels: {
+                {
+                    br_trades.label | safe
+                }
+                },
+                datasets: [{
+                    label: 'All Trades on Account',
+                    backgroundColor: {{br_trades.colors | safe}
+                },
+                borderColor: '#19393D',
+                    data
+                :
+                {
+                    {
+                        br_trades.trades | safe
+                    }
+                }
+                }]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
-        <div class="col" style="width:50%;">
-            <canvas id="bar_chart_7" width="50%" height="20">
+        </canvas>
+    </div>
+    <div class="col" style="width:50%;">
+        <canvas id="bar_chart_7" width="50%" height="20">
 
             <script>
                 var ctx = document.getElementById('bar_chart_7').getContext('2d');
                 var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'bar',
+                    // The type of chart we want to create
+                    type: 'bar',
 
-                // The data for our dataset
-                data: {
-                    labels: {{ balance_label }},
-                    datasets: [{
-                        label: 'Balance History',
-                        backgroundColor: '#405347',
-                        borderColor: '#19393D',
-                        borderWidth: 1,
-                        data: {{ balance }}
-                    }]
+                    // The data for our dataset
+                    data: {
+                        labels: {
+                {
+                    balance_label
+                }
+                },
+                datasets: [{
+                    label: 'Balance History',
+                    backgroundColor: '#405347',
+                    borderColor: '#19393D',
+                    borderWidth: 1,
+                    data: {{balance}
+                }
+                }]
                 },
 
                 // Configuration options go here
-                options: {}
-                });
+                options: {
+                }
+                })
+                ;
             </script>
-            </canvas>
-        </div>
+        </canvas>
     </div>
-    <!--    Active Robots Table-->
-    <div class="row" style="height:200px; margin-right: 0px; margin-left:0px;">
-        <h5 class="nav-link link_color font-weight-bold">
+</div>
+<!--    Active Robots Table-->
+<div class="row" style="height:200px; margin-right: 0px; margin-left:0px;">
+    <h5 class="nav-link link_color font-weight-bold">
         Active Robots
-        </h5>
-        <div>
-            <table class="table trade_table">
-                <thead>
-                    <tr class="align-middle" id="a_r_header">
+    </h5>
+    <div>
+        <table class="table trade_table">
+            <thead>
+            <tr class="align-middle" id="a_r_header">
 
-                    </tr>
-                </thead>
-                <tbody id="a_r_body"></tbody>
-            </table>
-        </div>
+            </tr>
+            </thead>
+            <tbody id="a_r_body"></tbody>
+        </table>
     </div>
+</div>
 
-    <!--Open trades Table-->
-    <div class="row" style="height:350px; margin-right: 0px; margin-left:0px;">
-        <h5 class="nav-link link_color font-weight-bold">
+<!--Open trades Table-->
+<div class="row" style="height:350px; margin-right: 0px; margin-left:0px;">
+    <h5 class="nav-link link_color font-weight-bold">
         Open Trades
-        </h5>
-        <div class="trade_log" style="height:300px;">
-            <table class="table trade_table">
-          <thead>
+    </h5>
+    <div class="trade_log" style="height:300px;">
+        <table class="table trade_table">
+            <thead>
             <tr class="align-middle">
                 <th>Robot</th>
                 <th>Security</th>
@@ -443,9 +530,9 @@ h5{
                 <th>P&L %</th>
                 <th></th>
             </tr>
-          </thead>
-          <tbody style="height:250px;">
-          {% for trade in open_trades %}
+            </thead>
+            <tbody style="height:250px;">
+            {% for trade in open_trades %}
             <tr class="align-middle">
                 <td class="align-middle">{{trade.robot}}</td>
                 <td class="align-middle">{{trade.security}}</td>
@@ -455,25 +542,27 @@ h5{
                 <td class="align-middle">{{trade.time_frame}}</td>
                 <td class="align-middle">30.23</td>
                 <td class="align-middle">2.4</td>
-                <td class="align-middle"><button class="btn btn-primary btn-sm">Close</button></td>
+                <td class="align-middle">
+                    <button class="btn btn-primary btn-sm">Close</button>
+                </td>
             </tr>
-          {% endfor %}
-          </tbody>
+            {% endfor %}
+            </tbody>
         </table>
-        </div>
     </div>
+</div>
 
-    <div class="row">
-        <form action="{% url 'test_execution' %}" method="POST">
-            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Open Trade Execution"><br>
-        </form>
-        <form action="{% url 'test_execution' %}" method="POST">
-            <input class="btn btn-primary btn-sm" type="submit", name="button" value="Test Close Trade Execution"><br>
-        </form>
-    </div>
-    {% load static %}
-    <script src="{% static 'admin/js/home_page.js' %}"></script>
-    {% endblock %}
+<div class="row">
+    <form action="{% url 'test_execution' %}" method="POST">
+        <input class="btn btn-primary btn-sm" type="submit" , name="button" value="Test Open Trade Execution"><br>
+    </form>
+    <form action="{% url 'test_execution' %}" method="POST">
+        <input class="btn btn-primary btn-sm" type="submit" , name="button" value="Test Close Trade Execution"><br>
+    </form>
+</div>
+{% load static %}
+<script src="{% static 'admin/js/home_page.js' %}"></script>
+{% endblock %}
 
 
 

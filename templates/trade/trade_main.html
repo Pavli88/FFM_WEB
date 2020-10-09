@@ -1,5 +1,28 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
-    {% block main_block%}
-    <p>Trading Panel</p>
-    {% endblock %}
+{% block main_block%}
+<br>
+<div style="width: 100%; height: 500px; background: #B5A22A">
+    <div style="width: 100%; height: 50px; background: #ba2121">
+        <h4>Trading Panel</h4>
+    </div>
+    <div style="width: 100%; height: 100%; background: burlywood">
+        <form class="form-inline" style="padding:5px;" action="{% url 'submit trade' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="trd_qty">Quantity</label>
+                <input class="form-control form-control-sm" type="number" id="trd_qty" name="quantity" min="0"
+                       value="0" required>
+            </div>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <select class="form-control" style="height:30px;" name="side">
+                    <option>BUY</option>
+                    <option>SELL</option>
+                    <option selected>ALL</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="submit_trade">Submit</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

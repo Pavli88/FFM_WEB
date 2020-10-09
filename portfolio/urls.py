@@ -8,4 +8,5 @@ urlpatterns = [
     path('portfolios/create/new_cash_flow/', new_cash_flow, name="create port cash flow"),
     path('portfolios/create/instrument/', create_instrument, name="create instrument"),
     path('portfolios/load_chart/', load_chart),
+    path('portfolios/sec_types/', get_securities_by_type),
 ]
