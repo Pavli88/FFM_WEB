@@ -1,54 +1,9 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-{% block css_place %}
-
-.trade_log{
-    height:560px;
-    width: 100%;
-    font-size: 12px;
-    border-bottom: 1px solid grey;
-}
-
-thead, tbody tr {
-    display:table;
-    width:100%;
-    table-layout:fixed;
-    line-height: 5px;
-    height:5px;
-    text-align:center;
-
-}
-
-
-tbody {
-    display:block;
-    height:525px;
-    overflow:auto;
-    background: white;
-}
-
-h5{
-    margin:5px;
-}
-
-.menu_bar{
-    height:50px;
-    margin:auto;
-
-}
-
-.chart_area{
-    margin:auto;
-    height:250px;
-    border-bottom: 1px solid grey;
-}
-
-.chart_header{
-    height:25px;
-    font-size:12px;
-}
-
+{% block head %}
+{% load static %}
+<link href="{% static 'admin/css/home_template.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block my_scripts %}
@@ -113,13 +68,7 @@ h5{
         <!--Form to load all accounts-->
         <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
             {% csrf_token %}
-            <div class="col-auto">
-                <select class="form-control input-sm" style="height:30px;" name="account" id="account_selector">
-                    {% for account in accounts %}
-                    <option>{{account.account_number}}</option>
-                    {% endfor %}
-                </select>
-            </div>
+
             <button id="def_but_main" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">
                 Default
             </button>
@@ -131,19 +80,14 @@ h5{
         </form>
     </div>
 </div>
+
 <div class="row menu_bar" style="height:40px; border-bottom: 1px solid grey;">
     <!--Form for submiting robot results-->
     <div style="height:40px;">
         <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
             {% csrf_token %}
-            <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Robot</label>
-            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                <select class="form-control" style="height:30px; width:80px;" name="robot_name" id="robot_selector">
-                    {% for robot in robots %}
-                    <option>{{robot}}</option>
-                    {% endfor %}
-                </select>
-            </div>
+
+
 
             <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Trade</label>
             <div class="col-auto" style="padding-left:15px; padding-right:15px;">
@@ -166,8 +110,7 @@ h5{
                        value="{{ dates.next_day }}" min="2020-01-01">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="get_robot_data_btn">Submit
-            </button>
+
         </form>
     </div>
 </div>
@@ -179,66 +122,85 @@ h5{
 <div class="row">
     <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
 </div>
-<!--Robots summary statistics-->
-<div class="row menu_bar chart_header">
-    <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe }}</label>
+
+
+<br>
+<!--Account-->
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 100px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <h5 style="color: #19393D"><strong>Account</strong></h5>
+        </div>
+        <div style="padding: 5px">
+            <select class="form-control form-control-sm" name="account" id="account_selector">
+                {% for account in accounts %}
+                <option>{{account.account_number}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="card_container" style="height: 100%; width: 100%">
+        <label><strong>Environment</strong></label>
+        <label>Live</label>
+        <label><strong>Broker</strong></label>
+        <label>Oanda</label>
+        <label><strong>Asset Value</strong></label>
+        <label>1346</label>
+    </div>
 </div>
-<div class="row chart_area">
-    <div class="col" style="width:50%;">
+
+<br>
+<!--Robots loaded on page-->
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
+
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <h5 style="color: #19393D"><strong>Robots</strong></h5>
+        </div>
+        <div style="padding: 5px">
+            <select class="form-control form-control-sm" name="robot_name" id="robot_selector">
+                {% for robot in robots %}
+                <option>{{robot}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="padding: 5px">
+            <button type="submit" class="btn btn-primary btn-sm">
+                Submit
+            </button>
+        </div>
+
+    </div>
+    <div class="card_container form-row align-items-center ">
+
+    </div>
+
+</div>
+
+
+<!--Settings-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 400px; display: flex">
+    <div style="display: flex">
+        <h5 class="card-header" style="color: #19393D"><strong>Charts</strong></h5>
+        <label class="card-header">Number of Trades:</label>
+    </div>
+
+    <div class="card_container form-row align-items-center ">
+        <!--Robots summary statistics-->
+        <!--        <div class="row menu_bar chart_header">-->
+        <!--            <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe-->
+        <!--                }}</label>-->
+        <!--        </div>-->
+
+
         <canvas id="bar_chart_2" width="50%" height="20"></canvas>
-    </div>
-    <div class="col" style="width:50%;">
-        <canvas id="bar_chart_0" width="50%" height="20">
-            <script>
-                var ctx = document.getElementById('bar_chart_0').getContext('2d');
-                var chart = new Chart(ctx, {
-                    // The type of chart we want to create
-                    type: 'bar',
-
-                    // The data for our dataset
-                    data: {
-
-                        labels: {
-                {
-                    robot_perf.robot_label | safe
-                }
-                },
-                datasets: [{
-                    label: 'Winner %',
-                    backgroundColor: '#405347',
-                    borderColor: '#19393D',
-                    data: {{win_lose.winners | safe}
-                }
-                },
-                {
-                    label: 'Loser %',
-                        backgroundColor
-                :
-                    '#842518',
-                        borderColor
-                :
-                    '#19393D',
-                        data
-                :
-                    {
-                        {
-                            win_lose.losers | safe
-                        }
-                    }
-                }
-                ]
-                },
 
 
-                // Configuration options go here
-                options: {
-                }
-                })
-                ;
-            </script>
-        </canvas>
     </div>
 </div>
+
+
 
 <!--Robots statistics-->
 <div class="row menu_bar chart_header">

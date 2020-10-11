@@ -1,5 +1,36 @@
-// Updating Securities on selected security type
+// Creating and removing End Date in calculation on load
+let singleTick = $("#single_tick")
+singleTick.click(checkMultiplePeriod)
 
+function checkMultiplePeriod() {
+    if (singleTick.is(':checked')){
+        let currentDate = new Date()
+        let year = currentDate.getFullYear()
+        let month = currentDate.getMonth()+1
+        let day = currentDate.getDate()
+        let procDiv = $("#process_div")
+        let newDiv = document.createElement("div")
+        let newDate = document.createElement("input")
+        let newLabel = document.createElement("label")
+
+        newDate.setAttribute("type", "date")
+        newDate.setAttribute("value", year + "-" + month + "-" + day)
+        newDate.classList.add("form-control")
+        newDate.classList.add("form-control-sm")
+        newDiv.classList.add("form-group")
+        newDiv.setAttribute("id", "end_time_block")
+        newLabel.innerHTML = "End Date"
+
+        newDiv.appendChild(newLabel)
+        newDiv.appendChild(newDate)
+        procDiv.append(newDiv)
+    } else {
+        let endDateDiv = $("#end_time_block")
+        endDateDiv.remove()
+    }
+}
+
+// Updating Securities on selected security type
 let secTypeSelector = document.querySelector("#sec_select")
 secTypeSelector.addEventListener("change", loadSecurities)
 
@@ -10,6 +41,8 @@ let availableCash = $("#available_cash")
 let portfolio = $("#port_selector")
 let security = $("#secs")
 let tradePanel = $("#trade_panel")
+let calcButton = $("#calc_btn")
+let process = $("#process")
 
 // Adding All option to portfolio drop down menu
 let newOpt = document.createElement("option")
@@ -90,4 +123,9 @@ function trade() {
     })
 }
 
+// Sending calculation to back end
+calcButton.click(calculate)
 
+function calculate() {
+    console.log(process.val())
+}

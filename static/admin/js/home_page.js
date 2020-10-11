@@ -76,7 +76,6 @@ function chart(id, dataSet) {
     let chart = new Chart(ctx, dataSet)
 }
 
-
 // Switching between account and its robot data
 let accountSelector = document.querySelector('#account_selector')
 accountSelector.addEventListener("change", switchAccount)

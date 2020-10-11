@@ -2,63 +2,90 @@
 {% extends "base.html" %}
 
 {% block head %}
+{% load static %}
+<link href="{% static 'admin/css/portfolio_template.css' %}" rel="stylesheet">
 
 {% endblock %}
 
 {% block main_block%}
 <br>
-<div style="width: 100%; height: 50px; background: #5b80b2">
-    <h1>Portfolio Management</h1>
+<div class="card text-center shadow rounded" style="width: 100%; height: 60px; background: #19393D">
+    <h3 style="color: white"><strong>Portfolio Management</strong></h3>
 </div>
 
-<div style="width: 100%; height: 50px; background: #ba2121; display: flex">
-   <div class="form-group">
-        <label>Portfolio</label>
-        <select class="form-control-sm" name="port_name" id="port_selector" required>
-            {% for portfolio in portfolios %}
-            <option>{{portfolio.portfolio_name}}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div>
-        <label>NAV</label>
-        <label id="nav_value">1000</label>
-        <label>$</label>
-    </div>
-
-    <div>
-        <label>Available Cash</label>
-        <label id="available_cash">500</label>
-        <label>$</label>
+<!--Portfolio-->
+<br>
+<div class="card h-md-100 shadow rounded" style="width: 100%; height: 150px; display: flex">
+    <h5 class="card-header" style="color: #19393D"><strong>Portfolio</strong></h5>
+    <div class="card_container form-row align-items-center col-auto">
+        <div class="col-auto">
+            <select class="form-control form-control-sm" name="port_name" id="port_selector" required>
+                {% for portfolio in portfolios %}
+                <option>{{portfolio.portfolio_name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="card-text">NAV</label>
+            <label id="nav_value">1000</label>
+            <label>$</label>
+        </div>
+        <div class="col-auto">
+            <label class="card-text">Available Cash</label>
+            <label id="available_cash">500</label>
+            <label>$</label>
+        </div>
     </div>
 </div>
 
-<div style="width: 100%; height: 200px; background: #5b80b2">
-    <h1>Process Management</h1>
-    <div class="form-group">
-        <label>Process</label>
-        <select name="process" id="process" required>
-            <option>Positions</option>
-            <option>NAV Calculation</option>
-            <option>Portfolio Risk</option>
-            <option>Portfolio Holdings</option>
-            <option>Portfolio Return</option>
-        </select>
-        <label for="start">Start date:</label>
-        <input type="date" id="start" name="trip-start" value="2018-07-22">
-        <button style="width: 100px; height: 50px;" id="calc_btn">Calculate</button>
-    </div>
+<!--Settings-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 150px; display: flex">
+    <h5 class="card-header" style="color: #19393D"><strong>Settings</strong></h5>
+    <div class="card_container form-row align-items-center ">
 
+    </div>
 </div>
 
-<div style="width: 100%; height: 500px; background: #49B0C2" id="trade_panel">
-
-    <h1>Trade</h1>
-
-    <div class="form-group">
-        <label>Security Type</label>
-        <select class="form-control form-control-sm" name="sec_type" id="sec_select" required>
+<!--Process management-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px">
+    <h5 class="card-header" style="color: #19393D"><strong>Process Management</strong></h5>
+    <div class="card_container align-items-center col-auto" id="process_div">
+        <div style="display: flex">
+            <div class="form-group">
+                <label for="process">Process</label>
+                <select class="form-control form-control-sm" style="width: 150px" name="process" id="process" required>
+                    <option>Positions</option>
+                    <option>NAV Calculation</option>
+                    <option>Portfolio Risk</option>
+                    <option>Portfolio Holdings</option>
+                    <option>Portfolio Return</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="single_tick">
+                <label for="single_tick">Time Interval</label>
+            </div>
+            <div class="col-auto" id="calc_btn_div">
+                <button class="btn btn-primary" style="width: 100px; height: 50px;" id="calc_btn">Calculate</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="start">Start date:</label>
+            <input class="form-control form-control-sm" type="date" id="start" name="trip-start" value="2018-07-22">
+        </div>
+    </div>
+</div>
+<!--Trade Panel-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px" id="trade_panel">
+    <h5 class="card-header" style="color: #19393D"><strong>Trade</strong></h5>
+    <div class="col-auto">
+        <label for="sec_select">Security Type</label>
+    </div>
+    <div class="col-auto">
+        <select class="form-control form-control-sm" name="sec_type" id="sec_select" style="width: 200px" required>
             <option>Robot</option>
             <option>Equity</option>
             <option>Commodity</option>
@@ -66,48 +93,34 @@
             <option>Currency</option>
         </select>
     </div>
-
-    <div class="form-group">
+    <div class="col-auto">
         <label>Security</label>
-        <select class="form-control form-control-sm" name="security" id="secs" required>
+    </div>
+    <div class="col-auto">
+        <select class="form-control form-control-sm" name="security" id="secs" style="width: 200px" required>
             <option class="securities">Robot</option>
             <option class="securities">Investment</option>
         </select>
     </div>
-
-    <div class="form-group">
+    <div class="col-auto">
         <label>Quantity</label>
-        <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty" required>
     </div>
+    <div class="col-auto">
+        <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty" style="width: 200px" required>
 
     <div class="form-group">
         <label>Price</label>
-        <input type="number" class="form-control form-control-sm" min="0.0", step="10.0" name="price" id="price" required>
+        <input type="number" class="form-control form-control-sm" min="0.0", step="10.0" name="price" id="price" style="width: 200px" required>
     </div>
-
-    <div class="form-group" style="display: flex">
+    <div class="col-auto" style="display: flex">
         <label>Market Value:</label>
         <label id="mv">1230</label>
     </div>
-
-    <button style="width: 100px; height: 50px;" id="trade_btn">Trade</button>
-</div>
-
-<div style="width: 100%; height: 400px; background: #B5A22A">
-    <div style="width: 100%; height: 50px; background: #ba2121">
-        <button class="btn btn-primary submit_button" id="get_chart">Get Chart</button>
+    <div class="col-auto">
+        <button class="btn btn-primary" style="width: 100px; height: 50px;" id="trade_btn">Trade</button>
     </div>
-    <div style="width: 100%; height: 100%; background: #49B0C2; display: flex" >
-        <div style="width: 50%; height: 100%; background: #447e9b" >
 
-        </div>
-        <div style="width: 50%; height: 100%; background: #666666">
-            <canvas style="width: 100%; height: 100%;" id="pie_chart"></canvas>
-        </div>
-    </div>
 </div>
-<div id="d_table"></div>
-
 {% load static %}
 <script src="{% static 'admin/js/portfolios_main.js' %}"></script>
 
@@ -118,9 +131,8 @@
 
 <br>
 <form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
-
     {% csrf_token %}
-    <h4>New Portfolio</h4>
+    <h5><strong>New Portfolio</strong></h5>
     <div class="form-group">
         <input id="robot_name" class="form-control form-control-sm" type="text" name="port_name"
                placeholder="Portfolio Name" required>
@@ -137,10 +149,8 @@
 
 <br>
 <form class="entry_form" action="{% url 'create port cash flow' %}" method="POST">
-
     {% csrf_token %}
-    <h4>New Cash FLow</h4>
-
+    <h5><strong>New Cash Flow</strong></h5>
     <div class="form-group">
         <label>Portfolio</label>
         <select class="form-control form-control-sm" name="port_name" required>
@@ -164,14 +174,13 @@
 
 <br>
 <form class="entry_form" action="{% url 'create instrument' %}" method="POST">
-
     {% csrf_token %}
-    <h4>New Instrument</h4>
+    <h5><strong>New Instrument</strong></h5>
     <div class="form-group">
         <input type="text" class="form-control form-control-sm" name="instrument_name" required>
     </div>
     <div class="form-group">
-        <label>Instrument Type</label>
+        <label><strong>Instrument Type</strong></label>
         <select class="form-control form-control-sm" name="instrument_type" required>
             <option>Equity</option>
             <option>Commodity</option>
@@ -180,7 +189,7 @@
         </select>
     </div>
     <div class="form-group">
-        <label>Source</label>
+        <label><strong>Source</strong></label>
         <select class="form-control form-control-sm" name="source" required>
             <option>oanda</option>
             <option>MAP</option>
