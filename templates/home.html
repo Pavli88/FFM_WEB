@@ -10,7 +10,8 @@
 
 {% endblock %}
 {% block entry_form %}
-<div class="row">
+<br>
+<div>
     <form style="width:100%">
         <div class="form-group" style="width:100%; padding-left:5px; padding-right:5px;">
             <div style="display:flex;">
@@ -23,110 +24,51 @@
         </div>
     </form>
 </div>
-<h5 class="nav-link link_color font-weight-bold">
-    Trade Log
-</h5>
-<div class="trade_log">
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Robot</th>
-            <th>Security</th>
-            <th>Action</th>
-            <th>Quantity</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>test</td>
-            <td>EUR_USD</td>
-            <td>BUY</td>
-            <td>10000</td>
-        </tr>
-        <tr>
-            <td>test</td>
-            <td>EUR_USD</td>
-            <td>BUY</td>
-            <td>10000</td>
-        </tr>
 
-        </tbody>
-    </table>
+<div class="card h-md-100 shadow bg-white rounded">
+    <div class="card-header">
+        <h5 class="nav-link link_color font-weight-bold">
+        Trade Log
+    </h5>
+    </div>
+
+    <div style="width: 100%">
+        <table style="width: 100%">
+            <thead>
+            <tr>
+                <th>Robot</th>
+                <th>Security</th>
+                <th>Action</th>
+                <th>Quantity</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+            <tr>
+                <td>test</td>
+                <td>EUR_USD</td>
+                <td>BUY</td>
+                <td>10000</td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
 </div>
+
+
 {% endblock %}
 
 {% block main_block%}
-<div class="row" style="height:40px; border-bottom: 1px solid grey; margin:auto;">
-    <label class="nav-link link_color font-weight-bold" style="padding-left:0px;">Account: <label id="acc_name">{{
-        broker.account_number}}</label></label>
-    <label class="nav-link link_color font-weight-bold">Environment: <label id="env">{{ broker.env}}</label></label>
-    <label class="nav-link link_color font-weight-bold">Broker: <label id="broker">{{
-        broker.broker_name}}</label></label>
-    <label class="nav-link link_color font-weight-bold">NAV: {{ account_info.nav}}</label>
-    <label class="nav-link link_color font-weight-bold">Unrealized P&L: {{ account_info.un_pnl }}</label>
-    <div style="height:50px; width:25%;">
-        <!--Form to load all accounts-->
-        <form class="form-inline input-sm" style="padding:5px;" action="{% url 'make_default' %}" method="POST">
-            {% csrf_token %}
-
-            <button id="def_but_main" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">
-                Default
-            </button>
-            <script>
-                $("#def_but_main").on("click", function () {
-                    alert('Default account has been saved!');
-                })
-            </script>
-        </form>
-    </div>
-</div>
-
-<div class="row menu_bar" style="height:40px; border-bottom: 1px solid grey;">
-    <!--Form for submiting robot results-->
-    <div style="height:40px;">
-        <form class="form-inline" style="padding:5px;" action="{% url 'get_results' %}" method="POST">
-            {% csrf_token %}
-
-
-
-            <label class="nav-link link_color font-weight-bold" style="width:40px; padding:1px;">Trade</label>
-            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                <select class="form-control" style="height:30px;" name="side">
-                    <option>BUY</option>
-                    <option>SELL</option>
-                    <option selected>ALL</option>
-                </select>
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">Start Date:</label>
-            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
-                <input class="form-control" style="height:30px;" type="date" id="start" name="start_date"
-                       value="{{ dates.today }}" min="2020-01-01">
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="width:100px; padding:1px;">End Date:</label>
-            <div class="col-auto" style="padding-left:5px; padding-right:15px;">
-                <input class="form-control" style="height:30px;" type="date" id="end" name="end_date"
-                       value="{{ dates.next_day }}" min="2020-01-01">
-            </div>
-
-
-        </form>
-    </div>
-</div>
-
-<!--Performance-->
-<div class="row">
-    <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Performance</h5>
-</div>
-<div class="row">
-    <h6 class="nav-link link_color font-weight-bold">Robot Level</h6>
-</div>
-
 
 <br>
 <!--Account-->
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 100px; display: flex">
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px; display: flex">
     <div class="card-header" style="display: flex">
         <div style="padding: 5px">
             <h5 style="color: #19393D"><strong>Account</strong></h5>
@@ -138,38 +80,85 @@
                 {% endfor %}
             </select>
         </div>
+        <div>
+            <label><strong>Environment</strong></label>
+        </div>
+        <div>
+            <label id="#env"></label>
+        </div>
+        <div>
+            <label id="broker">Oanda</label>
+        </div>
+        <div>
+            <label><strong>Asset Value</strong></label>
+        </div>
+        <div>
+            <label>1346</label>
+        </div>
     </div>
     <div class="card_container" style="height: 100%; width: 100%">
-        <label><strong>Environment</strong></label>
-        <label>Live</label>
-        <label><strong>Broker</strong></label>
-        <label>Oanda</label>
-        <label><strong>Asset Value</strong></label>
-        <label>1346</label>
+        <canvas id="bar_chart_2" width="50%" ></canvas>
     </div>
 </div>
 
 <br>
 <!--Robots loaded on page-->
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px; display: flex">
 
     <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Robots</strong></h5>
+        <div class="col">
+            <div class="form-group" style="padding: 5px; display: flex">
+                <div style="width: 50%">
+                    <h5 style="color: #19393D"><strong>Robots</strong></h5>
+                </div>
+                <div style="width: 50%">
+                    <select class="form-control form-control-sm" name="robot_name" id="robot_selector">
+                    {% for robot in robots %}
+                    <option>{{robot}}</option>
+                    {% endfor %}
+                </select>
+                </div>
+            </div>
+            <div style="padding: 5px; display: flex">
+                <div style="width: 50%">
+                    <label>Trade</label>
+                </div>
+                <div style="width: 50%">
+                    <select class="form-control form-control-sm" name="side">
+                    <option>BUY</option>
+                    <option>SELL</option>
+                    <option selected>ALL</option>
+                </select>
+                </div>
+            </div>
         </div>
-        <div style="padding: 5px">
-            <select class="form-control form-control-sm" name="robot_name" id="robot_selector">
-                {% for robot in robots %}
-                <option>{{robot}}</option>
-                {% endfor %}
-            </select>
+        <div class="col">
+            <div style="padding: 5px; display: flex">
+                <div class="col-auto" style="width: 50%">
+                    <label>Start Date</label>
+                </div>
+                <div class="col-auto" style="width: 50%">
+                    <input class="form-control form-control-sm" type="date" id="start" name="start_date"
+                       value="{{ dates.today }}" min="2020-01-01" style="width: 150px">
+                </div>
+            </div>
+            <div style="padding: 5px; display: flex">
+                <div class="col-auto" style="width: 50%">
+                    <label>End Date</label>
+                </div>
+                <div class="col-auto" style="width: 50%">
+                    <input class="form-control form-control-sm" type="date" id="end" name="end_date"
+                       value="{{ dates.next_day }}" min="2020-01-01" style="width: 150px">
+                </div>
+            </div>
         </div>
-        <div style="padding: 5px">
-            <button type="submit" class="btn btn-primary btn-sm">
-                Submit
-            </button>
+        <div class="col">
+            <div style="padding: 5px">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    Submit
+                </button>
+            </div>
         </div>
-
     </div>
     <div class="card_container form-row align-items-center ">
 
@@ -185,18 +174,12 @@
         <h5 class="card-header" style="color: #19393D"><strong>Charts</strong></h5>
         <label class="card-header">Number of Trades:</label>
     </div>
-
     <div class="card_container form-row align-items-center ">
         <!--Robots summary statistics-->
         <!--        <div class="row menu_bar chart_header">-->
         <!--            <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe-->
         <!--                }}</label>-->
         <!--        </div>-->
-
-
-        <canvas id="bar_chart_2" width="50%" height="20"></canvas>
-
-
     </div>
 </div>
 

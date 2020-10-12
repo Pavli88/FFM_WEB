@@ -1,19 +1,33 @@
+
+
+function getRobotChartData() {
+    alert("button clicked")
+}
+
+// Charting function
+function chart(id, dataSet) {
+    let ctx = document.querySelector(id).getContext('2d');
+    let chart = new Chart(ctx, dataSet)
+}
+
+// Switching between account and its robot data
+let accountSelector = document.querySelector('#account_selector')
+accountSelector.addEventListener("change", switchAccount)
+
+// Function switch between account
 function switchAccount() {
     $.ajax({
         type: "POST",
         url: "switch_account/",
         data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'), data: accountSelector.value},
         success: function (data) {
-
-            let accountNumber = document.querySelector('#acc_name')
             let env = document.querySelector('#env')
             let broker = document.querySelector('#broker')
             let robots = document.querySelector('#robot_selector')
 
             // Amending main account labels
-            accountNumber.innerHTML = data["account data"][0]["account_number"]
-            env.innerHTML = data["account data"][0]["env"]
-            broker.innerHTML = data["account data"][0]["broker_name"]
+            // env.innerHTML = data["account data"][0]["env"]
+            // broker.innerHTML = data["account data"][0]["broker_name"]
 
             let allRobotOptions = robots.querySelectorAll('.robot_option')
             allRobotOptions.forEach(n => n.remove())
@@ -66,23 +80,7 @@ function switchAccount() {
     })
 }
 
-function getRobotChartData() {
-    alert("button clicked")
-}
-
-// Charting function
-function chart(id, dataSet) {
-    let ctx = document.querySelector(id).getContext('2d');
-    let chart = new Chart(ctx, dataSet)
-}
-
-// Switching between account and its robot data
-let accountSelector = document.querySelector('#account_selector')
-accountSelector.addEventListener("change", switchAccount)
-
 // Fetching robot related chart data from back end
-let robotDataFetchButton = document.querySelector("#get_robot_data_btn")
-robotDataFetchButton.addEventListener("click", getRobotChartData)
 
 // Loading Charts
 let data_set = {
