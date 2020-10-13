@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from portfolio.models import *
+from robots.models import *
 from django.http import JsonResponse
 
 
@@ -85,6 +86,7 @@ def create_instrument(request):
 
         print("INSTRUMENT NAME:", instrument_name)
         print("INSTRUMENT TYPE:", instrument_type)
+
         print("SOURCE:", source)
 
         print("Saving new instrument to database")
@@ -161,11 +163,7 @@ def trade(request):
         security = request.POST.get("security")
         security_type = request.POST.get("secType")
         market_value = float(quantity) * float(price)
-
-        if float(quantity) > 0:
-            cash_flow = market_value
-        else:
-            cash_flow = market_value *1
+        cash_flow = market_value * -1
 
         if security_type == "Robot":
             source = "ffm_system"
@@ -196,6 +194,14 @@ def trade(request):
                  type="TRADE").save()
 
         print("Amending cash flow table for", portfolio)
+
+        if security_type == "Robot":
+            print("Amending robot cash flow table")
+            print("ROBOT CASH FLOW:", cash_flow * -1)
+            RobotCashFlow(robot_name=security,
+                          cash_flow=cash_flow * -1).save()
+
+            print("New cash flow was recorded for", security)
 
     response = {"securities": [0]}
 

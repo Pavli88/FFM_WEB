@@ -72,7 +72,7 @@ def create_robot(request):
 
             Instruments(instrument_name=robot_name,
                         instrument_type="Robot",
-                        source=broker).save()
+                        source="ffm_system").save()
 
             print("Saving down robot to instruments table")
 

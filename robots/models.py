@@ -20,7 +20,7 @@ class Robots(models.Model):
     prec = models.IntegerField(default=1)
 
 
-class CashFlow(models.Model):
+class RobotCashFlow(models.Model):
     robot_name = models.CharField(max_length=20)
     cash_flow = models.FloatField(default=0.0)
     date = models.DateTimeField(auto_now=True)
