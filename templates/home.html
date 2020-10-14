@@ -66,38 +66,38 @@
 
 {% block main_block%}
 
+<!--Portfolios-->
 <br>
-<!--Account-->
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px; display: flex">
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 400px; display: flex">
     <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Account</strong></h5>
-        </div>
-        <div style="padding: 5px">
-            <select class="form-control form-control-sm" name="account" id="account_selector">
-                {% for account in accounts %}
-                <option>{{account.account_number}}</option>
-                {% endfor %}
-            </select>
+        <div>
+            <h5  style="color: #19393D"><strong>Portfolio</strong></h5>
         </div>
         <div>
-            <label><strong>Environment</strong></label>
+            <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
+            {% for portfolio in portfolios %}
+            <option>{{portfolio.portfolio_name}}</option>
+            {% endfor %}
+        </select>
         </div>
         <div>
-            <label id="#env"></label>
+            <label><strong>Type</strong></label>
         </div>
         <div>
-            <label id="broker">Oanda</label>
+            <label><strong>Trade</strong></label>
         </div>
         <div>
             <label><strong>Asset Value</strong></label>
         </div>
         <div>
-            <label>1346</label>
+            <label><strong>1000</strong></label>
+        </div>
+        <div>
+            <label><strong>USD</strong></label>
         </div>
     </div>
-    <div class="card_container" style="height: 100%; width: 100%">
-        <canvas id="bar_chart_2" width="50%" ></canvas>
+    <div class="card_container form-row align-items-center ">
+
     </div>
 </div>
 
@@ -166,6 +166,40 @@
 
 </div>
 
+<!--Account-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <h5 style="color: #19393D"><strong>Account</strong></h5>
+        </div>
+        <div style="padding: 5px">
+            <select class="form-control form-control-sm" name="account" id="account_selector">
+                {% for account in accounts %}
+                <option>{{account.account_number}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label><strong>Environment</strong></label>
+        </div>
+        <div>
+            <label id="#env"></label>
+        </div>
+        <div>
+            <label id="broker">Oanda</label>
+        </div>
+        <div>
+            <label><strong>Asset Value</strong></label>
+        </div>
+        <div>
+            <label>1346</label>
+        </div>
+    </div>
+    <div class="card_container" style="height: 100%; width: 100%">
+        <canvas id="bar_chart_2" width="50%" ></canvas>
+    </div>
+</div>
 
 <!--Settings-->
 <br>
@@ -175,15 +209,9 @@
         <label class="card-header">Number of Trades:</label>
     </div>
     <div class="card_container form-row align-items-center ">
-        <!--Robots summary statistics-->
-        <!--        <div class="row menu_bar chart_header">-->
-        <!--            <label class="nav-link link_color font-weight-bold">Number of Trades: {{ pnl.number_of_trades|safe-->
-        <!--                }}</label>-->
-        <!--        </div>-->
+
     </div>
 </div>
-
-
 
 <!--Robots statistics-->
 <div class="row menu_bar chart_header">

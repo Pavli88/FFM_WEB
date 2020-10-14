@@ -7,6 +7,7 @@ from datetime import date
 import datetime
 from robots.models import *
 from accounts.models import *
+from portfolio.models import *
 from mysite.processes.oanda import *
 from django.http import JsonResponse
 
@@ -125,6 +126,17 @@ def get_account_data(account_number="All"):
     return accounts
 
 
+def get_portfolios():
+
+    """
+    Function to get all portfolios
+    :return:
+    """
+    portfolios = Portfolio.objects.filter().values()
+
+    return portfolios
+
+
 def get_open_trades():
 
     """
@@ -235,6 +247,7 @@ def home(request, default_load=None):
                                          "cum_pnl": [],
                                          "balance": [],
                                          "balance_label": [],
+                                         "portfolios": get_portfolios(),
                                          })
 
 

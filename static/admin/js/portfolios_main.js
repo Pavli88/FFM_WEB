@@ -41,8 +41,6 @@ let availableCash = $("#available_cash")
 let portfolio = $("#port_selector")
 let security = $("#secs")
 let tradePanel = $("#trade_panel")
-let calcButton = $("#calc_btn")
-let process = $("#process")
 
 // Adding All option to portfolio drop down menu
 let newOpt = document.createElement("option")
@@ -91,6 +89,7 @@ function loadSecurities() {
                 let opt = document.createElement("option")
                 opt.innerHTML = sec["instrument_name"]
                 opt.classList.add("securities")
+                opt.setAttribute("id", sec["id"])
                 securities.appendChild(opt)
             }
 
@@ -111,21 +110,39 @@ function trade() {
     $.ajax({
         type: "POST",
         url: "trade_port/",
-        data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
+        data: {
+            csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
             quantity: quantity.val(),
-            price:price.val(),
+            price: price.val(),
             portfolio: portfolio.val(),
             security: security.val(),
-            secType: secTypeSelector.value},
-        success: function (quantity, price, portfolio, security, secType) {
+            secType: secTypeSelector.value,
+            secId: security.children(":selected").attr("id")
+        },
+        success: function (quantity, price, portfolio, security, secType, secId) {
             console.log("success")
         }
     })
 }
 
 // Sending calculation to back end
+let calcButton = $("#calc_btn")
+let process = $("#process")
+let startDate = $("#start")
+
 calcButton.click(calculate)
 
 function calculate() {
-    console.log(process.val())
+    $.ajax({
+        type: "POST",
+        url: "process_hub/",
+        data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
+            process: process.val(),
+            start_date: startDate.val(),
+            portfolio: portfolio.val(),
+            },
+        success: function (quantity, price, portfolio, security, secType) {
+            console.log("success process submission")
+        }
+    })
 }

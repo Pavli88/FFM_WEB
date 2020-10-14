@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from portfolio.models import *
 from robots.models import *
 from django.http import JsonResponse
-
+from portfolio.processes.processes import *
 
 # Main site for portfolios
 def portfolios_main(request):
@@ -162,6 +162,7 @@ def trade(request):
         portfolio = request.POST.get("portfolio")
         security = request.POST.get("security")
         security_type = request.POST.get("secType")
+        security_id = request.POST.get("secId")
         market_value = float(quantity) * float(price)
         cash_flow = market_value * -1
 
@@ -175,6 +176,7 @@ def trade(request):
         print("PORTFOLIO:", portfolio)
         print("SECURITY:", security)
         print("SECURITY TYPE:", security_type)
+        print("SECURITY ID:", security_id)
         print("MARKET VALUE:", market_value)
         print("CASH FLOW:", cash_flow)
         print("SOURCE:", source)
@@ -184,7 +186,7 @@ def trade(request):
               price=price,
               mv=market_value,
               sec_type=security_type,
-              security=security,
+              security=security_id,
               source=source).save()
 
         print("Saving new trade record to", portfolio)
@@ -206,6 +208,7 @@ def trade(request):
     response = {"securities": [0]}
 
     print("Sending data to front end")
+    print("")
 
     return JsonResponse(response, safe=False)
 
@@ -215,6 +218,19 @@ def process_hub(request):
     print("=====================")
     print("PORTFOLIO PROCESS HUB")
     print("=====================")
+
+    if request.method == "POST":
+        process = request.POST.get("process")
+        portfolio = request.POST.get("portfolio")
+        start_date = request.POST.get("start_date")
+
+        print("PROCESS:", process)
+        print("START DATE:", start_date)
+
+    if process == "Positions":
+        pos_calc(portfolio=portfolio, calc_date=start_date)
+    elif process == "Portfolio Holdings":
+        port_holding(portfolio=portfolio, calc_date=start_date)
 
     response = {"securities": [0]}
 
