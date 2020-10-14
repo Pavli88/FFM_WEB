@@ -1,36 +1,14 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-{% block title %}
-<title>Robot Configuration</title>
-{% endblock %}
-
-<!--Space for CSS-->
-{% block css_place %}
-
-td {
-   padding: 5px;
-}
-
-{% endblock %}
-
-<!--Scripts-->
-{% block script %}
+{% block head %}
+{% load static %}
+<!--<link href="{% static 'admin/css/portfolio_template.css' %}" rel="stylesheet">-->
 
 {% endblock %}
 
 <!--New robot creator form-->
 {% block entry_form %}
-<script>
-    $(".modify_btn").on("click", function(){
-        alert("Robot has been updated !");
-    })
-    $(".delete_btn").on("click", function () {
-        alert("Robot has been deleted !");
-    })
-
-</script>
-
 <form class="entry_form" action="{% url 'create robot' %}" method="POST">
     {% csrf_token %}
     <h4>New Robot</h4>
@@ -106,11 +84,9 @@ td {
 </form>
 {% endblock %}
 
-
 <!--Main block-->
 {% block main_block%}
 <div class="container-fluid">
-
     <!--Form to get back all robots-->
     <div class="row" style="padding:15px;">
         <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
@@ -120,7 +96,6 @@ td {
                    id="get_robots">
         </form>
     </div>
-
     <div class="row">
         <table class="table table-striped tables" id="robot_table">
             <thead>
@@ -235,6 +210,61 @@ td {
     </div>
 </div>
 
+<!--Robot Processes-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 150px; display: flex">
+    <div class="card-header" style="display: flex">
+        <h5 style="color: #19393D"><strong>Process Management</strong></h5>
+        <div class="col-auto">
+            <select class="form-control form-control-sm" name="port_name" id="robot_proc_selector" required>
+                <option>Balance</option>
+                <option>Risk</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <select class="form-control form-control-sm" name="port_name" id="robot" required>
+                {% for robot in robots %}
+                <option>{{ robot.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <input class="form-control form-control-sm" type="date" id="start" name="trip-start" value="2020-10-14">
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100px; height: 30px;" id="calc_btn">Calculate</button>
+        </div>
+
+    </div>
+
+    <div class="card_container form-row align-items-center ">
+
+    </div>
+</div>
+
+<!--Test trade panel-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 150px; display: flex">
+    <div class="card-header" style="display: flex">
+        <h5 style="color: #19393D"><strong>Trade</strong></h5>
+
+
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100px; height: 30px;" id="trade_btn">Trade</button>
+        </div>
+
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100px; height: 30px;" id="close_btn">Close</button>
+        </div>
+
+    </div>
+
+    <div class="card_container form-row align-items-center ">
+
+    </div>
+</div>
+{% load static %}
+<script src="{% static 'admin/js/robots_main.js' %}"></script>
 {% endblock %}
 
 

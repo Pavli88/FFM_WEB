@@ -4,19 +4,20 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from robots.models import *
 from portfolio.models import *
+from robots.processes.robot_processes import *
+from mysite.processes.oanda import *
 
 
 # Main site for robot configuration
 def robots_main(request):
 
-    robots = Robots.objects.filter().values('name')
-    robot_list = []
-    for robot in robots:
-        robot_list.append(robot["name"])
+    print("===============")
+    print("ROBOT MAIN PAGE")
+    print("===============")
 
-    print("Robot list:", robot_list)
+    robots = Robots.objects.filter().values()
 
-    return render(request, 'robots_app/create_robot.html', {"robot_list": robot_list})
+    return render(request, 'robots_app/create_robot.html', {"robots": robots})
 
 
 def create_robot(request):
@@ -182,3 +183,49 @@ def amend_robot(request):
 
         return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
+
+def robot_process_hub(request):
+    print("=================")
+    print("ROBOT PROCESS HUB")
+    print("=================")
+
+    if request.method == "POST":
+        process = request.POST.get("process")
+        robot = request.POST.get("robot")
+        date = request.POST.get("date")
+
+    print("PROCESS:", process)
+    print("ROBOT:", robot)
+    print("DATE:", date)
+
+    if process == "Balance":
+        balance_calc(robot=robot, calc_date=date)
+
+    response = {"securities": [0]}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def incoming_trade(request):
+
+    print("===============")
+    print("INCOMING SIGNAL")
+    print("===============")
+
+    if request.method == "POST":
+
+        signal = {'robot_name': 'silver_h1', 'trade_side': 'buy', 'quantity': '2', 'action': 'BUY'}
+
+        print("INCOMING SIGNAL:", signal)
+        print("ROBOT NAME:" )
+
+    print("EXECUTING TRADE")
+
+
+    response = {"securities": [0]}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)

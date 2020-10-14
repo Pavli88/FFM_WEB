@@ -229,7 +229,10 @@ class OandaV20:
         self.api.request(r)
 
         print("Market Order was executed succesfully!")
+        print(r.response)
         print("")
+
+        return r.response
 
     def get_open_trades(self):
 
@@ -246,12 +249,12 @@ class OandaV20:
 
         return open_trades_df
 
-#
+
 # if __name__ == "__main__":
-#     #.pricing_stream(instrument="XAG_USD")
-#     #.submit_market_order(security="XAG_USD", sl_price="24.15", quantity="-10")
-#     OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
-#              account_id="101-004-11289420-001").get_open_trades()
+    #.pricing_stream(instrument="XAG_USD")
+
+    # OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
+    #          account_id="101-004-11289420-001").get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
 
 
 

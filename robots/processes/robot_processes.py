@@ -1,4 +1,8 @@
 from robots.models import *
+import pandas as pd
+import numpy as np
+import datetime
+from mysite.models import *
 
 
 class RobotProcesses:
@@ -76,3 +80,18 @@ class RobotProcesses:
 
     def close_position(self):
         print("close")
+
+
+def balance_calc(robot, calc_date):
+    print("=========================")
+    print("ROBOT BALANCE CALCULATION")
+    print("=========================")
+    print("ROBOT:", robot)
+    print("CALCULATION DATE:", calc_date)
+
+    date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
+
+    trades_df = pd.DataFrame(list(Trades.objects.filter(robot=robot,
+                                                       open_time__gte=date).values()))
+
+    print(trades_df)
