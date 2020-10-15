@@ -175,7 +175,7 @@ class OandaV20:
     Oanda V20 API
     """
 
-    def __init__(self, access_token, account_id):
+    def __init__(self, access_token, account_id, environment):
 
         """
         OandaV20 API connection with the access token and the account number
@@ -183,7 +183,7 @@ class OandaV20:
         :param account_id:
         """
 
-        self.api = API(access_token=access_token)
+        self.api = API(access_token=access_token, environment=environment)
         self.account_id = account_id
 
     def pricing_stream(self, instrument):
@@ -238,7 +238,7 @@ class OandaV20:
         r = orders.OrderCreate(self.account_id, data=data)
         self.api.request(r)
 
-        print("Market Order was executed succesfully!")
+        print("Market Order was executed successfully!")
 
         response = r.response
 
@@ -271,12 +271,13 @@ class OandaV20:
 # if __name__ == "__main__":
 #     # .pricing_stream(instrument="XAG_USD")
 #
-#     o = OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
-#              account_id="101-004-11289420-001")\
+#     o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
+#              account_id="001-004-2840244-004",
+#                  environment="live")
 #
 #     o.get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
 #     # f = o.close_trades(trd_id=7369)
-#     # print(f)
+    # print(f)
 
 
 

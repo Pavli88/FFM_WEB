@@ -219,12 +219,12 @@ def incoming_trade(request):
     if request.method == "POST":
 
         # This is for live signal !
-        message = request.body
-        message = str(message.decode("utf-8"))
-        signal = message.split()
+        # message = request.body
+        # message = str(message.decode("utf-8"))
+        # signal = message.split()
 
         # Test singal
-        # signal = str(request.POST.get("mydata")).split()
+        signal = str(request.POST.get("mydata")).split()
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
@@ -266,7 +266,14 @@ def incoming_trade(request):
             account = BrokerAccounts.objects.filter(account_number=account_number,
                                                     broker_name=broker).values()
 
-            environment = account[0]["env"]
+            env = account[0]["env"]
+
+            if env == "demo":
+                environment = "practice"
+            else:
+                environment = "live"
+
+
             token = account[0]["access_token"]
 
             print("ACCOUNT NUMBER:", account_number)
@@ -299,7 +306,8 @@ def incoming_trade(request):
                 for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
                     print("Close -> OANDA ID:", trd)
                     open_trade = OandaV20(access_token=token,
-                                          account_id=account_number).close_trades(trd_id=trd)
+                                          account_id=account_number,
+                                          environment=environment).close_trades(trd_id=trd)
                     print("Update -> Database ID:", id)
 
                     trade_record = RobotTrades.objects.get(id=id)
@@ -316,7 +324,8 @@ def incoming_trade(request):
             print("Submiting trade request to Oanda...")
 
             trade = OandaV20(access_token=token,
-                             account_id=account_number).submit_market_order(security=security, quantity=quantity)
+                             account_id=account_number,
+                             environment=environment).submit_market_order(security=security, quantity=quantity)
 
             print("Updating robot trade table with new trade record")
 
