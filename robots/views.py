@@ -6,6 +6,7 @@ from robots.models import *
 from portfolio.models import *
 from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
+from accounts.models import *
 
 
 # Main site for robot configuration
@@ -216,13 +217,115 @@ def incoming_trade(request):
 
     if request.method == "POST":
 
-        signal = {'robot_name': 'silver_h1', 'trade_side': 'buy', 'quantity': '2', 'action': 'BUY'}
+        # This is for live signal !
+        # message = request.body
+        # message = str(message.decode("utf-8"))
+        # message = message.split()
+
+        # Test singal
+        signal = str(request.POST.get("mydata")).split()
 
         print("INCOMING SIGNAL:", signal)
-        print("ROBOT NAME:" )
+        print("ROBOT NAME:", signal[0])
+        print("Fetching robot parameters from database")
+        print("")
 
-    print("EXECUTING TRADE")
+        try:
+            robot = Robots.objects.filter(name=signal[0]).values()
+            security = robot[0]["security"]
+            broker = robot[0]["broker"]
+            status = robot[0]["status"]
+            account_number = robot[0]["account_number"]
+        except:
+            print("Robot is not in the database. Execution stopped!")
+            return HttpResponse(None)
 
+        print("-------------------------")
+        print("Robot database parameters")
+        print("-------------------------")
+        print("STATUS:", status)
+        print("BROKER:", broker)
+        print("SECURITY:", security)
+        print("ACCOUNT NUMBER:", account_number)
+
+        if status == "inactive":
+            print("Robot is inactive. Trade execution stopped!")
+            return HttpResponse(None)
+
+        print("Robot is active. Trading is allowed.")
+        print("-------------------------")
+        print("")
+        print("-------------------------")
+        print(" ORDER ROUTING TO BROKER ")
+        print("-------------------------")
+
+        if broker == "oanda":
+            print("Fetching out account parameters from database")
+
+            account = BrokerAccounts.objects.filter(account_number=account_number,
+                                                    broker_name=broker).values()
+
+            environment = account[0]["env"]
+            token = account[0]["access_token"]
+
+            print("ACCOUNT NUMBER:", account_number)
+            print("ENVIRONMENT:", environment)
+            print("TOKEN:", token)
+
+            print("-------------------------")
+            print("     CREATING ORDER      ")
+            print("-------------------------")
+
+            trade_side = signal[3]
+
+            print("TRADE SIDE:", trade_side)
+
+            if trade_side == "BUY":
+                quantity = str(signal[2])
+            elif trade_side == "SELL":
+                quantity = str(signal[2] * -1)
+            elif trade_side == "Close":
+
+                print("OPEN TRADES:")
+                open_trades = pd.DataFrame(list(RobotTrades.objects.filter(robot=signal[0], status="OPEN").values()))
+                print(open_trades)
+                print("Closing all trades for", signal[0])
+
+                for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
+                    print("Close -> OANDA ID:", trd)
+                    open_trade = OandaV20(access_token=token,
+                                          account_id=account_number).close_trades(trd_id=trd)
+                    print("Update -> Database ID:", id)
+
+                    trade_record = RobotTrades.objects.get(id=id)
+                    trade_record.status = "CLOSED"
+                    trade_record.close_price = open_trade["price"]
+                    trade_record.pnl = open_trade["pl"]
+                    trade_record.save()
+
+                return HttpResponse(None)
+
+            print("QUANTITY:", quantity)
+            print("ORDER TYPE: MARKET")
+            print("SECURITY:", security)
+            print("Submiting trade request to Oanda...")
+
+            trade = OandaV20(access_token=token,
+                             account_id=account_number).submit_market_order(security=security, quantity=quantity)
+
+            print("Updating robot trade table with new trade record")
+
+            RobotTrades(security=security,
+                        robot=signal[0],
+                        quantity=quantity,
+                        status="OPEN",
+                        pnl=0.0,
+                        open_price=trade["price"],
+                        side=trade_side,
+                        broker_id=trade["id"],
+                        broker="oanda").save()
+
+            print("Robot trade table is updated!")
 
     response = {"securities": [0]}
 

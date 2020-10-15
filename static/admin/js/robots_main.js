@@ -33,10 +33,9 @@ function trade() {
         url: "signals/trade/",
         data: {
             csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            trdSignal: {'robot_name': 'silver_h1', 'trade_side': 'buy', 'quantity': '2', 'action': 'BUY'},
+            mydata: "silver_h1_demo buy 2 Close",
         },
-        success: function (trdSignal) {
-            console.log("success")
+        success: function (mydata){
         }
     })
 }

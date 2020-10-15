@@ -206,33 +206,43 @@ class OandaV20:
             if maxrecs == 0:
                 r.terminate("maxrecs records received")
 
-    def submit_market_order(self, security, sl_price, quantity):
+    def submit_market_order(self, security, quantity, sl_price=None):
 
         print("============")
         print("MARKET ORDER")
         print("============")
 
-        data = {
-            "order": {
-                "stopLossOnFill": {
-                    "price": sl_price
-                },
-                "instrument": security,
-                "units": quantity,
-                "type": "MARKET",
-                "positionFill": "DEFAULT"
+        if sl_price is None:
+            data = {
+                "order": {
+                    "instrument": security,
+                    "units": quantity,
+                    "type": "MARKET",
+                    "positionFill": "DEFAULT"
+                }
             }
-        }
+        else:
+            data = {
+                "order": {
+                    "stopLossOnFill": {
+                        "price": sl_price
+                    },
+                    "instrument": security,
+                    "units": quantity,
+                    "type": "MARKET",
+                    "positionFill": "DEFAULT"
+                }
+            }
         print("ORDER:", data)
 
         r = orders.OrderCreate(self.account_id, data=data)
         self.api.request(r)
 
         print("Market Order was executed succesfully!")
-        print(r.response)
-        print("")
 
-        return r.response
+        response = r.response
+
+        return response['orderFillTransaction']
 
     def get_open_trades(self):
 
@@ -249,12 +259,24 @@ class OandaV20:
 
         return open_trades_df
 
+    def close_trades(self, trd_id):
+
+        r = trades.TradeClose(accountID=self.account_id, tradeID=trd_id)
+        self.api.request(r)
+
+        response = r.response
+
+        return response['orderFillTransaction']
 
 # if __name__ == "__main__":
-    #.pricing_stream(instrument="XAG_USD")
-
-    # OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
-    #          account_id="101-004-11289420-001").get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
+#     # .pricing_stream(instrument="XAG_USD")
+#
+#     o = OandaV20(access_token="ecd553338b9feac1bb350924e61329b7-0d7431f8a1a13bddd6d5880b7e2a3eea",
+#              account_id="101-004-11289420-001")\
+#
+#     o.get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
+#     # f = o.close_trades(trd_id=7369)
+#     # print(f)
 
 
 
