@@ -292,6 +292,10 @@ def incoming_trade(request):
                 print(open_trades)
                 print("Closing all trades for", signal[0])
 
+                if len(open_trades) == 0:
+                    print("There are no open trades for this robot in the database. Execution stopped!")
+                    return HttpResponse(None)
+
                 for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
                     print("Close -> OANDA ID:", trd)
                     open_trade = OandaV20(access_token=token,
