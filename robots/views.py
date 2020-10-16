@@ -219,12 +219,12 @@ def incoming_trade(request):
     if request.method == "POST":
 
         # This is for live signal !
-        # message = request.body
-        # message = str(message.decode("utf-8"))
-        # signal = message.split()
+        message = request.body
+        message = str(message.decode("utf-8"))
+        signal = message.split()
 
         # Test singal
-        signal = str(request.POST.get("mydata")).split()
+        # signal = str(request.POST.get("mydata")).split()
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
