@@ -284,7 +284,7 @@ def incoming_trade(request):
             print("     CREATING ORDER      ")
             print("-------------------------")
 
-            trade_side = signal[3]
+            trade_side = signal[4]
 
             print("TRADE SIDE:", trade_side)
 
