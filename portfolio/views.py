@@ -73,32 +73,6 @@ def create_portfolio(request):
     return redirect('portfolio main')
 
 
-def create_instrument(request):
-
-    print("==============")
-    print("NEW INSTRUMENT")
-    print("==============")
-
-    if request.method == "POST":
-        instrument_name = request.POST.get("instrument_name")
-        instrument_type = request.POST.get("instrument_type")
-        source = request.POST.get("source")
-
-        print("INSTRUMENT NAME:", instrument_name)
-        print("INSTRUMENT TYPE:", instrument_type)
-
-        print("SOURCE:", source)
-
-        print("Saving new instrument to database")
-        Instruments(instrument_name=instrument_name,
-                    instrument_type=instrument_type,
-                    source=source).save()
-
-        print("New instrument was saved successfully")
-
-    return redirect('portfolio main')
-
-
 def get_portfolios():
 
     """

@@ -10,6 +10,7 @@ from accounts.models import *
 from robots.forms import *
 from accounts.models import *
 
+
 # Main site for robot configuration
 def robots_main(request):
 
