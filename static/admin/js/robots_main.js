@@ -33,9 +33,20 @@ function trade() {
         url: "signals/trade/",
         data: {
             csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            mydata: "silver_h1_demo buy 2 Close",
+            mydata: "silver_test_live buy 1 BUY",
         },
         success: function (mydata){
         }
     })
+}
+
+// New Robot form js
+window.onload = function () {
+    loadBrokers()
+    console.log("Page is loaded")
+}
+
+function loadBrokers() {
+    let broker = $("#id_broker")
+    console.log(broker)
 }

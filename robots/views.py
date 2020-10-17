@@ -7,7 +7,8 @@ from portfolio.models import *
 from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
 from accounts.models import *
-
+from robots.forms import *
+from accounts.models import *
 
 # Main site for robot configuration
 def robots_main(request):
@@ -15,10 +16,33 @@ def robots_main(request):
     print("===============")
     print("ROBOT MAIN PAGE")
     print("===============")
-
+    print("Loading brokers from database")
+    # broker_data = get_brokers()
+    # broker_list = [(broker["id"], broker["broker_name"]) for broker in broker_data]
     robots = Robots.objects.filter().values()
+    robot_form = RobotEntryForm(brokers=[("1", "oanda")])
 
-    return render(request, 'robots_app/create_robot.html', {"robots": robots})
+    return render(request, 'robots_app/create_robot.html', {"robots": robots,
+                                                            "robot_form": robot_form})
+
+
+def new_robot(request):
+
+    if request.method == "POST":
+        robot_form = RobotEntryForm(request.POST)
+
+        if robot_form.is_valid():
+            print("==================")
+            print("NEW ROBOT CREATION")
+            print("==================")
+            print("Form is valid.")
+            robot_name = robot_form.cleaned_data["robot_name"]
+
+            print("Robot Name", robot_name)
+
+    print("Redirecting to Robot Main page")
+
+    return redirect('robots main')
 
 
 def create_robot(request):
@@ -136,6 +160,13 @@ def delete_robot(request):
         print("Record has been deleted")
 
     return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
+
+
+def get_brokers():
+
+    brokers = BrokerAccounts.objects.filter().values()
+
+    return brokers
 
 
 def amend_robot(request):

@@ -263,6 +263,19 @@
 
     </div>
 </div>
+
+<div class="card h-md-100 shadow bg-white rounded" style="width: 50%">
+    <div class="card-body">
+        <h5 class="card-title">New Robot</h5>
+        <form action="{% url 'new robot' %}" method="POST">
+        {% csrf_token %}
+        {{ robot_form.as_p }}
+        <button class="btn btn-primary" style="width: 100px; height: 30px;">Calculate</button>
+    </form>
+    </div>
+
+</div>
+
 {% load static %}
 <script src="{% static 'admin/js/robots_main.js' %}"></script>
 {% endblock %}

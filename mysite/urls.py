@@ -12,6 +12,7 @@ urlpatterns = [
     path('', include('portfolio.urls')),
     path('', include('accounts.urls')),
     path('', include('trade_app.urls')),
+    path('', include('instrument.urls')),
     path('trade_results/', views.get_results, name="get_results"),
     path('save_home/', views.save_layout, name="make_default"),
     path('settings/', views.go_to_settings, name="settings main"),

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'portfolio',
     'accounts',
     'trade_app',
+    'instrument',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
