@@ -11,6 +11,9 @@
           integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
 
+    {% load static %}
+    <link href="{% static 'admin/css/base.css' %}" rel="stylesheet">
+
     <!--    Chart.js-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
@@ -22,97 +25,7 @@
     {% endblock %}
 
     <title>Home Page</title>
-    <style>
-        .my_container {
-            width: 100%;
-            height: 2000px;
-            background: white;
-        }
 
-        .left {
-            background: #E9E7E0;
-            margin-top: 2px;
-        }
-
-        .right {
-            background: #E9E7E0;
-            margin-top: 2px;
-            width: 20%;
-
-        }
-
-        .main_panel {
-            background: #E9E7E0;
-            margin-top: 2px;
-            width: 100%;
-        }
-
-        .nav_bar {
-            background: #19393D;
-            position: fixed;
-            top: 0;
-            right: 0;
-            left: 0;
-            z-index: 1030;
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
-        }
-
-        .side_bar {
-            padding-top: 10px;
-            font-size: 14px;
-            color: #49B0C2;
-        }
-
-        .entry_form {
-            font-size: 14px;
-            color: #19393D;
-            background: #B5A22A;
-            padding: 20px;
-            margin-left: 20px;
-            border-radius: 5px;
-
-        }
-
-        .submit_button {
-            background: #AC5C26;
-            outline: 0;
-            border-style: none !important;
-        }
-
-        .submit_button_2 {
-            background: #49B0C2;
-            outline: 0;
-            border-style: none !important;
-            margin-left: 20px;
-        }
-
-        .row_nav_bar {
-            height: 65px;
-        }
-
-        .main_area {
-            height: 100%;
-        }
-
-        .link_color {
-            color: #19393D;
-        }
-
-        .tables {
-            max-width: none;
-            table-layout: fixed;
-            padding: 0;
-            margin: auto;
-            font-size: 12px;
-            text-align: center;
-        }
-
-        th {
-            background-color: #19393D;
-            color: white;
-        }
-
-    </style>
 </head>
 <body>
 <div class="container-fluid my_container">

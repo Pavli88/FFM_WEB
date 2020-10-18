@@ -3,7 +3,7 @@
 
 {% block head %}
 {% load static %}
-<!--<link href="{% static 'admin/css/portfolio_template.css' %}" rel="stylesheet">-->
+<link href="{% static 'admin/css/robots_template.css' %}" rel="stylesheet">
 
 {% endblock %}
 
@@ -86,159 +86,90 @@
 
 <!--Main block-->
 {% block main_block%}
-<div class="container-fluid">
-    <!--Form to get back all robots-->
-    <div class="row" style="padding:15px;">
-        <form style="display:flex;" action="{% url 'show robots' %}" method="POST">
-            {% csrf_token %}
-            <h2>Robot Configuration</h2>
-            <input class="btn btn-primary btn-sm submit_button_2" type="submit" , name="button" value="Show Robots"
-                   id="get_robots">
-        </form>
-    </div>
-    <div class="row">
-        <table class="table table-striped tables" id="robot_table">
-            <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Robot Name</th>
-                <th scope="col">Strategy</th>
-                <th scope="col">Security</th>
-                <th scope="col">Time Frame</th>
-                <th scope="col">Broker</th>
-                <th scope="col">Environment</th>
-                <th scope="col">Status</th>
-                <th scope="col">Sl Policy</th>
-                <th scope="col">Pyramiding Level</th>
-                <th scope="col">Initial Exposure</th>
-                <th scope="col">Quantity</th>
-                <th scope="col">Precision</th>
-                <th scope="col">Account Number</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for robot in robots %}
-            <tr style="height:10px;">
-                <form action="{% url 'amend robot' %}" method="POST">
-                    {% csrf_token %}
-                    <td>
-                        <input type="hidden" name="robot_id" value="{{robot.id}}">
-                        <label>{{robot.id}}</label>
-                    </td>
-                    <td>
-                        <input type="hidden" name="robot_name" value="{{robot.name}}">
-                        <label>{{robot.name}}</label>
-                    </td>
-                    <td>
-                        <label>{{robot.strategy}}</label>
-                    </td>
-                    <td>
-                        <label>{{robot.security}}</label>
-                    </td>
-                    <td>
-                        <label>{{robot.time_frame}}</label>
-                    </td>
-                    <td>
-                        <label>{{robot.broker}}</label>
-                    </td>
-                    <td>
-                        <select class="form-control form-control-sm" name="env" value="{{robot.env}}">
-                            <option>{{robot.env}}</option>
-                            {% if robot.env == "demo"%}
-                            <option>live</option>
-                            {% else %}
-                            <option>demo</option>
-                            {% endif %}
-                        </select>
-                    </td>
-                    <td>
-                        <select class="form-control form-control-sm" name="status" value="{{robot.status}}">
-                            <option>{{robot.status}}</option>
-                            {% if robot.env == "active"%}
-                            <option>active</option>
-                            {% else %}
-                            <option>inactive</option>
-                            {% endif %}
-                        </select>
-                    </td>
-                    <td>
-                        <select class="form-control form-control-sm" name="sl_policy">
-                            <option>{{robot.sl_policy}}</option>
-                            {% if robot.sl_policy == "percentage"%}
-                            <option>level</option>
-                            {% else %}
-                            <option>percentage</option>
-                            {% endif %}
-                        </select>
-                    </td>
-                    <td>
-                        <input class="form-control form-control-sm" type="number" name="pyramiding_level" min="0"
-                               max="10" value="{{robot.pyramiding_level}}">
-                    </td>
-                    <td>
-                        <input class="form-control form-control-sm" type="number" name="init_exp" min="0.00" step="0.01"
-                               value="{{robot.in_exp}}">
-                    </td>
-                    <td>
-                        <input class="form-control form-control-sm" type="number" name="quantity" min="0"
-                               value="{{robot.quantity}}">
-                    </td>
-                    <td>
-                        <input class="form-control form-control-sm" type="number" name="precision" min="1"
-                               value="{{robot.prec}}">
-                    </td>
-                    <td>
-                        <input class="form-control form-control-sm" width="10" type="text" name="account_number"
-                               value="{{robot.account_number}}" placeholder="{{robot.account_number}}">
-                    </td>
-                    <td>
-                        <button type="submit" class="btn btn-primary mb-2 modify_btn">Modify</button>
-                    </td>
-                    <td>
-                        <button type="submit" class="btn btn-primary mb-2 delete_button delete_btn"
-                                formaction="{% url 'delete robot' %}">Delete
-                        </button>
-                    </td>
-                </form>
-            </tr>
-            {% endfor %}
-
-            </tbody>
-        </table>
-    </div>
-</div>
 
 <!--Robot Processes-->
 <br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 150px; display: flex">
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
     <div class="card-header" style="display: flex">
-        <h5 style="color: #19393D"><strong>Process Management</strong></h5>
-        <div class="col-auto">
-            <select class="form-control form-control-sm" name="port_name" id="robot_proc_selector" required>
+        <h5 style="color: #19393D; padding: 5px"><strong>Process Management</strong></h5>
+        <div class="col-auto" style="padding: 5px">
+            <select class="form-control" name="port_name" id="robot_proc_selector" required>
                 <option>Balance</option>
                 <option>Risk</option>
             </select>
         </div>
-        <div class="col-auto">
-            <select class="form-control form-control-sm" name="port_name" id="robot" required>
+        <div class="col-auto" style="padding: 5px">
+            <select class="form-control" name="port_name" id="robot" required>
                 {% for robot in robots %}
                 <option>{{ robot.name}}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="date" id="start" name="trip-start" value="2020-10-14">
+        <div class="form-group" style="padding: 5px">
+            <input class="form-control" type="date" id="start" name="trip-start" value="2020-10-14">
         </div>
-        <div class="form-group">
-            <button class="btn btn-primary" style="width: 100px; height: 30px;" id="calc_btn">Calculate</button>
+        <div class="form-group" style="padding: 5px">
+            <button type="button" class="btn btn-outline-dark" id="calc_btn">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </svg>
+            </button>
         </div>
-
     </div>
-
     <div class="card_container form-row align-items-center ">
 
+    </div>
+</div>
+
+<!--Test trade panel-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
+    <div class="card-header" >
+        <div style="display: flex">
+            <div style="padding: 5px">
+                <h5 class="card-title" style="color: #19393D"><strong>Robots</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <button type="button" class="btn btn-outline-dark" id="load_robots">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise"
+                         fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                    </svg>
+                </button>
+            </div>
+            <div style="padding: 5px">
+                <button type="button" class="btn btn-outline-dark" id="new_robot">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-plus" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card_container" style="width: 100%; overflow-y:scroll;">
+        <table class="table-striped" style="width: 100%" id="robot_table">
+            <thead style="width: 100%">
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Strategy</th>
+                <th scope="col">Security</th>
+                <th scope="col">Time Frame</th>
+                <th scope="col">Broker</th>
+                <th scope="col">Env</th>
+                <th scope="col">Status</th>
+                <th scope="col">Account Number</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody id="robot_table_body"></tbody>
+        </table>
     </div>
 </div>
 
@@ -264,14 +195,11 @@
     </div>
 </div>
 
-<div class="card h-md-100 shadow bg-white rounded" style="width: 50%">
+<div class="card h-md-100 shadow bg-white rounded" style="width: 300px" id="new_robot_dialog">
     <div class="card-body">
         <h5 class="card-title">New Robot</h5>
-        <form action="{% url 'new robot' %}" method="POST">
-        {% csrf_token %}
         {{ robot_form.as_p }}
-        <button class="btn btn-primary" style="width: 100px; height: 30px;">Calculate</button>
-    </form>
+        <button type="submit" class="btn btn-outline-dark" style="width: 100px; height: 30px;" id="create_robot_btn">Add</button>
     </div>
 </div>
 

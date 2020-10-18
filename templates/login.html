@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+          integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+
+    {% load static %}
+    <link href="{% static 'admin/css/base.css' %}" rel="stylesheet">
+
+    <!--    Chart.js-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+    <!--JQuery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+    {% block head %}
+
+    {% endblock %}
+
+    <title>Home Page</title>
+
+</head>
+<body class="text-center" style="display: flex">
+    <form action="{% url 'login' %}" method="POST" class="form-signin" style="width: 400px">
+        {% csrf_token %}
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <input type="text" id="inputEmail" name="user" class="form-control" placeholder="Username" required="" autofocus="">
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required="">
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" value="remember-me"> Remember me
+            </label>
+        </div>
+        <input class="btn btn-lg btn-primary btn-block" type="submit">Sign in</input>
+        <p class="mt-5 mb-3 text-muted">© 2019-2020</p>
+    </form>
+
+    <form action="{% url 'register' %}" method="POST" style="width: 400px">
+        {% csrf_token %}
+        <h1 class="h3 mb-3 font-weight-normal">Register new user</h1>
+        <label for="inputEmail" class="sr-only">First Name</label>
+        <input type="text" id="first_name" name="first_name" class="form-control" placeholder="First Name" required="" autofocus="">
+        <label for="inputEmail" class="sr-only">Last Name</label>
+        <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Last Name" required="" autofocus="">
+        <label for="inputEmail" class="sr-only">User Name</label>
+        <input type="text" id="user_name" name="user_name" class="form-control" placeholder="User Name" required="" autofocus="">
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input type="email" id="newEmail" name="new_email" class="form-control" placeholder="Email address" required="" autofocus="">
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="newPassword" name="new_password" class="form-control" placeholder="Password" required="">
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" value="remember-me"> Remember me
+            </label>
+        </div>
+        <input class="btn btn-lg btn-primary btn-block" type="submit">Register</input>
+        <p class="mt-5 mb-3 text-muted">© 2019-2020</p>
+    </form>
+</body>
+
+
+
+<!--    Bootstrap Js-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>

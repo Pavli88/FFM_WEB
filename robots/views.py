@@ -9,6 +9,7 @@ from mysite.processes.oanda import *
 from accounts.models import *
 from robots.forms import *
 from accounts.models import *
+from instrument.models import *
 
 
 # Main site for robot configuration
@@ -20,30 +21,70 @@ def robots_main(request):
     print("Loading brokers from database")
     # broker_data = get_brokers()
     # broker_list = [(broker["id"], broker["broker_name"]) for broker in broker_data]
-    robots = Robots.objects.filter().values()
-    robot_form = RobotEntryForm(brokers=[("1", "oanda")])
 
-    return render(request, 'robots_app/create_robot.html', {"robots": robots,
-                                                            "robot_form": robot_form})
+    robots = get_all_robots()
+    robot_form = RobotEntryForm()
+
+    return render(request, 'robots_app/create_robot.html', {"robot_form": robot_form,
+                                                            "robots": robots})
 
 
 def new_robot(request):
 
+    print("==================")
+    print("NEW ROBOT CREATION")
+    print("==================")
+
     if request.method == "POST":
-        robot_form = RobotEntryForm(request.POST)
 
-        if robot_form.is_valid():
-            print("==================")
-            print("NEW ROBOT CREATION")
-            print("==================")
-            print("Form is valid.")
-            robot_name = robot_form.cleaned_data["robot_name"]
+        robot_name = request.POST.get("robot_name")
+        strategy = request.POST.get("strategy")
+        broker = request.POST.get("broker")
+        env = request.POST.get("env")
+        security = request.POST.get("security")
+        account_number = request.POST.get("account")
 
-            print("Robot Name", robot_name)
+        print("ROBOT NAME:", robot_name)
+        print("STRATEGY:", strategy)
+        print("BROKER:", broker)
+        print("ENVIRONMENT:", env)
+        print("SECURITY:", security)
+        print("ACCOUNT:", account_number)
 
-    print("Redirecting to Robot Main page")
+        try:
+            Robots(name=robot_name,
+                   strategy=strategy,
+                   security=security,
+                   broker=broker,
+                   status="active",
+                   env=env,
+                   account_number=account_number
+                   ).save()
 
-    return redirect('robots main')
+            print("Inserting new robot to database")
+
+            Balance(robot_name=robot_name,
+                    daily_pnl=0.0,
+                    daily_cash_flow=0.0).save()
+
+            print("Setting up initial balance to 0")
+
+            Instruments(instrument_name=robot_name,
+                        instrument_type="Robot",
+                        source="ffm_system").save()
+
+            print("Saving down robot to instruments table")
+
+            response = {"securities": []}
+
+        except:
+            print("Robot exists in database")
+            response = {"message": "alert"}
+
+    print("Sending response to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
 
 
 def create_robot(request):
@@ -74,63 +115,66 @@ def create_robot(request):
         init_exp = float(request.POST.get("init_exp"))
         quantity = float(request.POST.get("quantity"))
 
-        try:
-            Robots(name=robot_name,
-                   strategy=strategy_name,
-                   security=security,
-                   broker=broker,
-                   status=status,
-                   pyramiding_level=pyramiding_level,
-                   in_exp=init_exp,
-                   env=env,
-                   quantity=quantity,
-                   time_frame=time_frame,
-                   account_number=account_number,
-                   sl_policy=sl_policy,
-                   prec=precision).save()
 
-            print("Inserting new robot to database")
-
-            Balance(robot_name=robot_name,
-                    daily_pnl=0.0,
-                    daily_cash_flow=0.0).save()
-
-            print("Setting up initial balance to 0")
-
-            Instruments(instrument_name=robot_name,
-                        instrument_type="Robot",
-                        source="ffm_system").save()
-
-            print("Saving down robot to instruments table")
-
-        except:
-            print("Robot exists in database")
-            return render(request, 'robots_app/create_robot.html', {"robot_exists": "yes"})
 
         return redirect('robots main')
 
 
-def get_all_robots(request):
+# ===================================
+# Functions to load data to front end
+# ===================================
 
-    """
-    Queries out all robots from database and passes it back to the html
-    :param request:
-    :return:
-    """
 
-    print("Request received to load all robot data on Robots page.")
-    print("Loading robot data")
+def load_robots(request):
 
-    robots = Robots.objects.filter().values()
+    print("Request from front end to load all robot data")
 
-    print("ROBOTS:")
-    print(robots)
+    robots = get_all_robots()
 
-    # Create code to give the data back in json
-    if len(robots) == 0:
-        return render(request, 'robots_app/create_robot.html')
-    else:
-        return render(request, 'robots_app/create_robot.html', {"robots": robots})
+    response = {"securities": list(robots)}
+
+    print("Sending data to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
+
+
+def load_securities(request):
+    print("Request from front end to load security data")
+
+    if request.method == "GET":
+        broker = request.GET.get("broker")
+
+    print("BROKER:", broker)
+
+    securities = get_securities(broker=broker)
+
+    response = {"securities": list(securities)}
+
+    print("Sending data to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
+
+
+def load_accounts(request):
+    print("Request from front end to load accounts data")
+
+    if request.method == "GET":
+        broker = request.GET.get("broker")
+        env= request.GET.get("env")
+
+    print("BROKER:", broker)
+    print("ENVIRONTMENT:", env)
+
+    accounts = get_accounts(broker=broker, environment=env)
+
+    response = {"accounts": list(accounts)}
+
+    print("Sending data to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
 
 
 def delete_robot(request):
@@ -162,12 +206,49 @@ def delete_robot(request):
 
     return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
+# ===================================
+# Functions to get data from database
+# ===================================
+
+
+def get_all_robots():
+
+    """
+    Queries out all robots from database and passes it back to the html
+    :param request:
+    :return:
+    """
+
+    print("Fetching robot data from database")
+
+    robots = Robots.objects.filter().values()
+
+    return robots
+
 
 def get_brokers():
 
     brokers = BrokerAccounts.objects.filter().values()
 
     return brokers
+
+
+def get_securities(broker=None):
+    if broker is None:
+        securities = Instruments.objects.filter().values()
+    else:
+        securities = Instruments.objects.filter(source=broker).values()
+
+    return securities
+
+
+def get_accounts(broker=None, environment=None):
+    if broker is None:
+        accounts = BrokerAccounts.objects.filter().values()
+    else:
+        accounts = BrokerAccounts.objects.filter(broker_name=broker, env=environment).values()
+
+    return accounts
 
 
 def amend_robot(request):

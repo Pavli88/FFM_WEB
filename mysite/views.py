@@ -10,6 +10,63 @@ from accounts.models import *
 from portfolio.models import *
 from mysite.processes.oanda import *
 from django.http import JsonResponse
+from django.contrib.auth.models import User, auth
+
+def main_page(request):
+    return render(request, 'login.html')
+
+
+def login(request):
+    print("==========")
+    print("USER LOGIN")
+    print("===========")
+
+    if request.method == "POST":
+        user_name = request.POST["user"]
+        password = request.POST["password"]
+
+        user = auth.authenticate(username=user_name, password=password)
+
+        if user is not None:
+            auth.login(request, user)
+            return redirect('home_page')
+        else:
+            print("User is not registered in the database!")
+
+            return redirect('login')
+
+
+def register(request):
+    print("============")
+    print("REGISTRATION")
+    print("============")
+
+    if request.method == "POST":
+        first_name = request.POST["first_name"]
+        last_name = request.POST["last_name"]
+        user_name = request.POST["user_name"]
+        email = request.POST["new_email"]
+        password = request.POST["new_password"]
+
+        print("FIRST NAME:", first_name)
+        print("LAST NAME:", last_name)
+        print("USER NAME:", user_name)
+        print("EMAIL:", email)
+
+        if User.objects.filter(username=user_name).exists():
+            print("User exists in database")
+        elif User.objects.filter(email=email).exists():
+            print("Email exists in database")
+        else:
+            user = User.objects.create_user(username=user_name,
+                                           password=password,
+                                           email=email,
+                                           first_name=first_name,
+                                           last_name=last_name)
+            user.save()
+            print("New user created!")
+
+        return render(request, 'login.html')
 
 
 def get_balance_history(start_date, end_date):
