@@ -140,3 +140,5 @@ MEDIA_ROOT = '/home/pavliati/mysite/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/home/pavliati/mysite/static'
 STATIC_URL = '/static/'
+
+LOGIN_URL = "/home/"

@@ -11,9 +11,34 @@ from portfolio.models import *
 from mysite.processes.oanda import *
 from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+
 
 def main_page(request):
+    print("=========")
+    print("MAIN PAGE")
+    print("=========")
+
+    if request.user.is_authenticated is True:
+        print("User has already logged in")
+        print("Redirecting to home page")
+        return redirect('home_page')
+    else:
+        print("Anonimous user! Login is requested!")
+
     return render(request, 'login.html')
+
+
+def logout_user(request):
+
+    print("===========")
+    print("USER LOGOUT")
+    print("===========")
+    print("Redirecting to logout page")
+
+    logout(request)
+    return redirect('main_page')
 
 
 def login(request):
@@ -30,10 +55,9 @@ def login(request):
         if user is not None:
             auth.login(request, user)
             return redirect('home_page')
-        else:
+        elif user is None:
             print("User is not registered in the database!")
-
-            return redirect('login')
+            return redirect('main_page')
 
 
 def register(request):
@@ -267,6 +291,7 @@ def get_robot_list(account=None):
 
 
 # Home page
+@login_required(login_url="/")
 def home(request, default_load=None):
 
     print("=========")
