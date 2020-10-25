@@ -9,79 +9,7 @@
 
 <!--New robot creator form-->
 {% block entry_form %}
-<form class="entry_form" action="{% url 'create robot' %}" method="POST">
-    {% csrf_token %}
-    <h4>New Robot</h4>
-    <div class="form-group">
-        <input id="robot_name" class="form-control form-control-sm" type="text" name="robot_name"
-                   placeholder="Robot Name" required>
-    </div>
-    <div class="form-group">
-        <input id="strategy_name" class="form-control form-control-sm" type="text" name="strategy_name" placeholder="Strategy" required>
-    </div>
-    <div class="form-group">
-        <input id="security" class="form-control form-control-sm" type="text" name="security" placeholder="Security" required>
-    </div>
-    <div class="form-group">
-        <input id="time_frame" class="form-control form-control-sm" type="text" name="time_frame" placeholder="Timeframe" required>
-    </div>
-    <div class="form-group">
-        <input class="form-control form-control-sm" type="text" name="broker"
-               placeholder="Broker" required>
-    </div>
-    <div class="form-group">
-        <input class="form-control form-control-sm" type="text" name="account_number"
-               placeholder="Account Number" required>
-    </div>
-    <div class="form-group">
-        <label for="quantity">Quantity</label>
-        <input class="form-control form-control-sm" type="number" id="quantity" name="quantity" min="0" value="0" required>
-    </div>
-    <div class="form-group">
-        <label for="prec">SL Precision</label>
-        <input class="form-control form-control-sm" type="number" id="prec" name="precision" min="1" value="1" required>
-    </div>
-    <div class="form-group">
-        <label for="pyramiding_level">Pyramiding Level</label>
-        <input class="form-control form-control-sm" type="number" id="pyramiding_level" name="pyramiding_level" min="0" max="10" value="0" required>
-    </div>
-    <div class="form-group">
-        <label for="init_exp">Initial Exposure Level</label>
-        <input class="form-control form-control-sm" type="number" id="init_exp" name="init_exp" min="0.00" step="0.01" value="0.00" required>
-    </div>
 
-    <div class="form-group">
-        <label for="sl_policy">Stop Loss Policy</label>
-        <select class="form-control form-control-sm" id="sl_policy" name="sl_policy" required>
-            <option value="percentage">percentage</option>
-            <option value="level">level</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Status</label><br>
-        <label class="normal_text" for="active">Active</label>
-        <input type="radio" id="active" name="status" value="active" required>
-        <label class="normal_text" for="inactive">Inactive</label>
-        <input type="radio" id="inactive" name="status" value="inactive">
-    </div>
-
-    <div class="form-group">
-        <label class="entry_label_name">Environment</label>
-        <div class="form-group">
-            <label class="normal_text" for="live_env">Live</label>
-            <input type="radio" id="live_env" name="env" value="live" required>
-            <label class="normal_text" for="demo_env">Demo</label>
-            <input type="radio" id="demo_env" name="env" value="demo">
-        </div>
-    </div>
-
-    <script>if ("{{ exist_robots }}" == "exists") {
-                        alert("Record already exists in database!");
-                    }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
-    </script>
-    <input class="btn btn-primary submit_button" type="submit", name="button" value="Add New Robot"><br>
-</form>
 {% endblock %}
 
 <!--Main block-->
@@ -142,7 +70,7 @@
                 </button>
             </div>
             <div style="padding: 5px">
-                <button type="button" class="btn btn-outline-dark" id="new_robot">
+                <button type="button" class="btn btn-outline-dark" id="newRobotBtn" data-toggle="modal" data-target="#newRobot">
                     <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-plus" fill="currentColor"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
@@ -195,12 +123,36 @@
     </div>
 </div>
 
-<div class="card h-md-100 shadow bg-white rounded" style="width: 300px" id="new_robot_dialog">
-    <div class="card-body">
-        <h5 class="card-title">New Robot</h5>
-        {{ robot_form.as_p }}
-        <button type="submit" class="btn btn-outline-dark" style="width: 100px; height: 30px;" id="create_robot_btn">Add</button>
+<!--New Robot Modal-->
+<!--<div class="card h-md-100 shadow bg-white rounded" style="width: 300px" id="new_robot_dialog">-->
+<!--    <div class="card-body">-->
+<!--        <h5 class="card-title">New Robot</h5>-->
+<!--        {{ robot_form.as_p }}-->
+<!--        <button type="submit" class="btn btn-outline-dark" style="width: 100px; height: 30px;" id="create_robot_btn">Add</button>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop">-->
+<!--  Launch static backdrop modal-->
+<!--</button>-->
+
+<div class="modal fade" id="newRobot" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="newRobotLabel" aria-hidden="true">
+  <div class="modal-dialog" style="width: 300px">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newRobotLabel"><strong>New Robot</strong></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+        <div class="modal-body">
+            {{ robot_form }}
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="create_robot_btn">Add</button>
+      </div>
     </div>
+  </div>
 </div>
 
 {% load static %}

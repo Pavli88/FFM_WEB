@@ -63,9 +63,7 @@ def new_robot(request):
 
             print("Inserting new robot to database")
 
-            Balance(robot_name=robot_name,
-                    daily_pnl=0.0,
-                    daily_cash_flow=0.0).save()
+            Balance(robot_name=robot_name).save()
 
             print("Setting up initial balance to 0")
 
@@ -85,40 +83,6 @@ def new_robot(request):
     print("")
 
     return JsonResponse(response, safe=False)
-
-
-def create_robot(request):
-
-    """
-    This function creates new robot entry in the data base
-    :param request:
-    :return:
-    """
-
-    if request.method == "POST":
-
-        print("==================")
-        print("NEW ROBOT CREATION")
-        print("==================")
-
-        robot_name = request.POST.get("robot_name")
-        strategy_name = request.POST.get("strategy_name")
-        security = request.POST.get("security")
-        broker = request.POST.get("broker")
-        status = request.POST.get("status")
-        env = request.POST.get("env")
-        time_frame = request.POST.get("time_frame")
-        account_number = request.POST.get("account_number")
-        sl_policy = request.POST.get("sl_policy")
-        precision = request.POST.get("precision")
-        pyramiding_level = float(request.POST.get("pyramiding_level"))
-        init_exp = float(request.POST.get("init_exp"))
-        quantity = float(request.POST.get("quantity"))
-
-
-
-        return redirect('robots main')
-
 
 # ===================================
 # Functions to load data to front end

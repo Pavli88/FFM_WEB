@@ -95,6 +95,7 @@ function newRobot() {
             }
             else{
                 alert("New robot was created successfully!")
+                $("#newRobot").modal('hide')
             }
         }
     })
