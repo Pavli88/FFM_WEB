@@ -1,4 +1,5 @@
 from django.db import models
+import datetime
 
 "Restarting migration"
 "python manage.py migrate --fake robots zero"
@@ -18,12 +19,13 @@ class Robots(models.Model):
     account_number = models.CharField(max_length=50, default='')
     sl_policy = models.CharField(max_length=50, default='')
     prec = models.IntegerField(default=1)
+    inception_date = models.DateField(default=datetime.date.today)
 
 
 class RobotCashFlow(models.Model):
     robot_name = models.CharField(max_length=20)
     cash_flow = models.FloatField(default=0.0)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateField(default=datetime.date.today)
 
 
 class Balance(models.Model):
@@ -34,7 +36,7 @@ class Balance(models.Model):
     cash_flow = models.FloatField(default=0.0)
     close_balance = models.FloatField(default=0.0)
     ret = models.FloatField(default=0.0)
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateField(default=datetime.date.today)
 
 
 class RobotTrades(models.Model):

@@ -189,31 +189,4 @@
     </div>
     <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add"><br>
 </form>
-
-<br>
-<form class="entry_form" action="{% url 'create instrument' %}" method="POST">
-    {% csrf_token %}
-    <h5><strong>New Instrument</strong></h5>
-    <div class="form-group">
-        <input type="text" class="form-control form-control-sm" name="instrument_name" required>
-    </div>
-    <div class="form-group">
-        <label><strong>Instrument Type</strong></label>
-        <select class="form-control form-control-sm" name="instrument_type" required>
-            <option>Equity</option>
-            <option>Commodity</option>
-            <option>Currency</option>
-            <option>Bond</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label><strong>Source</strong></label>
-        <select class="form-control form-control-sm" name="source" required>
-            <option>oanda</option>
-            <option>MAP</option>
-        </select>
-    </div>
-    <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"><br>
-</form>
-
 {% endblock %}

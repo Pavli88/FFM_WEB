@@ -2,6 +2,7 @@ from robots.models import *
 import pandas as pd
 import numpy as np
 import datetime
+from datetime import timedelta
 from mysite.models import *
 
 
@@ -91,7 +92,57 @@ def balance_calc(robot, calc_date):
 
     date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
 
-    trades_df = pd.DataFrame(list(Trades.objects.filter(robot=robot,
-                                                       open_time__gte=date).values()))
+    t_min_one_date = date + timedelta(days=-1)
 
-    print(trades_df)
+    print("T-1 DATE:", t_min_one_date.date())
+
+    trades_df_closed = pd.DataFrame(list(RobotTrades.objects.filter(robot=robot,
+                                                                    close_time=date,
+                                                                    status="CLOSED").values()))
+
+    print(trades_df_closed)
+
+    if trades_df_closed.empty:
+        realized_pnl = 0.0
+    else:
+        realized_pnl = trades_df_closed["pnl"].sum()
+
+    print("REALIZED PNL:", realized_pnl)
+
+    cash_flow_table = pd.DataFrame(list(RobotCashFlow.objects.filter(robot_name=robot,
+                                                              date=date).values()))
+
+    if cash_flow_table.empty:
+        cash_flow = 0.0
+    else:
+        cash_flow = cash_flow_table["cash_flow"].sum()
+
+    print("CASH FLOW:", cash_flow)
+
+    open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
+    open_balance = open_balance_table["close_balance"].sum()
+
+    print("OPENING BALANCE:", open_balance)
+
+    close_balance = cash_flow + realized_pnl + open_balance
+
+    print("CLOSING BALANCE:", close_balance)
+
+    ret = realized_pnl / open_balance
+
+    print("RETURN:", round(ret, 4))
+
+    print("Clearing out prvious record for the same day")
+
+    Balance.objects.filter(date=date).delete()
+
+    print("Saving calculated records to robot balances table")
+
+    Balance(robot_name=robot,
+            opening_balance=round(open_balance, 4),
+            close_balance=round(close_balance, 4),
+            cash_flow=cash_flow,
+            realized_pnl=round(realized_pnl, 4),
+            ret=round(ret, 4),
+            unrealized_pnl=0.0,
+            date=date).save()
