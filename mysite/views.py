@@ -15,6 +15,43 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 
 
+# Home page
+# @login_required(login_url="/")
+def home(request, default_load=None):
+
+    print("=========")
+    print("HOME PAGE")
+    print("=========")
+
+    if default_load is None:
+        print("Loading default settings")
+        default_data = HomePageDefault.objects.filter().values()
+
+        if len(default_data) == 0:
+            print("No default account has been set.")
+            robot_list = []
+            broker_account = []
+            default_account = "-"
+        else:
+            default_account = default_data[0]["account_number"]
+            broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+    else:
+        print("Loading account parameters for", default_load)
+
+        broker_account = BrokerAccounts.objects.filter(account_number=default_load).values()[0]
+
+    print("Loading robot list from database")
+    print("Loading broker account information")
+
+    return render(request, 'home.html', {"dates": get_days(),
+                                         "robots": get_robots(),
+                                         "open_trades": get_open_trades(),
+                                         "accounts": get_account_data(),
+                                         "broker": broker_account,
+                                         "portfolios": get_portfolios(),
+                                         })
+
+
 def main_page(request):
     print("=========")
     print("MAIN PAGE")
@@ -260,7 +297,7 @@ def calculate_risk_exposure():
     return risk_dict
 
 
-def get_robot_list(account=None):
+def get_robots(account=None):
 
     """
     Function to get a list of robots from the db.
@@ -285,52 +322,42 @@ def get_robot_list(account=None):
     # except:
     #     robot_list = []
 
-    print("Robots:", robots)
-
     return robots
 
 
-# Home page
-@login_required(login_url="/")
-def home(request, default_load=None):
+def get_robot_balance(start_date, end_date, robot=None):
 
-    print("=========")
-    print("HOME PAGE")
-    print("=========")
+    print("Fetching robot balance data")
 
-    if default_load is None:
-        print("Loading default settings")
-        default_data = HomePageDefault.objects.filter().values()
-
-        if len(default_data) == 0:
-            print("No default account has been set.")
-            robot_list = []
-            broker_account = []
-            default_account = "-"
-        else:
-            default_account = default_data[0]["account_number"]
-            robot_list = get_robot_list(account=default_account)
-            broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
+    if robot is None:
+        robot_balance_data = Balance.objects.filter(date__gte=start_date, date__lte=end_date).values()
     else:
-        print("Loading account parameters for", default_load)
-        robot_list = get_robot_list(account=default_load)
-        broker_account = BrokerAccounts.objects.filter(account_number=default_load).values()[0]
+        robot_balance_data = Balance.objects.filter(robot_name=robot, date__range=[start_date, end_date]).values()
 
-    print("Loading robot list from db:", robot_list)
-    print("Loading broker account information")
+    return robot_balance_data
 
-    return render(request, 'home.html', {"dates": get_days(),
-                                         "robots": robot_list,
-                                         "open_trades": get_open_trades(),
-                                         "accounts": get_account_data(),
-                                         "broker": broker_account,
-                                         "pnl_label": [],
-                                         "pnls": [],
-                                         "cum_pnl": [],
-                                         "balance": [],
-                                         "balance_label": [],
-                                         "portfolios": get_portfolios(),
-                                         })
+
+def get_robot_charts_data(request):
+    print("=================")
+    print("ROBOT CHARTS DATA")
+    print("=================")
+
+    if request.method == "GET":
+        robot = request.GET.get("robot")
+        start_date= request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        print("ROBOT:", robot)
+        print("START DATE:", start_date)
+        print("END DATE:", end_date)
+
+        balance = get_robot_balance(robot=robot, start_date=start_date, end_date=end_date)
+
+    response = {"balance": list(balance)}
+
+    print("Sending response to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
 
 
 def save_layout(request):
@@ -347,178 +374,6 @@ def save_layout(request):
     print("Account:", account)
 
     return redirect('home_page')
-
-
-def get_trade_pnls(trades):
-
-    """
-    Function to calculate aggregated pnl on robots and winning and losing % on robots
-    :param trades:
-    :return:
-    """
-
-    print("Calculating Robot P&Ls")
-
-    trade_df = pd.DataFrame(list(trades))
-
-    color_list = []
-
-    if trade_df.empty is True:
-        return "empty"
-
-    for side in list(trade_df["side"]):
-        if side == "SELL":
-            color_list.append('#842518')
-        elif side == "BUY":
-            color_list.append('#405347')
-
-    robots = get_robot_list()
-
-    robot_pnl_list = []
-    robot_color_list = []
-    winner_perc_list = []
-    loser_perc_list = []
-
-    for robot in robots:
-
-        if robot == "ALL":
-            robot_df = trade_df
-        else:
-            robot_df = trade_df[trade_df["robot"] == robot]
-
-        try:
-            total_trades = len(list(robot_df["pnl"]))
-            winning_nmr = len(list(robot_df[robot_df["pnl"] > 0]["pnl"]))
-            losing_nmr = len(list(robot_df[robot_df["pnl"] < 0]["pnl"]))
-            win_per = round(int(winning_nmr)/int(total_trades), 2)*100
-            los_per = round(int(losing_nmr) / int(total_trades), 2)*100*-1
-        except:
-            win_per = 0
-            los_per = 0
-        robot_pnl = round(robot_df["pnl"].sum(), 2)
-        robot_pnl_list.append(robot_pnl)
-        winner_perc_list.append(win_per)
-        loser_perc_list.append(los_per)
-
-        if float(robot_pnl) < 0:
-            robot_color_list.append('#842518')
-        else:
-            robot_color_list.append('#405347')
-
-    pnls = list(trade_df["pnl"])
-    pnl_label = [label for label in range(len(pnls))]
-    cum_pnl = cumulative(pnls)
-
-    pnl_dict = {"pnls": pnls,
-                "labels": pnl_label,
-                "cum_pnl": cum_pnl,
-                "colors": color_list,
-                "number_of_trades": len(pnls)}
-
-    robot_pnls = {"robot_pnl": robot_pnl_list,
-                  "robot_label": robots,
-                  "color": robot_color_list}
-
-    win_lose = {"winners": winner_perc_list,
-                "losers": loser_perc_list,
-                "robot_label": robots}
-
-    return pnl_dict, robot_pnls, win_lose
-
-
-def get_results(request):
-
-    print("")
-    print("Loading default settings")
-
-    default_data = HomePageDefault.objects.filter().values()
-    default_account = default_data[0]["account_number"]
-    robot_list = get_robot_list(account=default_account)
-    broker_account = BrokerAccounts.objects.filter(account_number=default_account).values()[0]
-
-    print("Default Account:", default_account)
-    print("Loading robot list from db:", robot_list)
-    print("Loading broker account information")
-
-    if request.method == "POST":
-        trade_side = request.POST.get("side")
-        robot_name = request.POST.get("robot_name")
-        start_date = request.POST.get("start_date")
-        end_date = request.POST.get("end_date")
-
-        print("Parameters received:")
-        print("Trade Side:", trade_side)
-        print("Robot Name:", robot_name)
-        print("Start Date: ", start_date)
-
-    print("Today's date:", get_days()["today"])
-
-    if trade_side == "ALL" and robot_name == "ALL":
-        trades = Trades.objects.filter(status="CLOSE",
-                                       close_time__range=[start_date, end_date]).values()
-    elif trade_side == "ALL":
-        trades = Trades.objects.filter(status="CLOSE",
-                                       robot=robot_name,
-                                       close_time__range=[start_date, end_date]).values()
-    else:
-        print("Robot+Side parameters")
-        trades = Trades.objects.filter(status="CLOSE",
-                                       side=trade_side,
-                                       robot=robot_name,
-                                       close_time__range=[start_date, end_date]).values()
-
-    all_pnls = get_trade_pnls(trades=trades)
-
-    # Loading account balance from broker
-    print("Get account history from broker")
-
-    try:
-        balance_list = get_balance_history(start_date=start_date, end_date=end_date)
-    except:
-        balance_list = []
-
-    # SL Exposure
-    try:
-        sl_exposure_list = calculate_risk_exposure()
-    except:
-        sl_exposure_list = []
-        print("There are no open trades. SL Exposure cannot be calculated")
-
-    # If there is no record for the robot for the preiod the codes goes to this line
-    if all_pnls == "empty":
-
-        print("Empty Dataframe")
-        return render(request, 'home.html', {"dates": get_days(),
-                                             "robots": robot_list,
-                                             "message": "empty",
-                                             "accounts": get_account_data(),
-                                             "account_info": balance_list[4],
-                                             "balance": balance_list[0],
-                                             "balance_label": balance_list[1],
-                                             "nmbr_trades_bal": balance_list[2],
-                                             "broker": broker_account,
-                                             "robot_perf": [],
-                                             "pnl": [],
-
-                                             })
-
-    return render(request, 'home.html', {"dates": get_days(),
-                                         "robots": robot_list,
-                                         "robot_name": robot_name,
-                                         "accounts": get_account_data(),
-                                         "account_info": balance_list[4],
-                                         "balance": balance_list[0],
-                                         "balance_label": balance_list[1],
-                                         "nmbr_trades_bal": balance_list[2],
-                                         "side": trade_side,
-                                         "broker": broker_account,
-                                         "robot_perf": all_pnls[1],
-                                         "pnl": all_pnls[0],
-                                         "br_trades": balance_list[3],
-                                         "risk": sl_exposure_list,
-                                         "win_lose": all_pnls[2],
-                                         "message": "",
-                                         })
 
 
 # Settings
@@ -587,7 +442,7 @@ def switch_account(request):
     if request.method == "POST":
         account = request.POST.get("data")
         account_data = get_account_data(account_number=account)
-        robot_list = get_robot_list(account=account)
+        robot_list = get_robots(account=account)
 
         print(robot_list)
 

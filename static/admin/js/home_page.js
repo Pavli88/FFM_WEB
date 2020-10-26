@@ -1,12 +1,67 @@
+// Loading default parameters
+let now = new Date()
+let day = ("0" + now.getDate()).slice(-2)
+let month = ("0" + (now.getMonth() + 1)).slice(-2)
+let today = now.getFullYear()+"-"+(month)+"-"+(day)
+let firstDay = now.getFullYear()+"-"+(month)+"-01"
+$(".endDay").val(today)
+$(".startDay").val(firstDay)
 
+// Loading all robot chart data
+let robotBtn = $("#getChartBtn")
+robotBtn.click(getRobotChartData)
 
 function getRobotChartData() {
-    alert("button clicked")
+    $("#robotChartsDiv").show()
+    let robot = $("#robot_selector").val()
+    let startDate = $("#start").val()
+    let endDate = $("#end").val()
+
+    console.log(robot, startDate, endDate)
+    $.get("robot_chart_data/", {"robot": robot, "start_date": startDate, "end_date": endDate}, function (response) {
+        console.log("Success")
+        // console.log(response["balance"])
+        let realizedPnlList = [] // List for realized Pnl
+        let dateList = []
+        let closeBalList = []
+        for (let balData of response["balance"]){
+            console.log(balData)
+            dateList.push(balData["date"])
+            realizedPnlList.push(balData["realized_pnl"])
+            closeBalList.push(balData["close_balance"])
+        }
+
+        chart("#robotChart1", realizedPnlList, dateList, "Realized P&L")
+        chart("#robotChart2", closeBalList, dateList, "Closing Balance")
+    })
 }
 
 // Charting function
-function chart(id, dataSet) {
+function chart(id, data, dates, title) {
     let ctx = document.querySelector(id).getContext('2d');
+    console.log(data)
+    // Loading Charts
+    let dataSet = {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: title,
+                data: data,
+
+            }]
+        },
+        // options: {
+        //     scales: {
+        //         yAxes: [{
+        //             ticks: {
+        //                 // beginAtZero: true
+        //             }
+        //         }]
+        //     }
+        // }
+    }
+
     let chart = new Chart(ctx, dataSet)
 }
 
@@ -82,50 +137,6 @@ function switchAccount() {
 
 // Fetching robot related chart data from back end
 
-// Loading Charts
-let data_set = {
-    type: 'bar',
-    data: {
-        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-        datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)'
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true
-                }
-            }]
-        }
-    }
-}
-
-chart("#bar_chart_2", data_set)
 
 
-    // type = 'bar',
-    // labels = "{{robot_perf.robot_label|safe}}",
-    // label = 'P&L by Robots',
-    // bgColor = "{{ robot_perf.color|safe }}",
-    // borderColor = '#19393D', data = "{{ robot_perf.robot_pnl }}"
 
