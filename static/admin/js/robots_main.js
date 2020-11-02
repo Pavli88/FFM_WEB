@@ -1,11 +1,24 @@
+// Loading default parameters
+let now = new Date()
+let day = ("0" + now.getDate()).slice(-2)
+let month = ("0" + (now.getMonth() + 1)).slice(-2)
+let today = now.getFullYear()+"-"+(month)+"-"+(day)
+let firstDay = now.getFullYear()+"-"+(month)+"-01"
+$("#processStartDate").val(firstDay)
+$("#processEndDate").val(today)
+
 // Robot process calculation panel
 let calcButton = $("#calc_btn")
 let process = $("#robot_proc_selector")
 let robot = $("#robot")
-let startDate = $("#start")
+let startDate = $("#processStartDate")
+let endDate = $("#processEndDate")
+let calcLoadingDiv = $("#calcLoadingDiv")
+calcLoadingDiv.hide()
 
 calcButton.click(robotProcess)
 function robotProcess() {
+    calcLoadingDiv.show()
     $.ajax({
         type: "POST",
         url: "process_hub/",
@@ -14,9 +27,11 @@ function robotProcess() {
             process: process.val(),
             robot: robot.val(),
             date: startDate.val(),
+            endDate: endDate.val(),
         },
-        success: function (process, robot, date) {
-            console.log("success")
+        success: function (response) {
+            alert(response["message"][0])
+            calcLoadingDiv.hide()
         }
     })
 }

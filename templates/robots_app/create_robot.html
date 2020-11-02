@@ -34,7 +34,10 @@
             </select>
         </div>
         <div class="form-group" style="padding: 5px">
-            <input class="form-control" type="date" id="start" name="trip-start" value="2020-10-14">
+            <input class="form-control" type="date" id="processStartDate" name="trip-start">
+        </div>
+        <div class="form-group" style="padding: 5px">
+            <input class="form-control" type="date" id="processEndDate" name="trip-start">
         </div>
         <div class="form-group" style="padding: 5px">
             <button type="button" class="btn btn-outline-dark" id="calc_btn">
@@ -43,6 +46,12 @@
                     <path fill-rule="evenodd"
                           d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
                 </svg>
+            </button>
+        </div>
+        <div class="form-group" style="padding: 5px" id="calcLoadingDiv">
+            <button class="btn btn-outline-dark" type="button" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Calculating...
             </button>
         </div>
     </div>

@@ -17,10 +17,10 @@ function getRobotChartData() {
     let startDate = $("#start").val()
     let endDate = $("#end").val()
 
+    $()
+
     console.log(robot, startDate, endDate)
     $.get("robot_chart_data/", {"robot": robot, "start_date": startDate, "end_date": endDate}, function (response) {
-        console.log("Success")
-        // console.log(response["balance"])
         let realizedPnlList = [] // List for realized Pnl
         let dateList = []
         let closeBalList = []
@@ -31,18 +31,22 @@ function getRobotChartData() {
             closeBalList.push(balData["close_balance"])
         }
 
-        chart("#robotChart1", realizedPnlList, dateList, "Realized P&L")
-        chart("#robotChart2", closeBalList, dateList, "Closing Balance")
+        $("#robotStrategy").text(response["robot"][0]["strategy"])
+        $("#robotInceptionDate").text(response["robot"][0]["inception_date"])
+        $("#robotSecurity").text(response["robot"][0]["security"])
+        $("#robotStatus").text(response["robot"][0]["status"])
+        chart("#robotChart1", realizedPnlList, dateList, "Realized P&L", 'bar')
+        chart("#robotChart2", closeBalList, dateList, "Closing Balance", 'line')
     })
 }
 
 // Charting function
-function chart(id, data, dates, title) {
+function chart(id, data, dates, title, type) {
     let ctx = document.querySelector(id).getContext('2d');
     console.log(data)
     // Loading Charts
     let dataSet = {
-        type: 'line',
+        type: type,
         data: {
             labels: dates,
             datasets: [{

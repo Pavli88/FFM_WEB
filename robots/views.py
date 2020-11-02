@@ -271,15 +271,17 @@ def robot_process_hub(request):
         process = request.POST.get("process")
         robot = request.POST.get("robot")
         date = request.POST.get("date")
+        end_date = request.POST.get("endDate")
 
     print("PROCESS:", process)
     print("ROBOT:", robot)
-    print("DATE:", date)
+    print("START DATE:", date)
+    print("END DATE:", end_date)
 
     if process == "Balance":
-        balance_calc(robot=robot, calc_date=date)
+        process_response = balance_calc(robot=robot, calc_date=date)
 
-    response = {"securities": [0]}
+    response = {"message": [process_response]}
 
     print("Sending data to front end")
 

@@ -297,7 +297,7 @@ def calculate_risk_exposure():
     return risk_dict
 
 
-def get_robots(account=None):
+def get_robots(account=None, name=None):
 
     """
     Function to get a list of robots from the db.
@@ -305,14 +305,15 @@ def get_robots(account=None):
     """
 
     print("======================")
-    print("GET ROBOTS FOR ACCOUNT")
+    print("      GET ROBOTS      ")
     print("======================")
-    print("Account:", account)
 
-    if account is None:
+    if account is None and name is None:
         robots = Robots.objects.filter().values()
-    else:
+    elif account is not None:
         robots = Robots.objects.filter(account_number=account).values()
+    elif name is not None:
+        robots = Robots.objects.filter(name=name).values()
 
     # robot_df = pd.DataFrame(list(robots))
     #
@@ -344,15 +345,17 @@ def get_robot_charts_data(request):
 
     if request.method == "GET":
         robot = request.GET.get("robot")
-        start_date= request.GET.get("start_date")
+        start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         print("ROBOT:", robot)
         print("START DATE:", start_date)
         print("END DATE:", end_date)
 
+        robot_data = get_robots(name=robot)
         balance = get_robot_balance(robot=robot, start_date=start_date, end_date=end_date)
 
-    response = {"balance": list(balance)}
+    response = {"balance": list(balance),
+                "robot": list(robot_data)}
 
     print("Sending response to front end")
     print("")

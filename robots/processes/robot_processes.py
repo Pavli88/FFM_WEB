@@ -100,11 +100,10 @@ def balance_calc(robot, calc_date):
                                                                     close_time=date,
                                                                     status="CLOSED").values()))
 
-    print(trades_df_closed)
-
     if trades_df_closed.empty:
         realized_pnl = 0.0
     else:
+        print(trades_df_closed)
         realized_pnl = trades_df_closed["pnl"].sum()
 
     print("REALIZED PNL:", realized_pnl)
@@ -120,7 +119,11 @@ def balance_calc(robot, calc_date):
     print("CASH FLOW:", cash_flow)
 
     open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
-    open_balance = open_balance_table["close_balance"].sum()
+    print(open_balance_table)
+    if open_balance_table.empty:
+        return "There is no opening balance data for T-1"
+    else:
+        open_balance = open_balance_table["close_balance"].sum()
 
     print("OPENING BALANCE:", open_balance)
 
@@ -146,3 +149,5 @@ def balance_calc(robot, calc_date):
             ret=round(ret, 4),
             unrealized_pnl=0.0,
             date=date).save()
+
+    return "Calculation is completed!"
