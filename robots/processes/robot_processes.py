@@ -84,17 +84,10 @@ class RobotProcesses:
 
 
 def balance_calc(robot, calc_date):
-    print("=========================")
-    print("ROBOT BALANCE CALCULATION")
-    print("=========================")
-    print("ROBOT:", robot)
-    print("CALCULATION DATE:", calc_date)
 
     date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
 
     t_min_one_date = date + timedelta(days=-1)
-
-    print("T-1 DATE:", t_min_one_date.date())
 
     trades_df_closed = pd.DataFrame(list(RobotTrades.objects.filter(robot=robot,
                                                                     close_time=date,
@@ -103,10 +96,7 @@ def balance_calc(robot, calc_date):
     if trades_df_closed.empty:
         realized_pnl = 0.0
     else:
-        print(trades_df_closed)
         realized_pnl = trades_df_closed["pnl"].sum()
-
-    print("REALIZED PNL:", realized_pnl)
 
     cash_flow_table = pd.DataFrame(list(RobotCashFlow.objects.filter(robot_name=robot,
                                                               date=date).values()))
@@ -116,30 +106,23 @@ def balance_calc(robot, calc_date):
     else:
         cash_flow = cash_flow_table["cash_flow"].sum()
 
-    print("CASH FLOW:", cash_flow)
-
     open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
-    print(open_balance_table)
+
     if open_balance_table.empty:
-        return "There is no opening balance data for T-1"
+        message = str(calc_date) + " There is no opening balance data for T-1"
+        return message
     else:
         open_balance = open_balance_table["close_balance"].sum()
 
-    print("OPENING BALANCE:", open_balance)
-
     close_balance = cash_flow + realized_pnl + open_balance
-
-    print("CLOSING BALANCE:", close_balance)
 
     ret = realized_pnl / open_balance
 
-    print("RETURN:", round(ret, 4))
-
-    print("Clearing out prvious record for the same day")
-
     Balance.objects.filter(date=date).delete()
 
-    print("Saving calculated records to robot balances table")
+    message = "DATE: " + str(calc_date) + " T-1 DATE: " + str(t_min_one_date.date()) + " REALIZED PNL: " + str(round(realized_pnl, 2)) + " CASH FLOW: " + str(cash_flow) + " OPENING BALANCE: " + str(round(open_balance, 2)) + " CLOSING BALANCE: " + str(round(close_balance, 2)) + " RETURN: " + str(round(ret, 4))
+
+    print(message)
 
     Balance(robot_name=robot,
             opening_balance=round(open_balance, 4),
@@ -150,4 +133,4 @@ def balance_calc(robot, calc_date):
             unrealized_pnl=0.0,
             date=date).save()
 
-    return "Calculation is completed!"
+    return message

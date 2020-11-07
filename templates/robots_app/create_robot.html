@@ -31,6 +31,7 @@
                 {% for robot in robots %}
                 <option>{{ robot.name}}</option>
                 {% endfor %}
+                <option>ALL</option>
             </select>
         </div>
         <div class="form-group" style="padding: 5px">
@@ -55,8 +56,11 @@
             </button>
         </div>
     </div>
-    <div class="card_container form-row align-items-center ">
-
+    <div class="card_container" style="width: 100%; overflow-y:scroll;">
+        <table class="table-striped" style="width: 100%" id="robotMessageTable">
+            <tbody id="robotTableMessageBody">
+            </tbody>
+        </table>
     </div>
 </div>
 

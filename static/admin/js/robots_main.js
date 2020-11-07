@@ -14,11 +14,17 @@ let robot = $("#robot")
 let startDate = $("#processStartDate")
 let endDate = $("#processEndDate")
 let calcLoadingDiv = $("#calcLoadingDiv")
-calcLoadingDiv.hide()
+let robotMessageTable = $("#robotTableMessageBody")
 
+calcLoadingDiv.hide()
 calcButton.click(robotProcess)
+
 function robotProcess() {
     calcLoadingDiv.show()
+    try {
+        robotMessageTable.empty()
+    } catch (err) {
+    }
     $.ajax({
         type: "POST",
         url: "process_hub/",
@@ -30,7 +36,19 @@ function robotProcess() {
             endDate: endDate.val(),
         },
         success: function (response) {
-            alert(response["message"][0])
+
+            for (let msg of response["message"]){
+                let newMessagTr = document.createElement("tr")
+                let newMessage = document.createElement("td")
+                let icon = document.createElement("td")
+
+                newMessagTr.classList.add("robot_table_row")
+                newMessage.innerText = msg
+                newMessagTr.append(icon)
+                newMessagTr.append(newMessage)
+                robotMessageTable.append(newMessagTr)
+
+            }
             calcLoadingDiv.hide()
         }
     })

@@ -10,6 +10,8 @@ from accounts.models import *
 from robots.forms import *
 from accounts.models import *
 from instrument.models import *
+import datetime
+from datetime import timedelta
 
 
 # Main site for robot configuration
@@ -22,7 +24,7 @@ def robots_main(request):
     # broker_data = get_brokers()
     # broker_list = [(broker["id"], broker["broker_name"]) for broker in broker_data]
 
-    robots = get_all_robots()
+    robots = get_robots(status="active")
     robot_form = RobotEntryForm()
 
     return render(request, 'robots_app/create_robot.html', {"robot_form": robot_form,
@@ -93,7 +95,7 @@ def load_robots(request):
 
     print("Request from front end to load all robot data")
 
-    robots = get_all_robots()
+    robots = get_robots()
 
     response = {"securities": list(robots)}
 
@@ -175,7 +177,7 @@ def delete_robot(request):
 # ===================================
 
 
-def get_all_robots():
+def get_robots(status=None):
 
     """
     Queries out all robots from database and passes it back to the html
@@ -185,7 +187,10 @@ def get_all_robots():
 
     print("Fetching robot data from database")
 
-    robots = Robots.objects.filter().values()
+    if status is not None:
+        robots = Robots.objects.filter(status=status).values()
+    else:
+        robots = Robots.objects.filter().values()
 
     return robots
 
@@ -271,19 +276,48 @@ def robot_process_hub(request):
         process = request.POST.get("process")
         robot = request.POST.get("robot")
         date = request.POST.get("date")
-        end_date = request.POST.get("endDate")
+        end_date_str = request.POST.get("endDate")
 
     print("PROCESS:", process)
     print("ROBOT:", robot)
-    print("START DATE:", date)
-    print("END DATE:", end_date)
+    print("START DATE:", date, )
+    print("END DATE:", end_date_str)
+
+    end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
     if process == "Balance":
-        process_response = balance_calc(robot=robot, calc_date=date)
 
-    response = {"message": [process_response]}
+        print("=========================")
+        print("ROBOT BALANCE CALCULATION")
+        print("=========================")
 
-    print("Sending data to front end")
+        if robot == "ALL":
+            robot_list = [record["name"] for record in get_robots(status="active")]
+        else:
+            robot_list = [robot]
+
+        print("ROBOTS:", robot_list)
+        print("")
+
+        for active_robot in robot_list:
+            print("")
+            print(">>> ROBOT:", active_robot)
+
+            start_date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+
+            message_list = []
+
+            while start_date < end_date:
+                start_date = start_date + timedelta(days=1)
+                process_response = balance_calc(robot=active_robot, calc_date=str(start_date))
+                message_list.append(process_response)
+
+                # if process_response != "Calculation is completed!":
+                #     break
+
+    response = {"message": message_list}
+
+    print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
 
