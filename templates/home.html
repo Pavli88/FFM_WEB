@@ -168,8 +168,8 @@
 
 <br>
 <!--Robot charts-->
-<div style="width: 100%; height: 400px; overflow: scroll; display: none" id="robotChartsDiv">
-    <div class="row" style="justify-content: center; align-items: center; height: 50px">
+<div style="width: 100%; height: 600px; overflow: scroll; display: none" id="robotChartsDiv">
+    <div class="row" style="justify-content: center; align-items: center; height: 100px">
         <div style="padding: 5px">
             <h5 style="color: #19393D"><strong>Strategy</strong></h5>
         </div>
@@ -200,15 +200,11 @@
 
     </div>
     <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
-        <div class="col" style="height: 100%">
-            <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                <canvas id="robotChart1" class="my-4 w-100 chartjs-render-monitor"></canvas>
-            </div>
+        <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%">
+            <canvas id="robotChart1" width="300" height="200" class="chartjs-render-monitor" style="display: block; cursor: default;"></canvas>
         </div>
-        <div class="col" style="height: 100%">
-            <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                <canvas id="robotChart2" class="my-4 w-100 chartjs-render-monitor"></canvas>
-            </div>
+        <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%; margin: 10px">
+            <canvas id="robotChart2" width="300" height="200" class="chartjs-render-monitor" style="display: block; cursor: default;"></canvas>
         </div>
     </div>
     <div class="row" style="justify-content: center; align-items: center; height: 50px">
