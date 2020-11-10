@@ -118,7 +118,7 @@ def balance_calc(robot, calc_date):
 
     ret = realized_pnl / open_balance
 
-    Balance.objects.filter(date=date).delete()
+    Balance.objects.filter(date=date, robot_name=robot).delete()
 
     message = "DATE: " + str(calc_date) + " T-1 DATE: " + str(t_min_one_date.date()) + " REALIZED PNL: " + str(round(realized_pnl, 2)) + " CASH FLOW: " + str(cash_flow) + " OPENING BALANCE: " + str(round(open_balance, 2)) + " CLOSING BALANCE: " + str(round(close_balance, 2)) + " RETURN: " + str(round(ret, 4))
 
