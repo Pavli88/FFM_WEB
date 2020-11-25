@@ -397,14 +397,14 @@ def incoming_trade(request):
             print("     CREATING ORDER      ")
             print("-------------------------")
 
-            trade_side = signal[4]
+            trade_side = signal[-1]
 
             print("TRADE SIDE:", trade_side)
 
             if trade_side == "BUY":
                 quantity = str(signal[2])
             elif trade_side == "SELL":
-                quantity = str(signal[2] * -1)
+                quantity = str(int(signal[2]) * -1)
             elif trade_side == "Close":
 
                 print("OPEN TRADES:")
