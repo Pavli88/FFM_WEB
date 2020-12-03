@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from portfolio.processes.processes import *
 from instrument.models import *
 
+
 # Main site for portfolios
 def portfolios_main(request):
 

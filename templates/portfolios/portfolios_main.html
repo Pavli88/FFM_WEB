@@ -9,35 +9,47 @@
 
 {% block main_block%}
 <br>
-<div class="card text-center shadow rounded" style="width: 100%; height: 60px; background: #19393D">
-    <h3 style="color: white"><strong>Portfolio Management</strong></h3>
+<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;  display: flex">
+    <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
+        <div style="padding-right: 15px;">
+            <h5 style="color: #19393D"><strong>Portfolio Group</strong></h5>
+        </div>
+        <div style="padding-right: 15px;">
+            <button type="button" class="btn btn-outline-dark" id="newPortBtn" data-toggle="modal" data-target="#newPort">New Portfolio</button>
+        </div>
+    </div>
 </div>
 
 <!--Portfolio-->
 <br>
-<div class="card h-md-100 shadow rounded" style="width: 100%; height: 60px; display: flex">
-    <div class="card-header" style="display: flex">
-        <h5 style="color: #19393D"><strong>Portfolio</strong></h5>
-        <div class="col-auto">
+<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;  display: flex">
+    <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
+        <div style="padding-right: 15px;">
+            <h5 style="color: #19393D"><strong>Portfolio</strong></h5>
+        </div>
+        <div style="padding-right: 15px;">
             <select class="form-control form-control-sm" name="port_name" id="port_selector" required>
                 {% for portfolio in portfolios %}
                 <option>{{portfolio.portfolio_name}}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="col-auto">
+        <div style="padding-right: 15px;">
+            <button type="button" class="btn btn-outline-dark" id="newCashBtn" data-toggle="modal" data-target="#newCashFlow">New Cash Flow</button>
+        </div>
+        <div style="padding-right: 15px;">
+            <button type="button" class="btn btn-outline-dark" id="newTrdBtn" data-toggle="modal" data-target="#newPortTrade">Trade</button>
+        </div>
+        <div class="form-group" style="padding-right: 15px;">
             <label class="card-text">NAV</label>
             <label id="nav_value">1000</label>
             <label>$</label>
         </div>
-        <div class="col-auto">
+        <div class="form-group" style="padding-right: 15px;">
             <label class="card-text">Available Cash</label>
             <label id="available_cash">500</label>
             <label>$</label>
         </div>
-    </div>
-    <div class="card_container form-row align-items-center col-auto">
-
     </div>
 </div>
 
@@ -92,53 +104,138 @@
         </div>
     </div>
 </div>
-<!--Trade Panel-->
-<br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 500px" id="trade_panel">
-    <h5 class="card-header" style="color: #19393D"><strong>Trade</strong></h5>
-    <div class="col-auto">
-        <label for="sec_select">Security Type</label>
-    </div>
-    <div class="col-auto">
-        <select class="form-control form-control-sm" name="sec_type" id="sec_select" style="width: 200px" required>
-            <option>Robot</option>
-            <option>Equity</option>
-            <option>Commodity</option>
-            <option>Bond</option>
-            <option>Currency</option>
-        </select>
-    </div>
-    <div class="col-auto">
-        <label>Security</label>
-    </div>
-    <div class="col-auto">
-        <select class="form-control form-control-sm" name="security" id="secs" style="width: 200px" required>
-            <option class="securities">Robot</option>
-            <option class="securities">Investment</option>
-        </select>
-    </div>
-    <div class="col-auto">
-        <label>Quantity</label>
-    </div>
-    <div class="col-auto">
-        <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty" style="width: 200px"
-               required>
 
-        <div class="form-group">
-            <label>Price</label>
-            <input type="number" class="form-control form-control-sm" min="0.0" , step="10.0" name="price" id="price"
-                   style="width: 200px" required>
+<!--Modals-->
+<!--New Portfolio-->
+<div class="modal fade" id="newPort" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="newPortLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newPortLabel"><strong>New Portfolio</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Portfolio Name</label>
+                        <input id="robot_name" class="form-control form-control-sm" type="text" name="port_name"
+                                required>
+                    </div>
+                    <div class="form-group">
+                        <label>Portfolio Type</label>
+                        <select class="form-control form-control-sm" name="port_type" required>
+                            <option>Trade</option>
+                            <option>Investment</option>
+                        </select>
+                    </div>
+                    <input class="btn btn-primary submit_button" type="submit" name="button" value="Create" style="width: 100%">
+                </form>
+            </div>
         </div>
-        <div class="col-auto" style="display: flex">
-            <label>Market Value:</label>
-            <label id="mv">1230</label>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary" style="width: 100px; height: 50px;" id="trade_btn">Trade</button>
-        </div>
-
     </div>
 </div>
+
+<!--New Cash Flow-->
+<div class="modal fade" id="newCashFlow" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="newCashFlowLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newCashFlowLabel"><strong>New Cash Flow</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form class="entry_form" action="{% url 'create port cash flow' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Portfolio</label>
+                        <select class="form-control form-control-sm" name="port_name" required>
+                            {% for portfolio in portfolios %}
+                            <option>{{portfolio.portfolio_name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select class="form-control form-control-sm" name="type" required>
+                            <option>INFLOW</option>
+                            <option>OUTFLOW</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ammount</label>
+                        <input type="number" class="form-control form-control-sm" min="0.0" step="10.0" name="amount"
+                               required>
+                    </div>
+                    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add" style="width: 100%"><br>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Portfolio Trade-->
+
+<div class="modal fade" id="newPortTrade" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="newPortTradeLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newPortTradeLabel"><strong>Portfolio Trade</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="sec_select">Security Type</label>
+                    <select class="form-control form-control-sm" name="sec_type" id="sec_select"
+                            style="width: 100%" required>
+                        <option>Robot</option>
+                        <option>Equity</option>
+                        <option>Commodity</option>
+                        <option>Bond</option>
+                        <option>Currency</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Security</label>
+                    <select class="form-control form-control-sm" name="security" id="secs" style="width: 100%"
+                            required>
+                        <option class="securities">Robot</option>
+                        <option class="securities">Investment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty"
+                           style="width: 100%"
+                           required>
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="number" class="form-control form-control-sm" min="0.0" , step="10.0"
+                           name="price" id="price"
+                           style="width: 100%" required>
+                </div>
+                <div class="form-group">
+                    <label>Market Value:</label>
+                    <label id="mv">1230</label>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" style="width: 100%" id="trade_btn">Trade</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% load static %}
 <script src="{% static 'admin/js/portfolios_main.js' %}"></script>
 
@@ -147,46 +244,4 @@
 <!--New portfolio creator form-->
 {% block entry_form %}
 
-<br>
-<form class="entry_form" action="{% url 'create portfolio' %}" method="POST">
-    {% csrf_token %}
-    <h5><strong>New Portfolio</strong></h5>
-    <div class="form-group">
-        <input id="robot_name" class="form-control form-control-sm" type="text" name="port_name"
-               placeholder="Portfolio Name" required>
-    </div>
-    <div class="form-group">
-        <label>Portfolio Type</label>
-        <select class="form-control form-control-sm" name="port_type" required>
-            <option>Trade</option>
-            <option>Investment</option>
-        </select>
-    </div>
-    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Create"><br>
-</form>
-
-<br>
-<form class="entry_form" action="{% url 'create port cash flow' %}" method="POST">
-    {% csrf_token %}
-    <h5><strong>New Cash Flow</strong></h5>
-    <div class="form-group">
-        <label>Portfolio</label>
-        <select class="form-control form-control-sm" name="port_name" required>
-            {% for portfolio in portfolios %}
-            <option>{{portfolio.portfolio_name}}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Type</label>
-        <select class="form-control form-control-sm" name="type" required>
-            <option>INFLOW</option>
-            <option>OUTFLOW</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <input type="number" class="form-control form-control-sm" min="0.0" step="10.0" name="amount" required>
-    </div>
-    <input class="btn btn-primary submit_button" type="submit" , name="button" value="Add"><br>
-</form>
 {% endblock %}

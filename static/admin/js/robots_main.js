@@ -146,7 +146,7 @@ function trade() {
         url: "signals/trade/",
         data: {
             csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            mydata: "silver_test_live buy 1 BUY",
+            mydata: "silver_test_live buy 1 SELL",
         },
         success: function (mydata){
         }
