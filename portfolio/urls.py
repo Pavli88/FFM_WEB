@@ -10,4 +10,5 @@ urlpatterns = [
     path('portfolios/sec_types/', get_securities_by_type),
     path('portfolios/trade_port/', trade),
     path('portfolios/process_hub/', process_hub),
+    path('portfolios/get_portfolio_data/', get_portfolio_data),
 ]

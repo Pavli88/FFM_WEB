@@ -43,6 +43,11 @@ def new_cash_flow(request):
 
         print("New cashflow was created!")
 
+        if type == "Funding":
+            port = Portfolio.objects.get(portfolio_name=portfolio_name)
+            port.status = "Funded"
+            port.save()
+
     return redirect('portfolio main')
 
 
@@ -55,13 +60,18 @@ def create_portfolio(request):
     if request.method == "POST":
         port_name = request.POST.get("port_name")
         port_type = request.POST.get("port_type")
+        port_currency = request.POST.get("port_currency")
 
         print("PORTFOLIO NAME:", port_name)
         print("PORTFOLIO TYPE", port_type)
+        print("PORTFOLIO CURRENCY", port_currency)
 
         try:
             Portfolio(portfolio_name=port_name,
-                      portfolio_type=port_type).save()
+                      portfolio_type=port_type,
+                      currency=port_currency,
+                      status="Not Funded").save()
+
             print("New Portfolio was created!")
 
             print("Creating nav record for the portfolio")
@@ -75,16 +85,43 @@ def create_portfolio(request):
     return redirect('portfolio main')
 
 
-def get_portfolios():
+def get_portfolios(port=None):
 
     """
     Retrieves all portfolio records from database
     :return:
     """
 
-    portfolios = Portfolio.objects.filter().values()
+    if port is None:
+        portfolios = Portfolio.objects.filter().values()
+    else:
+        portfolios = Portfolio.objects.filter(portfolio_name=port).values()
 
     return portfolios
+
+
+def get_portfolio_data(request):
+
+    """
+    Function to load portfolio information to front end
+    :param request:
+    :return:
+    """
+
+    print("Request for portfolio data")
+
+    if request.method == "GET":
+        portfolio = request.GET.get("portfolio")
+
+        print("PORTFOLIO:", portfolio)
+
+        portfolio_data = get_portfolios(port=portfolio)
+
+    print("Sending response to front end")
+
+    response = {"portData": list(portfolio_data)}
+
+    return JsonResponse(response, safe=False)
 
 
 def load_chart(request):

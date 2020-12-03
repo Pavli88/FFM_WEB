@@ -50,16 +50,6 @@ portfolio.append(newOpt)
 price.keyup(calcMv)
 quantity.keyup(calcMv)
 
-// Allowing trading on portfolio and disable on All
-portfolio.change(function () {
-    if (portfolio.val() === "All"){
-        tradePanel.hide()
-    }else {
-        tradePanel.show()
-    }
-
-})
-
 // Calculates market value of the trade
 function calcMv() {
     let mv = quantity.val()*price.val()
@@ -145,4 +135,54 @@ function calculate() {
             console.log("success process submission")
         }
     })
+}
+
+// Loading selected portfolio status and information
+let portStatus = $("#portStatus")
+let portType = $("#portType")
+let portCurrency = $("#portCurrency")
+
+function loadPortInfo(){
+    $.get("get_portfolio_data/", {"portfolio": portfolio.val()}, function (data) {
+        portStatus.text(data["portData"][0]["status"])
+        portType.text(data["portData"][0]["portfolio_type"])
+        portCurrency.text(data["portData"][0]["currency"])
+
+        if (data["portData"][0]["status"] === "Not Funded"){
+            portStatus.css("color", "red")
+        }else{
+            portStatus.css("color", "green")
+        }
+    })
+}
+
+loadPortInfo()
+
+// Loading porrtfolio information on selected
+portfolio.change(function () {
+    loadPortInfo()
+})
+
+// Cash flow window
+let newCashFlowBtn = $("#newCashBtn")
+let cashForPort = $("#cashPort")
+let cashPortName = $("#cashPortName")
+let cashFlowSelector = $("#cfSelector")
+newCashFlowBtn.click(newCashFlow)
+
+function newCashFlow(){
+
+    cashForPort.text(portfolio.val())
+    cashPortName.attr('value', portfolio.val())
+
+    let allcfOptions = document.querySelectorAll('.cfOpt')
+    allcfOptions.forEach(k => k.remove())
+
+    if (portStatus.text() === "Not Funded"){
+        cashFlowSelector.append('<option class="cfOpt">Funding</option>')
+    }else{
+        cashFlowSelector.append('<option class="cfOpt">Subscription</option>')
+        cashFlowSelector.append('<option class="cfOpt">Redemption</option>')
+        cashFlowSelector.append('<option class="cfOpt">Dividend Payout</option>')
+    }
 }
