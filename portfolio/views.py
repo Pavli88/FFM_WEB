@@ -244,8 +244,8 @@ def process_hub(request):
         pos_calc(portfolio=portfolio, calc_date=start_date)
     elif process == "Portfolio Holdings":
         port_holding(portfolio=portfolio, calc_date=start_date)
-
-    response = {"securities": [0]}
+    elif process == "NAV":
+        response = nav_calc(portfolio=portfolio, calc_date=start_date)
 
     print("Sending data to front end")
 

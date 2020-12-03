@@ -1,3 +1,12 @@
+
+let now = new Date()
+let day = ("0" + now.getDate()).slice(-2)
+let month = ("0" + (now.getMonth() + 1)).slice(-2)
+let today = now.getFullYear()+"-"+(month)+"-"+(day)
+let firstDay = now.getFullYear()+"-"+(month)+"-01"
+let startDate = $("#calcStart")
+startDate.val(today)
+
 // Creating and removing End Date in calculation on load
 let singleTick = $("#single_tick")
 singleTick.click(checkMultiplePeriod)
@@ -118,7 +127,6 @@ function trade() {
 // Sending calculation to back end
 let calcButton = $("#calc_btn")
 let process = $("#process")
-let startDate = $("#start")
 
 calcButton.click(calculate)
 
@@ -131,8 +139,8 @@ function calculate() {
             start_date: startDate.val(),
             portfolio: portfolio.val(),
             },
-        success: function (quantity, price, portfolio, security, secType) {
-            console.log("success process submission")
+        success: function (response) {
+            console.log(response["message"])
         }
     })
 }

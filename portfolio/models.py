@@ -6,7 +6,7 @@ class Portfolio(models.Model):
     portfolio_type = models.CharField(max_length=30, default="")
     status = models.CharField(max_length=30, default="")
     currency = models.CharField(max_length=30, default="")
-    inception_date = models.DateTimeField(auto_now=True)
+    inception_date = models.DateField(auto_now=True)
 
 
 class CashFlow(models.Model):
@@ -14,13 +14,21 @@ class CashFlow(models.Model):
     amount = models.FloatField(default=0.0)
     type = models.CharField(max_length=30, default="")
     user = models.CharField(max_length=30, default="")
-    date = models.DateTimeField(auto_now=True)
+    date = models.DateField(auto_now=True)
 
 
 class Nav(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
-    amount = models.FloatField(default=0.0)
-    date = models.DateTimeField(auto_now=True)
+    pos_val = models.FloatField(default=0.0)
+    cash_val = models.FloatField(default=0.0)
+    accured_income = models.FloatField(default=0.0)
+    short_liab = models.FloatField(default=0.0)
+    long_liab = models.FloatField(default=0.0)
+    accured_expenses = models.FloatField(default=0.0)
+    total = models.FloatField(default=0.0)
+    units = models.FloatField(default=0.0)
+    nav_per_share = models.FloatField(default=0.0)
+    date = models.DateField(auto_now=True)
 
 
 class Trade(models.Model):
