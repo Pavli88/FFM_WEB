@@ -3,7 +3,9 @@ from portfolio.models import *
 from robots.models import *
 from django.http import JsonResponse
 from portfolio.processes.processes import *
+from robots.processes.robot_processes import *
 from instrument.models import *
+from datetime import datetime
 
 
 # Main site for portfolios
@@ -213,10 +215,16 @@ def trade(request):
         if security_type == "Robot":
             print("Amending robot cash flow table")
             print("ROBOT CASH FLOW:", cash_flow * -1)
+
             RobotCashFlow(robot_name=security,
                           cash_flow=cash_flow * -1).save()
 
             print("New cash flow was recorded for", security)
+            print("Calculating robot balance")
+
+            balance_calc_message = balance_calc(robot=security, calc_date=str(datetime.today().date()))
+
+            print(balance_calc_message)
 
     return redirect('portfolio main')
 

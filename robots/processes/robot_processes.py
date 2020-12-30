@@ -87,6 +87,8 @@ def balance_calc(robot, calc_date):
 
     date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
 
+    robot_data = Robots.objects.filter(name=robot).values()
+
     if date.weekday() == 6:
         return {"message": calc_date + ": Sunday. Calculation is not executed at weekends"}
     elif date.weekday() == 5:
@@ -118,20 +120,21 @@ def balance_calc(robot, calc_date):
     open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
 
     if open_balance_table.empty:
-        message = str(calc_date) + " There is no opening balance data for T-1"
-        return message
+        if robot_data[0]["inception_date"] == date.date():
+            print("Inception date! No previous record available.")
+            open_balance = 0.0
+            ret = realized_pnl / cash_flow
+        else:
+            return str(calc_date) + " There is no opening balance data for T-1"
     else:
         open_balance = open_balance_table["close_balance"].sum()
+        ret = realized_pnl / open_balance
 
     close_balance = cash_flow + realized_pnl + open_balance
-
-    ret = realized_pnl / open_balance
 
     Balance.objects.filter(date=date, robot_name=robot).delete()
 
     message = "DATE: " + str(calc_date) + " T-1 DATE: " + str(t_min_one_date.date()) + " REALIZED PNL: " + str(round(realized_pnl, 2)) + " CASH FLOW: " + str(cash_flow) + " OPENING BALANCE: " + str(round(open_balance, 2)) + " CLOSING BALANCE: " + str(round(close_balance, 2)) + " RETURN: " + str(round(ret, 4))
-
-    print(message)
 
     Balance(robot_name=robot,
             opening_balance=round(open_balance, 4),

@@ -14,6 +14,19 @@
                 <input class="form-control form-control-sm" type="number" id="trd_qty" name="quantity" min="0"
                        value="0" required>
             </div>
+            <div class="form-group">
+                <label for="trd_qty">SL</label>
+                <input class="form-control form-control-sm" type="number" id="sl" name="sl" step="0.01"
+                       required>
+            </div>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <label for="trd_qty">Robot</label>
+                <select class="form-control" style="height:30px;" name="robot" id="robots">
+                    {% for robot in robots %}
+                    <option>{{robot.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="col-auto" style="padding-left:15px; padding-right:15px;">
                 <select class="form-control" style="height:30px;" name="side">
                     <option>BUY</option>
@@ -21,8 +34,35 @@
                     <option selected>ALL</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="submit_trade">Submit</button>
+            <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="submit_trade">Submit</button>
+            </div>
+<!--            <div class="col-auto" style="padding-left:15px; padding-right:15px;">-->
+<!--                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="closeAllButton">Close All</button>-->
+<!--            </div>-->
         </form>
+        <div>
+            <label>Open Trades</label>
+            <div class="card_container" style="width: 100%; overflow-y:scroll;">
+                <table class="table-striped" style="width: 100%" id="openTradeTable">
+                    <thead style="width: 100%">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Robot</th>
+                        <th scope="col">Security</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Side</th>
+                        <th scope="col">Broker ID</th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="openTradeTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
 </div>
+{% load static %}
+<script src="{% static 'admin/js/trade_main.js' %}"></script>
 {% endblock %}
