@@ -170,12 +170,12 @@ def trade(request):
     print("===============")
 
     if request.method == "POST":
-        quantity = request.POST.get("quantity")
+        quantity = request.POST.get("qty")
         price = request.POST.get("price")
         portfolio = request.POST.get("portfolio")
-        security = request.POST.get("security")
-        security_type = request.POST.get("secType")
-        security_id = request.POST.get("secId")
+        security = request.POST.get("sec")
+        security_type = request.POST.get("sec_type")
+        security_id = request.POST.get("sec_id")
         market_value = float(quantity) * float(price)
         cash_flow = market_value * -1
 
@@ -218,12 +218,7 @@ def trade(request):
 
             print("New cash flow was recorded for", security)
 
-    response = {"securities": [0]}
-
-    print("Sending data to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
+    return redirect('portfolio main')
 
 
 def process_hub(request):

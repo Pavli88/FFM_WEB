@@ -87,7 +87,16 @@ def balance_calc(robot, calc_date):
 
     date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
 
-    t_min_one_date = date + timedelta(days=-1)
+    if date.weekday() == 6:
+        return {"message": calc_date + ": Sunday. Calculation is not executed at weekends"}
+    elif date.weekday() == 5:
+        return {"message": calc_date + ": Saturday. Calculation is not executed at weekends"}
+    elif date.weekday() == 0:
+        day_swift = 3
+    else:
+        day_swift = 1
+
+    t_min_one_date = date + timedelta(days=-day_swift)
 
     trades_df_closed = pd.DataFrame(list(RobotTrades.objects.filter(robot=robot,
                                                                     close_time=date,

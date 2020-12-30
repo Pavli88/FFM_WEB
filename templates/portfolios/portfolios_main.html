@@ -287,44 +287,54 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label for="sec_select">Security Type</label>
-                    <select class="form-control form-control-sm" name="sec_type" id="sec_select"
-                            style="width: 100%" required>
-                        <option>Robot</option>
-                        <option>Equity</option>
-                        <option>Commodity</option>
-                        <option>Bond</option>
-                        <option>Currency</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Security</label>
-                    <select class="form-control form-control-sm" name="security" id="secs" style="width: 100%"
-                            required>
-                        <option class="securities">Robot</option>
-                        <option class="securities">Investment</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty"
-                           style="width: 100%"
-                           required>
-                </div>
-                <div class="form-group">
-                    <label>Price</label>
-                    <input type="number" class="form-control form-control-sm" min="0.0" , step="10.0"
-                           name="price" id="price"
-                           style="width: 100%" required>
-                </div>
-                <div class="form-group">
-                    <label>Market Value:</label>
-                    <label id="mv">1230</label>
-                </div>
-                <div class="form-group">
-                    <button class="btn btn-primary" style="width: 100%" id="trade_btn">Trade</button>
-                </div>
+                <form class="entry_form" action="{% url 'trade port' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="hidden" name="portfolio" id="trdPortName">
+                    </div>
+                    <div class="form-group">
+                        <label for="sec_select">Security Type</label>
+                        <select class="form-control form-control-sm" name="sec_type" id="sec_select"
+                                style="width: 100%" required>
+                            <option>Robot</option>
+                            <option>Equity</option>
+                            <option>Commodity</option>
+                            <option>Bond</option>
+                            <option>Currency</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Security</label>
+                        <select class="form-control form-control-sm" name="security" id="secs" style="width: 100%"
+                                required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="sec_id" id="trdSecId">
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="sec" id="trdSec">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" class="form-control form-control-sm" step="10.0" name="qty" id="qty"
+                               style="width: 100%"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number" class="form-control form-control-sm" min="0.0"
+                               name="price" id="price"
+                               style="width: 100%" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Market Value:</label>
+                        <label id="mv"></label>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary submit_button" type="submit" style="width: 100%" id="trade_btn">Trade</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

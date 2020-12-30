@@ -40,8 +40,16 @@ function checkMultiplePeriod() {
 }
 
 // Updating Securities on selected security type
+let securities = document.querySelector('#secs')
 let secTypeSelector = document.querySelector("#sec_select")
+
 secTypeSelector.addEventListener("change", loadSecurities)
+
+//Changes the value of hidden security id tag on security selection
+$('#secs').change(function (){
+    $('#trdSecId').val($('#secs').val())
+    $('#trdSec').val($('#secs option:selected').text())
+})
 
 let price = $("#price")
 let quantity = $("#qty")
@@ -78,50 +86,38 @@ function loadSecurities() {
         data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'), data: secTypeSelector.value},
         success: function (data) {
 
-            let securities = document.querySelector('#secs')
             let allSecurities = securities.querySelectorAll('.securities')
 
             allSecurities.forEach(k => k.remove())
 
             for (let sec of data["securities"]){
-                console.log(sec)
                 let opt = document.createElement("option")
                 opt.innerHTML = sec["instrument_name"]
                 opt.classList.add("securities")
-                opt.setAttribute("id", sec["id"])
+                opt.setAttribute("value", sec["id"])
                 securities.appendChild(opt)
             }
 
             if (secTypeSelector.value === "Robot"){
-                console.log("price")
                 $("#price").val(1)
             }
+
+            $('#trdSecId').val($('#secs').val())
+            $('#trdSec').val($('#secs option:selected').text())
         }
     })
 
 }
 
-// Executing portfolio trade
-let tradeButton = $("#trade_btn")
-tradeButton.click(trade)
+// New portfolio trade window
+const newTradeButton = $('#newTrdBtn')
+const tradePortName = $('#trdPortName')
 
-function trade() {
-    $.ajax({
-        type: "POST",
-        url: "trade_port/",
-        data: {
-            csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            quantity: quantity.val(),
-            price: price.val(),
-            portfolio: portfolio.val(),
-            security: security.val(),
-            secType: secTypeSelector.value,
-            secId: security.children(":selected").attr("id")
-        },
-        success: function (quantity, price, portfolio, security, secType, secId) {
-            console.log("success")
-        }
-    })
+newTradeButton.click(loadTradeWindow)
+
+function loadTradeWindow() {
+    loadSecurities()
+    tradePortName.attr('value', portfolio.val())
 }
 
 // Sending calculation to back end
