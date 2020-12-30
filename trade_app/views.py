@@ -25,8 +25,6 @@ def get_open_trades(request):
 
     trades = RobotTrades.objects.filter(status="OPEN").values()
 
-    print(trades)
-
     response = {"trades": list(trades)}
 
     print("Sending data to front end")
@@ -57,7 +55,6 @@ def close_trade(request):
     else:
         env = "practice"
 
-    print(account_data)
     print("Closing Trade")
 
     open_trade = OandaV20(access_token=account_data[0]["access_token"],

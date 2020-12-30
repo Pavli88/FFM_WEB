@@ -37,7 +37,6 @@ function LoadOpenTrades(){
             newRow.append(newBtn)
 
             openTradeTableBody.append(newRow)
-            console.log(trade)
         }
         // This part is responsible for closing the open trade based on broker ID. It sends broker ID to back end
         $('.closeBtn').click(function () {
@@ -62,4 +61,3 @@ function LoadOpenTrades(){
         })
     })
 }
-console.log("open")
