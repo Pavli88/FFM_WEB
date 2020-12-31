@@ -11,7 +11,7 @@ from robots.forms import *
 from accounts.models import *
 from instrument.models import *
 import datetime
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 
 # Main site for robot configuration
@@ -385,7 +385,6 @@ def incoming_trade(request):
                 environment = "practice"
             else:
                 environment = "live"
-
 
             token = account[0]["access_token"]
 
