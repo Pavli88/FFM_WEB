@@ -4,8 +4,13 @@ const statTableBody = $("#robotStatTable")
 
 function loadStats(){
     $.get("load_robot_stats/", function (data) {
+
+        let allStats = document.querySelectorAll(".statRow")
+        allStats.forEach(k => k.remove())
+
         for (let robot of data["robots"]){
             let newRow = document.createElement("tr")
+            newRow.classList.add("statRow")
 
             let newTd1 = document.createElement("td")
             let newTd2 = document.createElement("td")
