@@ -4,6 +4,8 @@ from robots.models import *
 from accounts.models import *
 from mysite.models import *
 from django.http import JsonResponse
+from robots.processes.robot_processes import *
+from datetime import datetime
 
 
 def trade_main(request):
@@ -60,13 +62,19 @@ def close_trade(request):
     open_trade = OandaV20(access_token=account_data[0]["access_token"],
                           account_id=account_data[0]["account_number"],
                           environment=env).close_trades(trd_id=trade_id)
-    print("Update -> Database ID:", id)
+    print("Update -> Database ID:", trd_id)
 
     trade_record = RobotTrades.objects.get(id=trd_id)
     trade_record.status = "CLOSED"
     trade_record.close_price = open_trade["price"]
     trade_record.pnl = open_trade["pl"]
     trade_record.save()
+
+    print("Calculating balance for robot")
+
+    balance_calc_msg = balance_calc(robot=robot, calc_date=str(datetime.today().date()))
+
+    print(balance_calc_msg)
 
     return redirect('trade_app main')
 

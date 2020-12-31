@@ -11,7 +11,7 @@ from robots.forms import *
 from accounts.models import *
 from instrument.models import *
 import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 # Main site for robot configuration
@@ -428,6 +428,12 @@ def incoming_trade(request):
                     trade_record.close_price = open_trade["price"]
                     trade_record.pnl = open_trade["pl"]
                     trade_record.save()
+
+                print("Calculating balance for robot")
+
+                balance_calc_msg = balance_calc(robot=signal[0], calc_date=str(datetime.today().date()))
+
+                print(balance_calc_msg)
 
                 return HttpResponse(None)
 
