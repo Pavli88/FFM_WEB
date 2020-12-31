@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from mysite.models import *
 import pandas as pd
 from datetime import date
-import datetime
+from datetime import datetime
 from robots.models import *
 from accounts.models import *
 from portfolio.models import *
@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from robots.processes.robot_processes import *
 
 
 # Home page
@@ -50,6 +51,45 @@ def home(request, default_load=None):
                                          "broker": broker_account,
                                          "portfolios": get_portfolios(),
                                          })
+
+
+def load_robot_stats(request):
+    print("Loading robot stats to dashboard")
+
+    year_beg = date(date.today().year, 1, 1)
+    month_beg = date(date.today().year, date.today().month, 1)
+
+    robots = Robots.objects.filter(status="active").values()
+
+    response_data_list = []
+
+    for robot in robots:
+
+        balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+        robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
+
+        # print(robot_trades_all)
+
+        try:
+            last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
+        except:
+            last_balance = 0.0
+
+        try:
+            dtd = str(round(list(robot_trades_all["ret"])[-1]*100, 2)) + "%"
+        except:
+            dtd = 0.0
+
+        response_data_list.append({"robot": robot["name"], "security": robot["security"],
+                                   "env": robot["env"], "balance": last_balance,
+                                   "dtd": dtd, "mtd": "34.45%", "ytd": "55.23%"})
+
+    response = {"robots": response_data_list}
+
+    print("Sending response to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
 
 
 def main_page(request):
