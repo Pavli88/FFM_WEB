@@ -79,8 +79,15 @@ function loadRobots() {
             let newTd6 = document.createElement("td")
             let newTd7 = document.createElement("td")
             let newTd8 = document.createElement("td")
+            let newTd9 = document.createElement("td")
 
+            let newBtn = document.createElement("button")
+            newBtn.classList.add("closeBtn")
+            newBtn.classList.add("btn")
+            newBtn.classList.add("btn-outline-dark")
             newRow.classList.add("robot_table_row")
+
+            newTd1.classList.add("robotName")
 
             newTd1.innerText = robot["name"]
             newTd2.innerHTML = robot["strategy"]
@@ -90,6 +97,7 @@ function loadRobots() {
             newTd6.innerHTML = robot["env"]
             newTd7.innerHTML = robot["status"]
             newTd8.innerHTML = robot["account_number"]
+            newBtn.innerText = "Close"
 
             newRow.append(newTd1)
             newRow.append(newTd2)
@@ -99,8 +107,33 @@ function loadRobots() {
             newRow.append(newTd6)
             newRow.append(newTd7)
             newRow.append(newTd8)
+            newRow.append(newTd9)
+            newTd9.append(newBtn)
             robotTable.append(newRow)
         }
+        // Deleting robot from database
+        $('.closeBtn').click(function () {
+            if (confirm("Do you want to delete this robot?")) {
+                let currentRow = this.parentElement.parentElement
+                let currentRobot = currentRow.getElementsByClassName("robotName")
+
+                // Check if robot has balance
+                $.ajax({
+                    type: "POST",
+                    url: "delete_robot/",
+                    data: {
+                        csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
+                        robot_name: currentRobot[0].innerHTML,
+                    },
+                    success: function (response) {
+                        alert("Robot was deleted!")
+                    }
+                })
+                loadRobots()
+            } else {
+                console.log("Not Deleted")
+            }
+        })
     })
 }
 
@@ -133,24 +166,6 @@ function newRobot() {
         }
     })
 
-}
-
-// Trade process
-let tradeButton = $("#trade_btn")
-tradeButton.click(trade)
-
-function trade() {
-
-    $.ajax({
-        type: "POST",
-        url: "signals/trade/",
-        data: {
-            csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            mydata: "silver_test_live buy 1 SELL",
-        },
-        success: function (mydata){
-        }
-    })
 }
 
 // New Robot form js

@@ -142,36 +142,6 @@ def load_accounts(request):
 
     return JsonResponse(response, safe=False)
 
-
-def delete_robot(request):
-
-    """
-    Deletes existing robot from database
-    :param request:
-    :return:
-    """
-
-    print("")
-    print("============")
-    print("DELETE ROBOT")
-    print("============")
-
-    if request.method == "POST":
-
-        message = request.body
-        message = str(message.decode("utf-8"))
-
-        robot_id = request.POST.get("robot_id")
-
-        print("Robot ID:", robot_id)
-        print("Deleting from database...")
-
-        Robots.objects.filter(id=robot_id).delete()
-
-        print("Record has been deleted")
-
-    return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
-
 # ===================================
 # Functions to get data from database
 # ===================================
@@ -460,6 +430,27 @@ def incoming_trade(request):
             print("Robot trade table is updated!")
 
     response = {"securities": [0]}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def delete_robot(request):
+    print("============")
+    print("DELETE ROBOT")
+    print("============")
+
+    if request.method == "POST":
+        robot = request.POST.get("robot_name")
+
+    print("ROBOT:", robot)
+
+    print("Deleting robot from database")
+
+    response = {"message": "Robot was deleted"}
+
+    Robots.objects.filter(name=robot).delete()
 
     print("Sending data to front end")
 
