@@ -56,19 +56,17 @@ def home(request, default_load=None):
 def load_robot_stats(request):
     print("Loading robot stats to dashboard")
 
-    # year_beg = date(date.today().year, 1, 1)
-    # month_beg = date(date.today().year, date.today().month, 1)
+    year_beg = date(date.today().year, 1, 1)
+    month_beg = date(date.today().year, date.today().month, 1)
 
-    year_beg = date(2020, 1, 1)
-    month_beg = date(2020, 12, 1)
-    print(month_beg)
     robots = Robots.objects.filter(status="active").values()
 
     response_data_list = []
 
     for robot in robots:
 
-        # balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+        bcalc_msg = balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+        print(robot["name"], bcalc_msg)
         robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
 
         try:
