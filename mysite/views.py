@@ -56,19 +56,44 @@ def home(request, default_load=None):
 def load_robot_stats(request):
     print("Loading robot stats to dashboard")
 
-    year_beg = date(date.today().year, 1, 1)
-    month_beg = date(date.today().year, date.today().month, 1)
+    # year_beg = date(date.today().year, 1, 1)
+    # month_beg = date(date.today().year, date.today().month, 1)
 
+    year_beg = date(2020, 1, 1)
+    month_beg = date(2020, 12, 1)
+    print(month_beg)
     robots = Robots.objects.filter(status="active").values()
 
     response_data_list = []
 
     for robot in robots:
 
-        balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+        # balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
         robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
 
-        # print(robot_trades_all)
+        try:
+            yearly_trades = robot_trades_all[robot_trades_all["date"] > year_beg]
+            ytd = 1
+            for daily_ret in yearly_trades["ret"]:
+                if daily_ret == 0.0:
+                    ytd = ytd * 1
+                else:
+                    ytd = ytd * (daily_ret + 1)
+            ytd = str(round((ytd - 1) * 100, 2)) + "%"
+        except:
+            ytd = 0.0
+
+        try:
+            monthly_trades = robot_trades_all[robot_trades_all["date"] > month_beg]
+            mtd = 1
+            for daily_ret in monthly_trades["ret"]:
+                if daily_ret == 0.0:
+                    mtd = mtd * 1
+                else:
+                    mtd = mtd * (daily_ret + 1)
+            mtd = str(round((mtd - 1) * 100, 2)) + "%"
+        except:
+            mtd = 0.0
 
         try:
             last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
@@ -82,7 +107,7 @@ def load_robot_stats(request):
 
         response_data_list.append({"robot": robot["name"], "security": robot["security"],
                                    "env": robot["env"], "balance": last_balance,
-                                   "dtd": dtd, "mtd": "34.45%", "ytd": "55.23%"})
+                                   "dtd": dtd, "mtd": mtd, "ytd": ytd})
 
     response = {"robots": response_data_list}
 
