@@ -6,105 +6,60 @@
 {% endblock %}
 
 {% block main_block%}
-<div class="row" style="height:50px; border-bottom: 1px solid grey;  margin-left:5px;  margin-right:5px;">
-    <h4 class="nav-link link_color font-weight-bold">Risk Parameters</h4><br>
-</div>
-<div class="row" style="border-bottom: 1px solid grey; margin-left:5px;  margin-right:5px;">
-    <div class="col" style="border-right: 1px solid grey; margin-top: 15px; margin-bottom:15px;">
+<!--Portfolios-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 200px; display: flex">
+    <div class="card-header" style="display: flex">
         <div>
-            <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Account Level</h5>
+            <h5  style="color: #19393D"><strong>Portfolio</strong></h5>
         </div>
-        <form class=" input-sm" style="padding:10px;" action="{% url 'save_account_risk' %}" method="POST">
-            {% csrf_token %}
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Accounts</label>
-            <div class="col-auto">
-                <select class="form-control input-sm" name="account">
-                    {% for account in accounts %}
-                    <option >{{account.account_number}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Daily Loss Limit</label>
-            </div>
-            <div class="col-auto">
-                <input class="form-control input-sm" type="number" name="loss_limit" min="0.00" step="0.01" value="0.05">
-            </div>
-            <div>
-                <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Drawdown</label>
-            </div>
-            <div>
-                <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Risk Exposure</label>
-            </div>
-            <div class="col-auto">
-                <button id="acc_sub" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
-            </div>
-            <script>
-                $("#acc_sub").on("click", function(){
-                    alert('Record has been updated!');
-                })
-            </script>
-        </form>
-    </div>
-
-    <div class="col" style="border-right: 1px solid grey; margin-top:15px; margin-bottom:15px;">
         <div>
-        <h5 class="nav-link link_color font-weight-bold" style="padding:10px;">Robot Level</h5>
-    </div>
-        <div>
-            <form class=" input-sm" style="padding:10px;" action="{% url 'save_robot_risk' %}" method="POST">
-            {% csrf_token %}
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Robots</label>
-            <div class="col-auto">
-                <select class="form-control input-sm" name="robot">
-                    {% for robot in robots %}
-                    <option >{{robot}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Stop Loss Policy</label>
-            <div class="col-auto">
-                <select class="form-control input-sm" name="sl_policy">
-                    <option >percentage</option>
-                    <option >fixed</option>
-                    <option >quantity</option>
-                </select>
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Initial Exposure</label>
-            <div class="col-auto">
-                <input class="form-control input-sm" type="number" name="in_exp" min="0.00" step="0.01" value="0.05">
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Quantity</label>
-            <div class="col-auto">
-                <input class="form-control input-sm" type="number" name="qt" min="0" step="1" value="0">
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Pyramiding Level</label>
-            <div class="col-auto">
-                <input class="form-control input-sm" type="number" name="p_level" min="1" step="1" value="1">
-            </div>
-
-            <label class="nav-link link_color font-weight-bold" style="font-size:12px;">Max Drawdown</label>
-            <div class="col-auto">
-                <input class="form-control input-sm" type="number" name="max_dd" min="0.00" step="0.01" value="0.05">
-            </div>
-
-            <div class="col-auto" style="padding-top:15px;">
-                <button id="rob_sub" type="submit" class="btn btn-primary btn-sm" style="height:30px; width:60px;">Save</button>
-            </div>
-            <script>
-                $("#rob_sub").on("click", function(){
-                    alert('Record has been updated!');
-                })
-            </script>
-        </form>
+            <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
+            {% for portfolio in portfolios %}
+            <option>{{portfolio.portfolio_name}}</option>
+            {% endfor %}
+        </select>
         </div>
+    </div>
+    <div class="card_container form-row align-items-center ">
+
     </div>
 </div>
 
+<!--Robot-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 200px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div>
+            <h5  style="color: #19393D"><strong>Robot</strong></h5>
+        </div>
+        <div>
+            <select class="form-control form-control-sm" name="robotSelector" id="robotSelector">
+                {% for robot in robots %}
+                <option>{{robot.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="card_container form-row align-items-center ">
 
+    </div>
+</div>
 
+<!--Account-->
+<br>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 200px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div>
+            <h5  style="color: #19393D"><strong>Account</strong></h5>
+        </div>
+        <div>
+            <select class="form-control form-control-sm" name="accountSelector" id="accountSelector">
+        </select>
+        </div>
+    </div>
+    <div class="card_container form-row align-items-center ">
+
+    </div>
+</div>
 {% endblock %}
