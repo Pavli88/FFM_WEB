@@ -253,7 +253,7 @@ def robot_process_hub(request):
     print("START DATE:", date, )
     print("END DATE:", end_date_str)
 
-    end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
     if process == "Balance":
 
@@ -273,7 +273,7 @@ def robot_process_hub(request):
             print("")
             print(">>> ROBOT:", active_robot)
 
-            start_date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+            start_date = datetime.strptime(date, '%Y-%m-%d').date()
 
             message_list = []
 
