@@ -68,6 +68,7 @@ def close_trade(request):
     trade_record.status = "CLOSED"
     trade_record.close_price = open_trade["price"]
     trade_record.pnl = open_trade["pl"]
+    trade_record.close_time = datetime.today().date()
     trade_record.save()
 
     print("Calculating balance for robot")
