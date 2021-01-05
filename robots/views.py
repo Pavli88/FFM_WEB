@@ -11,7 +11,7 @@ from robots.forms import *
 from accounts.models import *
 from instrument.models import *
 import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 # Main site for robot configuration
@@ -307,7 +307,7 @@ def incoming_trade(request):
         signal = message.split()
 
         # Test singal
-        # signal = str(request.POST.get("mydata")).split()
+        # signal = ['dd', 'buy', '1', 'XAGUSD', 'Close']
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
