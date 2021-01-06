@@ -64,5 +64,5 @@ function loadStats(){
     })
     console.log("Loading robot stats")
 }
-
+loadStats()
 statRefreshButton.click(loadStats)

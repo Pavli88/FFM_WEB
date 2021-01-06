@@ -6,6 +6,7 @@ from portfolio.processes.processes import *
 from robots.processes.robot_processes import *
 from instrument.models import *
 from datetime import datetime
+from mysite.models import *
 
 
 # Main site for portfolios
@@ -225,6 +226,11 @@ def trade(request):
             balance_calc_message = balance_calc(robot=security, calc_date=str(datetime.today().date()))
 
             print(balance_calc_message)
+
+            print("Sending message to system messages table")
+
+            SystemMessages(msg_type="Cash Flow",
+                           msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
     return redirect('portfolio main')
 

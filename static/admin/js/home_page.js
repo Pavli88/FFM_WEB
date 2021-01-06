@@ -152,6 +152,7 @@ const messageTable = $("#msgTableBody")
 const loadMessagesBtn = $("#loadMsgsBtn")
 
 loadMessagesBtn.on("click", loadMessages)
+loadMessages()
 
 function loadMessages(){
     $.get('get_messages/', function (data) {
