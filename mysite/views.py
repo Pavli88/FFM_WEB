@@ -518,6 +518,21 @@ def switch_account(request):
     return JsonResponse(response, safe=False)
 
 
+def get_messages(request):
+    print("===================")
+    print("GET SYSTEM MESSAGES")
+    print("===================")
+
+    if request.method == "GET":
+        system_messages = SystemMessages.objects.filter().values()
+
+    response = {"message": list(system_messages)}
+
+    print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+
+
 
 
 
