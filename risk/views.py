@@ -43,6 +43,10 @@ def update_robot_risk(request):
     print("ROBOT:", robot)
     print("DAILY RISK LIMIT:", daily_risk)
 
+    robot_risk_data = RobotRisk.objects.get(robot=robot)
+    robot_risk_data.daily_risk_perc = daily_risk
+    robot_risk_data.save()
+
     response = {"message": "success"}
 
     print("Sending message to front end")
@@ -50,3 +54,20 @@ def update_robot_risk(request):
     return JsonResponse(response, safe=False)
 
 
+def get_robot_risk(request):
+    print("===================")
+    print("GET ROBOT RISK")
+    print("===================")
+
+    if request.method == "GET":
+        robot = request.GET.get("robot")
+
+    print("ROBOT:", robot)
+
+    robot_risk = RobotRisk.objects.filter(robot=robot).values()
+
+    response = {"message": list(robot_risk)}
+
+    print("Sending message to front end")
+
+    return JsonResponse(response, safe=False)

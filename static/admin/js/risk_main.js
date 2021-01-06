@@ -4,8 +4,6 @@ const robotSelector = $("#robotSelector")
 const dailyRiskLimit = $("#dailyLossLimit")
 
 riskSaveButton.click(function () {
-    console.log(robotSelector.val())
-    console.log(dailyRiskLimit.val())
     $.ajax({
         type: "POST",
         url: "update_robot_risk/",
@@ -14,7 +12,16 @@ riskSaveButton.click(function () {
             daily_risk: dailyRiskLimit.val()
             },
         success: function (response) {
-            console.log(response["message"])
+            alert("Risk data is updated!")
         }
     })
 })
+
+// Loading robot risk data on selection change
+robotSelector.on("change", loadRobotRisk)
+
+function loadRobotRisk(){
+    $.get('get_robot_risk/', {'robot': robotSelector.val()},  function (data) {
+        dailyRiskLimit.val(data["message"][0]["daily_risk_perc"])
+    })
+}
