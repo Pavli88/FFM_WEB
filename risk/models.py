@@ -7,9 +7,5 @@ class AccountRisk(models.Model):
 
 
 class RobotRisk(models.Model):
-    robot = models.CharField(max_length=50, default="")
-    p_level = models.IntegerField(default=0)
-    in_exp = models.FloatField(default=0.00)
-    sl_policy = models.CharField(max_length=20, default="")
-    quantity = models.IntegerField(default=0)
-    m_dd = models.FloatField(default=0.00)
+    robot = models.CharField(max_length=50, unique=True, default="")
+    daily_risk_perc = models.FloatField(default=0.00)

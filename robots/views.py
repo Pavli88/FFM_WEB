@@ -12,6 +12,7 @@ from accounts.models import *
 from instrument.models import *
 import datetime
 from datetime import timedelta, datetime
+from risk.views import *
 
 
 # Main site for robot configuration
@@ -72,6 +73,10 @@ def new_robot(request):
             Instruments(instrument_name=robot_name,
                         instrument_type="Robot",
                         source="ffm_system").save()
+
+            print("Creating new record in robot risk table")
+
+            RobotRisk(robot=robot_name).save()
 
             print("Saving down robot to instruments table")
 
