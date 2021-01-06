@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from mysite.processes.oanda import *
+from mysite.models import *
 from robots.models import *
 from accounts.models import *
 from mysite.models import *
@@ -77,6 +78,11 @@ def close_trade(request):
 
     print(balance_calc_msg)
 
+    print("Sending message to system messages table")
+
+    SystemMessages(msg_type="Trade Execution",
+                   msg="Closing trade for " + robot).save()
+
     return redirect('trade_app main')
 
 
@@ -135,5 +141,10 @@ def submit_trade(request):
                 broker="oanda").save()
 
     print("Robot trade table is updated!")
+
+    print("Sending message to system messages table")
+
+    SystemMessages(msg_type="Trade Execution",
+                   msg="Trade executed for " + robot + "@" + quantity).save()
 
     return redirect('trade_app main')

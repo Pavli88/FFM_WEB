@@ -19,7 +19,7 @@ riskSaveButton.click(function () {
 
 // Loading robot risk data on selection change
 robotSelector.on("change", loadRobotRisk)
-
+loadRobotRisk()
 function loadRobotRisk(){
     $.get('get_robot_risk/', {'robot': robotSelector.val()},  function (data) {
         dailyRiskLimit.val(data["message"][0]["daily_risk_perc"])

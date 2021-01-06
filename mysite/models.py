@@ -30,3 +30,9 @@ class Settings(models.Model):
     ov_status = models.BooleanField()
     ov_st_time = models.TimeField()
     ov_en_time = models.TimeField()
+
+
+class SystemMessages(models.Model):
+    msg_type = models.CharField(max_length=100, default="")
+    msg = models.CharField(max_length=200, default="")
+    date = models.DateField(auto_now=True)
