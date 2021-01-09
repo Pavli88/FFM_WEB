@@ -9,17 +9,11 @@
 
 <!--New robot creator form-->
 {% block entry_form %}
-
-{% endblock %}
-
-<!--Main block-->
-{% block main_block%}
-
 <!--Robot Processes-->
 <br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
-    <div class="card-header" style="display: flex">
-        <h5 style="color: #19393D; padding: 5px"><strong>Process Management</strong></h5>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <h6 class="card-header" style="color: #19393D"><strong>Process Management</strong></h6>
+    <div class="card_container align-items-center col-auto">
         <div class="col-auto" style="padding: 5px">
             <select class="form-control" name="port_name" id="robot_proc_selector" required>
                 <option>Balance</option>
@@ -63,15 +57,19 @@
         </table>
     </div>
 </div>
+{% load static %}
+<script src="{% static 'admin/js/robots_right_panel.js' %}"></script>
+{% endblock %}
 
-<!--Test trade panel-->
+<!--Main block-->
+{% block main_block%}
+
+<!--Load robot-->
 <br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
-    <div class="card-header" >
-        <div style="display: flex">
-            <div style="padding: 5px">
-                <h5 class="card-title" style="color: #19393D"><strong>Robots</strong></h5>
-            </div>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <h6 class="card-header" style="color: #19393D"><strong>Robots</strong></h6>
+    <div class="card_container" style="width: 100%; height: 300px">
+        <div style="padding: 5px; display: flex">
             <div style="padding: 5px">
                 <button type="button" class="btn btn-outline-dark" id="load_robots">
                     <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise"
@@ -80,53 +78,42 @@
                         <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                         <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
                     </svg>
-                </button>
+                Load</button>
             </div>
             <div style="padding: 5px">
-                <button type="button" class="btn btn-outline-dark" id="newRobotBtn" data-toggle="modal" data-target="#newRobot">
+                <button type="button" class="btn btn-outline-dark" id="newRobotBtn" data-toggle="modal"
+                        data-target="#newRobot">
                     <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-plus" fill="currentColor"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
                               d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                     </svg>
-                </button>
+                New</button>
             </div>
         </div>
-    </div>
-    <div class="card_container" style="width: 100%; overflow-y:scroll;">
-        <table class="table-striped" style="width: 100%" id="robot_table">
-            <thead style="width: 100%">
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Strategy</th>
-                <th scope="col">Security</th>
-                <th scope="col">Time Frame</th>
-                <th scope="col">Broker</th>
-                <th scope="col">Env</th>
-                <th scope="col">Status</th>
-                <th scope="col">Account Number</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-            </tr>
-            </thead>
-            <tbody id="robot_table_body"></tbody>
-        </table>
+        <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%; height: 90%" id="robot_table">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="robot_table_body"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <!--New Robot Modal-->
-<!--<div class="card h-md-100 shadow bg-white rounded" style="width: 300px" id="new_robot_dialog">-->
-<!--    <div class="card-body">-->
-<!--        <h5 class="card-title">New Robot</h5>-->
-<!--        {{ robot_form.as_p }}-->
-<!--        <button type="submit" class="btn btn-outline-dark" style="width: 100px; height: 30px;" id="create_robot_btn">Add</button>-->
-<!--    </div>-->
-<!--</div>-->
-
-<!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop">-->
-<!--  Launch static backdrop modal-->
-<!--</button>-->
-
 <div class="modal fade" id="newRobot" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="newRobotLabel" aria-hidden="true">
   <div class="modal-dialog" style="width: 300px">
     <div class="modal-content">

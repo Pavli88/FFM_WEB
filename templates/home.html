@@ -11,24 +11,31 @@
 {% endblock %}
 {% block entry_form %}
 <br>
-<div class="card h-md-100 shadow bg-white rounded">
+<div class="card text-center">
     <div class="card-header" style="display: flex">
-        <h5 class="nav-link link_color font-weight-bold">
-            Active Robot Performance Dashboard
-        </h5>
-        <button type="button" class="btn btn-outline-dark" id="loadRobotStats">
-            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise"
-                 fill="currentColor"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-            </svg>
-        </button>
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Robot Performance Dashboard</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item" id="loadRobotStats">Refresh</label>
+                        <label class="dropdown-item">Live</label>
+                        <label class="dropdown-item">Demo</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </div>
-
-    <div style="width: 100%">
+    <div class="card_container" style="width: 100%">
         <table style="width: 100%">
-            <thead>
+            <thead style="width: 100%">
             <tr>
                 <th>Robot</th>
                 <th>Security</th>
@@ -42,7 +49,46 @@
             <tbody id="robotStatTable"></tbody>
         </table>
     </div>
+
 </div>
+
+<!--System Messages-->
+<br>
+<div style="width: 100%; height: 400px">
+    <div class="card" style="width: 100%; height: 400px; display: flex">
+        <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>System Messages</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+        <div class="card_container" style="width: 100%; overflow-y:scroll;">
+            <table class="table-striped" style="width: 100%" id="msgTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody id="msgTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
 {% endblock %}
@@ -51,8 +97,8 @@
 
 <!--Portfolios-->
 <br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 200px; display: flex">
-    <div class="card-header" style="display: flex">
+<div class="card" style="width: 100%; height: 200px; display: flex">
+    <div class="card-header card_header">
         <div>
             <h5  style="color: #19393D"><strong>Portfolio</strong></h5>
         </div>
@@ -86,7 +132,7 @@
 
 <br>
 <!--All robots dashboard-->
-<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;  display: flex">
+<div class="card-header" style="width: 100%;  display: flex">
     <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
         <div style="padding-right: 15px;">
             <h5 style="color: #19393D"><strong>Robot Dashboard</strong></h5>
@@ -115,7 +161,7 @@
 
 <br>
 <!--Robots loaded on page-->
-<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;  display: flex">
+<div class="card-header rounded" style="width: 100%;  display: flex">
     <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
         <div style="padding-right: 15px;">
             <h5 style="color: #19393D"><strong>Robot</strong></h5>
@@ -209,8 +255,8 @@
 
 <!--Account-->
 <div style="width: 100%;">
-    <div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 200px; display: flex">
-        <div class="card-header" style="display: flex">
+    <div class="card" style="width: 100%; height: 200px; display: flex">
+        <div class="card-header card_header">
             <div style="padding: 5px">
                 <h5 style="color: #19393D"><strong>Account</strong></h5>
             </div>
@@ -239,40 +285,6 @@
         </div>
         <div class="card_container" style="height: 100%; width: 100%">
             <canvas id="bar_chart_2" width="50%"></canvas>
-        </div>
-    </div>
-</div>
-
-<!--System Messages-->
-<br>
-<div style="width: 100%; height: 400px">
-    <div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 400px; display: flex">
-        <div class="card-header" style="display: flex">
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>System Messages</strong></h5>
-            </div>
-            <div style="padding: 5px">
-                <button type="button" class="btn btn-outline-dark" id="loadMsgsBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise"
-                         fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <div class="card_container" style="width: 100%; overflow-y:scroll;">
-            <table class="table-striped" style="width: 100%" id="msgTable">
-                <thead style="width: 100%">
-                <tr>
-                    <th scope="col">Type</th>
-                    <th scope="col">Message</th>
-                    <th scope="col">Date</th>
-                </tr>
-                </thead>
-                <tbody id="msgTableBody"></tbody>
-            </table>
         </div>
     </div>
 </div>

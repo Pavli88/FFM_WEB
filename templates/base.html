@@ -31,18 +31,36 @@
 <div class="container-fluid my_container">
     <!--        NAV Bar-->
     <div>
-        <nav class="navbar navbar-dark nav_bar">
-            <label class="navbar-brand"><strong>FFM SYSTEMS</strong></label>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light nav_bar">
+            <div style="padding: 2px">
+                <label class="navbar-brand" style="margin: 0px;"><strong>FFM SYSTEMS</strong></label>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <a class="nav-link font-weight-bold" href="{% url 'home_page' %}">Home</a>
+                    <a class="nav-link font-weight-bold" href="{% url 'portfolio main' %}">Portfolio</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'reports main' %}">Reports</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'risk main template' %}">Risk</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'robots main' %}">Robots</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'accounts main' %}">Accounts</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'instruments main' %}">Instruments</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'settings main' %}">Settings</a>
+                    <a class="nav-link link_color font-weight-bold" href="{% url 'trade_app main' %}">Trade</a>
+                </ul>
+            </div>
             <form class="form-inline">
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
-            {% if user.is_authenticated %}
-            <p class="navbar-brand">Welcome {{ user.get_username }}</p>
-            <a href="{% url 'logout' %}">Log out</a>
-            {% else %}
-            <p>Please log in</p>
-            {% endif %}
+            <div style="padding: 10px">
+                {% if user.is_authenticated %}
+                <p class="navbar-brand">Welcome {{ user.get_username }}</p>
+                <a href="{% url 'logout' %}">Log out</a>
+                {% else %}
+                <p style="margin: 0px;"><strong>Please log in</strong></p>
+                {% endif %}
+            </div>
+
         </nav>
     </div>
     <div class="container-fluid my_container row_nav_bar">
@@ -50,19 +68,7 @@
     </div>
     <div class="row main_area">
         <!--            Left Panel-->
-        <div class="col-1 left">
-            <div class="nav flex-column nav-pills side_bar">
-                <a class="nav-link link_color font-weight-bold" href="{% url 'home_page' %}">Home</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'portfolio main' %}">Portfolio</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'reports main' %}">Reports</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'risk main template' %}">Risk</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'robots main' %}">Robots</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'accounts main' %}">Accounts</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'instruments main' %}">Instruments</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'settings main' %}">Settings</a>
-                <a class="nav-link link_color font-weight-bold" href="{% url 'trade_app main' %}">Trade</a>
-            </div>
-        </div>
+
         <!--            Main Panel-->
         <main class="col-8 main_panel">
             {% block main_block%}
