@@ -50,16 +50,22 @@
 <!--Portfolios-->
 <br>
 <div class="card" style="width: 100%; height: 300px; display: flex">
-    <div class="card-header card_header">
-        <div>
-            <h5 style="color: #19393D"><strong>Portfolio Risk</strong></h5>
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Robot Risk</strong></label>
         </div>
-        <div>
-            <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
-            {% for portfolio in portfolios %}
-            <option>{{portfolio.portfolio_name}}</option>
-            {% endfor %}
-        </select>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
         </div>
     </div>
     <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
@@ -86,41 +92,31 @@
 <!--Robot-->
 <br>
 <div class="card " style="width: 100%; height: 300px; display: flex">
-    <div class="card-header card_header">
-        <div style="padding-right: 15px;">
-            <h5  style="color: #19393D"><strong>Robot Risk</strong></h5>
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Portfolio Risk</strong></label>
         </div>
-        <div style="padding-right: 15px;">
-            <select class="form-control form-control-sm" name="robotSelector" id="robotSelector">
-                {% for robot in robots %}
-                <option>{{robot.name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="riskSaveBtn">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fill-rule="evenodd"
-                          d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                </svg>
-            </button>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
         </div>
     </div>
     <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
             <table class="table-striped" style="width: 100%;" id="robotRiskTable">
                 <thead style="width: 100%">
                 <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Strategy</th>
-                    <th scope="col">Security</th>
-                    <th scope="col">Time Frame</th>
-                    <th scope="col">Broker</th>
-                    <th scope="col">Env</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Account Number</th>
-                    <th scope="col"></th>
+                    <th scope="col">Robot</th>
+                    <th scope="col">Daily Max Loss %</th>
+                    <th scope="col">Daily Max Number of Trades</th>
                     <th scope="col"></th>
                 </tr>
                 </thead>
@@ -132,13 +128,22 @@
 <!--Account-->
 <br>
 <div class="card " style="width: 100%; height: 300px; display: flex">
-    <div class="card-header card_header">
-        <div>
-            <h5  style="color: #19393D"><strong>Account Risk</strong></h5>
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Account Risk</strong></label>
         </div>
-        <div>
-            <select class="form-control form-control-sm" name="accountSelector" id="accountSelector">
-        </select>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
         </div>
     </div>
     <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
@@ -160,6 +165,28 @@
                 <tbody id="accountRiskTableBody"></tbody>
             </table>
         </div>
+</div>
+
+<!--Update Daily Robot Risk Modal-->
+<div class="modal fade" id="amendRobotRisk" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="robotRiskLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 250px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="robotRiskLabel"><strong>Update Robot Risk</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {{ risk_form }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="updateDailyRiskbtn" style="width: 100%">Update
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% load static %}

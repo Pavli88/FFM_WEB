@@ -12,10 +12,12 @@ let loadButton = $("#load_robots")
 let robotTable = $("#robot_table_body")
 loadButton.click(loadRobots)
 
+loadRobots()
+
 function loadRobots() {
 
     try{
-        let allRobotRows = robotTable.empty()
+        robotTable.empty()
     }
     catch (err) {
     }

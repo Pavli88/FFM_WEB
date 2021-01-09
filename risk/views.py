@@ -5,6 +5,7 @@ from mysite.views import *
 from risk.models import *
 from robots.views import *
 from django.http import JsonResponse
+from risk.forms import *
 
 
 # Main site for risk management
@@ -25,10 +26,12 @@ def risk_main(request):
     print("Loading all robots from database")
 
     robots = get_robots()
+    risk_form = RobotRiskForm()
 
     print("Loading all accounts from database")
 
-    return render(request, 'risk_app/risk_main.html', {"robots": robots})
+    return render(request, 'risk_app/risk_main.html', {"robots": robots,
+                                                       "risk_form": risk_form})
 
 
 def update_robot_risk(request):
@@ -59,12 +62,7 @@ def get_robot_risk(request):
     print("GET ROBOT RISK")
     print("===================")
 
-    if request.method == "GET":
-        robot = request.GET.get("robot")
-
-    print("ROBOT:", robot)
-
-    robot_risk = RobotRisk.objects.filter(robot=robot).values()
+    robot_risk = RobotRisk.objects.filter().values()
 
     response = {"message": list(robot_risk)}
 

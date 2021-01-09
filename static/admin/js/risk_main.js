@@ -18,10 +18,49 @@ riskSaveButton.click(function () {
 })
 
 // Loading robot risk data on selection change
-robotSelector.on("change", loadRobotRisk)
+const robotRiskTableBody = $("#robotRiskTableBody")
 loadRobotRisk()
-function loadRobotRisk(){
-    $.get('get_robot_risk/', {'robot': robotSelector.val()},  function (data) {
-        dailyRiskLimit.val(data["message"][0]["daily_risk_perc"])
+
+function loadRobotRisk() {
+    $.get('get_robot_risk/', function (data) {
+
+        try {
+            robotRiskTableBody.empty()
+        } catch (err) {
+
+        }
+        for (let robot of data["message"]){
+            console.log(robot)
+            let newRow = document.createElement("tr")
+            let newTd1 = document.createElement("td")
+            let newTd2 = document.createElement("td")
+            let newTd3 = document.createElement("td")
+            let newTd4 = document.createElement("td")
+            let newBtn = document.createElement("button")
+
+            newTd1.innerText = robot["robot"]
+            newTd2.innerHTML = robot["daily_risk_perc"]
+            newTd3.innerHTML = robot["daily_trade_limit"]
+            newBtn.innerText = "Update"
+
+            newBtn.classList.add("robRiskAmendBtn")
+            newBtn.classList.add("btn")
+            newBtn.classList.add("btn-outline-dark")
+            newTd1.classList.add("robotName")
+            newTd2.classList.add("dailyRisk")
+            newTd3.classList.add("dailyTrades")
+
+            newRow.append(newTd1)
+            newRow.append(newTd2)
+            newRow.append(newTd3)
+            newRow.append(newTd4)
+            newTd4.append(newBtn)
+
+            robotRiskTableBody.append(newRow)
+        }
+        $('.robRiskAmendBtn').click(function () {
+            console.log(this.parentElement.parentElement)
+            $("#amendRobotRisk").modal();
+        })
     })
 }
