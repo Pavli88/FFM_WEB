@@ -56,10 +56,14 @@ def home(request, default_load=None):
 def load_robot_stats(request):
     print("Loading robot stats to dashboard")
 
+    if request.method == "GET":
+        env = request.GET["env"]
+
+    print(env)
     year_beg = date(date.today().year, 1, 1)
     month_beg = date(date.today().year, date.today().month, 1)
 
-    robots = Robots.objects.filter(status="active").values()
+    robots = Robots.objects.filter(status="active", env=env).values()
 
     response_data_list = []
 

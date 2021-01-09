@@ -1,9 +1,11 @@
 // Refreshing and loading robot stats to dashboard
 const statRefreshButton = $('#loadRobotStats')
 const statTableBody = $("#robotStatTable")
+const demoRobotButton = $("#demoRobots")
+const liveRobotButton = $("#liveRobots")
 
-function loadStats(){
-    $.get("load_robot_stats/", function (data) {
+function loadStats(environment){
+    $.get("load_robot_stats/", {'env': environment}, function (data) {
 
         let allStats = document.querySelectorAll(".statRow")
         allStats.forEach(k => k.remove())
@@ -58,14 +60,19 @@ function loadStats(){
             newRow.append(newTd7)
 
             statTableBody.append(newRow)
-
-            console.log(robot)
         }
     })
-    console.log("Loading robot stats")
 }
-loadStats()
-statRefreshButton.click(loadStats)
+
+loadStats("live")
+
+demoRobotButton.click(function (){
+    loadStats("demo")
+})
+
+liveRobotButton.click(function (){
+    loadStats("live")
+})
 
 // System message dashboard
 const messageTable = $("#msgTableBody")
