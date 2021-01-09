@@ -5,6 +5,47 @@
 
 {% endblock %}
 
+{% block entry_form %}
+
+<!--System Messages-->
+<br>
+<div style="width: 100%; height: 400px">
+    <div class="card" style="width: 100%; height: 800px; display: flex">
+        <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Messages</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+        <div class="card_container" style="width: 100%; overflow-y:scroll;">
+            <table class="table-striped" style="width: 100%" id="msgTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody id="msgTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
 {% block main_block%}
 <!--Portfolios-->
 <br>
@@ -21,14 +62,30 @@
         </select>
         </div>
     </div>
-    <div class="card_container form-row align-items-center ">
-
-    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="portfolioRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="portfolioRiskTableBody"></tbody>
+            </table>
+        </div>
 </div>
 
 <!--Robot-->
 <br>
-<div class="card " style="width: 100%; height: 400px; display: flex">
+<div class="card " style="width: 100%; height: 300px; display: flex">
     <div class="card-header card_header">
         <div style="padding-right: 15px;">
             <h5  style="color: #19393D"><strong>Robot Risk</strong></h5>
@@ -51,15 +108,25 @@
             </button>
         </div>
     </div>
-    <div class="card_container form-row align-items-center " >
-        <div class="form-group" style="padding-right: 15px;">
-            <label>Daily Loss Limit %</label>
-            <input type="number" class="form-control form-control-sm" step="0.01" min="0.00" name="dailyLossLimit"
-                   id="dailyLossLimit"
-                   style="width: 100%"
-                   required>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="robotRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="robotRiskTableBody"></tbody>
+            </table>
         </div>
-    </div>
 </div>
 
 <!--Account-->
@@ -74,10 +141,27 @@
         </select>
         </div>
     </div>
-    <div class="card_container form-row align-items-center ">
-
-    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="accountRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="accountRiskTableBody"></tbody>
+            </table>
+        </div>
 </div>
+
 {% load static %}
 <script src="{% static 'admin/js/risk_main.js' %}"></script>
 {% endblock %}

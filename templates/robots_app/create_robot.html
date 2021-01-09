@@ -12,7 +12,20 @@
 <!--Robot Processes-->
 <br>
 <div class="card" style="width: 100%; height: 400px; display: flex">
-    <h6 class="card-header" style="color: #19393D"><strong>Process Management</strong></h6>
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Process Management</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <button type="button" class="btn btn-outline-dark" id="calc_btn">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
     <div class="card_container align-items-center col-auto">
         <div class="col-auto" style="padding: 5px">
             <select class="form-control" name="port_name" id="robot_proc_selector" required>
@@ -35,13 +48,7 @@
             <input class="form-control" type="date" id="processEndDate" name="trip-start">
         </div>
         <div class="form-group" style="padding: 5px">
-            <button type="button" class="btn btn-outline-dark" id="calc_btn">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                </svg>
-            </button>
+
         </div>
         <div class="form-group" style="padding: 5px" id="calcLoadingDiv">
             <button class="btn btn-outline-dark" type="button" disabled>
@@ -57,6 +64,35 @@
         </table>
     </div>
 </div>
+
+<!--Transefer balances-->
+<br>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Balance Transfer</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item">Show Robots</label>
+                        <label class="dropdown-item">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="card_container align-items-center col-auto">
+
+    </div>
+</div>
+
 {% load static %}
 <script src="{% static 'admin/js/robots_right_panel.js' %}"></script>
 {% endblock %}
@@ -67,32 +103,28 @@
 <!--Load robot-->
 <br>
 <div class="card" style="width: 100%; height: 400px; display: flex">
-    <h6 class="card-header" style="color: #19393D"><strong>Robots</strong></h6>
-    <div class="card_container" style="width: 100%; height: 300px">
-        <div style="padding: 5px; display: flex">
-            <div style="padding: 5px">
-                <button type="button" class="btn btn-outline-dark" id="load_robots">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise"
-                         fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-                    </svg>
-                Load</button>
-            </div>
-            <div style="padding: 5px">
-                <button type="button" class="btn btn-outline-dark" id="newRobotBtn" data-toggle="modal"
-                        data-target="#newRobot">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-plus" fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                              d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                    </svg>
-                New</button>
-            </div>
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Robots</strong></label>
         </div>
-        <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
-            <table class="table-striped" style="width: 100%; height: 90%" id="robot_table">
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item" id="load_robots">Show Robots</label>
+                        <label class="dropdown-item" id="newRobotBtn" data-toggle="modal" data-target="#newRobot">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="robot_table">
                 <thead style="width: 100%">
                 <tr>
                     <th scope="col">Name</th>
@@ -110,7 +142,6 @@
                 <tbody id="robot_table_body"></tbody>
             </table>
         </div>
-    </div>
 </div>
 
 <!--New Robot Modal-->
