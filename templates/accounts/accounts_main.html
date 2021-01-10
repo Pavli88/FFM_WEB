@@ -2,101 +2,90 @@
 {% extends "base.html" %}
 
 {% block entry_form %}
-<form class="entry_form" action="{% url 'create broker account' %}" method="POST">
-        {% csrf_token %}
-        <h4>New Account</h4>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="broker_name" placeholder="Broker Name" required>
-        </div>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="account_number" placeholder="Account Number" required>
-        </div>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="token" placeholder="Account Token" required>
-        </div>
-        <div class="form-group">
-            <label>Environment</label>
-            <div class="radio_button_container">
-                <label for="live_env">Live</label>
-                <input type="radio" id="live_env" name="env" value="live" required>
-                <label for="demo_env">Demo</label>
-                <input type="radio" id="demo_env" name="env" value="demo"><br>
-            </div>
-        </div>
 
-        <script>if ("{{ exist_broker }}" == "exists") {
-                                alert("Record already exists in database!");
-                            }else if ("{{ exist_broker }}" == "created") { alert("New record was created!")}
-                            else if ("{{ exist_broker }}" == "issue") { alert("Incorrect data type was given in one of the fields!")}
-        </script>
-        <input class="btn btn-primary btn-sm submit_button" type="submit" name="button" value="Add New Account">
-    </form>
 {% endblock %}
 
 {% block main_block%}
-
-<div class="container-fluid">
-    <!--Form to get back all robots-->
-    <div class="row" style="padding:15px;">
-        <form style="display:flex;" action="{% url 'show accounts' %}" method="POST">
-        {% csrf_token %}
-            <h2>Account Configuration</h2>
-            <input class="btn btn-primary btn-sm submit_button_2" type="submit", name="button" value="Show Accounts" id="acc_btn">
-        </form>
+<!--Load accounts-->
+<br>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Accounts</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item" id="newAccountBtn" data-toggle="modal"
+                               data-target="#newAccount">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </div>
-
-    <div class="row">
-        <table class="table table-striped tables">
-            <thead>
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Broker Name</th>
-                    <th scope="col">Account Number</th>
-                    <th scope="col">Token</th>
-                    <th scope="col">Environment</th>
-                    <th scope="col"></th>
-                </tr>
+    <div style="width: 100%; height: 100%; overflow-y:scroll">
+        <table class="table-striped" style="width: 100%;" id="accountTable">
+            <thead style="width: 100%">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Broker</th>
+                <th scope="col">Account Number</th>
+                <th scope="col">Token</th>
+                <th scope="col">Environment</th>
+                <th scope="col"></th>
+            </tr>
             </thead>
-            <tbody>
-            {% for account in accounts %}
-                <tr style="height:10px;">
-                    <form action="{% url 'amend robot' %}" method="POST">
-                        {% csrf_token %}
-                        <td>
-                            <label>{{account.id}}</label>
-                        </td>
-                        <td>
-                            <label>{{account.broker_name}}</label>
-                        </td>
-                        <td>
-                            <label>{{account.account_number}}</label>
-                        </td>
-                        <td>
-                            <label>{{account.acces_token}}</label>
-                        </td>
-                        <td>
-                            <label>{{account.env}}</label>
-                        </td>
-
-                        <td>
-                            <button class="btn btn-primary mb-2">Modify</button>
-                        </td>
-                    </form>
-                </tr>
-            {% endfor %}
-            </tbody>
+            <tbody id="accountTableBody"></tbody>
         </table>
     </div>
 </div>
-<script>
-    function f(){
-        $("#acc_btn").on("click", function () {
-            alert('Button was clicked')
-            // console.log(a)
-        })
-    }
 
-    f();
+<!--New Account Modal-->
+<div class="modal fade" id="newAccount" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="newAccountLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newAccountLabel"><strong>New Account</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input class="form-control form-control-sm" type="text" name="broker_name"
+                           placeholder="Broker Name" required id="brokerName">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-sm" type="text" name="account_number"
+                           placeholder="Account Number"
+                           required id="accNumber">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-sm" type="text" name="token" placeholder="Account Token"
+                           required id="token">
+                </div>
+                <div class="form-group" style="display: flex">
+                    <label style="padding: 5px;">Environment</label>
+                    <select class="form-control form-control-sm" style="width: 100%; padding: 5px" id="env"
+                            required>
+                        <option>live</option>
+                        <option>demo</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-sm submit_button" type="submit" name="button"
+                        value="Add New Account" style="width: 100%;" id="accountCreateBtn">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-</script>
+{% load static %}
+<script src="{% static 'admin/js/accounts_main.js' %}"></script>
 {% endblock %}

@@ -1,10 +1,15 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from accounts.models import *
+from django.http import JsonResponse
 
 
 # Accounts main page
 def accounts_main(request):
+    print("==================")
+    print("ACCOUNTS MAIN PAGE")
+    print("==================")
+
     return render(request, 'accounts/accounts_main.html')
 
 
@@ -18,49 +23,36 @@ def create_broker(request):
 
     print("New broker creation request received.")
 
-    # String fields
-    broker_name = request.POST.get("broker_name")
-    account_number = request.POST.get("account_number")
-    environment = request.POST.get("env")
-    token = request.POST.get("token")
+    if request.method == "POST":
+        broker_name = request.POST.get("broker_name")
+        account_number = request.POST.get("account_number")
+        environment = request.POST.get("env")
+        token = request.POST.get("token")
 
-    string_parameter_dict = {"broker_name": broker_name,
-                             "account_number": account_number,
-                             "token": token,
-                             "environment": environment,
-                             }
-
-    print("Broker parameters:", string_parameter_dict)
-
-    # Checking if robot name exists in data base
-    print("Checking if new record exists in database")
-    try:
-        data_exists = BrokerAccounts.objects.get(account_number=account_number).name
-    except:
-        data_exists = "does not exist"
-
-    if data_exists == account_number:
-        print("Account number exists in database.")
-        return render(request, 'accounts/accounts_main.html', {"exist_broker": "Account number exists in data base !"})
-
-    # Inserting new robot data to database
-    print("Inserting new record to database")
-    robot = BrokerAccounts(broker_name=broker_name,
-                           account_number=account_number,
-                           access_token=token,
-                           env=environment)
+    print("BROKER", broker_name)
+    print("ACCOUNT NUMBER", account_number)
+    print("ENVIRONMENT", environment)
+    print("TOKEN", token)
 
     try:
-        robot.save()
-        print("New record was created with parameters:", string_parameter_dict)
-        return render(request, 'accounts/accounts_main.html', {"exist_broker": "created"})
+        BrokerAccounts(broker_name=broker_name,
+                       account_number=account_number,
+                       access_token=token,
+                       env=environment).save()
+
+        print("Inserting new account to database")
+        response = "not exists"
     except:
-        print("Error occured while inserting data to database. "
-              "Either data type or server configuration is not correct.")
-        return render(request, 'accounts/accounts_main.html', {"exist_broker": "issue"})
+        print("Account exists in database")
+        response = "exists"
+
+    print("Sending response to front end")
+    print("")
+
+    return JsonResponse(response, safe=False)
 
 
-def get_all_accounts(request):
+def get_accounts():
 
     """
     Queries out all accounts from database and passes it back to the html
@@ -69,4 +61,17 @@ def get_all_accounts(request):
     """
     accounts = BrokerAccounts.objects.filter().values()
 
-    return render(request, 'accounts/accounts_main.html', {"accounts": accounts})
+    return accounts
+
+
+def load_accounts(request):
+
+    print("Requesting account data from front end")
+
+    accounts = get_accounts()
+
+    response = {"accounts": list(accounts)}
+
+    print("Sending response to front end")
+
+    return JsonResponse(response, safe=False)
