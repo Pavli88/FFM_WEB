@@ -2,6 +2,54 @@
 {% extends "base.html" %}
 
 {% block entry_form %}
+<!--Cash Flow Manager-->
+<br>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Cash Flow Manager</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item" id="newCfBtn" data-toggle="modal"
+                               data-target="#newAccount">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%">
+        <div style="width: 50%; padding: 5px">
+            <div class="form-group">
+                <label>Accounts</label>
+                <select class="form-control form-control-sm" style="width: 100%" id="accSelector" required>
+                    {% for account in accounts %}
+                    <option>{{account.account_number}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Cash Flow</label>
+                <input class="form-control form-control-sm startDay" type="number" id="accCf" style="width: 100%">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary submit_button" style="width: 100%" id="accCfBtn">Enter
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% load static %}
+<script src="{% static 'admin/js/accounts_right_panel.js' %}"></script>
 
 {% endblock %}
 
@@ -38,6 +86,8 @@
                 <th scope="col">Account Number</th>
                 <th scope="col">Token</th>
                 <th scope="col">Environment</th>
+                <th scope="col">Available Balance</th>
+                <th scope="col">Invested Balance</th>
                 <th scope="col"></th>
             </tr>
             </thead>

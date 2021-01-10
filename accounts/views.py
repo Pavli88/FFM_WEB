@@ -10,7 +10,9 @@ def accounts_main(request):
     print("ACCOUNTS MAIN PAGE")
     print("==================")
 
-    return render(request, 'accounts/accounts_main.html')
+    accounts = get_accounts()
+    print(accounts)
+    return render(request, 'accounts/accounts_main.html', {"accounts": accounts})
 
 
 def create_broker(request):
@@ -41,6 +43,11 @@ def create_broker(request):
                        env=environment).save()
 
         print("Inserting new account to database")
+
+        print("Setting up initial balance to zero")
+
+        AccountBalance(account_number=account_number).save()
+
         response = "not exists"
     except:
         print("Account exists in database")
@@ -64,13 +71,44 @@ def get_accounts():
     return accounts
 
 
+def get_account_balances():
+
+    balances = AccountBalance.objects.filter().values()
+
+    return balances
+
+
 def load_accounts(request):
 
     print("Requesting account data from front end")
 
     accounts = get_accounts()
+    account_balance = get_account_balances()
 
     response = {"accounts": list(accounts)}
+
+    print("Sending response to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def new_cash_flow(request):
+    print("====================")
+    print("NEW ACCOUNT CASHFLOW")
+    print("====================")
+
+    if request.method == "POST":
+        account = request.POST.get("account")
+        cash_flow = request.POST.get("cash_flow")
+
+    print("ACCOUNT", account)
+    print("CASH FLOW", cash_flow)
+    print("Entering cashflow into the database")
+
+    AccountCashFlow(account_number=account,
+                    cash_flow=cash_flow).save()
+
+    response = "New cash flow was entered into the database"
 
     print("Sending response to front end")
 
