@@ -4,199 +4,239 @@
 {% block head %}
 {% load static %}
 <link href="{% static 'admin/css/portfolio_template.css' %}" rel="stylesheet">
-
 {% endblock %}
 
-{% block main_block%}
+{% block entry_form %}
+<!--Portfolio Group-->
 <br>
-<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;  display: flex">
-    <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
-        <div style="padding-right: 15px;">
-            <label class="card-text" style="color: #19393D"><strong>Portfolio Group</strong></label>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Portfolio Group</strong></label>
         </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="PortGroupBtn" data-toggle="modal"
-                    data-target="#PortGroup">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-diagram-3" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5v-1zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1zM0 11.5A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
-                </svg>
-            </button>
-        </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="newPortBtn" data-toggle="modal"
-                    data-target="#newPort">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-folder-plus" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M9.828 4H2.19a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91H9v1H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181L15.546 8H14.54l.265-2.91A1 1 0 0 0 13.81 4H9.828zm-2.95-1.707L7.587 3H2.19c-.24 0-.47.042-.684.12L1.5 2.98a1 1 0 0 1 1-.98h3.672a1 1 0 0 1 .707.293z"/>
-                    <path fill-rule="evenodd"
-                          d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!--Portfolio-->
-<br>
-<div class="card-header h-md-100 shadow bg-white rounded" style="width: 100%;">
-    <div class="form-inline" style="padding: 5px; display: flex;">
-        <div style="padding-right: 15px;">
-            <label class="card-text" style="color: #19393D"><strong>Portfolio</strong></label>
-        </div>
-        <div style="padding-right: 15px;">
-            <select class="form-control form-control-sm" name="port_name" id="port_selector" required>
-                {% for portfolio in portfolios %}
-                <option>{{portfolio.portfolio_name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="newCashBtn" data-toggle="modal"
-                    data-target="#newCashFlow">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-cash" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M15 4H1v8h14V4zM1 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H1z"/>
-                    <path d="M13 4a2 2 0 0 0 2 2V4h-2zM3 4a2 2 0 0 1-2 2V4h2zm10 8a2 2 0 0 1 2-2v2h-2zM3 12a2 2 0 0 0-2-2v2h2zm7-4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
-                </svg>
-            </button>
-        </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="newTrdBtn" data-toggle="modal"
-                    data-target="#newPortTrade">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-cart4" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l.5 2H5V5H3.14zM6 5v2h2V5H6zm3 0v2h2V5H9zm3 0v2h1.36l.5-2H12zm1.11 3H12v2h.61l.5-2zM11 8H9v2h2V8zM8 8H6v2h2V8zM5 8H3.89l.5 2H5V8zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/>
-                </svg>
-            </button>
-        </div>
-        <div style="padding-right: 15px;">
-            <button type="button" class="btn btn-outline-dark" id="portDeleteBtn">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                    <path fill-rule="evenodd"
-                          d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                </svg>
-            </button>
-        </div>
-        <div class="form-inline">
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text">Portfolio Type</label>
+        <div style="position: absolute; right: 40px; display: flex">
+            <div style="padding-right: 15px;">
+                <button type="button" class="btn btn-outline-dark" id="PortGroupBtn" data-toggle="modal"
+                        data-target="#PortGroup">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-diagram-3" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5v-1zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1zM0 11.5A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm4.5.5a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5v-1zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
+                    </svg>
+                </button>
             </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text" id="portType" style="font-weight: normal"></label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text">Status</label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text" id="portStatus" style="font-weight: normal"></label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text">Currency</label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text" id="portCurrency" style="font-weight: normal"></label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text">NAV</label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text" id="portNAV" style="font-weight: normal">514.43</label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text">Available Cash</label>
-            </div>
-            <div class="form-group" style="padding-right: 15px; font-size: 14px">
-                <label class="card-text" id="availableCash" style="font-weight: normal">334.21</label>
+            <div>
+                <button type="button" class="btn btn-outline-dark" id="newPortBtn" data-toggle="modal"
+                        data-target="#newPort">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-folder-plus"
+                         fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M9.828 4H2.19a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91H9v1H2.826a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181L15.546 8H14.54l.265-2.91A1 1 0 0 0 13.81 4H9.828zm-2.95-1.707L7.587 3H2.19c-.24 0-.47.042-.684.12L1.5 2.98a1 1 0 0 1 1-.98h3.672a1 1 0 0 1 .707.293z"/>
+                        <path fill-rule="evenodd"
+                              d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
-</div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll">
 
-<!--Settings-->
-<br>
-<div class="card h-md-100 shadow bg-white rounded" style="width: 100%; height: 300px; display: flex">
-    <h6 class="card-header" style="color: #19393D"><strong>Settings</strong></h6>
-    <div style="width: 100%; height: 100%; padding: 10px">
-        <div class="bs-example" style="height: 100%; width: 100%">
-            <ul class="nav nav-tabs" id="myTab">
-                <li class="nav-item">
-                    <a href="#positions" class="nav-link" data-toggle="tab">Positions</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#nav" class="nav-link" data-toggle="tab">NAV</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#risk" class="nav-link" data-toggle="tab">Risk</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#holdings" class="nav-link" data-toggle="tab">Holdings</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#return" class="nav-link" data-toggle="tab">Return</a>
-                </li>
-            </ul>
-            <div class="bs-example" style="width: 100%; padding: 15px">
-            <div class="tab-content">
-                <div class="tab-pane fade" id="positions">
-                    <h4 class="mt-2">Home tab content</h4>
-                </div>
-                <div class="tab-pane fade" id="nav">
-                    <h4 class="mt-2">Profile tab content</h4>
-                </div>
-                <div class="tab-pane fade" id="risk">
-                    <h4 class="mt-2">Risk</h4>
-                </div>
-                <div class="tab-pane fade" id="holdings">
-                    <h4 class="mt-2">Risk</h4>
-                </div>
-                <div class="tab-pane fade" id="return">
-                    <h4 class="mt-2">Risk</h4>
-                </div>
-            </div>
-        </div>
-        </div>
     </div>
 </div>
 
 <!--Process management-->
 <br>
-<div class="card" style="width: 100%; height: 500px">
-    <h6 class="card-header" style="color: #19393D"><strong>Process Management</strong></h6>
-    <div class="card_container align-items-center col-auto" id="process_div">
-        <div style="display: flex">
-            <div class="form-group">
-                <label for="process">Process</label>
-                <select class="form-control form-control-sm" style="width: 150px" name="process" id="process" required>
-                    <option>Positions</option>
-                    <option>NAV</option>
-                    <option>Portfolio Risk</option>
-                    <option>Portfolio Holdings</option>
-                    <option>Portfolio Return</option>
+
+
+<!--<br>-->
+<!--<div class="card" style="width: 100%; height: 500px">-->
+<!--    <h6 class="card-header" style="color: #19393D"><strong>Process Management</strong></h6>-->
+<!--    <div class="card_container align-items-center col-auto" id="process_div">-->
+<!--        <div style="display: flex">-->
+<!--            <div class="form-group">-->
+<!--                <label for="process">Process</label>-->
+<!--                <select class="form-control form-control-sm" style="width: 150px" name="process" id="process" required>-->
+<!--                    <option>Positions</option>-->
+<!--                    <option>NAV</option>-->
+<!--                    <option>Portfolio Risk</option>-->
+<!--                    <option>Portfolio Holdings</option>-->
+<!--                    <option>Portfolio Return</option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div class="form-group">-->
+<!--                <input type="checkbox" id="single_tick">-->
+<!--                <label for="single_tick">Time Interval</label>-->
+<!--            </div>-->
+<!--            <div class="col-auto" id="calc_btn_div">-->
+<!--                <button class="btn btn-primary" style="width: 100px; height: 50px;" id="calc_btn">Calculate</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div class="form-group">-->
+<!--            <label>Start date:</label>-->
+<!--            <input class="form-control form-control-sm" type="date" id="calcStart" name="trip-start" value="2020-10-14">-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+{% endblock %}
+
+{% block main_block%}
+<!--Portfolio-->
+<br>
+<div class="card" style="width: 100%; height: 800px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px; display: flex">
+            <div style="padding-right: 15px">
+                <label style="color: #19393D; margin: 0px"><strong>Portfolio</strong></label>
+            </div>
+            <div style="padding-right: 15px;">
+                <select class="form-control form-control-sm" name="port_name" id="port_selector" required>
+                    {% for portfolio in portfolios %}
+                    <option>{{portfolio.portfolio_name}}</option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="form-group">
-                <input type="checkbox" id="single_tick">
-                <label for="single_tick">Time Interval</label>
+        </div>
+        <div style="position: absolute; right: 40px; display: flex">
+            <div style="padding-right: 15px;">
+                <button type="button" class="btn btn-outline-dark" id="newCashBtn" data-toggle="modal"
+                        data-target="#newCashFlow">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-cash" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M15 4H1v8h14V4zM1 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H1z"/>
+                        <path d="M13 4a2 2 0 0 0 2 2V4h-2zM3 4a2 2 0 0 1-2 2V4h2zm10 8a2 2 0 0 1 2-2v2h-2zM3 12a2 2 0 0 0-2-2v2h2zm7-4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
+                    </svg>
+                </button>
             </div>
-            <div class="col-auto" id="calc_btn_div">
-                <button class="btn btn-primary" style="width: 100px; height: 50px;" id="calc_btn">Calculate</button>
+            <div style="padding-right: 15px;">
+                <button type="button" class="btn btn-outline-dark" id="newTrdBtn" data-toggle="modal"
+                        data-target="#newPortTrade">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-cart4" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l.5 2H5V5H3.14zM6 5v2h2V5H6zm3 0v2h2V5H9zm3 0v2h1.36l.5-2H12zm1.11 3H12v2h.61l.5-2zM11 8H9v2h2V8zM8 8H6v2h2V8zM5 8H3.89l.5 2H5V8zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/>
+                    </svg>
+                </button>
+            </div>
+            <div style="padding-right: 15px;">
+                <button type="button" class="btn btn-outline-dark" id="portDeleteBtn">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd"
+                              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    </svg>
+                </button>
             </div>
         </div>
-        <div class="form-group">
-            <label for="start">Start date:</label>
-            <input class="form-control form-control-sm" type="date" id="calcStart" name="trip-start" value="2020-10-14">
+    </div>
+    <div style="width: 100%; height: 100%; display: flex">
+
+    </div>
+</div>
+
+<!--Process Management-->
+<br>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px; display: flex">
+            <div style="padding-right: 15px">
+                <label style="color: #19393D; margin: 0px"><strong>Process Management</strong></label>
+            </div>
+        </div>
+        <div style="position: absolute; right: 40px; display: flex">
+
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; display: flex">
+        <div class="card" style="width: 50%; height: 100%; display: flex">
+            <div class="card-header" style="display: flex">
+                <div style="padding: 5px">
+                    <label style="color: #19393D; margin: 0px"><strong>Calculations</strong></label>
+                </div>
+                <div style="position: absolute; right: 40px">
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                               aria-haspopup="true" aria-expanded="false">
+                                Processes
+                            </a>
+                            <div class="dropdown-menu"
+                                 style="position: absolute; left: 0px">
+                                <label class="dropdown-item" id="posCalc">Positions</label>
+                                <label class="dropdown-item" id="navCalc">NAV</label>
+                                <label class="dropdown-item" id="portRisk">Risk</label>
+                                <label class="dropdown-item" id="portHoldings">Holdings</label>
+                                <label class="dropdown-item" id="portRet">Return</label>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div style="width: 100%; height: 100%">
+
+            </div>
+        </div>
+        <div class="card" style="width: 50%; height: 100%; display: flex">
+            <div class="card-header" style="display: flex">
+                <div style="padding: 5px; display: flex">
+                    <div style="padding-right: 15px">
+                        <label style="color: #19393D; margin: 0px"><strong>Settings</strong></label>
+                    </div>
+                </div>
+                <div style="position: absolute; right: 40px; display: flex">
+
+                </div>
+            </div>
+            <div style="width: 100%; height: 100%">
+                <div class="bs-example" style="height: 100%; width: 100%">
+                    <ul class="nav nav-tabs" id="myTab">
+                        <li class="nav-item">
+                            <a href="#positions" class="nav-link" data-toggle="tab">Positions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#nav" class="nav-link" data-toggle="tab">NAV</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#risk" class="nav-link" data-toggle="tab">Risk</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#holdings" class="nav-link" data-toggle="tab">Holdings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#return" class="nav-link" data-toggle="tab">Return</a>
+                        </li>
+                    </ul>
+                    <div class="bs-example" style="width: 100%; padding: 15px">
+                        <div class="tab-content">
+                            <div class="tab-pane fade" id="positions">
+                                <h4 class="mt-2">Home tab content</h4>
+                            </div>
+                            <div class="tab-pane fade" id="nav">
+                                <h4 class="mt-2">Profile tab content</h4>
+                            </div>
+                            <div class="tab-pane fade" id="risk">
+                                <h4 class="mt-2">Risk</h4>
+                            </div>
+                            <div class="tab-pane fade" id="holdings">
+                                <h4 class="mt-2">Risk</h4>
+                            </div>
+                            <div class="tab-pane fade" id="return">
+                                <h4 class="mt-2">Risk</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!--Modals-->
+
+
+<!--Modals------------------------------------------------------------------------------------------------------------->
 <!--New Portfolio-->
 <div class="modal fade" id="newPort" data-backdrop="static" data-keyboard="false" tabindex="-1"
      aria-labelledby="newPortLabel" aria-hidden="true">
@@ -342,11 +382,4 @@
 
 {% load static %}
 <script src="{% static 'admin/js/portfolios_main.js' %}"></script>
-
-{% endblock %}
-
-<!--New portfolio creator form-->
-{% block entry_form %}
-
-
 {% endblock %}

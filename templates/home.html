@@ -132,200 +132,204 @@
 {% endblock %}
 
 {% block main_block%}
-
-<!--Portfolios-->
 <br>
-<div class="card" style="width: 100%; height: 200px; display: flex">
-    <div class="card-header card_header">
-        <div>
-            <h5  style="color: #19393D"><strong>Portfolio</strong></h5>
-        </div>
-        <div>
-            <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
-            {% for portfolio in portfolios %}
-            <option>{{portfolio.portfolio_name}}</option>
-            {% endfor %}
-        </select>
-        </div>
-        <div>
-            <label><strong>Type</strong></label>
-        </div>
-        <div>
-            <label><strong>Trade</strong></label>
-        </div>
-        <div>
-            <label><strong>Asset Value</strong></label>
-        </div>
-        <div>
-            <label><strong>1000</strong></label>
-        </div>
-        <div>
-            <label><strong>USD</strong></label>
-        </div>
-    </div>
-    <div class="card_container form-row align-items-center ">
-
-    </div>
-</div>
-
-<br>
-<!--All robots dashboard-->
-<div class="card-header" style="width: 100%;  display: flex">
-    <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
-        <div style="padding-right: 15px;">
-            <h5 style="color: #19393D"><strong>Robot Dashboard</strong></h5>
-        </div>
-        <div class="form-group" style="padding-right: 15px;">
-            <label>Start Date</label>
-            <input class="form-control form-control-sm startDay" type="date" id="robotDashStart" name="start_date"
-                    min="2020-01-01" style="width: 150px">
-        </div>
-        <div class="form-group" style="padding-right: 15px;">
-            <label>End Date</label>
-            <input class="form-control form-control-sm endDay" type="date" id="robotDashEnd" name="end_date"
-                    min="2020-01-01" style="width: 150px">
-        </div>
-        <div>
-            <button type="button" class="btn btn-outline-dark" id="getDashChartBtn">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-</div>
-
-<br>
-<!--Robots loaded on page-->
-<div class="card-header rounded" style="width: 100%;  display: flex">
-    <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
-        <div style="padding-right: 15px;">
-            <h5 style="color: #19393D"><strong>Robot</strong></h5>
-        </div>
-        <div style="padding-right: 15px;">
-            <select class="form-control form-control-sm" name="robot_name" id="robot_selector">
-                {% for robot in robots %}
-                <option>{{robot.name}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group" style="padding-right: 15px;">
-            <label>Start Date</label>
-            <input class="form-control form-control-sm startDay" type="date" id="start" name="start_date"
-                    min="2020-01-01" style="width: 150px">
-        </div>
-        <div class="form-group" style="padding-right: 15px;">
-            <label>End Date</label>
-            <input class="form-control form-control-sm endDay" type="date" id="end" name="end_date"
-                    min="2020-01-01" style="width: 150px">
-        </div>
-        <div>
-            <button type="button" class="btn btn-outline-dark" id="getChartBtn">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd"
-                          d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-</div>
-
-<br>
-<!--Robot charts-->
-<div style="width: 100%; height: 600px; overflow: scroll; display: none" id="robotChartsDiv">
-    <div class="row" style="justify-content: center; align-items: center; height: 100px">
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Strategy</strong></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D" id="robotStrategy"></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Security</strong></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D" id="robotSecurity"></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Inception Date</strong></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D" id="robotInceptionDate"></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D"><strong>Status</strong></h5>
-        </div>
-        <div style="padding: 5px">
-            <h5 style="color: #19393D" id="robotStatus"></h5>
-        </div>
-
-    </div>
-    <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
-        <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%">
-            <canvas id="robotChart1" width="300" height="200" class="chartjs-render-monitor" style="display: block; cursor: default;"></canvas>
-        </div>
-        <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%; margin: 10px">
-            <canvas id="robotChart2" width="300" height="200" class="chartjs-render-monitor" style="display: block; cursor: default;"></canvas>
-        </div>
-    </div>
-    <div class="row" style="justify-content: center; align-items: center; height: 50px">
-        <h5 style="color: #19393D"><strong>Return</strong></h5>
-    </div>
-    <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
-        <div class="col" style="height: 100%">
-            <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                <canvas id="bar_chart_3" class="my-4 w-100 chartjs-render-monitor"></canvas>
-            </div>
-        </div>
-        <div class="col" style="height: 100%">
-            <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                <canvas id="robotChart4" class="my-4 w-100 chartjs-render-monitor"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--Account-->
-<div style="width: 100%;">
+<div style="height: 800px; width: 100%; overflow-y:scroll">
+    <!--Portfolios-->
     <div class="card" style="width: 100%; height: 200px; display: flex">
         <div class="card-header card_header">
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>Account</strong></h5>
+            <div>
+                <h5 style="color: #19393D"><strong>Portfolio</strong></h5>
             </div>
-            <div style="padding: 5px">
-                <select class="form-control form-control-sm" name="account" id="account_selector">
-                    {% for account in accounts %}
-                    <option>{{account.account_number}}</option>
+            <div>
+                <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
+                    {% for portfolio in portfolios %}
+                    <option>{{portfolio.portfolio_name}}</option>
                     {% endfor %}
                 </select>
             </div>
             <div>
-                <label><strong>Environment</strong></label>
+                <label><strong>Type</strong></label>
             </div>
             <div>
-                <label id="#env"></label>
-            </div>
-            <div>
-                <label id="broker">Oanda</label>
+                <label><strong>Trade</strong></label>
             </div>
             <div>
                 <label><strong>Asset Value</strong></label>
             </div>
             <div>
-                <label>1346</label>
+                <label><strong>1000</strong></label>
+            </div>
+            <div>
+                <label><strong>USD</strong></label>
             </div>
         </div>
-        <div class="card_container" style="height: 100%; width: 100%">
-            <canvas id="bar_chart_2" width="50%"></canvas>
+        <div class="card_container form-row align-items-center ">
+
+        </div>
+    </div>
+
+    <br>
+    <!--All robots dashboard-->
+    <div class="card-header" style="width: 100%;  display: flex">
+        <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
+            <div style="padding-right: 15px;">
+                <h5 style="color: #19393D"><strong>Robot Dashboard</strong></h5>
+            </div>
+            <div class="form-group" style="padding-right: 15px;">
+                <label>Start Date</label>
+                <input class="form-control form-control-sm startDay" type="date" id="robotDashStart" name="start_date"
+                       min="2020-01-01" style="width: 150px">
+            </div>
+            <div class="form-group" style="padding-right: 15px;">
+                <label>End Date</label>
+                <input class="form-control form-control-sm endDay" type="date" id="robotDashEnd" name="end_date"
+                       min="2020-01-01" style="width: 150px">
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-dark" id="getDashChartBtn">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <!--Robots loaded on page-->
+    <div class="card-header rounded" style="width: 100%;  display: flex">
+        <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
+            <div style="padding-right: 15px;">
+                <h5 style="color: #19393D"><strong>Robot</strong></h5>
+            </div>
+            <div style="padding-right: 15px;">
+                <select class="form-control form-control-sm" name="robot_name" id="robot_selector">
+                    {% for robot in robots %}
+                    <option>{{robot.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="padding-right: 15px;">
+                <label>Start Date</label>
+                <input class="form-control form-control-sm startDay" type="date" id="start" name="start_date"
+                       min="2020-01-01" style="width: 150px">
+            </div>
+            <div class="form-group" style="padding-right: 15px;">
+                <label>End Date</label>
+                <input class="form-control form-control-sm endDay" type="date" id="end" name="end_date"
+                       min="2020-01-01" style="width: 150px">
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-dark" id="getChartBtn">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <!--Robot charts-->
+    <div style="width: 100%; height: 600px; overflow: scroll; display: none" id="robotChartsDiv">
+        <div class="row" style="justify-content: center; align-items: center; height: 100px">
+            <div style="padding: 5px">
+                <h5 style="color: #19393D"><strong>Strategy</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D" id="robotStrategy"></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D"><strong>Security</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D" id="robotSecurity"></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D"></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D"><strong>Inception Date</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D" id="robotInceptionDate"></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D"><strong>Status</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <h5 style="color: #19393D" id="robotStatus"></h5>
+            </div>
+
+        </div>
+        <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
+            <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%">
+                <canvas id="robotChart1" width="300" height="200" class="chartjs-render-monitor"
+                        style="display: block; cursor: default;"></canvas>
+            </div>
+            <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%; margin: 10px">
+                <canvas id="robotChart2" width="300" height="200" class="chartjs-render-monitor"
+                        style="display: block; cursor: default;"></canvas>
+            </div>
+        </div>
+        <div class="row" style="justify-content: center; align-items: center; height: 50px">
+            <h5 style="color: #19393D"><strong>Return</strong></h5>
+        </div>
+        <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
+            <div class="col" style="height: 100%">
+                <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
+                    <canvas id="bar_chart_3" class="my-4 w-100 chartjs-render-monitor"></canvas>
+                </div>
+            </div>
+            <div class="col" style="height: 100%">
+                <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
+                    <canvas id="robotChart4" class="my-4 w-100 chartjs-render-monitor"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Account-->
+    <div style="width: 100%;">
+        <div class="card" style="width: 100%; height: 200px; display: flex">
+            <div class="card-header card_header">
+                <div style="padding: 5px">
+                    <h5 style="color: #19393D"><strong>Account</strong></h5>
+                </div>
+                <div style="padding: 5px">
+                    <select class="form-control form-control-sm" name="account" id="account_selector">
+                        {% for account in accounts %}
+                        <option>{{account.account_number}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label><strong>Environment</strong></label>
+                </div>
+                <div>
+                    <label id="#env"></label>
+                </div>
+                <div>
+                    <label id="broker">Oanda</label>
+                </div>
+                <div>
+                    <label><strong>Asset Value</strong></label>
+                </div>
+                <div>
+                    <label>1346</label>
+                </div>
+            </div>
+            <div class="card_container" style="height: 100%; width: 100%">
+                <canvas id="bar_chart_2" width="50%"></canvas>
+            </div>
         </div>
     </div>
 </div>
+
 
 {% load static %}
 <script src="{% static 'admin/js/home_page.js' %}"></script>
