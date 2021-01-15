@@ -5,6 +5,7 @@ from datetime import timedelta
 import numpy as np
 from django.http import JsonResponse
 
+
 def pos_calc(portfolio, calc_date):
     print("==============================")
     print("PORTFOLIO POSITIONS CALCULATOR")

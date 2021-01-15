@@ -12,7 +12,9 @@ from accounts.models import *
 from instrument.models import *
 import datetime
 from datetime import timedelta, datetime
-from risk.views import *
+from risk.models import *
+from mysite.models import *
+from mysite.my_functions.general_functions import *
 
 
 # Main site for robot configuration
@@ -85,6 +87,9 @@ def new_robot(request):
         except:
             print("Robot exists in database")
             response = {"message": "alert"}
+
+    SystemMessages(msg_type="NEW ROBOT",
+                   msg=robot_name + ": New robot was created.").save()
 
     print("Sending response to front end")
     print("")
@@ -309,10 +314,10 @@ def incoming_trade(request):
         # This is for live signal !
         message = request.body
         message = str(message.decode("utf-8"))
-        signal = message.split()
+        # signal = message.split()
 
         # Test singal
-        # signal = ['dd', 'buy', '1', 'XAGUSD', 'Close']
+        signal = ['ttz', 'buy', '1', 'XAGUSD', 'BUY']
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
@@ -339,11 +344,46 @@ def incoming_trade(request):
 
         if status == "inactive":
             print("Robot is inactive. Trade execution stopped!")
+            SystemMessages(msg_type="TRADE EXECUTION", msg=signal[0] + ": Inactive Robot. Execution stopped.").save()
             return HttpResponse(None)
 
         print("Robot is active. Trading is allowed.")
-        print("-------------------------")
-        print("")
+        print("--------------------------")
+        print("RISK PARAMETERS EVALUATION")
+        print("--------------------------")
+        print("Fetching risk parameters from database")
+
+        risk_params = RobotRisk.objects.filter(robot=signal[0]).values()
+
+        # Checking if risk parameters are existing for the robot
+        if not risk_params:
+            SystemMessages(msg_type="TRADE EXECUTION",
+                           msg="Risk parameters are not assigned to " + signal[0] + str(". Execution stopped.")).save()
+            return HttpResponse(None)
+
+        daily_loss_limit = risk_params[0]["daily_risk_perc"] * -1
+
+        print("Fetching balance information from database")
+
+        balance_params = Balance.objects.filter(robot_name=signal[0], date=get_today()).values()
+
+        # Check if balance is calculated for a robot
+        if not balance_params:
+            SystemMessages(msg_type="TRADE EXECUTION",
+                           msg=signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped").save()
+            return HttpResponse(None)
+
+        daily_return = balance_params[0]["ret"]
+
+        # Checking if close balance is not zero
+
+        # Daily loss % check
+        if daily_return < daily_loss_limit:
+            SystemMessages(msg_type="RISK",
+                           msg=signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%").save()
+            return HttpResponse(None)
+
+        print("Robot passed all risk checks")
         print("-------------------------")
         print(" ORDER ROUTING TO BROKER ")
         print("-------------------------")
@@ -353,7 +393,6 @@ def incoming_trade(request):
 
             account = BrokerAccounts.objects.filter(account_number=account_number,
                                                     broker_name=broker).values()
-
             env = account[0]["env"]
 
             if env == "demo":
@@ -388,6 +427,7 @@ def incoming_trade(request):
 
                 if len(open_trades) == 0:
                     print("There are no open trades for this robot in the database. Execution stopped!")
+                    SystemMessages(msg_type="TRADE EXECUTION", msg=signal[0] + ": Close trade request. There are no open trades.").save()
                     return HttpResponse(None)
 
                 for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
@@ -403,6 +443,8 @@ def incoming_trade(request):
                     trade_record.pnl = open_trade["pl"]
                     trade_record.close_time = datetime.today().date()
                     trade_record.save()
+
+                    SystemMessages(msg_type="TRADE EXECUTION", msg="CLOSE: " + signal[0] + "P&L " + str(open_trade["pl"])).save()
 
                 print("Calculating balance for robot")
 
@@ -434,6 +476,9 @@ def incoming_trade(request):
                         broker="oanda").save()
 
             print("Robot trade table is updated!")
+
+            SystemMessages(msg_type="TRADE EXECUTION",
+                           msg=signal[0] + ": " + str(trade_side) + " " + str(quantity) + " " + str(security)).save()
 
     response = {"securities": [0]}
 

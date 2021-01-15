@@ -80,8 +80,8 @@ def close_trade(request):
 
     print("Sending message to system messages table")
 
-    SystemMessages(msg_type="Trade Execution",
-                   msg="Closing trade for " + robot).save()
+    SystemMessages(msg_type="TRADE EXECUTION",
+                   msg=robot + ": Closing trade manually").save()
 
     return redirect('trade_app main')
 
@@ -144,7 +144,7 @@ def submit_trade(request):
 
     print("Sending message to system messages table")
 
-    SystemMessages(msg_type="Trade Execution",
+    SystemMessages(msg_type="TRADE EXECUTION",
                    msg="Trade executed for " + robot + "@" + quantity).save()
 
     return redirect('trade_app main')
