@@ -1,18 +1,20 @@
 // Updating robot risk parameters
-const riskSaveButton = $("#riskSaveBtn")
-const robotSelector = $("#robotSelector")
-const dailyRiskLimit = $("#dailyLossLimit")
+const riskSaveButton = $("#updateDailyRiskBtn")
 
 riskSaveButton.click(function () {
+
+    console.log(this)
     $.ajax({
         type: "POST",
         url: "update_robot_risk/",
         data: {csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
-            robot: robotSelector.val(),
-            daily_risk: dailyRiskLimit.val()
+            robot: $("#robotNameRisk").val(),
+            daily_risk: $("#dailyRobotRisk").val(),
+            daily_nmb_trades: $("#dailyNmbTrades").val(),
             },
         success: function (response) {
             alert("Risk data is updated!")
+            loadRobotRisk()
         }
     })
 })
@@ -30,7 +32,7 @@ function loadRobotRisk() {
 
         }
         for (let robot of data["message"]){
-            console.log(robot)
+
             let newRow = document.createElement("tr")
             let newTd1 = document.createElement("td")
             let newTd2 = document.createElement("td")
@@ -59,7 +61,9 @@ function loadRobotRisk() {
             robotRiskTableBody.append(newRow)
         }
         $('.robRiskAmendBtn').click(function () {
-            console.log(this.parentElement.parentElement)
+            let robotName = this.parentElement.parentElement.querySelector(".robotName").innerHTML
+            console.log(robotName)
+            $("#robotNameRisk").val(robotName)
             $("#amendRobotRisk").modal();
         })
     })

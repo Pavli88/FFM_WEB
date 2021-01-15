@@ -42,12 +42,15 @@ def update_robot_risk(request):
     if request.method == "POST":
         robot = request.POST.get("robot")
         daily_risk = request.POST.get("daily_risk")
+        nbm_trades = request.POST.get("daily_nmb_trades")
 
     print("ROBOT:", robot)
     print("DAILY RISK LIMIT:", daily_risk)
+    print("DAILY MAX NUMBER OF TRADES:", nbm_trades)
 
     robot_risk_data = RobotRisk.objects.get(robot=robot)
     robot_risk_data.daily_risk_perc = daily_risk
+    robot_risk_data.daily_trade_limit = nbm_trades
     robot_risk_data.save()
 
     response = {"message": "success"}
