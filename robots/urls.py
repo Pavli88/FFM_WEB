@@ -14,4 +14,5 @@ urlpatterns = [
     path('robots/get_securities/', views.load_securities),
     path('robots/get_accounts/', views.load_accounts),
     path('robots/delete_robot/', views.delete_robot),
+    path('robots/calculate_robot_balance/', views.calculate_robot_balance),
 ]

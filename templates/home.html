@@ -90,50 +90,13 @@
     </div>
 </div>
 
-<!--System Messages-->
-<br>
-<div style="width: 100%; height: 400px">
-    <div class="card" style="width: 100%; height: 400px; display: flex">
-        <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <label style="color: #19393D; margin: 0px"><strong>System Messages</strong></label>
-        </div>
-        <div style="position: absolute; right: 40px">
-            <ul class="navbar-nav">
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">
-                    Options
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
-                    <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
-                </div>
-            </li>
-        </ul>
-        </div>
-    </div>
-        <div class="card_container" style="width: 100%; overflow-y:scroll;">
-            <table class="table-striped" style="width: 100%" id="msgTable">
-                <thead style="width: 100%">
-                <tr>
-                    <th scope="col">Type</th>
-                    <th scope="col">Message</th>
-                    <th scope="col">Date</th>
-                </tr>
-                </thead>
-                <tbody id="msgTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
 {% endblock %}
 
 {% block main_block%}
 <br>
-<div style="height: 800px; width: 100%; overflow-y:scroll">
+<div style="height: 500px; width: 100%; overflow-y:scroll">
     <!--Portfolios-->
     <div class="card" style="width: 100%; height: 500px; display: flex">
         <div class="card-header" style="display: flex">
@@ -347,6 +310,42 @@
     </div>
 </div>
 
+<!--System Messages-->
+<br>
+<div style="width: 100%; height: 300px">
+    <div class="card" style="width: 100%; height: 100%; display: flex">
+        <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>System Messages</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+        <div class="card_container" style="width: 100%; overflow-y:scroll;">
+            <table class="table-striped" style="width: 100%" id="msgTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody id="msgTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 {% load static %}
 <script src="{% static 'admin/js/home_page.js' %}"></script>

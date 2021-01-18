@@ -145,7 +145,39 @@ function switchAccount() {
     })
 }
 
-// Fetching robot related chart data from back end
+// System message dashboard
+const messageTable = $("#msgTableBody")
+const loadMessagesBtn = $("#loadMsgsBtn")
+
+loadMessagesBtn.on("click", loadMessages)
+loadMessages()
+
+function loadMessages(){
+    $.get('get_messages/', function (data) {
+
+        try {
+            messageTable.empty()
+        } catch (err) {
+        }
+
+        for (msg of data["message"]){
+            let newRow = document.createElement("tr")
+            let newTd1 = document.createElement("td")
+            let newTd2 = document.createElement("td")
+            let newTd3 = document.createElement("td")
+
+            newTd1.innerText = msg["msg_type"]
+            newTd2.innerHTML = msg["msg"]
+            newTd3.innerHTML = msg["date"]
+
+            newRow.append(newTd1)
+            newRow.append(newTd2)
+            newRow.append(newTd3)
+
+            messageTable.append(newRow)
+        }
+    })
+}
 
 
 

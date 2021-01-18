@@ -15,6 +15,7 @@ from datetime import timedelta, datetime
 from risk.models import *
 from mysite.models import *
 from mysite.my_functions.general_functions import *
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 # Main site for robot configuration
@@ -344,7 +345,7 @@ def incoming_trade(request):
 
         if status == "inactive":
             print("Robot is inactive. Trade execution stopped!")
-            SystemMessages(msg_type="TRADE EXECUTION", msg=signal[0] + ": Inactive Robot. Execution stopped.").save()
+            SystemMessages(msg_type="Trade Execution", msg=signal[0] + ": Inactive Robot. Execution stopped.").save()
             return HttpResponse(None)
 
         print("Robot is active. Trading is allowed.")
@@ -357,7 +358,7 @@ def incoming_trade(request):
 
         # Checking if risk parameters are existing for the robot
         if not risk_params:
-            SystemMessages(msg_type="TRADE EXECUTION",
+            SystemMessages(msg_type="Trade Execution",
                            msg="Risk parameters are not assigned to " + signal[0] + str(". Execution stopped.")).save()
             return HttpResponse(None)
 
@@ -369,7 +370,7 @@ def incoming_trade(request):
 
         # Check if balance is calculated for a robot
         if not balance_params:
-            SystemMessages(msg_type="TRADE EXECUTION",
+            SystemMessages(msg_type="Trade Execution",
                            msg=signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped").save()
             return HttpResponse(None)
 
@@ -379,7 +380,7 @@ def incoming_trade(request):
 
         # Daily loss % check
         if daily_return < daily_loss_limit:
-            SystemMessages(msg_type="RISK",
+            SystemMessages(msg_type="Risk",
                            msg=signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%").save()
             return HttpResponse(None)
 
@@ -427,7 +428,7 @@ def incoming_trade(request):
 
                 if len(open_trades) == 0:
                     print("There are no open trades for this robot in the database. Execution stopped!")
-                    SystemMessages(msg_type="TRADE EXECUTION", msg=signal[0] + ": Close trade request. There are no open trades.").save()
+                    SystemMessages(msg_type="Trade Execution", msg=signal[0] + ": Close trade request. There are no open trades.").save()
                     return HttpResponse(None)
 
                 for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
@@ -444,7 +445,7 @@ def incoming_trade(request):
                     trade_record.close_time = datetime.today().date()
                     trade_record.save()
 
-                    SystemMessages(msg_type="TRADE EXECUTION", msg="CLOSE: " + signal[0] + "P&L " + str(open_trade["pl"])).save()
+                    SystemMessages(msg_type="Trade Execution", msg="CLOSE: " + signal[0] + "P&L " + str(open_trade["pl"])).save()
 
                 print("Calculating balance for robot")
 
@@ -477,7 +478,7 @@ def incoming_trade(request):
 
             print("Robot trade table is updated!")
 
-            SystemMessages(msg_type="TRADE EXECUTION",
+            SystemMessages(msg_type="Trade Execution",
                            msg=signal[0] + ": " + str(trade_side) + " " + str(quantity) + " " + str(security)).save()
 
     response = {"securities": [0]}
@@ -506,3 +507,30 @@ def delete_robot(request):
     print("Sending data to front end")
 
     return JsonResponse(response, safe=False)
+
+
+def calculate_robot_balance(request):
+
+    print("Loading robots from database")
+
+    robots = pd.DataFrame(list(Robots.objects.filter().values()))
+
+    print(robots)
+    print("")
+    print("Calculating balances")
+
+    for robot in robots["name"]:
+        bal_calc_msg = balance_calc(robot=robot, calc_date=str(get_today()))
+        print(bal_calc_msg)
+
+    # for single_date in (datetime.date(2021,1,1) + timedelta(n) for n in range(50)):
+    #
+    #     print(single_date, bal_calc_msg)
+    #
+    SystemMessages(msg_type="Robot Balance Calculation",
+                   msg=bal_calc_msg).save()
+
+    return HttpResponse(None)
+
+
+

@@ -89,10 +89,16 @@ def balance_calc(robot, calc_date):
 
     robot_data = Robots.objects.filter(name=robot).values()
 
+    # Checking if calculation date is less then robot inception data
+    if date.date() < robot_data[0]["inception_date"]:
+        return robot + " - " + "Calculation date (" + str(date.date()) +") is less than robot inception date (" + \
+               str(robot_data[0]["inception_date"]) + ". Calculation is stopped."
+
+    # Checking if calculation date is weekend or not
     if date.weekday() == 6:
-        return {"message": calc_date + ": Sunday. Calculation is not executed at weekends"}
+        return robot + " - " + calc_date + " is Sunday. Calculation is not executed at weekends"
     elif date.weekday() == 5:
-        return {"message": calc_date + ": Saturday. Calculation is not executed at weekends"}
+        return robot + " - " + calc_date + " is Saturday. Calculation is not executed at weekends"
     elif date.weekday() == 0:
         day_swift = 3
     else:
@@ -117,32 +123,52 @@ def balance_calc(robot, calc_date):
     else:
         cash_flow = cash_flow_table["cash_flow"].sum()
 
-    open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
+    open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date.date()).values()))
 
     if open_balance_table.empty:
         if robot_data[0]["inception_date"] == date.date():
-            print("Inception date! No previous record available.")
             open_balance = 0.0
-            ret = realized_pnl / cash_flow
+            if cash_flow == 0.0:
+                return robot + " - " + str(calc_date) + " - Robot is not funded. Calculation is not possible."
+            else:
+                ret = realized_pnl / cash_flow
         else:
-            return str(calc_date) + " There is no opening balance data for T-1"
+            return robot + " - " + str(calc_date) + " There is no opening balance data for T-1"
     else:
         open_balance = open_balance_table["close_balance"].sum()
-        ret = realized_pnl / open_balance
+
+        # Checks if previous day's opening balance is zero or not
+        if open_balance == 0.0:
+            ret = 0.0
+        else:
+            ret = realized_pnl / open_balance
 
     close_balance = cash_flow + realized_pnl + open_balance
 
-    Balance.objects.filter(date=date, robot_name=robot).delete()
+    # Saving down calculated balance to database
+    try:
+        robot_balance = Balance.objects.get(date=date, robot_name=robot)
+        robot_balance.opening_balance = round(open_balance, 4)
+        robot_balance.close_balance = round(close_balance, 4)
+        robot_balance.cash_flow = cash_flow
+        robot_balance.realized_pnl = round(realized_pnl, 4)
+        robot_balance.ret = round(ret, 4)
+        robot_balance.unrealized_pnl = 0.0
+        robot_balance.date = date
+        robot_balance.save()
+        rec_status = "Updated Record"
+    except:
+        Balance(robot_name=robot,
+                opening_balance=round(open_balance, 4),
+                close_balance=round(close_balance, 4),
+                cash_flow=cash_flow,
+                realized_pnl=round(realized_pnl, 4),
+                ret=round(ret, 4),
+                unrealized_pnl=0.0,
+                date=date).save()
+        rec_status = "New Record"
 
-    message = "DATE: " + str(calc_date) + " T-1 DATE: " + str(t_min_one_date.date()) + " REALIZED PNL: " + str(round(realized_pnl, 2)) + " CASH FLOW: " + str(cash_flow) + " OPENING BALANCE: " + str(round(open_balance, 2)) + " CLOSING BALANCE: " + str(round(close_balance, 2)) + " RETURN: " + str(round(ret, 4))
-
-    Balance(robot_name=robot,
-            opening_balance=round(open_balance, 4),
-            close_balance=round(close_balance, 4),
-            cash_flow=cash_flow,
-            realized_pnl=round(realized_pnl, 4),
-            ret=round(ret, 4),
-            unrealized_pnl=0.0,
-            date=date).save()
-
-    return message
+    return robot + " - " + str(rec_status) + " - Date " + str(calc_date) + " - T-1 Date " + \
+           str(t_min_one_date.date()) + " - Realized Pnl " + str(round(realized_pnl, 2)) + \
+           " - Cash Flow " + str(cash_flow) + " - Opening Balance " + str(round(open_balance, 2)) + \
+           " - Closing Balance: " + str(round(close_balance, 2)) + " - Return " + str(round(ret, 4))

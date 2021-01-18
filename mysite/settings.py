@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,8 @@ STATIC_ROOT = '/home/pavliati/mysite/static'
 STATIC_URL = '/static/'
 
 LOGIN_URL = "/home/"
+
+
+CRONJOBS = [
+    ('30 02 * * *', 'mysite.jobs.robot_balance_calculation', '>> ' + BASE_DIR + '/mysite/job_logs/robot_balance_calc.log')
+]
