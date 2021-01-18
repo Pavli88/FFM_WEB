@@ -20,3 +20,7 @@ def robot_balance_calculation():
 
     SystemMessages(msg_type="Robot Balance Calculation",
                    msg="Robot balance calculation job run successfully for all robots at " + str(datetime.now())).save()
+
+
+if __name__ == "__main__":
+    robot_balance_calculation()
