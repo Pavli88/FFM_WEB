@@ -314,10 +314,10 @@ def incoming_trade(request):
         # This is for live signal !
         message = request.body
         message = str(message.decode("utf-8"))
-        # signal = message.split()
+        signal = message.split()
 
         # Test singal
-        signal = ['ttz', 'buy', '1', 'XAGUSD', 'BUY']
+        # signal = ['ttz', 'buy', '1', 'XAGUSD', 'BUY']
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
