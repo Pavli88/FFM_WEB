@@ -135,65 +135,82 @@
 <br>
 <div style="height: 800px; width: 100%; overflow-y:scroll">
     <!--Portfolios-->
-    <div class="card" style="width: 100%; height: 200px; display: flex">
-        <div class="card-header card_header">
-            <div>
-                <h5 style="color: #19393D"><strong>Portfolio</strong></h5>
+    <div class="card" style="width: 100%; height: 500px; display: flex">
+        <div class="card-header" style="display: flex">
+            <div style="padding: 5px">
+                <label style="color: #19393D; margin: 0px"><strong>Robots</strong></label>
             </div>
-            <div>
-                <select class="form-control form-control-sm" name="portfolio" id="portfolio_selector">
-                    {% for portfolio in portfolios %}
-                    <option>{{portfolio.portfolio_name}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label><strong>Type</strong></label>
-            </div>
-            <div>
-                <label><strong>Trade</strong></label>
-            </div>
-            <div>
-                <label><strong>Asset Value</strong></label>
-            </div>
-            <div>
-                <label><strong>1000</strong></label>
-            </div>
-            <div>
-                <label><strong>USD</strong></label>
+            <div style="position: absolute; right: 40px">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            Environment
+                        </a>
+                        <div class="dropdown-menu"
+                             style="position: absolute; left: 0px">
+                            <label class="dropdown-item">Live</label>
+                            <label class="dropdown-item">Demo</label>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
-        <div class="card_container form-row align-items-center ">
+        <div style="width: 100%; height: 100%; display: flex; padding: 10px;">
+
+            <!--General info performance and risk numbers-->
+            <div class="card" style="width: 30%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px">
+                        <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
+                    </div>
+                    <div style="position: absolute; right: 40px">
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    Environment
+                                </a>
+                                <div class="dropdown-menu"
+                                     style="position: absolute; left: 0px">
+                                    <label class="dropdown-item">Live</label>
+                                    <label class="dropdown-item">Demo</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+        <div style="width: 100%; height: 100%;">
 
         </div>
     </div>
 
-    <br>
-    <!--All robots dashboard-->
-    <div class="card-header" style="width: 100%;  display: flex">
-        <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
-            <div style="padding-right: 15px;">
-                <h5 style="color: #19393D"><strong>Robot Dashboard</strong></h5>
-            </div>
-            <div class="form-group" style="padding-right: 15px;">
-                <label>Start Date</label>
-                <input class="form-control form-control-sm startDay" type="date" id="robotDashStart" name="start_date"
-                       min="2020-01-01" style="width: 150px">
-            </div>
-            <div class="form-group" style="padding-right: 15px;">
-                <label>End Date</label>
-                <input class="form-control form-control-sm endDay" type="date" id="robotDashEnd" name="end_date"
-                       min="2020-01-01" style="width: 150px">
-            </div>
-            <div>
-                <button type="button" class="btn btn-outline-dark" id="getDashChartBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                    </svg>
-                </button>
-            </div>
+            <!--Charts-->
+            <div class="card" style="width: 70%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px;">
+                        <label style="color: #19393D; margin: 0px;"><strong>Charts</strong></label>
+                    </div>
+                    <div style="position: absolute; right: 40px;">
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    Environment
+                                </a>
+                                <div class="dropdown-menu"
+                                     style="position: absolute; left: 0px">
+                                    <label class="dropdown-item">Live</label>
+                                    <label class="dropdown-item">Demo</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+        <div style="width: 100%; height: 100%;">
+
+        </div>
+    </div>
         </div>
     </div>
 
