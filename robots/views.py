@@ -15,7 +15,6 @@ from datetime import timedelta, datetime
 from risk.models import *
 from mysite.models import *
 from mysite.my_functions.general_functions import *
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 # Main site for robot configuration
