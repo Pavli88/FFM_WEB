@@ -146,5 +146,5 @@ LOGIN_URL = "/home/"
 
 
 CRONJOBS = [
-    ('30 02 * * *', 'mysite.jobs.robot_balance_calculation', '>> ' + BASE_DIR + '/mysite/job_logs/robot_balance_calc.log')
+    ('06 00 * * *', 'mysite.jobs.robot_balance_calculation', '>> ' + BASE_DIR + '/mysite/job_logs/robot_balance_calc.log')
 ]
