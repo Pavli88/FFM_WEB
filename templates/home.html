@@ -131,21 +131,6 @@
                     <div style="padding: 5px">
                         <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
                     </div>
-                    <div style="position: absolute; right: 40px">
-                        <ul class="navbar-nav">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                                   aria-haspopup="true" aria-expanded="false">
-                                    Environment
-                                </a>
-                                <div class="dropdown-menu"
-                                     style="position: absolute; left: 0px">
-                                    <label class="dropdown-item">Live</label>
-                                    <label class="dropdown-item">Demo</label>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
                 <div style="width: 100%; height: 100%;">
 
@@ -164,22 +149,10 @@
                                 <a href="#dailyRet" class="nav-link" data-toggle="tab">Daily Returns</a>
                             </li>
                             <li class="nav-item">
-                                <a href="#nav" class="nav-link" data-toggle="tab">Performance</a>
+                                <a href="#robotBalance" class="nav-link" data-toggle="tab">Balance</a>
                             </li>
-                        </ul>
-                    </div>
-                    <div style="position: absolute; right: 40px;">
-                        <ul class="navbar-nav">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                                   aria-haspopup="true" aria-expanded="false">
-                                    Environment
-                                </a>
-                                <div class="dropdown-menu"
-                                     style="position: absolute; left: 0px">
-                                    <label class="dropdown-item">Live</label>
-                                    <label class="dropdown-item">Demo</label>
-                                </div>
+                            <li class="nav-item">
+                                <a href="#robotCf" class="nav-link" data-toggle="tab">Cash Flow</a>
                             </li>
                         </ul>
                     </div>
@@ -189,8 +162,11 @@
                         <div class="tab-pane fade" id="dailyRet">
                             <canvas id="dailyReturnChart" width="400" height="170"></canvas>
                         </div>
-                        <div class="tab-pane fade" id="nav">
-                            <h4 class="mt-2">Profile tab content</h4>
+                        <div class="tab-pane fade" id="robotBalance">
+                            <canvas id="balanceChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="robotCf">
+                            <canvas id="cashFlowChart" width="400" height="170"></canvas>
                         </div>
                     </div>
                 </div>

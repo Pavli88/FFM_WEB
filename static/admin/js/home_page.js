@@ -203,9 +203,15 @@ function robotDataLoader(){
     let robotBalanceData = getRobotBalance()
 
     // Loading daily robot returns
-    loadDailyReturnsChart(robotBalanceData)
+    BalanceDataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
+
+    // Robot balance chart
+    BalanceDataChart(robotBalanceData, "#balanceChart", "Balance", "line", "close_balance")
+
+    // Robot cash flow chart
+    BalanceDataChart(robotBalanceData, "#cashFlowChart", "Cash Flow", "bar", "cash_flow")
 }
-    // Load robot balance data function
+// Load robot balance data function
 function getRobotBalance() {
     let responseData = null
     $.ajax({
@@ -224,33 +230,26 @@ function getRobotBalance() {
     return responseData;
 }
 
-    // Load Daily return function
-function loadDailyReturnsChart(data){
-    console.log("Loading daily returns")
-    console.log(data)
+// Balance data chart creatior function
+function BalanceDataChart(data, id, title, type, dataValue){
     let dates = []
     let values = []
     let colorList = []
 
     for (record of data["message"]){
-        console.log(record)
         dates.push(record["date"])
-        values.push(record["ret"])
+        values.push(record[dataValue])
 
-        if (record["ret"] < 0){
+        if (record[dataValue] < 0){
             colorList.push("red")
         }else {
             colorList.push("green")
         }
-
     }
-    console.log(dates)
-
-    chart("#dailyReturnChart", values, dates, "Daily Returns", "bar", colorList)
-
+    chart(id, values, dates, title, type, colorList)
 }
 
-    // Load Performance data function
+
 
 
 
