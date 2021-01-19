@@ -530,4 +530,32 @@ def calculate_robot_balance(request):
     return HttpResponse(None)
 
 
+def get_robot_balance(robot_name, start_date=None, end_date=None):
+    robot_balance = Balance.objects.filter(robot_name=robot_name).values()
+    return robot_balance
+
+
+# Javascript based calls from front end
+def get_robot_returns(request):
+    print("Fetching robot balance records from database")
+
+    if request.method == "GET":
+        robot = request.GET.get("robot")
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+
+    print("ROBOT:", robot)
+    print("START DATE:", start_date)
+    print("END DATE:", end_date)
+
+    robot_balance = get_robot_balance(robot_name=robot)
+
+    response = {"message": list(robot_balance)}
+
+    print("Sending message to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+
 

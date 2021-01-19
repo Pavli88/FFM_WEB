@@ -46,17 +46,17 @@ function getRobotChartData() {
 }
 
 // Charting function
-function chart(id, data, dates, title, type, colorList) {
+function chart(id, dataList, dateList, title, type, colorList) {
     let ctx = document.querySelector(id).getContext('2d');
-    console.log(data)
+
     // Loading Charts
     let dataSet = {
         type: type,
         data: {
-            labels: dates,
+            labels: dateList,
             datasets: [{
                 label: title,
-                data: data,
+                data: dataList,
                 backgroundColor : colorList,
 
             }]
@@ -178,6 +178,79 @@ function loadMessages(){
         }
     })
 }
+
+// Loading data to robot panel
+
+    // Variables
+
+const robotSelector = $("#robotSelector")
+const startDate = $("#startDate")
+const endDate = $("#endDate")
+
+    // Function on change calls main loader function
+robotSelector.on("change", robotDataLoader)
+startDate.on("change", robotDataLoader)
+endDate.on("change", robotDataLoader)
+
+    // Main loader function
+function robotDataLoader(){
+    console.log("Robot Data Loader")
+
+    // Clearing chart canvases
+    // let canvas1 = $('#dailyReturnChart')[0]; // or document.getElementById('canvas');
+    // canvas1.width = canvas1.width;
+
+    let robotBalanceData = getRobotBalance()
+
+    // Loading daily robot returns
+    loadDailyReturnsChart(robotBalanceData)
+}
+    // Load robot balance data function
+function getRobotBalance() {
+    let responseData = null
+    $.ajax({
+        url: 'get_robot_returns/',
+        type: 'GET',
+        data: {
+            "robot": robotSelector.val(),
+            "start_date": startDate.val(),
+            "end_date": endDate.val()
+        },
+        async: false,
+        success: function (data) {
+            responseData = data;
+        }
+    });
+    return responseData;
+}
+
+    // Load Daily return function
+function loadDailyReturnsChart(data){
+    console.log("Loading daily returns")
+    console.log(data)
+    let dates = []
+    let values = []
+    let colorList = []
+
+    for (record of data["message"]){
+        console.log(record)
+        dates.push(record["date"])
+        values.push(record["ret"])
+
+        if (record["ret"] < 0){
+            colorList.push("red")
+        }else {
+            colorList.push("green")
+        }
+
+    }
+    console.log(dates)
+
+    chart("#dailyReturnChart", values, dates, "Daily Returns", "bar", colorList)
+
+}
+
+    // Load Performance data function
 
 
 
