@@ -200,22 +200,27 @@ function robotDataLoader(){
     // let canvas1 = $('#dailyReturnChart')[0]; // or document.getElementById('canvas');
     // canvas1.width = canvas1.width;
 
-    let robotBalanceData = getRobotBalance()
+    let robotBalanceData = getData('get_robot_data/balance')
+    let robotTradesData = getData('get_robot_data/trade')
 
     // Loading daily robot returns
-    BalanceDataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
+    DataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
 
     // Robot balance chart
-    BalanceDataChart(robotBalanceData, "#balanceChart", "Balance", "line", "close_balance")
+    DataChart(robotBalanceData, "#balanceChart", "Balance", "line", "close_balance")
 
     // Robot cash flow chart
-    BalanceDataChart(robotBalanceData, "#cashFlowChart", "Cash Flow", "bar", "cash_flow")
+    DataChart(robotBalanceData, "#cashFlowChart", "Cash Flow", "bar", "cash_flow")
+
+    // Robot trade pnl chart
+    DataChart(robotTradesData, "#tradesChart", "Trades", "bar", "pnl")
 }
-// Load robot balance data function
-function getRobotBalance() {
+
+// Get data via url request from database
+function getData(myUrl){
     let responseData = null
     $.ajax({
-        url: 'get_robot_returns/',
+        url: myUrl,
         type: 'GET',
         data: {
             "robot": robotSelector.val(),
@@ -230,8 +235,8 @@ function getRobotBalance() {
     return responseData;
 }
 
-// Balance data chart creatior function
-function BalanceDataChart(data, id, title, type, dataValue){
+// Balance data chart creator function
+function DataChart(data, id, title, type, dataValue){
     let dates = []
     let values = []
     let colorList = []
@@ -248,6 +253,8 @@ function BalanceDataChart(data, id, title, type, dataValue){
     }
     chart(id, values, dates, title, type, colorList)
 }
+
+
 
 
 

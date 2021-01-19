@@ -96,7 +96,7 @@
 
 {% block main_block%}
 <br>
-<div style="height: 1000px; width: 100%; overflow-y:scroll">
+<div style="height: 500px; width: 100%; overflow-y:scroll">
     <!--Portfolios-->
     <div class="card" style="width: 100%; height: 500px; display: flex">
         <div class="card-header" style="display: flex">
@@ -131,6 +131,16 @@
                     <div style="padding: 5px">
                         <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
                     </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="infoTab">
+                            <li class="nav-item">
+                                <a href="#riskInfo" class="nav-link" data-toggle="tab">Risk</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#returnInfo" class="nav-link" data-toggle="tab">Return</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div style="width: 100%; height: 100%;">
 
@@ -154,6 +164,9 @@
                             <li class="nav-item">
                                 <a href="#robotCf" class="nav-link" data-toggle="tab">Cash Flow</a>
                             </li>
+                            <li class="nav-item">
+                                <a href="#robotTrades" class="nav-link" data-toggle="tab">Trades</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -168,93 +181,17 @@
                         <div class="tab-pane fade" id="robotCf">
                             <canvas id="cashFlowChart" width="400" height="170"></canvas>
                         </div>
+                        <div class="tab-pane fade" id="robotTrades">
+                            <canvas id="tradesChart" width="400" height="170"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <br>
-    <!--Robots loaded on page-->
-    <div class="card-header rounded" style="width: 100%;  display: flex">
-        <div class="form-inline" style="padding: 5px; display: flex; justify-content: center">
-            <div style="padding-right: 15px;">
-                <h5 style="color: #19393D"><strong>Robot</strong></h5>
-            </div>
-
-
-            <div>
-                <button type="button" class="btn btn-outline-dark" id="getChartBtn">
-                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right" fill="currentColor"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                              d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <br>
-    <!--Robot charts-->
-    <div style="width: 100%; height: 600px; overflow: scroll; display: none" id="robotChartsDiv">
-        <div class="row" style="justify-content: center; align-items: center; height: 100px">
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>Strategy</strong></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D" id="robotStrategy"></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>Security</strong></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D" id="robotSecurity"></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>Inception Date</strong></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D" id="robotInceptionDate"></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D"><strong>Status</strong></h5>
-            </div>
-            <div style="padding: 5px">
-                <h5 style="color: #19393D" id="robotStatus"></h5>
-            </div>
-
-        </div>
-        <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
-            <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%">
-
-            </div>
-            <div class="col card h-md-100 shadow bg-white rounded" style="height: 100%; margin: 10px">
-                <canvas id="robotChart2" width="300" height="200" class="chartjs-render-monitor"
-                        style="display: block; cursor: default;"></canvas>
-            </div>
-        </div>
-        <div class="row" style="justify-content: center; align-items: center; height: 50px">
-            <h5 style="color: #19393D"><strong>Return</strong></h5>
-        </div>
-        <div class="row" style="width: 100%; height: 400px; margin: 0; justify-content: center; align-items: center">
-            <div class="col" style="height: 100%">
-                <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                    <canvas id="bar_chart_3" class="my-4 w-100 chartjs-render-monitor"></canvas>
-                </div>
-            </div>
-            <div class="col" style="height: 100%">
-                <div class="card h-md-100 shadow bg-white rounded" style="height: 100%">
-                    <canvas id="robotChart4" class="my-4 w-100 chartjs-render-monitor"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!--Account-->
+    <br>
     <div style="width: 100%;">
         <div class="card" style="width: 100%; height: 200px; display: flex">
             <div class="card-header card_header">
