@@ -106,6 +106,7 @@ def balance_calc(robot, calc_date):
 
     t_min_one_date = date + timedelta(days=-day_swift)
 
+    # Aggregated trade pnl calculation
     trades_df_closed = pd.DataFrame(list(RobotTrades.objects.filter(robot=robot,
                                                                     close_time=date,
                                                                     status="CLOSED").values()))
@@ -115,6 +116,7 @@ def balance_calc(robot, calc_date):
     else:
         realized_pnl = trades_df_closed["pnl"].sum()
 
+    # Aggregated cash flow calculation
     cash_flow_table = pd.DataFrame(list(RobotCashFlow.objects.filter(robot_name=robot,
                                                               date=date).values()))
 
@@ -131,7 +133,7 @@ def balance_calc(robot, calc_date):
             if cash_flow == 0.0:
                 return robot + " - " + str(calc_date) + " - Robot is not funded. Calculation is not possible."
             else:
-                ret = realized_pnl / cash_flow
+                ret = ((realized_pnl + cash_flow) / cash_flow)-1
         else:
             return robot + " - " + str(calc_date) + " There is no opening balance data for T-1"
     else:
@@ -141,7 +143,7 @@ def balance_calc(robot, calc_date):
         if open_balance == 0.0:
             ret = 0.0
         else:
-            ret = realized_pnl / open_balance
+            ret = ((realized_pnl + open_balance) / open_balance)-1
 
     close_balance = cash_flow + realized_pnl + open_balance
 
