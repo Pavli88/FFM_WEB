@@ -317,7 +317,7 @@ def incoming_trade(request):
         signal = message.split()
 
         # Test singal
-        # signal = ['ttz', 'buy', '1', 'XAGUSD', 'BUY']
+        #signal = ['test', 'buy', '1', 'DE30_EUR', 'BUY']
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
@@ -355,6 +355,9 @@ def incoming_trade(request):
 
         risk_params = RobotRisk.objects.filter(robot=signal[0]).values()
 
+        # Fetching out robot trades for the current day
+        robot_trades = RobotTrades.objects.filter(robot=signal[0], close_time=get_today()).values()
+
         # Checking if risk parameters are existing for the robot
         if not risk_params:
             SystemMessages(msg_type="Trade Execution",
@@ -381,6 +384,16 @@ def incoming_trade(request):
         if daily_return < daily_loss_limit:
             SystemMessages(msg_type="Risk",
                            msg=signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%").save()
+            return HttpResponse(None)
+
+        # Number of trades check
+        if robot_trades.count() == risk_params[0]["daily_trade_limit"]:
+            if robot_trades.count() == 0:
+                SystemMessages(msg_type="Risk",
+                               msg=signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.").save()
+            else:
+                SystemMessages(msg_type="Risk",
+                               msg=signal[0] + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.").save()
             return HttpResponse(None)
 
         print("Robot passed all risk checks")
