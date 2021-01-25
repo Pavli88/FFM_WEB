@@ -61,6 +61,36 @@ function loadStats(environment){
 
             statTableBody.append(newRow)
         }
+
+        // Updating pnls
+        const dailyPnl = $("#dtdProfit")
+        const monthlyPnl = $("#mtdProfit")
+        const yearlyPnl = $("#ytdProfit")
+
+        dailyPnl.html(data["pnls"][0])
+        monthlyPnl.html(data["pnls"][1])
+        yearlyPnl.html(data["pnls"][2])
+
+        if (parseFloat(data["pnls"][0]) > 0.0){
+            dailyPnl.css("color", "green")
+        }else {
+            dailyPnl.css("color", "red")
+        }
+
+        if (parseFloat(data["pnls"][1]) > 0.0){
+            monthlyPnl.css("color", "green")
+        }else {
+            monthlyPnl.css("color", "red")
+        }
+
+        if (parseFloat(data["pnls"][2]) > 0.0){
+            yearlyPnl.css("color", "green")
+        }else {
+            yearlyPnl.css("color", "red")
+        }
+
+
+
     })
 }
 

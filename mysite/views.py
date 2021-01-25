@@ -66,13 +66,17 @@ def load_robot_stats(request):
     robots = Robots.objects.filter(status="active", env=env).values()
 
     response_data_list = []
+    dtd_pnl = 0.0
+    mtd_pnl = 0.0
+    ytd_pnl = 0.0
 
     for robot in robots:
 
-        bcalc_msg = balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
-        print(robot["name"], bcalc_msg)
+        balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+
         robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
 
+        # Yearly calculations
         try:
             yearly_trades = robot_trades_all[robot_trades_all["date"] > year_beg]
             ytd = 1
@@ -82,9 +86,12 @@ def load_robot_stats(request):
                 else:
                     ytd = ytd * (daily_ret + 1)
             ytd = str(round((ytd - 1) * 100, 2)) + "%"
+            ytd_pnl = ytd_pnl + yearly_trades["realized_pnl"].sum()
         except:
             ytd = 0.0
+            ytd_pnl = ytd_pnl + 0.0
 
+        # Monthly calculations
         try:
             monthly_trades = robot_trades_all[robot_trades_all["date"] > month_beg]
             mtd = 1
@@ -94,24 +101,30 @@ def load_robot_stats(request):
                 else:
                     mtd = mtd * (daily_ret + 1)
             mtd = str(round((mtd - 1) * 100, 2)) + "%"
+            mtd_pnl = mtd_pnl + monthly_trades["realized_pnl"].sum()
         except:
             mtd = 0.0
+            mtd_pnl = mtd_pnl + 0.0
 
         try:
             last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
         except:
             last_balance = 0.0
 
+        # Daily calculations
         try:
             dtd = str(round(list(robot_trades_all["ret"])[-1]*100, 2)) + "%"
+            dtd_pnl = dtd_pnl + round(list(robot_trades_all["realized_pnl"])[-1]*100, 2)
         except:
             dtd = 0.0
+            dtd_pnl = dtd_pnl + 0.0
 
         response_data_list.append({"robot": robot["name"], "security": robot["security"],
                                    "env": robot["env"], "balance": last_balance,
                                    "dtd": dtd, "mtd": mtd, "ytd": ytd})
 
-    response = {"robots": response_data_list}
+    response = {"robots": response_data_list,
+                "pnls": [round(dtd_pnl, 2), round(mtd_pnl, 2), round(ytd_pnl, 2)]}
 
     print("Sending response to front end")
     print("")
