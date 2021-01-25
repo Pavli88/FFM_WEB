@@ -114,7 +114,7 @@ def load_robot_stats(request):
         # Daily calculations
         try:
             dtd = str(round(list(robot_trades_all["ret"])[-1]*100, 2)) + "%"
-            dtd_pnl = dtd_pnl + round(list(robot_trades_all["realized_pnl"])[-1]*100, 2)
+            dtd_pnl = dtd_pnl + round(list(robot_trades_all["realized_pnl"])[-1], 2)
         except:
             dtd = 0.0
             dtd_pnl = dtd_pnl + 0.0

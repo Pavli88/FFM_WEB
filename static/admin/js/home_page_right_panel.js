@@ -88,9 +88,6 @@ function loadStats(environment){
         }else {
             yearlyPnl.css("color", "red")
         }
-
-
-
     })
 }
 
