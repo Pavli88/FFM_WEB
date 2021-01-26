@@ -160,7 +160,23 @@ function loadPortInfo(){
     })
 }
 
-loadPortInfo()
+// Function to get portfolio data
+function getPortfolioData(portType){
+    let responseData = null
+    $.ajax({
+        url: "get_portfolio_data/",
+        type: 'GET',
+        data: {"port_type": portType},
+        async: false,
+        success: function (data) {
+            responseData = data;
+            console.log(responseData)
+        }
+    });
+    return responseData;
+}
+
+getPortfolioData("Portfolio Group")
 
 // Loading porrtfolio information on selected
 portfolio.change(function () {

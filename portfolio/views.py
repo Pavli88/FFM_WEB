@@ -88,17 +88,17 @@ def create_portfolio(request):
     return redirect('portfolio main')
 
 
-def get_portfolios(port=None):
+def get_portfolios(port=None, port_type=None):
 
     """
     Retrieves all portfolio records from database
     :return:
     """
 
-    if port is None:
-        portfolios = Portfolio.objects.filter().values()
-    else:
+    if port is not None:
         portfolios = Portfolio.objects.filter(portfolio_name=port).values()
+    elif port_type is not None:
+        portfolios = Portfolio.objects.filter(portfolio_type=port_type).values()
 
     return portfolios
 
@@ -114,17 +114,17 @@ def get_portfolio_data(request):
     print("Request for portfolio data")
 
     if request.method == "GET":
-        portfolio = request.GET.get("portfolio")
+        portfolio_type = request.GET.get("port_type")
 
-        print("PORTFOLIO:", portfolio)
+        print("PORTFOLIO TYPE:", portfolio_type)
 
-        portfolio_data = get_portfolios(port=portfolio)
+        portfolio_data = get_portfolios(port_type=portfolio_type)
 
-    print("Sending response to front end")
+        print("Sending response to front end")
 
-    response = {"portData": list(portfolio_data)}
+        response = {"portData": list(portfolio_data)}
 
-    return JsonResponse(response, safe=False)
+        return JsonResponse(response, safe=False)
 
 
 def load_chart(request):
