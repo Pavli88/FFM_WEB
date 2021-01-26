@@ -47,3 +47,8 @@ class Positions(models.Model):
     security = models.IntegerField(default=0)
     quantity = models.FloatField(default=0.0)
     date = models.DateField()
+
+
+class PortGroup(models.Model):
+    parent_id = models.IntegerField()
+    children_id = models.IntegerField()

@@ -36,7 +36,7 @@
                         <path fill-rule="evenodd"
                               d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"/>
                     </svg>
-                </button>
+                 </button>
             </div>
         </div>
     </div>
@@ -259,9 +259,8 @@
                     <div class="form-group">
                         <label>Portfolio Type</label>
                         <select class="form-control form-control-sm" name="port_type" required>
-                            <option>Trade</option>
-                            <option>Investment</option>
-                            <option>Savings</option>
+                            <option>Portfolio</option>
+                            <option>Portfolio Group</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -276,6 +275,98 @@
         </div>
     </div>
 </div>
+
+<!--Portfolio group editor-->
+<div class="modal fade" id="PortGroup" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="newPortLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 300px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newPortGroupLabel"><strong>Portfolio Group Editor</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="bs-example" style="height: 100%; width: 100%">
+                    <ul class="nav nav-tabs" id="PortGroupTab">
+                        <li class="nav-item">
+                            <a href="#addPort" class="nav-link" data-toggle="tab">Add</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#removePort" class="nav-link" data-toggle="tab">Remove</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#movePort" class="nav-link" data-toggle="tab">Move</a>
+                        </li>
+                    </ul>
+                    <div class="bs-example" style="width: 100%; padding: 15px">
+                        <div class="tab-content">
+                            <!--Addition-->
+                            <div class="tab-pane fade" id="addPort">
+                                <div class="form-group">
+                                    <label>Portfolio Group</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio Group 1</option>
+                                        <option>Portfolio Group 2</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Portfolio</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio 1</option>
+                                        <option>Portfolio 2</option>
+                                    </select>
+                                </div>
+                                <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"
+                                       style="width: 100%">
+                            </div>
+                            <!--Remove-->
+                            <div class="tab-pane fade" id="removePort">
+                                <div class="form-group">
+                                    <label>Portfolio Group</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio Group 1</option>
+                                        <option>Portfolio Group 2</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Portfolio</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio 1</option>
+                                        <option>Portfolio 2</option>
+                                    </select>
+                                </div>
+                                <input class="btn btn-primary submit_button" type="submit" name="button" value="Remove"
+                                       style="width: 100%">
+                            </div>
+                            <!--Move-->
+                            <div class="tab-pane fade" id="movePort">
+                                <div class="form-group">
+                                    <label>Portfolio Group</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio Group 1</option>
+                                        <option>Portfolio Group 2</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Portfolio</label>
+                                    <select class="form-control form-control-sm" required>
+                                        <option>Portfolio 1</option>
+                                        <option>Portfolio 2</option>
+                                    </select>
+                                </div>
+                                <input class="btn btn-primary submit_button" type="submit" name="button" value="Move"
+                                       style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!--New Cash Flow-->
 <div class="modal fade" id="newCashFlow" data-backdrop="static" data-keyboard="false" tabindex="-1"
