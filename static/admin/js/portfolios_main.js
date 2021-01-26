@@ -1,4 +1,4 @@
-
+// MAIN VARIABLES
 let now = new Date()
 let day = ("0" + now.getDate()).slice(-2)
 let month = ("0" + (now.getMonth() + 1)).slice(-2)
@@ -6,6 +6,45 @@ let today = now.getFullYear()+"-"+(month)+"-"+(day)
 let firstDay = now.getFullYear()+"-"+(month)+"-01"
 let startDate = $("#calcStart")
 startDate.val(today)
+
+// GENERAL FUNCTIONS ******************
+// Function to get portfolio data
+function getPortfolioData(portType){
+    let responseData = null
+    $.ajax({
+        url: "get_portfolio_data/",
+        type: 'GET',
+        data: {"port_type": portType},
+        async: false,
+        success: function (data) {
+            responseData = data;
+        }
+    });
+    return responseData;
+}
+
+// Loading data to selector based on dataset
+function loadDataToSelector(selectorId, className, dataSet, responseField){
+
+    let portGroupSelector = $(selectorId)
+    portGroupSelector.empty()
+
+    for (record of dataSet[responseField]) {
+
+        let opt = document.createElement("option")
+
+        opt.innerHTML = record["portfolio_name"]
+        opt.classList.add(className)
+        opt.setAttribute("value", record["id"])
+        portGroupSelector.append(opt)
+    }
+}
+
+// ************************************
+
+// Loading robots to robot selector on the portfolio widget
+let portfolios = getPortfolioData("Portfolio")
+loadDataToSelector("#portSelector", "portfolios", portfolios, "portData")
 
 // Creating and removing End Date in calculation on load
 let singleTick = $("#single_tick")
@@ -160,23 +199,7 @@ function loadPortInfo(){
     })
 }
 
-// Function to get portfolio data
-function getPortfolioData(portType){
-    let responseData = null
-    $.ajax({
-        url: "get_portfolio_data/",
-        type: 'GET',
-        data: {"port_type": portType},
-        async: false,
-        success: function (data) {
-            responseData = data;
-            console.log(responseData)
-        }
-    });
-    return responseData;
-}
 
-getPortfolioData("Portfolio Group")
 
 // Loading porrtfolio information on selected
 portfolio.change(function () {
@@ -206,3 +229,8 @@ function newCashFlow(){
         cashFlowSelector.append('<option class="cfOpt">Dividend Payout</option>')
     }
 }
+
+
+
+
+
