@@ -358,8 +358,11 @@ def incoming_trade(request):
 
         # Checking if risk parameters are existing for the robot
         if not risk_params:
+            print("Risk parameters are not assigned to the robot. Execution stopped.")
+
             SystemMessages(msg_type="Trade Execution",
                            msg="Risk parameters are not assigned to " + signal[0] + str(". Execution stopped.")).save()
+
             return HttpResponse(None)
 
         daily_loss_limit = risk_params[0]["daily_risk_perc"] * -1
@@ -370,8 +373,11 @@ def incoming_trade(request):
 
         # Check if balance is calculated for a robot
         if not balance_params:
+            print(signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped")
+
             SystemMessages(msg_type="Trade Execution",
                            msg=signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped").save()
+
             return HttpResponse(None)
 
         daily_return = balance_params[0]["ret"]
@@ -380,18 +386,26 @@ def incoming_trade(request):
 
         # Daily loss % check
         if daily_return < daily_loss_limit:
+            print(signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%")
+
             SystemMessages(msg_type="Risk",
                            msg=signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%").save()
+
             return HttpResponse(None)
 
         # Number of trades check
-        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_side != "close":
+        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_side != "Close":
             if robot_trades.count() == 0:
+                print(signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.")
+
                 SystemMessages(msg_type="Risk",
                                msg=signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.").save()
             else:
+                print(signal[0] + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.")
+
                 SystemMessages(msg_type="Risk",
                                msg=signal[0] + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.").save()
+
             return HttpResponse(None)
 
         print("Robot passed all risk checks")
