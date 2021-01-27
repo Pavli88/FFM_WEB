@@ -311,16 +311,14 @@ def incoming_trade(request):
 
     if request.method == "POST":
 
-        # This is for live signal !
         message = request.body
         message = str(message.decode("utf-8"))
         signal = message.split()
-
-        # Test singal
-        #signal = ['test', 'buy', '1', 'DE30_EUR', 'BUY']
+        trade_side = signal[4]
 
         print("INCOMING SIGNAL:", signal)
         print("ROBOT NAME:", signal[0])
+        print("TRADE SIDE:", trade_side)
         print("Fetching robot parameters from database")
         print("")
 
@@ -387,7 +385,7 @@ def incoming_trade(request):
             return HttpResponse(None)
 
         # Number of trades check
-        if robot_trades.count() == risk_params[0]["daily_trade_limit"]:
+        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_side != "close":
             if robot_trades.count() == 0:
                 SystemMessages(msg_type="Risk",
                                msg=signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.").save()
@@ -422,8 +420,6 @@ def incoming_trade(request):
             print("-------------------------")
             print("     CREATING ORDER      ")
             print("-------------------------")
-
-            trade_side = signal[4]
 
             print("TRADE SIDE:", trade_side)
 
