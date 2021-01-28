@@ -1,4 +1,4 @@
-// Loading default parameters
+// GENERAL VARIABLES ***************************************************************************************************
 let now = new Date()
 let day = ("0" + now.getDate()).slice(-2)
 let month = ("0" + (now.getMonth() + 1)).slice(-2)
@@ -7,9 +7,27 @@ let firstDay = now.getFullYear()+"-"+(month)+"-01"
 $(".endDay").val(today)
 $(".startDay").val(firstDay)
 
+// GENERAL FUNCTION ****************************************************************************************************
+// Function to get portfolio data
+function getDataFromServer(url, requestData){
+    let responseData = null
+    $.ajax({
+        url: url,
+        type: 'GET',
+        data: requestData, // {"port_type": portType}
+        async: false,
+        success: function (data) {
+            responseData = data;
+        }
+    });
+    return responseData;
+}
+
 // Loading all robot chart data
 let robotBtn = $("#getChartBtn")
 robotBtn.click(getRobotChartData)
+
+
 
 function getRobotChartData() {
     $("#robotChartsDiv").show()
@@ -153,6 +171,7 @@ loadMessagesBtn.on("click", loadMessages)
 loadMessages()
 
 function loadMessages(){
+    let msgData = getDataFromServer('get_messages/', )
     $.get('get_messages/', function (data) {
 
         try {

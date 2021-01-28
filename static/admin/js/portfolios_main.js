@@ -44,7 +44,7 @@ function loadDataToSelector(selectorId, className, dataSet, responseField){
 
 // Loading robots to robot selector on the portfolio widget
 let portfolios = getPortfolioData("Portfolio")
-loadDataToSelector("#portSelector", "portfolios", portfolios, "portData")
+// loadDataToSelector("#portSelector", "portfolios", portfolios, "portData")
 
 // Creating and removing End Date in calculation on load
 let singleTick = $("#single_tick")
@@ -94,14 +94,8 @@ let price = $("#price")
 let quantity = $("#qty")
 let marketValue = $("#mv")
 let availableCash = $("#available_cash")
-let portfolio = $("#port_selector")
 let security = $("#secs")
 let tradePanel = $("#trade_panel")
-
-// Adding All option to portfolio drop down menu
-let newOpt = document.createElement("option")
-newOpt.innerHTML = "All"
-portfolio.append(newOpt)
 
 price.keyup(calcMv)
 quantity.keyup(calcMv)
@@ -148,7 +142,7 @@ function loadSecurities() {
 
 }
 
-// New portfolio trade window
+// New portfolio trade window ------------------------------------------------------------------------------------------
 const newTradeButton = $('#newTrdBtn')
 const tradePortName = $('#trdPortName')
 
@@ -159,7 +153,7 @@ function loadTradeWindow() {
     tradePortName.attr('value', portfolio.val())
 }
 
-// Sending calculation to back end
+// Sending calculation to back end -------------------------------------------------------------------------------------
 let calcButton = $("#calc_btn")
 let process = $("#process")
 
@@ -180,31 +174,6 @@ function calculate() {
     })
 }
 
-// Loading selected portfolio status and information
-let portStatus = $("#portStatus")
-let portType = $("#portType")
-let portCurrency = $("#portCurrency")
-
-function loadPortInfo(){
-    $.get("get_portfolio_data/", {"portfolio": portfolio.val()}, function (data) {
-        portStatus.text(data["portData"][0]["status"])
-        portType.text(data["portData"][0]["portfolio_type"])
-        portCurrency.text(data["portData"][0]["currency"])
-
-        if (data["portData"][0]["status"] === "Not Funded"){
-            portStatus.css("color", "red")
-        }else{
-            portStatus.css("color", "green")
-        }
-    })
-}
-
-
-
-// Loading porrtfolio information on selected
-portfolio.change(function () {
-    loadPortInfo()
-})
 
 // Cash flow window
 let newCashFlowBtn = $("#newCashBtn")

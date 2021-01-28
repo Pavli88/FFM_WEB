@@ -61,7 +61,7 @@
             <div style="padding-right: 15px;">
                 <select class="form-control form-control-sm" name="port_name" id="portSelector" required>
                     {% for portfolio in portfolios %}
-                    <option>{{portfolio.portfolio_name}}</option>
+                    <option value="{{portfolio.id}}">{{portfolio.portfolio_name}}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -227,6 +227,7 @@
                         <select class="form-control form-control-sm" name="port_type" required>
                             <option>Portfolio</option>
                             <option>Portfolio Group</option>
+                            <option>Top</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -263,9 +264,6 @@
                         <li class="nav-item">
                             <a href="#removePort" class="nav-link" data-toggle="tab">Remove</a>
                         </li>
-                        <li class="nav-item">
-                            <a href="#movePort" class="nav-link" data-toggle="tab">Move</a>
-                        </li>
                     </ul>
                     <div class="bs-example" style="width: 100%; padding: 15px">
                         <div class="tab-content">
@@ -275,16 +273,21 @@
                                     <div class="form-group" style="width: 50%; padding: 5px">
                                         <label>Parent Group</label>
                                         <select class="form-control form-control-sm" id="addPortGroup"
-                                                required></select>
+                                                required>
+                                            {% for pg in port_groups %}
+                                            <option value="{{pg.id}}">{{pg.portfolio_name}}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
                                     <!--Portfolio-->
-                                    <div style="width: 50%; padding: 5px">
-                                        <div>
-                                            <label>Portfolio</label>
-                                            <label>Port Group</label>
-                                        </div>
+                                    <div style="width: 50%; padding: 5px;">
+                                        <label>Children</label>
                                         <select class="form-control form-control-sm" id="addPortSelect"
-                                                required></select>
+                                                required>
+                                            {% for portfolio in portfolios %}
+                                            <option value="{{portfolio.id}}">{{portfolio.portfolio_name}}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
                                 </div>
                                 <input class="btn btn-primary submit_button" type="submit" name="button" value="Add"
@@ -302,19 +305,6 @@
                                     <select class="form-control form-control-sm" required></select>
                                 </div>
                                 <input class="btn btn-primary submit_button" type="submit" name="button" value="Remove"
-                                       style="width: 100%">
-                            </div>
-                            <!--Move-->
-                            <div class="tab-pane fade" id="movePort">
-                                <div class="form-group">
-                                    <label>Parent Portfolio Group</label>
-                                    <select class="form-control form-control-sm" id="movePortGroup" required></select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Portfolio</label>
-                                    <select class="form-control form-control-sm" required></select>
-                                </div>
-                                <input class="btn btn-primary submit_button" type="submit" name="button" value="Move"
                                        style="width: 100%">
                             </div>
                         </div>

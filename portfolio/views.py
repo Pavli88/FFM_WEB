@@ -7,38 +7,36 @@ from robots.processes.robot_processes import *
 from instrument.models import *
 from datetime import datetime
 from mysite.models import *
+from django.views.decorators.csrf import csrf_exempt
+from portfolio.portfolio_functions import *
 
 
-# Main site for portfolios
+# Main site for portfolios *********************************************************************************************
 def portfolios_main(request):
-
-    print("===================")
-    print("PORTFOLIO MAIN PAGE")
-    print("===================")
+    print("*** PORTFOLIO MAIN PAGE ***")
 
     try:
-        portfolios = get_portfolios()
+        portfolios = get_portfolios(port_type="Portfolio")
+        port_groups = get_portfolios(port_type="Portfolio Group")
         print("Loading portfolios to main page")
     except:
         portfolios = []
 
-    return render(request, 'portfolios/portfolios_main.html', {"portfolios": portfolios})
+    return render(request, 'portfolios/portfolios_main.html', {"portfolios": portfolios,
+                                                               "port_groups": port_groups})
 
 
+# URL Processes ********************************************************************************************************
+@csrf_exempt
 def new_cash_flow(request):
-
-    print("=============")
-    print("NEW CASH FLOW")
-    print("=============")
+    print("*** PORTFOLIO NEW CASH FLOW ***")
 
     if request.method == "POST":
         portfolio_name = request.POST.get("port_name")
         amount = request.POST.get("amount")
         type = request.POST.get("type")
 
-        print("PORTFOLIO NAME:", portfolio_name)
-        print("TYPE:", type)
-        print("AMOUNT:", amount)
+        print("PORTFOLIO NAME:", portfolio_name, "TYPE:", type, "AMOUNT:", amount)
 
         CashFlow(portfolio_name=portfolio_name,
                  amount=amount,
@@ -50,57 +48,36 @@ def new_cash_flow(request):
             port = Portfolio.objects.get(portfolio_name=portfolio_name)
             port.status = "Funded"
             port.save()
+            print("")
 
     return redirect('portfolio main')
 
 
 def create_portfolio(request):
-
-    print("======================")
-    print("NEW PORTFOLIO CREATION")
-    print("======================")
+    print("*** NEW PORTFOLIO CREATION ***")
 
     if request.method == "POST":
         port_name = request.POST.get("port_name")
         port_type = request.POST.get("port_type")
         port_currency = request.POST.get("port_currency")
 
-        print("PORTFOLIO NAME:", port_name)
-        print("PORTFOLIO TYPE", port_type)
-        print("PORTFOLIO CURRENCY", port_currency)
+        print("PORTFOLIO NAME:", port_name, "PORTFOLIO TYPE:", port_type, "PORTFOLIO CURRENCY", port_currency)
 
         try:
             Portfolio(portfolio_name=port_name,
                       portfolio_type=port_type,
                       currency=port_currency,
                       status="Not Funded").save()
-
             print("New Portfolio was created!")
-
-            print("Creating nav record for the portfolio")
-
-            Nav(portfolio_name=port_name,
-                amount=0.0).save()
-
         except:
             print("Portfolio exists in database!")
 
+        print("Creating nav record for the portfolio")
+
+        if port_type == "Portfolio":
+            Nav(portfolio_name=port_name).save()
+
     return redirect('portfolio main')
-
-
-def get_portfolios(port=None, port_type=None):
-
-    """
-    Retrieves all portfolio records from database
-    :return:
-    """
-
-    if port is not None:
-        portfolios = Portfolio.objects.filter(portfolio_name=port).values()
-    elif port_type is not None:
-        portfolios = Portfolio.objects.filter(portfolio_type=port_type).values()
-
-    return portfolios
 
 
 def get_portfolio_data(request):
@@ -125,23 +102,6 @@ def get_portfolio_data(request):
         response = {"portData": list(portfolio_data)}
 
         return JsonResponse(response, safe=False)
-
-
-def load_chart(request):
-
-    print("=========================")
-    print("CHART LOADER AND SELECTOR")
-    print("=========================")
-
-    if request.method == "POST":
-        account = request.POST.get("portfolio")
-        print(account)
-        print(request.POST.get("chartname"))
-        print("Loading Chart")
-
-        response = {"account data": [30, 20, 10, 40]}
-
-    return JsonResponse(response, safe=False)
 
 
 def get_securities_by_type(request):
@@ -257,6 +217,23 @@ def process_hub(request):
         response = nav_calc(portfolio=portfolio, calc_date=start_date)
 
     print("Sending data to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+# Portfolio Group Related Processes
+@csrf_exempt
+def add_port_to_group(request):
+    print("*** PORTFOLIO GROUP ADDITION ***")
+
+    if request.method == "POST":
+        parent_id = request.POST.get("process")
+        children_id = request.POST.get("process")
+
+        try:
+            PortGroup(parent_id=parent_id, children_id=children_id, connection_id=str(parent_id)+str(children_id)).save()
+        except:
+            response = {"message": "Connection exists in database!"}
 
     return JsonResponse(response, safe=False)
 

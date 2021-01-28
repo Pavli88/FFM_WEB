@@ -8,13 +8,13 @@ $("#PortGroupBtn").on("click", function (){
     let portData = getPortfolioData("Portfolio")
 
     // Loading port group and portfolio data to adding section
-    loadDataToSelector("#addPortGroup", "portGroupOption", portGroups, "portData")
-    loadDataToSelector("#addPortSelect", "portOption", portData, "portData")
+    // loadDataToSelector("#addPortGroup", "portGroupOption", portGroups, "portData")
+    // loadDataToSelector("#addPortSelect", "portOption", portData, "portData")
 
     // Loading port group data to removing section
-    loadDataToSelector("#removePortGroup", "portGroupOption", portGroups, "portData")
+    // loadDataToSelector("#removePortGroup", "portGroupOption", portGroups, "portData")
 
-    // Loading port group data to move section
-    loadDataToSelector("#movePortGroup", "portGroupOption", portGroups, "portData")
+    // // Loading port group data to move section
+    // loadDataToSelector("#movePortGroup", "portGroupOption", portGroups, "portData")
 })
 
