@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from instrument.forms import *
 from instrument.models import *
+from django.http import JsonResponse
 
 
 def instruments_main(request):
@@ -41,4 +42,14 @@ def new_instrument(request):
             print("New instrument was saved successfully")
 
         return redirect('instruments main')
+
+
+def get_instruments_url(request):
+    print("*** GET INSTRUMENTS ***")
+
+    print("Sending data to front end")
+
+    response = {"message": "instruments"}
+
+    return JsonResponse(response, safe=False)
 

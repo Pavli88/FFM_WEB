@@ -16,14 +16,17 @@ def portfolios_main(request):
     print("*** PORTFOLIO MAIN PAGE ***")
 
     try:
+        portfolio_data = get_portfolios()
         portfolios = get_portfolios(port_type="Portfolio")
         port_groups = get_portfolios(port_type="Portfolio Group")
+
         print("Loading portfolios to main page")
     except:
         portfolios = []
 
     return render(request, 'portfolios/portfolios_main.html', {"portfolios": portfolios,
-                                                               "port_groups": port_groups})
+                                                               "port_groups": port_groups,
+                                                               "all_portfolios": portfolio_data})
 
 
 # URL Processes ********************************************************************************************************

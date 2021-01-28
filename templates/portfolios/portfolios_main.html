@@ -284,8 +284,8 @@
                                         <label>Children</label>
                                         <select class="form-control form-control-sm" id="addPortSelect"
                                                 required>
-                                            {% for portfolio in portfolios %}
-                                            <option value="{{portfolio.id}}">{{portfolio.portfolio_name}}</option>
+                                            {% for all_port in all_portfolios %}
+                                            <option value="{{all_port.id}}">{{all_port.portfolio_name}}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

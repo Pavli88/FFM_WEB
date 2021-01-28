@@ -9,12 +9,12 @@ startDate.val(today)
 
 // GENERAL FUNCTIONS ******************
 // Function to get portfolio data
-function getPortfolioData(portType){
+function getDataFromServer(dataDict, url){
     let responseData = null
     $.ajax({
-        url: "get_portfolio_data/",
+        url: url,
         type: 'GET',
-        data: {"port_type": portType},
+        data: dataDict,
         async: false,
         success: function (data) {
             responseData = data;
@@ -42,9 +42,6 @@ function loadDataToSelector(selectorId, className, dataSet, responseField){
 
 // ************************************
 
-// Loading robots to robot selector on the portfolio widget
-let portfolios = getPortfolioData("Portfolio")
-// loadDataToSelector("#portSelector", "portfolios", portfolios, "portData")
 
 // Creating and removing End Date in calculation on load
 let singleTick = $("#single_tick")
