@@ -24,5 +24,6 @@ urlpatterns = [
     path('home/load_robot_stats/', views.load_robot_stats),
     path('home/robot_chart_data/', views.get_robot_charts_data),
     path('home/get_messages/', views.get_messages),
+    path('home/test_calc/', views.test_calc),
 
 ]

@@ -9,11 +9,13 @@ from robots.models import *
 from accounts.models import *
 from portfolio.models import *
 from mysite.processes.oanda import *
+from mysite.processes.calculations import *
 from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from robots.processes.robot_processes import *
+from mysite.my_functions.general_functions import *
 
 
 # Home page
@@ -44,7 +46,7 @@ def home(request, default_load=None):
     print("Loading robot list from database")
     print("Loading broker account information")
 
-    return render(request, 'home.html', {"dates": get_days(),
+    return render(request, 'home.html', {
                                          "robots": get_robots(),
                                          "open_trades": get_open_trades(),
                                          "accounts": get_account_data(),
@@ -60,8 +62,8 @@ def load_robot_stats(request):
         env = request.GET["env"]
 
     print(env)
-    year_beg = date(date.today().year, 1, 1)
-    month_beg = date(date.today().year, date.today().month, 1)
+    year_beg = beginning_of_year()
+    month_beg = beginning_of_month()
 
     robots = Robots.objects.filter(status="active", env=env).values()
 
@@ -72,7 +74,7 @@ def load_robot_stats(request):
 
     for robot in robots:
 
-        balance_calc(robot=robot["name"], calc_date=str(datetime.datetime.today().date()))
+        balance_calc(robot=robot["name"], calc_date=str(get_today()))
 
         robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
 
@@ -131,6 +133,12 @@ def load_robot_stats(request):
 
     return JsonResponse(response, safe=False)
 
+
+def test_calc(request):
+    robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name="SNP500_TRD1").values()))
+    cumulative_return_calc(data_series=robot_trades_all["ret"].tolist(), period_start=beginning_of_month())
+
+    return JsonResponse({"test": "test"}, safe=False)
 
 def main_page(request):
     print("=========")
@@ -291,22 +299,22 @@ def cumulative(lists):
     return cu_list[1:]
 
 
-def get_days():
-
-    """
-    This function gets today's value and returns it back as a string
-    :return:
-    """
-
-    today = date.today()
-    t_plus_one = today + datetime.timedelta(days=1)
-    datem = datetime.datetime(today.year, today.month, 1)
-
-    dates = {"today": str(today),
-             "next_day": str(t_plus_one),
-             "beg_month": str(datem)}
-
-    return dates
+# def get_days():
+#
+#     """
+#     This function gets today's value and returns it back as a string
+#     :return:
+#     """
+#
+#     today = date.today()
+#     t_plus_one = today + datetime.timedelta(days=1)
+#     datem = datetime.datetime(today.year, today.month, 1)
+#
+#     dates = {"today": str(today),
+#              "next_day": str(t_plus_one),
+#              "beg_month": str(datem)}
+#
+#     return dates
 
 
 def get_account_data(account_number="All"):
