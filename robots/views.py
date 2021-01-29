@@ -8,6 +8,7 @@ from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
 from accounts.models import *
 from robots.forms import *
+from robots.robot_functions import *
 from accounts.models import *
 from instrument.models import *
 import datetime
@@ -15,6 +16,7 @@ from datetime import timedelta, datetime
 from risk.models import *
 from mysite.models import *
 from mysite.my_functions.general_functions import *
+from instrument.instruments_functions import *
 
 
 # Main site for robot configuration
@@ -24,8 +26,6 @@ def robots_main(request):
     print("ROBOT MAIN PAGE")
     print("===============")
     print("Loading brokers from database")
-    # broker_data = get_brokers()
-    # broker_list = [(broker["id"], broker["broker_name"]) for broker in broker_data]
 
     robots = get_robots(status="active")
     robot_form = RobotEntryForm()
@@ -155,40 +155,6 @@ def load_accounts(request):
 # ===================================
 # Functions to get data from database
 # ===================================
-
-
-def get_robots(status=None):
-
-    """
-    Queries out all robots from database and passes it back to the html
-    :param request:
-    :return:
-    """
-
-    print("Fetching robot data from database")
-
-    if status is not None:
-        robots = Robots.objects.filter(status=status).values()
-    else:
-        robots = Robots.objects.filter().values()
-
-    return robots
-
-
-def get_brokers():
-
-    brokers = BrokerAccounts.objects.filter().values()
-
-    return brokers
-
-
-def get_securities(broker=None):
-    if broker is None:
-        securities = Instruments.objects.filter().values()
-    else:
-        securities = Instruments.objects.filter(source=broker).values()
-
-    return securities
 
 
 def get_accounts(broker=None, environment=None):

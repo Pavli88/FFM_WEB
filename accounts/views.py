@@ -93,9 +93,7 @@ def load_accounts(request):
 
 
 def new_cash_flow(request):
-    print("====================")
-    print("NEW ACCOUNT CASHFLOW")
-    print("====================")
+    print("*** NEW ACCOUNT CASHFLOW ***")
 
     if request.method == "POST":
         account = request.POST.get("account")

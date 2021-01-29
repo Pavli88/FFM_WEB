@@ -20,10 +20,7 @@ urlpatterns = [
     path('save_home/', views.save_layout, name="make_default"),
     path('settings/', views.go_to_settings, name="settings main"),
     path('settings/save/', views.save_settings, name="save settings"),
-    path('switch_account/', views.switch_account),
     path('home/load_robot_stats/', views.load_robot_stats),
-    path('home/robot_chart_data/', views.get_robot_charts_data),
     path('home/get_messages/', views.get_messages),
     path('home/test_calc/', views.test_calc),
-
 ]
