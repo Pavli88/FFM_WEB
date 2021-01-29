@@ -27,8 +27,6 @@ function getDataFromServer(url, requestData){
 let robotBtn = $("#getChartBtn")
 robotBtn.click(getRobotChartData)
 
-
-
 function getRobotChartData() {
     $("#robotChartsDiv").show()
     let robot = $("#robot_selector").val()
@@ -152,9 +150,13 @@ function robotDataLoader(){
 
     let robotBalanceData = getData('get_robot_data/balance')
     let robotTradesData = getData('get_robot_data/trade')
-
+    let cumRobotReturn = getData('get_robot_data/cumulative_return/')
+    console.log(cumRobotReturn)
     // Loading daily robot returns
     DataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
+
+    // Loading cumulative robot returns
+    DataChart(cumRobotReturn, "#cumReturnChart", "Cumulative Returns", "line", "data")
 
     // Robot balance chart
     DataChart(robotBalanceData, "#balanceChart", "Balance", "line", "close_balance")
@@ -192,6 +194,7 @@ function DataChart(data, id, title, type, dataValue){
     let colorList = []
 
     for (record of data["message"]){
+
         dates.push(record["date"])
         values.push(record[dataValue])
 
@@ -203,6 +206,7 @@ function DataChart(data, id, title, type, dataValue){
     }
     chart(id, values, dates, title, type, colorList)
 }
+
 
 
 

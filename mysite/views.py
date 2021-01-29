@@ -19,7 +19,7 @@ from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
 
 
-def load_robot_stats(request):
+def test_calc(request):
     print("Loading robot stats to dashboard")
 
     if request.method == "GET":
@@ -98,11 +98,70 @@ def load_robot_stats(request):
     return JsonResponse(response, safe=False)
 
 
-def test_calc(request):
-    robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name="SNP500_TRD1").values()))
-    cumulative_return_calc(data_series=robot_trades_all["ret"].tolist(), period_start=beginning_of_month())
+def load_robot_stats(request):
+    print("*** Robot Cumulative Performance Calculation ***")
 
-    return JsonResponse({"test": "test"}, safe=False)
+    if request.method == "GET":
+        env = request.GET["env"]
+
+    year_beg = beginning_of_year()
+    month_beg = beginning_of_month()
+
+    print("Year Start:", year_beg)
+    print("Month Start:", month_beg)
+    print("")
+
+    # Fetching robots from database based on environment
+    robots = Robots.objects.filter(status="active", env=env).values()
+
+    response_data_list = []
+    total_dtd_pnl = 0.0
+    total_mtd_pnl = 0.0
+    total_ytd_pnl = 0.0
+
+    for robot in robots:
+
+        robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
+
+        yearly_trades = robot_trades_all[robot_trades_all["date"] > year_beg]
+        monthly_trades = robot_trades_all[robot_trades_all["date"] > month_beg]
+
+        mtd_series = cumulative_return_calc(data_series=monthly_trades["ret"].tolist())
+        ytd_series = cumulative_return_calc(data_series=yearly_trades["ret"].tolist())
+
+        last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
+
+        dtd = round(list(robot_trades_all["ret"])[-1]*100, 2)
+        mtd = round(mtd_series[-1]-100, 2)
+        ytd = round(ytd_series[-1]-100, 2)
+
+        ytd_pnl = round(total_pnl_calc(yearly_trades["realized_pnl"].tolist()), 2)
+        mtd_pnl = round(total_pnl_calc(monthly_trades["realized_pnl"].tolist()), 2)
+        dtd_pnl = round(monthly_trades["realized_pnl"].tolist()[-1], 2)
+
+        total_ytd_pnl = total_ytd_pnl + ytd_pnl
+        total_mtd_pnl = total_mtd_pnl + mtd_pnl
+        total_dtd_pnl = total_dtd_pnl + dtd_pnl
+
+        response_data_list.append({"robot": robot["name"],
+                                   "security": robot["security"],
+                                   "balance": last_balance,
+                                   "dtd": dtd,
+                                   "mtd": mtd,
+                                   "ytd": ytd,
+                                   "ytdPnl": ytd_pnl})
+
+        print(robot["name"], " - YTD PnL", ytd_pnl, " - YTD Ret - ", ytd)
+        print(robot["name"], " - MTD PnL", mtd_pnl, " - MTD Ret - ", mtd)
+        print(robot["name"], " - DTD PnL", dtd_pnl, " - DTD Ret - ", dtd)
+        print(robot["name"], " - Latest Balance - ", last_balance)
+        print("")
+
+    print("TOTAL P&L - YTD - ", total_ytd_pnl, " - MTD - ", total_mtd_pnl, " - DTD - ", total_dtd_pnl)
+    print("Sending data to front end")
+
+    return JsonResponse({"robots": response_data_list,
+                         "pnls": [round(total_dtd_pnl, 2), round(total_mtd_pnl, 2), round(total_ytd_pnl, 2)]}, safe=False)
 
 # MAIN PAGE ************************************************************************************************************
 

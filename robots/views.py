@@ -16,6 +16,7 @@ from datetime import timedelta, datetime
 from risk.models import *
 from mysite.models import *
 from mysite.my_functions.general_functions import *
+from mysite.processes.calculations import *
 from instrument.instruments_functions import *
 
 
@@ -549,6 +550,12 @@ def get_robot_data(request, data_type):
         response_data = get_robot_balance(robot_name=robot)
     elif data_type == "trade":
         response_data = get_robot_trades(robot_name=robot)
+    elif data_type == "cumulative_return":
+        balance = pd.DataFrame(list(get_robot_balance(robot_name=robot)))
+        response_data = []
+
+        for record in cumulative_return_calc(balance["ret"]):
+            response_data.append({"data": record})
 
     response = {"message": list(response_data)}
 

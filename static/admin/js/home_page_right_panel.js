@@ -24,11 +24,18 @@ function loadStats(environment){
 
             newTd1.innerText = robot["robot"]
             newTd2.innerHTML = robot["security"]
-            newTd3.innerHTML = robot["env"]
+            newTd3.innerHTML = robot["ytdPnl"]
             newTd4.innerHTML = robot["balance"]
             newTd5.innerHTML = robot["dtd"]
             newTd6.innerText = robot["mtd"]
             newTd7.innerText = robot["ytd"]
+
+            if (parseFloat(robot["ytdPnl"]) > 0.0){
+                newTd3.style.color = "green"
+            }
+            else {
+                newTd3.style.color = "red"
+            }
 
             if (parseFloat(robot["dtd"]) > 0.0){
                 newTd5.style.color = "green"

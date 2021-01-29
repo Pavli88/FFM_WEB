@@ -1,9 +1,7 @@
 
 
 # Cumulative return calculation based on return series
-def cumulative_return_calc(data_series, period_start):
-    print("*** Cumulative return calculation ***")
-    print("Calculation period: ", period_start)
+def cumulative_return_calc(data_series):
 
     return_list = [100]
 
@@ -16,7 +14,8 @@ def cumulative_return_calc(data_series, period_start):
 
         return_list.append(round(return_record, 3))
 
-    print(return_list)
-    print("Calculation finished.")
-
     return return_list
+
+
+def total_pnl_calc(data_series):
+    return sum(data_series)

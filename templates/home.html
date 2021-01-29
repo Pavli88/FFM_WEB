@@ -38,11 +38,11 @@
             <tr>
                 <th>Robot</th>
                 <th>Security</th>
-                <th>Env</th>
+                <th>YTD Profit</th>
                 <th>Balance</th>
-                <th>DTD</th>
-                <th>MTD</th>
-                <th>YTD</th>
+                <th>DTD %</th>
+                <th>MTD %</th>
+                <th>YTD %</th>
             </tr>
             </thead>
             <tbody id="robotStatTable"></tbody>
@@ -183,6 +183,9 @@
                                 <a href="#dailyRet" class="nav-link" data-toggle="tab">Daily Returns</a>
                             </li>
                             <li class="nav-item">
+                                <a href="#cumRet" class="nav-link" data-toggle="tab">Cumulative Return</a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="#robotBalance" class="nav-link" data-toggle="tab">Balance</a>
                             </li>
                             <li class="nav-item">
@@ -198,6 +201,9 @@
                     <div class="tab-content">
                         <div class="tab-pane fade" id="dailyRet">
                             <canvas id="dailyReturnChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="cumRet">
+                            <canvas id="cumReturnChart" width="400" height="170"></canvas>
                         </div>
                         <div class="tab-pane fade" id="robotBalance">
                             <canvas id="balanceChart" width="400" height="170"></canvas>
