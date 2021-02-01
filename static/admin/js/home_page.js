@@ -127,31 +127,29 @@ function loadMessages(){
     })
 }
 
-// Loading data to robot panel
+// ROBOT PANEL *********************************************************************************************************
 
-    // Variables
-
+// Variables
 const robotSelector = $("#robotSelector")
 const startDate = $("#startDate")
 const endDate = $("#endDate")
 
-    // Function on change calls main loader function
+// Function on change calls main loader function
 robotSelector.on("change", robotDataLoader)
 startDate.on("change", robotDataLoader)
 endDate.on("change", robotDataLoader)
 
-    // Main loader function
+// Main ROBOT data loader function
 function robotDataLoader(){
-    console.log("Robot Data Loader")
 
     // Clearing chart canvases
     // let canvas1 = $('#dailyReturnChart')[0]; // or document.getElementById('canvas');
     // canvas1.width = canvas1.width;
-
-    let robotBalanceData = getData('get_robot_data/balance')
-    let robotTradesData = getData('get_robot_data/trade')
-    let cumRobotReturn = getData('get_robot_data/cumulative_return/')
-    let drawDown = getData('get_robot_data/drawdown/')
+    let dataSet = {"robot": robotSelector.val(), "start_date": startDate.val(), "end_date": endDate.val()}
+    let robotBalanceData = getData('get_robot_data/balance', dataSet)
+    let robotTradesData = getData('get_robot_data/trade', dataSet)
+    let cumRobotReturn = getData('get_robot_data/cumulative_return/', dataSet)
+    let drawDown = getData('get_robot_data/drawdown/', dataSet)
 
     // Loading daily robot returns
     DataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
@@ -172,17 +170,32 @@ function robotDataLoader(){
     DataChart(drawDown, "#drawdownChart", "Drawdown", "bar", "data")
 }
 
+// ACCOUNT PANEL *******************************************************************************************************
+const accountSelector = $("#accountSelector")
+const startdateAcc = $("#startDateAcc")
+const endDateAcc = $("#endDateAcc")
+
+accountSelector.on("change", accountDataLoader)
+startdateAcc.on("change", accountDataLoader)
+endDateAcc.on("change", accountDataLoader)
+
+// Main ACCOUNT data loader function
+function accountDataLoader(){
+    let dataSet = {"account": accountSelector.val(), "start_date": startdateAcc.val(), "end_date": endDateAcc.val()}
+    let accountBalanceData = getData('accounts/get_account_data/balance', dataSet)
+    console.log(accountBalanceData)
+     // Account balance chart
+    DataChart(accountBalanceData, "#balanceChartAcc", "Balance", "line", "value")
+
+}
+
 // Get data via url request from database
-function getData(myUrl){
+function getData(myUrl, dataSet){
     let responseData = null
     $.ajax({
         url: myUrl,
         type: 'GET',
-        data: {
-            "robot": robotSelector.val(),
-            "start_date": startDate.val(),
-            "end_date": endDate.val()
-        },
+        data: dataSet,
         async: false,
         success: function (data) {
             responseData = data;

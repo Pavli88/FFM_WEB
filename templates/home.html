@@ -228,37 +228,99 @@
 
     <!--Account-->
     <br>
-    <div style="width: 100%;">
-        <div class="card" style="width: 100%; height: 200px; display: flex">
-            <div class="card-header card_header">
-                <div style="padding: 5px">
-                    <h5 style="color: #19393D"><strong>Account</strong></h5>
+    <div class="card" style="width: 100%; height: 500px; display: flex">
+        <div class="card-header card_header">
+            <div style="padding: 5px; margin: 0px">
+                <h5 style="color: #19393D"><strong>Account</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <select class="form-control form-control-sm" name="account" id="accountSelector">
+                    {% for account in accounts %}
+                    <option>{{account.account_number}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="position: absolute; right: 40px; display: flex; padding: 5px;">
+                <label>Start Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm startDay" type="date" id="startDateAcc" name="startDateAcc"
+                           min="2020-01-01" style="width: 150px">
                 </div>
-                <div style="padding: 5px">
-                    <select class="form-control form-control-sm" name="account" id="account_selector">
-                        {% for account in accounts %}
-                        <option>{{account.account_number}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label><strong>Environment</strong></label>
-                </div>
-                <div>
-                    <label id="#env"></label>
-                </div>
-                <div>
-                    <label id="broker">Oanda</label>
-                </div>
-                <div>
-                    <label><strong>Asset Value</strong></label>
-                </div>
-                <div>
-                    <label>1346</label>
+                <label>End Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm endDay" type="date" id="endDateAcc" name="endDateAcc"
+                           min="2020-01-01" style="width: 150px">
                 </div>
             </div>
-            <div class="card_container" style="height: 100%; width: 100%">
-                <canvas id="bar_chart_2" width="50%"></canvas>
+        </div>
+        <div style="width: 100%; height: 100%; display: flex; padding: 10px;">
+            <!--General info performance and risk numbers-->
+            <div class="card" style="width: 30%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px">
+                        <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="infoTabAcc">
+                            <li class="nav-item">
+                                <a href="#riskInfoAcc" class="nav-link" data-toggle="tab">Risk</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#returnInfoAcc" class="nav-link" data-toggle="tab">Return</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 100%;">
+
+                </div>
+            </div>
+
+            <!--Charts-->
+            <div class="card" style="width: 70%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px;">
+                        <label style="color: #19393D; margin: 0px;"><strong>Charts</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="chartTabAcc">
+                            <li class="nav-item">
+                                <a href="#dailyRetAcc" class="nav-link" data-toggle="tab">Daily Returns</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#cumRetAcc" class="nav-link" data-toggle="tab">Cumulative Return</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#balanceAcc" class="nav-link" data-toggle="tab">Balance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#accountCf" class="nav-link" data-toggle="tab">Cash Flow</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#drawdownAcc" class="nav-link" data-toggle="tab">Drawdown</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bs-example" style="width: 100%; height: 100%">
+                    <div class="tab-content">
+                        <div class="tab-pane fade" id="dailyRetAcc">
+                            <canvas id="dailyReturnChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="cumRetAcc">
+                            <canvas id="cumReturnChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="balanceAcc">
+                            <canvas id="balanceChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="accountCf">
+                            <canvas id="cashFlowChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="drawdownAcc">
+                            <canvas id="drawdownChartAcc" width="400" height="170"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

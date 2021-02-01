@@ -7,6 +7,7 @@ from datetime import date
 from datetime import datetime
 from robots.models import *
 from accounts.models import *
+from accounts.account_functions import *
 from portfolio.models import *
 from mysite.processes.oanda import *
 from mysite.processes.calculations import *
@@ -22,11 +23,7 @@ from mysite.my_functions.general_functions import *
 def test_calc(request):
     print("Loading robot stats to dashboard")
 
-    year_beg = beginning_of_year()
-    robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name="EUR_USD_TRD1").values()))
-    yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
-
-    drawdown_calc(yearly_trades["ret"].tolist())
+    respo = get_account_balance_history(account="001-004-2840244-004", )
 
     return JsonResponse([0,0,0], safe=False)
 
@@ -187,7 +184,8 @@ def register(request):
 def home(request, default_load=None):
     print("*** HOME PAGE ***")
 
-    return render(request, 'home.html', {"robots": get_robots(status="active")})
+    return render(request, 'home.html', {"robots": get_robots(status="active"),
+                                         "accounts": get_accounts()})
 
 
 def get_account_data(account_number="All"):

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from accounts.models import *
+from accounts.account_functions import *
 from django.http import JsonResponse
 
 
@@ -109,5 +110,28 @@ def new_cash_flow(request):
     response = "New cash flow was entered into the database"
 
     print("Sending response to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def get_account_data(request, data_type):
+    print("*** GET ACCOUNT DATA REQUEST ***")
+    print("DATA TYPE REQUEST:", data_type)
+
+    if request.method == "GET":
+        account = request.GET.get("account")
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+
+    print("ACCOUNT:", account)
+    print("START DATE:", start_date)
+    print("END DATE:", end_date)
+
+    if data_type == "balance":
+        response_data = get_account_balance_history(account=account, start_date=start_date, end_date=end_date)
+
+    response = {"message": list(response_data)}
+
+    print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
