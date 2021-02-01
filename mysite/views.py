@@ -123,8 +123,8 @@ def load_robot_stats(request):
 
         robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
 
-        yearly_trades = robot_trades_all[robot_trades_all["date"] > year_beg]
-        monthly_trades = robot_trades_all[robot_trades_all["date"] > month_beg]
+        yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
+        monthly_trades = robot_trades_all[robot_trades_all["date"] >= month_beg]
 
         mtd_series = cumulative_return_calc(data_series=monthly_trades["ret"].tolist())
         ytd_series = cumulative_return_calc(data_series=yearly_trades["ret"].tolist())
