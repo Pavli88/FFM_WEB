@@ -137,7 +137,11 @@ def load_robot_stats(request):
 
         ytd_pnl = round(total_pnl_calc(yearly_trades["realized_pnl"].tolist()), 2)
         mtd_pnl = round(total_pnl_calc(monthly_trades["realized_pnl"].tolist()), 2)
-        dtd_pnl = round(monthly_trades["realized_pnl"].tolist()[-1], 2)
+
+        try:
+            dtd_pnl = round(monthly_trades["realized_pnl"].tolist()[-1], 2)
+        except:
+            dtd_pnl = 0.0
 
         total_ytd_pnl = total_ytd_pnl + ytd_pnl
         total_mtd_pnl = total_mtd_pnl + mtd_pnl
