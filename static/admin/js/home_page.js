@@ -151,7 +151,8 @@ function robotDataLoader(){
     let robotBalanceData = getData('get_robot_data/balance')
     let robotTradesData = getData('get_robot_data/trade')
     let cumRobotReturn = getData('get_robot_data/cumulative_return/')
-    console.log(cumRobotReturn)
+    let drawDown = getData('get_robot_data/drawdown/')
+
     // Loading daily robot returns
     DataChart(robotBalanceData, "#dailyReturnChart", "Daily Returns", "bar", "ret")
 
@@ -166,6 +167,9 @@ function robotDataLoader(){
 
     // Robot trade pnl chart
     DataChart(robotTradesData, "#tradesChart", "Trades", "bar", "pnl")
+
+    // Drawdown
+    DataChart(drawDown, "#drawdownChart", "Drawdown", "bar", "data")
 }
 
 // Get data via url request from database

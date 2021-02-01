@@ -22,80 +22,13 @@ from mysite.my_functions.general_functions import *
 def test_calc(request):
     print("Loading robot stats to dashboard")
 
-    if request.method == "GET":
-        env = request.GET["env"]
-
-    print(env)
     year_beg = beginning_of_year()
-    month_beg = beginning_of_month()
+    robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name="EUR_USD_TRD1").values()))
+    yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
 
-    robots = Robots.objects.filter(status="active", env=env).values()
+    drawdown_calc(yearly_trades["ret"].tolist())
 
-    response_data_list = []
-    dtd_pnl = 0.0
-    mtd_pnl = 0.0
-    ytd_pnl = 0.0
-
-    for robot in robots:
-
-        balance_calc(robot=robot["name"], calc_date=str(get_today()))
-
-        robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
-
-        # Yearly calculations
-        try:
-            yearly_trades = robot_trades_all[robot_trades_all["date"] > year_beg]
-            ytd = 1
-            for daily_ret in yearly_trades["ret"]:
-                if daily_ret == 0.0:
-                    ytd = ytd * 1
-                else:
-                    ytd = ytd * (daily_ret + 1)
-            ytd = str(round((ytd - 1) * 100, 2)) + "%"
-            ytd_pnl = ytd_pnl + yearly_trades["realized_pnl"].sum()
-        except:
-            ytd = 0.0
-            ytd_pnl = ytd_pnl + 0.0
-
-        # Monthly calculations
-        try:
-            monthly_trades = robot_trades_all[robot_trades_all["date"] > month_beg]
-            mtd = 1
-            for daily_ret in monthly_trades["ret"]:
-                if daily_ret == 0.0:
-                    mtd = mtd * 1
-                else:
-                    mtd = mtd * (daily_ret + 1)
-            mtd = str(round((mtd - 1) * 100, 2)) + "%"
-            mtd_pnl = mtd_pnl + monthly_trades["realized_pnl"].sum()
-        except:
-            mtd = 0.0
-            mtd_pnl = mtd_pnl + 0.0
-
-        try:
-            last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
-        except:
-            last_balance = 0.0
-
-        # Daily calculations
-        try:
-            dtd = str(round(list(robot_trades_all["ret"])[-1]*100, 2)) + "%"
-            dtd_pnl = dtd_pnl + round(list(robot_trades_all["realized_pnl"])[-1], 2)
-        except:
-            dtd = 0.0
-            dtd_pnl = dtd_pnl + 0.0
-
-        response_data_list.append({"robot": robot["name"], "security": robot["security"],
-                                   "env": robot["env"], "balance": last_balance,
-                                   "dtd": dtd, "mtd": mtd, "ytd": ytd})
-
-    response = {"robots": response_data_list,
-                "pnls": [round(dtd_pnl, 2), round(mtd_pnl, 2), round(ytd_pnl, 2)]}
-
-    print("Sending response to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
+    return JsonResponse([0,0,0], safe=False)
 
 
 def load_robot_stats(request):

@@ -557,6 +557,15 @@ def get_robot_data(request, data_type):
         for record in cumulative_return_calc(balance["ret"]):
             response_data.append({"data": record})
 
+    elif data_type == "drawdown":
+        raw_data = pd.DataFrame(list(get_robot_balance(robot_name=robot)))
+        draw_down_data = drawdown_calc(raw_data["ret"].tolist())
+
+        response_data = []
+
+        for record in draw_down_data:
+            response_data.append({"data": record})
+
     response = {"message": list(response_data)}
 
     print("Sending message to front end")
