@@ -6,6 +6,10 @@ def get_brokers():
     return BrokerAccounts.objects.filter().values()
 
 
+def get_account_info(account_number):
+    return BrokerAccounts.objects.filter(account_number=account_number).values()
+
+
 def get_accounts(broker=None, environment=None):
     if broker is None:
         return BrokerAccounts.objects.filter().values()

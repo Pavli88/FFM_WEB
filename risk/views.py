@@ -34,6 +34,7 @@ def risk_main(request):
                                                        "risk_form": risk_form})
 
 
+# URL Functions
 def update_robot_risk(request):
     print("===================")
     print("UPDATING ROBOT RISK")

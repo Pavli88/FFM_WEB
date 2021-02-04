@@ -7,8 +7,10 @@ from portfolio.models import *
 from robots.processes.robot_processes import *
 from mysite.processes.oanda import *
 from accounts.models import *
+from accounts.account_functions import *
 from robots.forms import *
 from robots.robot_functions import *
+from robots.trade_functions import *
 from accounts.models import *
 from instrument.models import *
 import datetime
@@ -269,25 +271,55 @@ def robot_process_hub(request):
     return JsonResponse(response, safe=False)
 
 
+def close_trade(robot):
+    print("*** CLOSE TRADE SIGNAL ***")
+    print("Fetching robot data for", robot)
+
+    robot_data = get_robots(name=robot)[0]
+
+    print(robot_data)
+
+    account_data = get_account_info(account_number=robot_data["account_number"])[0]
+
+    print(account_data)
+
+    print("Fetching open trades for", robot)
+    open_trades = pd.DataFrame(list(get_open_trades(robot=robot)))
+
+    print(open_trades)
+
+    if len(open_trades) == 0:
+        print("There are no open trades for this robot in the database. Execution stopped!")
+        SystemMessages(msg_type="Trade Execution",
+                       msg=robot + ": Close trade request. There are no open trades.").save()
+        return HttpResponse(None)
+
+
 @csrf_exempt
 def incoming_trade(request):
-
-    print("===============")
-    print("INCOMING SIGNAL")
-    print("===============")
+    print("*** TRADE SIGNAL ***")
 
     if request.method == "POST":
 
         message = request.body
         message = str(message.decode("utf-8"))
         signal = message.split()
-        trade_side = signal[4]
 
         print("INCOMING SIGNAL:", signal)
-        print("ROBOT NAME:", signal[0])
-        print("TRADE SIDE:", trade_side)
-        print("Fetching robot parameters from database")
-        print("")
+
+        trade_type = signal[1]
+        robot = signal[0]
+
+        print("ROBOT NAME -", robot, "TRADE TYPE -", trade_type, )
+
+        if trade_type == "Close":
+            close_trade(robot=robot)
+
+        try:
+            robot_data = get_robots(name=robot)[0]
+        except:
+            print("Robot is not in the database. Execution stopped!")
+            return HttpResponse(None)
 
         try:
             robot = Robots.objects.filter(name=signal[0]).values()
