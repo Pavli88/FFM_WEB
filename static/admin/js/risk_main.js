@@ -11,6 +11,7 @@ riskSaveButton.click(function () {
             robot: $("#robotNameRisk").val(),
             daily_risk: $("#dailyRobotRisk").val(),
             daily_nmb_trades: $("#dailyNmbTrades").val(),
+            risk_per_trade: $("#riskPerTrade").val()
             },
         success: function (response) {
             alert("Risk data is updated!")
@@ -38,11 +39,13 @@ function loadRobotRisk() {
             let newTd2 = document.createElement("td")
             let newTd3 = document.createElement("td")
             let newTd4 = document.createElement("td")
+            let newTd5 = document.createElement("td")
             let newBtn = document.createElement("button")
 
             newTd1.innerText = robot["robot"]
             newTd2.innerHTML = robot["daily_risk_perc"]
             newTd3.innerHTML = robot["daily_trade_limit"]
+            newTd4.innerHTML = robot["risk_per_trade"]
             newBtn.innerText = "Update"
 
             newBtn.classList.add("robRiskAmendBtn")
@@ -56,7 +59,8 @@ function loadRobotRisk() {
             newRow.append(newTd2)
             newRow.append(newTd3)
             newRow.append(newTd4)
-            newTd4.append(newBtn)
+            newRow.append(newTd5)
+            newTd5.append(newBtn)
 
             robotRiskTableBody.append(newRow)
         }
