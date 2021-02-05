@@ -310,8 +310,9 @@ def incoming_trade(request):
 
         trade_type = signal[1]
         robot = signal[0]
+        stop_loss = signal[2]
 
-        print(" ROBOT -", robot, "- TRADE TYPE -", trade_type, )
+        print(" ROBOT -", robot, "- TRADE TYPE -", trade_type, "STOP LOSS -", stop_loss)
 
         # Checking if trade is a new execution or a trade close
         if trade_type == "Close":
@@ -349,7 +350,7 @@ def incoming_trade(request):
         # ACCOUNT INFORMATION ******************************************************************************************
         account_data = get_account_info(account_number=account_number)[0]
         token = account_data["access_token"]
-        print(token)
+
         # BALANCE INFORMATION ******************************************************************************************
         balance_params = Balance.objects.filter(robot_name=robot, date=get_today()).values()[0]
 
@@ -366,6 +367,16 @@ def incoming_trade(request):
         # Balance main variable
         balance = balance_params["close_balance"]
         daily_return = balance_params["ret"]
+
+        # Zero balance check
+        if balance == 0.0:
+            print(" " + robot + ": Zero balance" + " on " + str(get_today()) + ". Execution stopped")
+
+            SystemMessages(msg_type="Trade Execution",
+                           msg=robot + ": Zero balance" + " on " + str(
+                               get_today()) + ". Execution stopped. Please fund the robot for trading.").save()
+
+            return HttpResponse(None)
 
         print("BALANCE INFORMATION")
         print(" Balance -", balance)
@@ -399,11 +410,11 @@ def incoming_trade(request):
         print(risk_params)
 
         # Fetching out robot trades for the current day
-        robot_trades = get_robot_trades(robot=robot, date=get_today())[0]
-
-        print(" Fetching balance information from database")
-
-        # Checking if close balance is not zero
+        robot_trades = get_robot_trades(robot=robot, date=get_today())
+        print(robot_trades)
+        print("")
+        print("TRADES")
+        print(" Number of open trades -", robot_trades.count())
 
         # Daily loss % check
         if daily_return < daily_risk_perc:
@@ -415,49 +426,43 @@ def incoming_trade(request):
             return HttpResponse(None)
 
         # Number of trades check
-        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_type != "Close":
+        if robot_trades.count() == daily_trade_limit and trade_type != "Close":
             if robot_trades.count() == 0:
-                print(signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.")
+                print(robot + ": Trading is not allowed. Daily number of trade limit is not set for the robot.")
 
                 SystemMessages(msg_type="Risk",
-                               msg=signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.").save()
+                               msg=robot + ": Trading is not allowed. Daily number of trade limit is not set for the robot.").save()
             else:
-                print(signal[0] + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.")
+                print(robot + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.")
 
                 SystemMessages(msg_type="Risk",
-                               msg=signal[0] + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.").save()
+                               msg=robot + ": Trading is not allowed. Daily number of trade limit (" + str(robot_trades.count()) +") is reached.").save()
 
             return HttpResponse(None)
 
         print("Robot passed all risk checks")
 
         # TRADE EXECUTION PART *****************************************************************************************
+        print("TRADE EXECUTION")
 
         if broker == "oanda":
+            # Get current price for traded security from broker
+
             # Quantity calculation
+            quantity = quantity_calc(balance=balance, stop_loss=stop_loss, trade_side=trade_type, trade_price=2)
+
+            if environment == "demo":
+                environment = "practice"
 
             # Submitting trade
-
-            account = BrokerAccounts.objects.filter(account_number=account_number,
-                                                    broker_name=broker).values()
-            env = account[0]["env"]
-
-            if env == "demo":
-                environment = "practice"
-            else:
-                environment = "live"
-
-            token = account[0]["access_token"]
-
-            print("ACCOUNT NUMBER:", account_number)
-            print("ENVIRONMENT:", environment)
-            print("TOKEN:", token)
-
-            print("-------------------------")
-            print("     CREATING ORDER      ")
-            print("-------------------------")
-
-            print("TRADE SIDE:", trade_type)
+            trade_at_oanda(token=token,
+                           account_number=account_number,
+                           robot=robot,
+                           trade_type="BUY",
+                           environment=environment,
+                           security=security,
+                           quantity=1,
+                           sl=stop_loss)
 
             if trade_type == "BUY":
                 quantity = str(signal[2])
@@ -499,31 +504,31 @@ def incoming_trade(request):
 
                 return HttpResponse(None)
 
-            print("QUANTITY:", quantity)
-            print("ORDER TYPE: MARKET")
-            print("SECURITY:", security)
-            print("Submiting trade request to Oanda...")
-
-            trade = OandaV20(access_token=token,
-                             account_id=account_number,
-                             environment=environment).submit_market_order(security=security, quantity=quantity)
-
-            print("Updating robot trade table with new trade record")
-
-            RobotTrades(security=security,
-                        robot=robot,
-                        quantity=quantity,
-                        status="OPEN",
-                        pnl=0.0,
-                        open_price=trade["price"],
-                        side=trade_type,
-                        broker_id=trade["id"],
-                        broker="oanda").save()
-
-            print("Robot trade table is updated!")
-
-            SystemMessages(msg_type="Trade Execution",
-                           msg=signal[0] + ": " + str(trade_type) + " " + str(quantity) + " " + str(security)).save()
+            # print("QUANTITY:", quantity)
+            # print("ORDER TYPE: MARKET")
+            # print("SECURITY:", security)
+            # print("Submiting trade request to Oanda...")
+            #
+            # trade = OandaV20(access_token=token,
+            #                  account_id=account_number,
+            #                  environment=environment).submit_market_order(security=security, quantity=quantity)
+            #
+            # print("Updating robot trade table with new trade record")
+            #
+            # RobotTrades(security=security,
+            #             robot=robot,
+            #             quantity=quantity,
+            #             status="OPEN",
+            #             pnl=0.0,
+            #             open_price=trade["price"],
+            #             side=trade_type,
+            #             broker_id=trade["id"],
+            #             broker="oanda").save()
+            #
+            # print("Robot trade table is updated!")
+            #
+            # SystemMessages(msg_type="Trade Execution",
+            #                msg=signal[0] + ": " + str(trade_type) + " " + str(quantity) + " " + str(security)).save()
 
     response = {"securities": [0]}
 

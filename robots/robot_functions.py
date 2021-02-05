@@ -19,7 +19,7 @@ def get_robots(status=None, name=None):
 
 def get_robot_trades(robot, start_date=None, end_date=None, date=None):
     if date is not None:
-        return RobotTrades.objects.filter(robot=robot, date=date).values()
+        return RobotTrades.objects.filter(robot=robot, close_time=date).values()
     else:
         return RobotTrades.objects.filter(robot=robot).values()
 
