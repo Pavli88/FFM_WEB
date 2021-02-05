@@ -16,6 +16,7 @@ from instrument.models import *
 import datetime
 from datetime import timedelta, datetime
 from risk.models import *
+from risk.risk_functions import *
 from mysite.models import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.calculations import *
@@ -305,95 +306,116 @@ def incoming_trade(request):
         message = str(message.decode("utf-8"))
         signal = message.split()
 
-        print("INCOMING SIGNAL:", signal)
+        print(" INCOMING SIGNAL:", signal)
 
         trade_type = signal[1]
         robot = signal[0]
 
-        print("ROBOT NAME -", robot, "TRADE TYPE -", trade_type, )
+        print(" ROBOT -", robot, "- TRADE TYPE -", trade_type, )
 
+        # Checking if trade is a new execution or a trade close
         if trade_type == "Close":
             close_trade(robot=robot)
 
+        # ROBOT INFORMATION ********************************************************************************************
         try:
             robot_data = get_robots(name=robot)[0]
+            security = robot_data["security"]
+            status = robot_data["status"]
+            environment = robot_data["env"]
+            broker = robot_data["broker"]
+            account_number = robot_data["account_number"]
+
+            print("")
+            print("ROBOT INFORMATION")
+            print(" Security -", security)
+            print(" Status -", status)
+            print(" Environment -", environment)
+            print("")
+            print("BROKER INFORMATION")
+            print(" Broker -", broker)
+            print(" Account Number -", account_number)
+            print(robot_data)
         except:
-            print("Robot is not in the database. Execution stopped!")
+            print(" Robot is not in the database. Execution stopped!")
             return HttpResponse(None)
 
-        try:
-            robot = Robots.objects.filter(name=signal[0]).values()
-            security = robot[0]["security"]
-            broker = robot[0]["broker"]
-            status = robot[0]["status"]
-            account_number = robot[0]["account_number"]
-        except:
-            print("Robot is not in the database. Execution stopped!")
-            return HttpResponse(None)
-
-        print("-------------------------")
-        print("Robot database parameters")
-        print("-------------------------")
-        print("STATUS:", status)
-        print("BROKER:", broker)
-        print("SECURITY:", security)
-        print("ACCOUNT NUMBER:", account_number)
-
+        # Checking if robot is active
         if status == "inactive":
-            print("Robot is inactive. Trade execution stopped!")
-            SystemMessages(msg_type="Trade Execution", msg=signal[0] + ": Inactive Robot. Execution stopped.").save()
+            print(" Robot is inactive. Trade execution stopped!")
+            SystemMessages(msg_type="Trade Execution", msg=robot + ": Inactive Robot. Execution stopped.").save()
             return HttpResponse(None)
 
-        print("Robot is active. Trading is allowed.")
-        print("--------------------------")
-        print("RISK PARAMETERS EVALUATION")
-        print("--------------------------")
-        print("Fetching risk parameters from database")
+        # ACCOUNT INFORMATION ******************************************************************************************
+        account_data = get_account_info(account_number=account_number)[0]
+        token = account_data["access_token"]
+        print(token)
+        # BALANCE INFORMATION ******************************************************************************************
+        balance_params = Balance.objects.filter(robot_name=robot, date=get_today()).values()[0]
 
-        risk_params = RobotRisk.objects.filter(robot=signal[0]).values()
+        # Check if balance is calculated for a robot
+        if not balance_params:
+            print(" " + robot + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped")
 
-        # Fetching out robot trades for the current day
-        robot_trades = RobotTrades.objects.filter(robot=signal[0], close_time=get_today()).values()
+            SystemMessages(msg_type="Trade Execution",
+                           msg=robot + ": Not calculated balance" + " on " + str(
+                               get_today()) + ". Execution stopped").save()
+
+            return HttpResponse(None)
+
+        # Balance main variable
+        balance = balance_params["close_balance"]
+        daily_return = balance_params["ret"]
+
+        print("BALANCE INFORMATION")
+        print(" Balance -", balance)
+        print(" Daily Return -", daily_return)
+        print(balance_params)
+
+        # RISK CHECK PART **********************************************************************************************
+        risk_params = get_robot_risk_data(robot=robot)[0]
 
         # Checking if risk parameters are existing for the robot
         if not risk_params:
-            print("Risk parameters are not assigned to the robot. Execution stopped.")
+            print(" Risk parameters are not assigned to the robot. Execution stopped.")
 
             SystemMessages(msg_type="Trade Execution",
                            msg="Risk parameters are not assigned to " + signal[0] + str(". Execution stopped.")).save()
 
             return HttpResponse(None)
 
-        daily_loss_limit = risk_params[0]["daily_risk_perc"] * -1
+        # Risk main variables
+        daily_risk_perc = risk_params["daily_risk_perc"]*-1
+        daily_trade_limit = risk_params["daily_trade_limit"]
+        risk_per_trade = risk_params["risk_per_trade"]
+        pyramiding_level = risk_params["pyramiding_level"]
 
-        print("Fetching balance information from database")
+        print("")
+        print("RISK PARAMETERS")
+        print(" Daily Risk Limit -", daily_risk_perc)
+        print(" Daily Trade Limit -", daily_trade_limit)
+        print(" Risk per Trade -", risk_per_trade)
+        print(" Pyramiding Level -", pyramiding_level)
+        print(risk_params)
 
-        balance_params = Balance.objects.filter(robot_name=signal[0], date=get_today()).values()
+        # Fetching out robot trades for the current day
+        robot_trades = get_robot_trades(robot=robot, date=get_today())[0]
 
-        # Check if balance is calculated for a robot
-        if not balance_params:
-            print(signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped")
-
-            SystemMessages(msg_type="Trade Execution",
-                           msg=signal[0] + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped").save()
-
-            return HttpResponse(None)
-
-        daily_return = balance_params[0]["ret"]
+        print(" Fetching balance information from database")
 
         # Checking if close balance is not zero
 
         # Daily loss % check
-        if daily_return < daily_loss_limit:
-            print(signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%")
+        if daily_return < daily_risk_perc:
+            print(robot + ": Trading is not allowed. Daily loss limit is over " + str(daily_risk_perc*100) + "%")
 
             SystemMessages(msg_type="Risk",
-                           msg=signal[0] + ": Trading is not allowed. Daily loss limit is over " + str(daily_loss_limit*100) + "%").save()
+                           msg=robot + ": Trading is not allowed. Daily loss limit is over " + str(daily_risk_perc*100) + "%").save()
 
             return HttpResponse(None)
 
         # Number of trades check
-        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_side != "Close":
+        if robot_trades.count() == risk_params[0]["daily_trade_limit"] and trade_type != "Close":
             if robot_trades.count() == 0:
                 print(signal[0] + ": Trading is not allowed. Daily number of trade limit is not set for the robot.")
 
@@ -408,12 +430,13 @@ def incoming_trade(request):
             return HttpResponse(None)
 
         print("Robot passed all risk checks")
-        print("-------------------------")
-        print(" ORDER ROUTING TO BROKER ")
-        print("-------------------------")
+
+        # TRADE EXECUTION PART *****************************************************************************************
 
         if broker == "oanda":
-            print("Fetching out account parameters from database")
+            # Quantity calculation
+
+            # Submitting trade
 
             account = BrokerAccounts.objects.filter(account_number=account_number,
                                                     broker_name=broker).values()
@@ -434,13 +457,13 @@ def incoming_trade(request):
             print("     CREATING ORDER      ")
             print("-------------------------")
 
-            print("TRADE SIDE:", trade_side)
+            print("TRADE SIDE:", trade_type)
 
-            if trade_side == "BUY":
+            if trade_type == "BUY":
                 quantity = str(signal[2])
-            elif trade_side == "SELL":
+            elif trade_type == "SELL":
                 quantity = str(int(signal[2]) * -1)
-            elif trade_side == "Close":
+            elif trade_type == "Close":
 
                 print("OPEN TRADES:")
                 open_trades = pd.DataFrame(list(RobotTrades.objects.filter(robot=signal[0], status="OPEN").values()))
@@ -488,19 +511,19 @@ def incoming_trade(request):
             print("Updating robot trade table with new trade record")
 
             RobotTrades(security=security,
-                        robot=signal[0],
+                        robot=robot,
                         quantity=quantity,
                         status="OPEN",
                         pnl=0.0,
                         open_price=trade["price"],
-                        side=trade_side,
+                        side=trade_type,
                         broker_id=trade["id"],
                         broker="oanda").save()
 
             print("Robot trade table is updated!")
 
             SystemMessages(msg_type="Trade Execution",
-                           msg=signal[0] + ": " + str(trade_side) + " " + str(quantity) + " " + str(security)).save()
+                           msg=signal[0] + ": " + str(trade_type) + " " + str(quantity) + " " + str(security)).save()
 
     response = {"securities": [0]}
 
@@ -552,16 +575,6 @@ def calculate_robot_balance(request):
     return HttpResponse(None)
 
 
-def get_robot_balance(robot_name, start_date=None, end_date=None):
-    robot_balance = Balance.objects.filter(robot_name=robot_name).values()
-    return robot_balance
-
-
-def get_robot_trades(robot_name, start_date=None, end_date=None):
-    robot_trades = RobotTrades.objects.filter(robot=robot_name).values()
-    return robot_trades
-
-
 # Javascript based calls from front end to transfer robot data
 def get_robot_data(request, data_type):
     print("------------------")
@@ -581,7 +594,7 @@ def get_robot_data(request, data_type):
     if data_type == "balance":
         response_data = get_robot_balance(robot_name=robot)
     elif data_type == "trade":
-        response_data = get_robot_trades(robot_name=robot)
+        response_data = get_robot_trades(robot=robot)
     elif data_type == "cumulative_return":
         balance = pd.DataFrame(list(get_robot_balance(robot_name=robot)))
         response_data = []

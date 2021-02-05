@@ -1,4 +1,6 @@
 from robots.robot_functions import *
+from mysite.processes.oanda import *
+from mysite.models import *
 
 
 def get_open_trades(robot):
@@ -9,6 +11,30 @@ def quantity_calc():
     pass
 
 
+def trade_at_oanda(token, account_number, robot, trade_type, environment, security, quantity):
+
+    trade = OandaV20(access_token=token,
+                     account_id=account_number,
+                     environment=environment).submit_market_order(security=security, quantity=quantity)
+
+    print("Updating robot trade table with new trade record")
+
+    RobotTrades(security=security,
+                robot=robot,
+                quantity=quantity,
+                status="OPEN",
+                pnl=0.0,
+                open_price=trade["price"],
+                side=trade_type,
+                broker_id=trade["id"],
+                broker="oanda").save()
+
+    print("Robot trade table is updated!")
+
+    SystemMessages(msg_type="Trade Execution",
+                   msg=robot + ": " + str(trade_type) + " " + str(quantity) + " " + str(security)).save()
+
+
 # RISK FUNCTIONS
 def pyramiding_check(robot):
     pass
@@ -16,4 +42,5 @@ def pyramiding_check(robot):
 
 def daily_risk_limit_check():
     pass
+
 
