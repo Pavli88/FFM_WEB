@@ -268,6 +268,19 @@ class OandaV20:
 
         return response['orderFillTransaction']
 
+    def get_prices(self, instruments):
+
+        params = {
+            "instruments": instruments
+        }
+
+        r = pricing.PricingInfo(accountID=self.account_id, params=params)
+        self.api.request(r)
+
+        response = r.response
+
+        return response['prices'][0]
+
 # if __name__ == "__main__":
 #     # .pricing_stream(instrument="XAG_USD")
 #

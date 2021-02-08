@@ -7,30 +7,20 @@ def get_open_trades(robot):
     return RobotTrades.objects.filter(robot=robot, status="OPEN").values()
 
 
-def quantity_calc(balance, stop_loss, trade_side, trade_price):
-    pass
+def quantity_calc(balance, risk_per_trade, stop_loss, trade_side, trade_price):
+    print(" Balance -", balance, "- Risk per Trade -",
+          risk_per_trade, "- Stop Loss -", stop_loss,
+          "- Trade Side -", trade_side, "- Trade Price -", trade_price)
 
+    risk_amount = balance * risk_per_trade
+    price_sl_dist = float(trade_price)-float(stop_loss)
+    quantity = int(risk_amount/price_sl_dist)
 
-def trade_at_oanda(token, account_number, robot, trade_type, environment, security, quantity, sl=None):
-    print("Trade execution via Oanda V20 API")
-    trade = OandaV20(access_token=token,
-                     account_id=account_number,
-                     environment=environment).submit_market_order(security=security, quantity=quantity, sl_price=sl)
+    print(" Risk Amount -", risk_amount)
+    print(" Price and Stop Distance -", price_sl_dist)
+    print(" Quantity -", quantity)
 
-    print("Updating robot trade table with new trade record")
-    RobotTrades(security=security,
-                robot=robot,
-                quantity=quantity,
-                status="OPEN",
-                pnl=0.0,
-                open_price=trade["price"],
-                side=trade_type,
-                broker_id=trade["id"],
-                broker="oanda").save()
-
-    print("Robot trade table is updated!")
-    SystemMessages(msg_type="Trade Execution",
-                   msg=robot + ": " + str(trade_type) + " " + str(quantity) + " " + str(security)).save()
+    return quantity
 
 
 # RISK FUNCTIONS
