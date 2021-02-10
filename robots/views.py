@@ -523,7 +523,10 @@ def incoming_trade(request):
                     return HttpResponse(None)
 
             if quantity_type == "Fix":
-                quantity = quantity_value
+                if trade_type == "BUY":
+                    quantity = quantity_value
+                elif trade_type == "SELL":
+                    quantity = quantity_value*-1
             else:
                 print(" Calculating quantity")
                 quantity = quantity_calc(balance=balance, risk_per_trade=risk_per_trade,
