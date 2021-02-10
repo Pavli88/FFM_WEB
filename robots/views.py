@@ -355,7 +355,6 @@ def incoming_trade(request):
             print("BROKER INFORMATION")
             print(" Broker -", broker)
             print(" Account Number -", account_number)
-            print(robot_data)
         except:
             print(" Robot is not in the database. Execution stopped!")
             return HttpResponse(None)
@@ -402,10 +401,10 @@ def incoming_trade(request):
 
             return HttpResponse(None)
 
+        print("")
         print("BALANCE INFORMATION")
         print(" Balance -", balance)
         print(" Daily Return -", daily_return)
-        print(balance_params)
 
         # RISK CHECK PART **********************************************************************************************
         risk_params = get_robot_risk_data(robot=robot)[0]
@@ -431,11 +430,28 @@ def incoming_trade(request):
         print(" Daily Trade Limit -", daily_trade_limit)
         print(" Risk per Trade -", risk_per_trade)
         print(" Pyramiding Level -", pyramiding_level)
-        print(risk_params)
+
+        # Daily risk limit parameter check
+        if daily_risk_perc == 0.0:
+            print(robot + ": Trading is not allowed. Daily risk limit is not set for the robot.")
+
+            SystemMessages(msg_type="Risk",
+                           msg=robot + ": Trading is not allowed. Daily risk limit is not set for the robot.").save()
+
+            return HttpResponse(None)
+
+        # Daily risk perc parameter check
+        if risk_per_trade == 0.0:
+            print(robot + ": Trading is not allowed. Daily risk per trade is not set for the robot.")
+
+            SystemMessages(msg_type="Risk",
+                               msg=robot + ": Trading is not allowed. Daily risk per trade is not set for the robot.").save()
+
+            return HttpResponse(None)
 
         # Fetching out robot trades for the current day
         robot_trades = get_robot_trades(robot=robot, open_time=get_today())
-        print(robot_trades)
+
         print("")
         print("TRADES")
         print(" Number of open trades -", robot_trades.count())
@@ -479,7 +495,7 @@ def incoming_trade(request):
             oanda_connection = OandaV20(access_token=token, account_id=account_number, environment=environment)
 
             print(" Get market prices for", security)
-            prices = oanda_connection.get_prices(instruments="XAU_USD")
+            prices = oanda_connection.get_prices(instruments=security)
 
             bid = prices['bids'][0]['price']
             ask = prices['asks'][0]['price']
@@ -493,6 +509,7 @@ def incoming_trade(request):
                     SystemMessages(msg_type="Trade Execution",
                                    msg=robot + ": Trade price is below stop loss level on BUY trade. Trade cannot be executed.").save()
                     return HttpResponse(None)
+
             elif trade_type == "SELL":
                 trade_price = bid
                 if trade_price > stop_loss:
@@ -512,7 +529,7 @@ def incoming_trade(request):
                 return HttpResponse(None)
 
             print(" Trade execution via Oanda V20 API")
-            trade = oanda_connection.submit_market_order(security=security, quantity=quantity, sl_price=stop_loss)
+            trade = oanda_connection.submit_market_order(security=security, quantity=quantity)
 
             print(" Updating robot trade table with new trade record")
             new_trade(security=security,
@@ -545,9 +562,10 @@ def delete_robot(request):
 
     print("Deleting robot from database")
 
-    response = {"message": "Robot was deleted"}
-
     Robots.objects.filter(name=robot).delete()
+    RobotRisk.objects.filter(robot=robot).delete()
+
+    response = {"message": "Robot was deleted"}
 
     print("Sending data to front end")
 
