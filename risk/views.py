@@ -46,18 +46,24 @@ def update_robot_risk(request):
         nbm_trades = request.POST.get("daily_nmb_trades")
         risk_per_trade = request.POST.get("risk_per_trade")
         pyramiding_level = request.POST.get("pyramiding_level")
+        quantity_type = request.POST.get("quantity_type")
+        quantity = request.POST.get("quantity")
 
     print("ROBOT:", robot)
     print("DAILY RISK LIMIT:", daily_risk)
     print("DAILY MAX NUMBER OF TRADES:", nbm_trades)
     print("RISK PER TRADE:", risk_per_trade)
     print("PYRAMIDING LEVEL:", pyramiding_level)
+    print("QUANTITY TYPE:", quantity_type)
+    print("QUANTITY:", quantity)
 
     robot_risk_data = RobotRisk.objects.get(robot=robot)
     robot_risk_data.daily_risk_perc = daily_risk
     robot_risk_data.daily_trade_limit = nbm_trades
     robot_risk_data.risk_per_trade = risk_per_trade
     robot_risk_data.pyramiding_level = pyramiding_level
+    robot_risk_data.quantity_type = quantity_type
+    robot_risk_data.quantity = quantity
     robot_risk_data.save()
 
     response = {"message": "success"}

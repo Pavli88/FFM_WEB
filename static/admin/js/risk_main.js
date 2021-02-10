@@ -12,7 +12,9 @@ riskSaveButton.click(function () {
             daily_risk: $("#dailyRobotRisk").val(),
             daily_nmb_trades: $("#dailyNmbTrades").val(),
             risk_per_trade: $("#riskPerTrade").val(),
-            pyramiding_level: $("#pyramidingLevel").val()
+            pyramiding_level: $("#pyramidingLevel").val(),
+            quantity_type: $("#quantityType").val(),
+            quantity: $("#quantity").val()
             },
         success: function (response) {
             alert("Risk data is updated!")
@@ -42,6 +44,8 @@ function loadRobotRisk() {
             let newTd4 = document.createElement("td")
             let newTd5 = document.createElement("td")
             let newTd6 = document.createElement("td")
+            let newTd7 = document.createElement("td")
+            let newTd8 = document.createElement("td")
             let newBtn = document.createElement("button")
 
             newTd1.innerText = robot["robot"]
@@ -49,6 +53,8 @@ function loadRobotRisk() {
             newTd3.innerHTML = robot["daily_trade_limit"]
             newTd4.innerHTML = robot["risk_per_trade"]
             newTd5.innerHTML = robot["pyramiding_level"]
+            newTd6.innerHTML = robot["quantity_type"]
+            newTd7.innerHTML = robot["quantity"]
             newBtn.innerText = "Update"
 
             newBtn.classList.add("robRiskAmendBtn")
@@ -64,7 +70,9 @@ function loadRobotRisk() {
             newRow.append(newTd4)
             newRow.append(newTd5)
             newRow.append(newTd6)
-            newTd6.append(newBtn)
+            newRow.append(newTd7)
+            newRow.append(newTd8)
+            newTd8.append(newBtn)
 
             robotRiskTableBody.append(newRow)
         }

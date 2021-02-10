@@ -12,3 +12,5 @@ class RobotRisk(models.Model):
     daily_trade_limit = models.FloatField(default=0.00)
     risk_per_trade = models.FloatField(default=0.00)
     pyramiding_level = models.FloatField(default=0.00)
+    quantity_type = models.CharField(max_length=50, default="Stop Based")
+    quantity = models.FloatField(default=0.00)

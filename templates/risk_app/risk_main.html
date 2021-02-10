@@ -119,6 +119,8 @@
                     <th scope="col">Daily Max Number of Trades</th>
                     <th scope="col">Risk (%) per Trade</th>
                     <th scope="col">Pyramiding Level</th>
+                    <th scope="col">Quantity Type</th>
+                    <th scope="col">Quantity</th>
                     <th scope="col"></th>
                 </tr>
                 </thead>
@@ -181,10 +183,36 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div>
+                <div class="form-group">
                     <input id="robotNameRisk" type="hidden">
                 </div>
-                {{ risk_form }}
+                <div class="form-group">
+                    <label for="dailyRobotRisk">Daily Loss Limit %:</label>
+                    <input type="text" name="daily_risk" id="dailyRobotRisk" required="">
+                </div>
+                <div class="form-group">
+                    <label for="dailyNmbTrades">Daily Max Number of Trades:</label>
+                    <input type="text" name="daily_number_of_trades"  id="dailyNmbTrades" required="">
+                </div>
+                <div class="form-group">
+                    <label for="riskPerTrade">Risk per Trade %:</label>
+                    <input type="text" name="risk_per_trade" id="riskPerTrade" required="">
+                </div>
+                <div class="form-group">
+                    <label for="pyramidingLevel">Pyramiding Level:</label>
+                    <input type="text" name="pyramiding_level" id="pyramidingLevel" required="">
+                </div>
+                <div class="form-group">
+                    <label for="quantityType">Quantity Type:</label>
+                    <select name="quantity_type" id="quantityType">
+                        <option value="Stop Based">Stop Based</option>
+                        <option value="Fix">Fix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="text" name="quantity" id="quantity" required="">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="updateDailyRiskBtn" style="width: 100%">Update

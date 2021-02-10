@@ -423,6 +423,8 @@ def incoming_trade(request):
         daily_trade_limit = risk_params["daily_trade_limit"]
         risk_per_trade = risk_params["risk_per_trade"]
         pyramiding_level = risk_params["pyramiding_level"]
+        quantity_type = risk_params["quantity_type"]
+        quantity_value = risk_params["quantity"]
 
         print("")
         print("RISK PARAMETERS")
@@ -430,6 +432,8 @@ def incoming_trade(request):
         print(" Daily Trade Limit -", daily_trade_limit)
         print(" Risk per Trade -", risk_per_trade)
         print(" Pyramiding Level -", pyramiding_level)
+        print(" Quantity Type -", quantity_type)
+        print(" Quantity Value -", quantity_value)
 
         # Daily risk limit parameter check
         if daily_risk_perc == 0.0:
@@ -518,9 +522,12 @@ def incoming_trade(request):
                                    msg=robot + ": Trade price is above stop loss level on BUY trade. Trade cannot be executed.").save()
                     return HttpResponse(None)
 
-            print(" Calculating quantity")
-            quantity = quantity_calc(balance=balance, risk_per_trade=risk_per_trade,
-                                     stop_loss=stop_loss, trade_side=trade_type, trade_price=trade_price)
+            if quantity_type == "Fix":
+                quantity = quantity_value
+            else:
+                print(" Calculating quantity")
+                quantity = quantity_calc(balance=balance, risk_per_trade=risk_per_trade,
+                                         stop_loss=stop_loss, trade_side=trade_type, trade_price=trade_price)
 
             if quantity == 0:
                 print(" Zero quantity calculated for incoming trade. Trade cannot be executed.")
