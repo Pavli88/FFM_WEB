@@ -506,28 +506,28 @@ def incoming_trade(request):
 
             print(" BID -", bid, "ASK -", ask)
 
-            if trade_type == "BUY":
-                trade_price = ask
-                if trade_price < stop_loss:
-                    print(" Trade price is below stop loss level on BUY trade. Trade cannot be executed.")
-                    SystemMessages(msg_type="Trade Execution",
-                                   msg=robot + ": Trade price is below stop loss level on BUY trade. Trade cannot be executed.").save()
-                    return HttpResponse(None)
-
-            elif trade_type == "SELL":
-                trade_price = bid
-                if trade_price > stop_loss:
-                    print(" Trade price is above stop loss level on SELL trade. Trade cannot be executed.")
-                    SystemMessages(msg_type="Trade Execution",
-                                   msg=robot + ": Trade price is above stop loss level on BUY trade. Trade cannot be executed.").save()
-                    return HttpResponse(None)
-
             if quantity_type == "Fix":
                 if trade_type == "BUY":
                     quantity = quantity_value
                 elif trade_type == "SELL":
                     quantity = quantity_value*-1
             else:
+                if trade_type == "BUY":
+                    trade_price = ask
+                    if trade_price < stop_loss:
+                        print(" Trade price is below stop loss level on BUY trade. Trade cannot be executed.")
+                        SystemMessages(msg_type="Trade Execution",
+                                       msg=robot + ": Trade price is below stop loss level on BUY trade. Trade cannot be executed.").save()
+                        return HttpResponse(None)
+
+                elif trade_type == "SELL":
+                    trade_price = bid
+                    if trade_price > stop_loss:
+                        print(" Trade price is above stop loss level on SELL trade. Trade cannot be executed.")
+                        SystemMessages(msg_type="Trade Execution",
+                                       msg=robot + ": Trade price is above stop loss level on BUY trade. Trade cannot be executed.").save()
+                        return HttpResponse(None)
+
                 print(" Calculating quantity")
                 quantity = quantity_calc(balance=balance, risk_per_trade=risk_per_trade,
                                          stop_loss=stop_loss, trade_side=trade_type, trade_price=trade_price)
