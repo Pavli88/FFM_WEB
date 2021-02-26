@@ -11,13 +11,9 @@
 {% endblock %}
 {% block entry_form %}
 <br>
-<div style="margin: 5px">
-    <div class="card" style="width: 100%; height: 400px; display: flex">
-        <div class="card-header" style="display: flex">
-            <div style="padding: 5px">
-                <label style="color: #19393D; margin: 0px"><strong>Performance</strong></label>
-            </div>
-            <div style="position: absolute; right: 40px">
+<div class="card" style="width: 100%; height: 50px; margin: 5px">
+    <h5 class="card-header" style="color: #19393D"><strong>Dashboard</strong></h5>
+    <div style="position: absolute; right: 40px">
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" data-toggle="dropdown"
@@ -32,42 +28,56 @@
                     </li>
                 </ul>
             </div>
-        </div>
-        <div style="width: 100%; height: 100%">
-            <div id="dtdPerfChart">
+</div>
 
-            </div>
-        </div>
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>DTD</strong></h6>
+        <label id="dtdTotalPnl"></label>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+       <h6 style="color: #19393D;"><strong>MTD</strong></h6>
+        <p id="mtdTotalPnl">sdfgsdf</p>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>YTD</strong></h6>
+        <p id="ytdTotalPnl">sdfgsdf</p>
     </div>
 </div>
 
 <div style="display: flex">
-    <div class="card" style="width: 50%; height: 300px; display: flex; margin: 5px">
-    <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <label style="color: #19393D; margin: 0px"><strong>Balance</strong></label>
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>DTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="dtdPerfChart"></div>
         </div>
     </div>
-    <div style="width: 100%; height: 100%">
-        <div id="robotBalChart">
 
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>MTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="mtdPerfChart"></div>
+        </div>
+    </div>
+
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>YTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="ytdPerfChart"></div>
         </div>
     </div>
 </div>
-    <div class="card" style="width: 50%; height: 300px; display: flex; margin: 5px">
-    <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <label style="color: #19393D; margin: 0px"><strong>Total Profit & Loss</strong></label>
-        </div>
-    </div>
-    <div style="width: 100%; height: 100%">
-        <div id="pnlChart">
 
+<div style="margin: 5px">
+    <div class="card" style="width:100%; height: 250px; display: flex">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Balances</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="robotBalChart"></div>
         </div>
     </div>
 </div>
-</div>
-
 
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
@@ -78,10 +88,7 @@
 <div style="height: 500px; width: 100%; overflow-y:scroll">
     <!--Portfolios-->
     <div class="card" style="width: 100%; height: 500px; display: flex">
-        <div class="card-header" style="display: flex">
-            <div style="padding: 5px">
-                <label style="color: #19393D; margin: 0px"><strong>Robots</strong></label>
-            </div>
+            <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Robots</strong></h6>
             <div style="padding: 5px;">
                 <select class="form-control form-control-sm" name="robot_name" id="robotSelector">
                     {% for robot in robots %}
@@ -101,7 +108,7 @@
                            min="2020-01-01" style="width: 150px">
                 </div>
             </div>
-        </div>
+
         <div style="width: 100%; height: 100%; display: flex; padding: 10px;">
 
             <!--General info performance and risk numbers-->

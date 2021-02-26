@@ -49,6 +49,9 @@ def load_robot_stats(request):
     dtd_list = []
     mtd_list = []
     ytd_list = []
+    dtd_pnl_list = []
+    mtd_pnl_list = []
+    ytd_pnl_list = []
     balance_list = []
     total_dtd_pnl = 0.0
     total_mtd_pnl = 0.0
@@ -86,14 +89,10 @@ def load_robot_stats(request):
         dtd_list.append(dtd)
         mtd_list.append(mtd)
         ytd_list.append(ytd)
+        dtd_pnl_list.append(dtd_pnl)
+        mtd_pnl_list.append(mtd_pnl)
+        ytd_pnl_list.append(ytd_pnl)
         balance_list.append(last_balance)
-        response_data_list.append({"robot": robot["name"],
-                                   "security": robot["security"],
-                                   "balance": last_balance,
-                                   "dtd": dtd,
-                                   "mtd": mtd,
-                                   "ytd": ytd,
-                                   "ytdPnl": ytd_pnl})
 
         print(robot["name"], " - YTD PnL", ytd_pnl, " - YTD Ret - ", ytd)
         print(robot["name"], " - MTD PnL", mtd_pnl, " - MTD Ret - ", mtd)
@@ -109,6 +108,9 @@ def load_robot_stats(request):
                          "mtd": mtd_list,
                          "ytd": ytd_list,
                          "balance": balance_list,
+                         "dtd_pnl": dtd_pnl_list,
+                         "mtd_pnl": mtd_pnl_list,
+                         "ytd_pnl": ytd_pnl_list,
                          "pnls": [round(total_dtd_pnl, 2), round(total_mtd_pnl, 2), round(total_ytd_pnl, 2)]}, safe=False)
 
 # MAIN PAGE ************************************************************************************************************

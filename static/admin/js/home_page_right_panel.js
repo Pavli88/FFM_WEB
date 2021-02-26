@@ -3,6 +3,7 @@ const statRefreshButton = $('#loadRobotStats')
 const statTableBody = $("#robotStatTable")
 const demoRobotButton = $("#demoRobots")
 const liveRobotButton = $("#liveRobots")
+const dtdTotalPnl = $("#dtdTotalPnl")
 
 function loadStats(environment){
     $.get("load_robot_stats/", {'env': environment}, function (data) {
@@ -10,24 +11,18 @@ function loadStats(environment){
         console.log(data["robots"])
 
         let series = [{
-            data: data["dtd"]
-        }, {
-            data: data["mtd"]
-        }, {
             data: data["ytd"]
         }]
 
-        let series2 = [{
-            data: data["balance"]
-        }]
+        let series2 = [{data: data["ytd_pnl"]}]
 
-        let series3 = [{
-            data: data["pnls"]
-        }]
+        BarChart("#dtdPerfChart", [{data: data["dtd"]}], data["robots"], 'bar', false, true, ['#3498DB'])
+        BarChart("#mtdPerfChart", [{data: data["mtd"]}], data["robots"], 'bar', false, true, ['#3498DB'])
+        BarChart("#ytdPerfChart", [{data: data["ytd"]}], data["robots"], 'bar', false, true, ['#3498DB'])
+        BarChart("#robotBalChart", [{data: data["balance"]}], data["robots"], 'bar', true, true, ['#3498DB'])
 
-        BarChart("#dtdPerfChart", series, data["robots"], 'bar', true, true)
-        BarChart("#robotBalChart", series2, data["robots"], 'bar', true, true)
-        BarChart("#pnlChart", series3, ["DTD", "MTD", "YTD"], 'bar', true, false)
+        console.log(data["pnls"][0])
+        dtdTotalPnl.val(data["pnls"][0])
     })
 }
 
@@ -41,40 +36,61 @@ liveRobotButton.click(function (){
     loadStats("live")
 })
 
-function BarChart(id, series, category, type, stacked, horizontal){
+function BarChart(id, series, category, type, stacked, horizontal, colors){
     let options = {
-          series: series,
-          chart: {
-          type: type,
-              width: '100%',
-              height: '100%',
-              stacked: stacked,
+        series: series,
+        colors: colors,
+        chart: {
+            type: type,
+            width: '100%',
+            height: '100%',
+            stacked: stacked,
         },
         plotOptions: {
-          bar: {
-            horizontal: horizontal,
-            dataLabels: {
-              position: 'top',
-            },
-          }
+            bar: {
+                horizontal: horizontal,
+                dataLabels: {
+                    position: 'top',
+                },
+            }
         },
         dataLabels: {
-          enabled: true,
-          offsetX: -6,
-          style: {
-            fontSize: '12px',
-            colors: ['#fff']
-          }
+            enabled: true,
+            offsetX: -6,
+            position: 'top',
+            style: {
+                fontSize: '10px',
+                colors: ['#17202A']
+            }
         },
         stroke: {
-          show: true,
-          width: 1,
-          colors: ['#fff']
+            show: true,
+            width: 1,
+            colors: ['#fff']
+        },
+        legend: {
+            show: false
         },
         xaxis: {
-          categories: category,
+            categories: category,
+            axisTicks:{
+                show:false
+            },
+            labels: {
+                style: {
+                    fontSize: '8px'
+                }
+            }
+
         },
-        };
+        yaxis: {
+            labels: {
+                style: {
+                    fontSize: '8px'
+                }
+            }
+        }
+    };
     let chart = new ApexCharts(document.querySelector(id), options);
     chart.render();
 }

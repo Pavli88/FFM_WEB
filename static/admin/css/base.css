@@ -13,8 +13,6 @@
 .right {
     background: #E9E7E0;
     margin-top: 0px;
-    width: 20%;
-
 }
 
 .main_panel {
@@ -24,14 +22,14 @@
 }
 
 .nav_bar {
-    /*background: #19393D;*/
+    background: #0D78AB;
     position: fixed;
     top: 0;
     right: 0;
     left: 0;
     z-index: 1030;
     height: 80px;
-    /*box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;*/
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
 }
 
 .side_bar {
@@ -74,4 +72,8 @@ tr{
 .card_header{
     height: 70px;
     display: flex;
+}
+
+.nav_link{
+    color: #F2F4F4;
 }
