@@ -11,108 +11,63 @@
 {% endblock %}
 {% block entry_form %}
 <br>
-<div class="card" style="width: 100%; height: 400px; display: flex">
-    <div class="card-header" style="display: flex">
-        <div style="padding: 5px">
-            <label style="color: #19393D; margin: 0px"><strong>Robot Performance Dashboard</strong></label>
+<div style="margin: 5px">
+    <div class="card" style="width: 100%; height: 400px; display: flex">
+        <div class="card-header" style="display: flex">
+            <div style="padding: 5px">
+                <label style="color: #19393D; margin: 0px"><strong>Performance</strong></label>
+            </div>
+            <div style="position: absolute; right: 40px">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            Environment
+                        </a>
+                        <div class="dropdown-menu"
+                             style="position: absolute; left: 0px">
+                            <label class="dropdown-item" id="liveRobots">Live</label>
+                            <label class="dropdown-item" id="demoRobots">Demo</label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div style="position: absolute; right: 40px">
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false">
-                        Environment
-                    </a>
-                    <div class="dropdown-menu"
-                         style="position: absolute; left: 0px">
-                        <label class="dropdown-item" id="liveRobots">Live</label>
-                        <label class="dropdown-item" id="demoRobots">Demo</label>
-                    </div>
-                </li>
-            </ul>
+        <div style="width: 100%; height: 100%">
+            <div id="dtdPerfChart">
+
+            </div>
         </div>
-    </div>
-    <div style="width: 100%; height: 100%; overflow-y:scroll;">
-        <table style="width: 100%">
-            <thead style="width: 100%">
-            <tr>
-                <th>Robot</th>
-                <th>Security</th>
-                <th>YTD Profit</th>
-                <th>Balance</th>
-                <th>DTD %</th>
-                <th>MTD %</th>
-                <th>YTD %</th>
-            </tr>
-            </thead>
-            <tbody id="robotStatTable"></tbody>
-        </table>
-    </div>
-    <div class="card-footer text-muted" style="height: 20%; padding: 5px">
-
-        <table style="width: 100%; padding: 5px">
-            <thead style="width: 100%; height: 20px">
-            <tr style="height: 20px">
-                <th style="width: 100px"></th>
-                <th>DTD</th>
-                <th>MTD</th>
-                <th>YTD</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td><strong>Total Profit</strong></td>
-                <td id="dtdProfit"></td>
-                <td id="mtdProfit"></td>
-                <td id="ytdProfit"></td>
-            </tr>
-            </tbody>
-        </table>
-
-<!--        <label style="color: #19393D; margin: 0px"><strong>Year to Date Profit:</strong></label>-->
-<!--        <label style="color: #19393D; margin: 0px" id="ytdProfit"><strong>450</strong></label>-->
     </div>
 </div>
 
-<br>
-<div class="card" style="width: 100%; height: 400px; display: flex">
+<div style="display: flex">
+    <div class="card" style="width: 50%; height: 300px; display: flex; margin: 5px">
     <div class="card-header" style="display: flex">
         <div style="padding: 5px">
-            <label style="color: #19393D; margin: 0px"><strong>Account Performance Dashboard</strong></label>
-        </div>
-        <div style="position: absolute; right: 40px">
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false">
-                        Environment
-                    </a>
-                    <div class="dropdown-menu"
-                         style="position: absolute; left: 0px">
-                        <label class="dropdown-item" id="liveAccounts">Live</label>
-                        <label class="dropdown-item" id="demoAccounts">Demo</label>
-                    </div>
-                </li>
-            </ul>
+            <label style="color: #19393D; margin: 0px"><strong>Balance</strong></label>
         </div>
     </div>
-    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
-        <table style="width: 100%">
-            <thead style="width: 100%">
-            <tr>
-                <th>Broker</th>
-                <th>Account</th>
-                <th>Env</th>
-                <th>Balance</th>
-                <th>DTD</th>
-                <th>MTD</th>
-                <th>YTD</th>
-            </tr>
-            </thead>
-            <tbody id="accountStatTable"></tbody>
-        </table>
+    <div style="width: 100%; height: 100%">
+        <div id="robotBalChart">
+
+        </div>
     </div>
 </div>
+    <div class="card" style="width: 50%; height: 300px; display: flex; margin: 5px">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Total Profit & Loss</strong></label>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%">
+        <div id="pnlChart">
+
+        </div>
+    </div>
+</div>
+</div>
+
 
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>

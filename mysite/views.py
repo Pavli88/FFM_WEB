@@ -45,6 +45,11 @@ def load_robot_stats(request):
     robots = Robots.objects.filter(status="active", env=env).values()
 
     response_data_list = []
+    robot_list = []
+    dtd_list = []
+    mtd_list = []
+    ytd_list = []
+    balance_list = []
     total_dtd_pnl = 0.0
     total_mtd_pnl = 0.0
     total_ytd_pnl = 0.0
@@ -77,6 +82,11 @@ def load_robot_stats(request):
         total_mtd_pnl = total_mtd_pnl + mtd_pnl
         total_dtd_pnl = total_dtd_pnl + dtd_pnl
 
+        robot_list.append(robot["name"])
+        dtd_list.append(dtd)
+        mtd_list.append(mtd)
+        ytd_list.append(ytd)
+        balance_list.append(last_balance)
         response_data_list.append({"robot": robot["name"],
                                    "security": robot["security"],
                                    "balance": last_balance,
@@ -94,7 +104,11 @@ def load_robot_stats(request):
     print("TOTAL P&L - YTD - ", total_ytd_pnl, " - MTD - ", total_mtd_pnl, " - DTD - ", total_dtd_pnl)
     print("Sending data to front end")
 
-    return JsonResponse({"robots": response_data_list,
+    return JsonResponse({"robots": robot_list,
+                         "dtd": dtd_list,
+                         "mtd": mtd_list,
+                         "ytd": ytd_list,
+                         "balance": balance_list,
                          "pnls": [round(total_dtd_pnl, 2), round(total_mtd_pnl, 2), round(total_ytd_pnl, 2)]}, safe=False)
 
 # MAIN PAGE ************************************************************************************************************
