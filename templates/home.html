@@ -14,36 +14,19 @@
 <div class="card" style="width: 100%; height: 50px; margin: 5px">
     <h5 class="card-header" style="color: #19393D"><strong>Dashboard</strong></h5>
     <div style="position: absolute; right: 40px">
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" data-toggle="dropdown"
-                           aria-haspopup="true" aria-expanded="false">
-                            Environment
-                        </a>
-                        <div class="dropdown-menu"
-                             style="position: absolute; left: 0px">
-                            <label class="dropdown-item" id="liveRobots">Live</label>
-                            <label class="dropdown-item" id="demoRobots">Demo</label>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-</div>
-
-<div style="display: flex">
-    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
-        <h6 style="color: #19393D;"><strong>DTD</strong></h6>
-        <label id="dtdTotalPnl"></label>
-    </div>
-
-    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
-       <h6 style="color: #19393D;"><strong>MTD</strong></h6>
-        <p id="mtdTotalPnl">sdfgsdf</p>
-    </div>
-
-    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
-        <h6 style="color: #19393D;"><strong>YTD</strong></h6>
-        <p id="ytdTotalPnl">sdfgsdf</p>
+        <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Environment
+                </a>
+                <div class="dropdown-menu"
+                     style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="liveRobots">Live</label>
+                    <label class="dropdown-item" id="demoRobots">Demo</label>
+                </div>
+            </li>
+        </ul>
     </div>
 </div>
 
@@ -69,6 +52,22 @@
         </div>
     </div>
 </div>
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>DTD</strong></h6>
+        <label id="dtdTotalPnl"></label>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+       <h6 style="color: #19393D;"><strong>MTD</strong></h6>
+        <p id="mtdTotalPnl">sdfgsdf</p>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>YTD</strong></h6>
+        <p id="ytdTotalPnl">sdfgsdf</p>
+    </div>
+</div>
 
 <div style="display: flex">
     <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
@@ -79,10 +78,11 @@
     </div>
 
 </div>
-<div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
-        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Risk / Trade</strong></h6>
-        <div style="width: 100%; height: 100%; overflow-y:scroll">
-            <table class="table-striped" style="width: 100%;">
+<div style="margin: 5px">
+    <div class="card" style="width:100%; height: 250px; display: flex">
+    <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Risk / Trade</strong></h6>
+    <div style="width: 100%; height: 100%; overflow-y:scroll">
+        <table class="table-striped" style="width: 100%;">
             <thead style="width: 100%">
             <tr>
                 <th scope="col">Robot</th>
@@ -91,8 +91,10 @@
             </thead>
             <tbody id="riskTableBody"></tbody>
         </table>
-        </div>
     </div>
+</div>
+</div>
+
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
 {% endblock %}
