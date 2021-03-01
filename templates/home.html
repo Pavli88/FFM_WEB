@@ -70,15 +70,29 @@
     </div>
 </div>
 
-<div style="margin: 5px">
-    <div class="card" style="width:100%; height: 250px; display: flex">
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
         <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Balances</strong></h6>
         <div style="width: 100%; height: 100%">
             <div id="robotBalChart"></div>
         </div>
     </div>
-</div>
 
+</div>
+<div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Risk / Trade</strong></h6>
+        <div style="width: 100%; height: 100%; overflow-y:scroll">
+            <table class="table-striped" style="width: 100%;">
+            <thead style="width: 100%">
+            <tr>
+                <th scope="col">Robot</th>
+                <th scope="col">Risk (%)</th>
+            </tr>
+            </thead>
+            <tbody id="riskTableBody"></tbody>
+        </table>
+        </div>
+    </div>
 {% load static %}
 <script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
 {% endblock %}

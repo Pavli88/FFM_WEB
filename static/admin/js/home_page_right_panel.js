@@ -7,8 +7,6 @@ const dtdTotalPnl = $("#dtdTotalPnl")
 
 function loadStats(environment){
     $.get("load_robot_stats/", {'env': environment}, function (data) {
-        console.log(data)
-        console.log(data["robots"])
 
         let series = [{
             data: data["ytd"]
@@ -21,7 +19,6 @@ function loadStats(environment){
         BarChart("#ytdPerfChart", [{data: data["ytd"]}], data["robots"], 'bar', false, true, ['#3498DB'])
         BarChart("#robotBalChart", [{data: data["balance"]}], data["robots"], 'bar', true, true, ['#3498DB'])
 
-        console.log(data["pnls"][0])
         dtdTotalPnl.val(data["pnls"][0])
     })
 }
@@ -35,6 +32,71 @@ demoRobotButton.click(function (){
 liveRobotButton.click(function (){
     loadStats("live")
 })
+
+// get robot risk
+function loadRobotRisk(){
+    $.get("get_robot_risk/", function (data) {
+
+        try {
+            riskTableBody.empty()
+        } catch (err) {
+        }
+        for (let risk of data["message"]){
+            let newRow = document.createElement("tr")
+            let newTd1 = document.createElement("td")
+            let newTd2 = document.createElement("td")
+            let newTd3 = document.createElement("td")
+            let newInput = document.createElement("input")
+            let inputAttributes = {'type':'range', 'min':0.0, 'max':0.2, 'class':'slider', 'step':0.005}
+
+            for (let key in inputAttributes){
+                newInput.setAttribute(key, inputAttributes[key])
+            }
+
+            newInput.setAttribute('value', risk['daily_risk_perc'])
+
+            newInput.addEventListener('input', updateRisk)
+
+            newTd1.innerText = risk["robot"]
+            newTd1.setAttribute('class', 'robotName')
+            newTd1.setAttribute('value', risk["robot"])
+            newTd3.innerText = risk["daily_risk_perc"]
+            newTd3.setAttribute('class', 'riskValue')
+            newTd2.append(newInput)
+            newRow.append(newTd1)
+            newRow.append(newTd2)
+            newRow.append(newTd3)
+
+            riskTableBody.append(newRow)
+        }
+
+    })
+}
+let riskTableBody = $("#riskTableBody")
+loadRobotRisk()
+
+function updateRisk(){
+    let row = this.parentElement.parentElement
+    let riskValue = row.querySelector(".riskValue")
+    let robotName = row.querySelector(".robotName")
+    riskValue.innerHTML = this.value
+
+    $.ajax({
+        type: "POST",
+        url: "update/risk_per_trade/",
+        data: {
+            csrfmiddlewaretoken: $('meta[name="csrf-token"]').attr('content'),
+            robot: robotName.innerHTML,
+            risk_per_trade: riskValue.innerHTML,
+        },
+        success: function (response) {
+
+        },
+        error: function (){
+            alert("Risk was not updated due to an error!")
+        }
+    })
+}
 
 function BarChart(id, series, category, type, stacked, horizontal, colors){
     let options = {

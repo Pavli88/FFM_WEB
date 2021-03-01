@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from . import views
+from risk.views import *
 
 urlpatterns = [
     path('', views.main_page, name="main_page"),
@@ -23,4 +24,6 @@ urlpatterns = [
     path('home/load_robot_stats/', views.load_robot_stats),
     path('home/get_messages/', views.get_messages),
     path('home/test_calc/', views.test_calc),
+    path('home/get_robot_risk/', get_robot_risk),
+    path('home/update/risk_per_trade/', update_risk_per_trade),
 ]

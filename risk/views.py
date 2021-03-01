@@ -35,6 +35,29 @@ def risk_main(request):
 
 
 # URL Functions
+def update_risk_per_trade(request):
+    print("UPDATING RISK PER TRADE")
+
+    if request.method == "POST":
+        robot = request.POST.get("robot")
+        risk_per_trade = request.POST.get("risk_per_trade")
+
+    print("ROBOT:", robot)
+    print("RISK PER TRADE:", risk_per_trade)
+
+    robot_risk_data = RobotRisk.objects.get(robot=robot)
+    robot_risk_data.risk_per_trade = risk_per_trade
+    robot_risk_data.save()
+
+    print("Risk data is updated!")
+
+    response = {"message": "success"}
+
+    print("Sending message to front end")
+
+    return JsonResponse(response, safe=False)
+
+
 def update_robot_risk(request):
     print("===================")
     print("UPDATING ROBOT RISK")
