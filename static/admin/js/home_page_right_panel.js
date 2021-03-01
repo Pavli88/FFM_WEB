@@ -47,20 +47,20 @@ function loadRobotRisk(){
             let newTd2 = document.createElement("td")
             let newTd3 = document.createElement("td")
             let newInput = document.createElement("input")
-            let inputAttributes = {'type':'range', 'min':0.0, 'max':0.2, 'class':'slider', 'step':0.005}
+            let inputAttributes = {'type':'range', 'min':0.0, 'max':0.1, 'class':'slider', 'step':0.0025}
 
             for (let key in inputAttributes){
                 newInput.setAttribute(key, inputAttributes[key])
             }
 
-            newInput.setAttribute('value', risk['daily_risk_perc'])
+            newInput.setAttribute('value', risk['risk_per_trade'])
 
             newInput.addEventListener('input', updateRisk)
 
             newTd1.innerText = risk["robot"]
             newTd1.setAttribute('class', 'robotName')
             newTd1.setAttribute('value', risk["robot"])
-            newTd3.innerText = risk["daily_risk_perc"]
+            newTd3.innerText = risk["risk_per_trade"]
             newTd3.setAttribute('class', 'riskValue')
             newTd2.append(newInput)
             newRow.append(newTd1)
