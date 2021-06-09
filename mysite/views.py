@@ -114,6 +114,9 @@ def load_robot_stats(request):
                          "pnls": [round(total_dtd_pnl, 2), round(total_mtd_pnl, 2), round(total_ytd_pnl, 2)]}, safe=False)
 
 # MAIN PAGE ************************************************************************************************************
+def main_page_react(request):
+    print("react page")
+    return render(request, 'index.html')
 
 
 def main_page(request):

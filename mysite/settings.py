@@ -66,7 +66,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': ['templates', 'front_end'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,7 +111,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -131,19 +130,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Here you tell django to look for a folder named 'assets'
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'front_end/static'), # This is the path for the React fornt end static files
 ]
-
 
 # default static files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
 MEDIA_ROOT = '/home/pavliati/mysite/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/home/pavliati/mysite/static'
-STATIC_URL = '/static/'
 
 LOGIN_URL = "/home/"
-
 
 CRONJOBS = [
     ('15 00 * * *', 'mysite.jobs.robot_balance_calculation', '>> ' + BASE_DIR + '/mysite/job_logs/robot_balance_calc.log')
