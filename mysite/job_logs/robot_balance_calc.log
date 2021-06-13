@@ -1,14 +1,3 @@
--------------------------
-ROBOT BALANCE CALCULATION
--------------------------
-Loading robots from database
-   id  name  strategy security broker  status   env  pyramiding_level  in_exp  quantity time_frame        account_number sl_policy  prec inception_date
-0  42  TEST  momentum  XAU_USD  oanda  active  demo  0.0               0.0     0.0                  101-004-11289420-001            1     2021-01-18   
-1  43  DEMO  momentum  XAU_USD  oanda  active  demo  0.0               0.0     0.0                  101-004-11289420-001            1     2021-01-18   
-
-Calculating balances
-2021-01-18 23:35:03.015049 TEST - Updated Record - Date 2021-01-18 - T-1 Date 2021-01-15 - Realized Pnl 0.0 - Cash Flow 3460.0 - Opening Balance 0.0 - Closing Balance: 3460.0 - Return 0.0
-2021-01-18 23:35:03.059510 DEMO - Updated Record - Date 2021-01-18 - T-1 Date 2021-01-15 - Realized Pnl 0.0 - Cash Flow 2000.0 - Opening Balance 0.0 - Closing Balance: 2000.0 - Return 0.0
 -----------------------------
 ROBOT BALANCE CALCULATION JOB
 -----------------------------
@@ -18,5 +7,5 @@ Loading robots from database
 1  43  DEMO  momentum  XAU_USD  oanda  active  demo  0.0               0.0     0.0                  101-004-11289420-001            1     2021-01-18   
 
 Calculating balances
-2021-01-18 23:49:02.769233 TEST - Updated Record - Date 2021-01-18 - T-1 Date 2021-01-15 - Realized Pnl 0.0 - Cash Flow 3460.0 - Opening Balance 0.0 - Closing Balance: 3460.0 - Return 0.0
-2021-01-18 23:49:02.858134 DEMO - Updated Record - Date 2021-01-18 - T-1 Date 2021-01-15 - Realized Pnl 0.0 - Cash Flow 2000.0 - Opening Balance 0.0 - Closing Balance: 2000.0 - Return 0.0
+2021-01-19 00:10:02.213956 TEST - Updated Record - Date 2021-01-19 - T-1 Date 2021-01-18 - Realized Pnl 0.0 - Cash Flow 0.0 - Opening Balance 3460.0 - Closing Balance: 3460.0 - Return 0.0
+2021-01-19 00:10:02.258532 DEMO - New Record - Date 2021-01-19 - T-1 Date 2021-01-18 - Realized Pnl 0.0 - Cash Flow 0.0 - Opening Balance 2000.0 - Closing Balance: 2000.0 - Return 0.0

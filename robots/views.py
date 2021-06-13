@@ -109,9 +109,9 @@ def load_robots(request):
 
     print("Request from front end to load all robot data")
 
-    robots = get_robots()
+    robots = Robots.objects.filter().values()
 
-    response = {"securities": list(robots)}
+    response = list(robots)
 
     print("Sending data to front end")
     print("")
@@ -641,6 +641,33 @@ def get_robot_data(request, data_type):
             response_data.append({"data": record})
 
     response = {"message": list(response_data)}
+
+    print("Sending message to front end")
+
+    return JsonResponse(response, safe=False)
+
+
+def get_robot_balances(request, type):
+
+    print("Robot balances")
+
+    if request.method == "GET":
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+
+    print("START DATE:", start_date)
+    print("END DATE:", end_date)
+
+    if type == "all":
+        print("All robots")
+        robots = Robots.objects.filter()
+        print(robots.values_list('name', flat=True))
+
+        # for robot in robots:
+        #     balance_data = Balance.objects.filter().va
+        #     print(robot)
+
+    response = list()
 
     print("Sending message to front end")
 

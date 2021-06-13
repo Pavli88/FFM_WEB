@@ -103,7 +103,7 @@ def get_robot_risk(request):
 
     robot_risk = RobotRisk.objects.filter().values()
 
-    response = {"message": list(robot_risk)}
+    response = list(robot_risk)
 
     print("Sending message to front end")
 
