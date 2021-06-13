@@ -2,3 +2,5 @@ node_modules/
 *.pyc
 #mysite/credentials.py
 __pycache__/
+
+robots/__pycache__/
