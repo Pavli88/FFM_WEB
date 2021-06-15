@@ -652,22 +652,33 @@ def get_robot_balances(request, type):
     print("Robot balances")
 
     if request.method == "GET":
+        env = request.GET.get("env")
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
 
+    print("ENVIRONMENT:", env)
     print("START DATE:", start_date)
     print("END DATE:", end_date)
 
     if type == "all":
         print("All robots")
-        robots = Robots.objects.filter()
-        print(robots.values_list('name', flat=True))
+        robots = Robots.objects.filter(env=env).values_list('name', flat=True)
 
-        # for robot in robots:
-        #     balance_data = Balance.objects.filter().va
-        #     print(robot)
+    response = []
 
-    response = list()
+    all_balance_data = pd.DataFrame(Balance.objects.filter().values())
+
+    for robot in robots:
+
+        robot_balance_data = all_balance_data[all_balance_data['robot_name'] == robot]
+
+        response.append({'robot': robot,
+                         'date': robot_balance_data['date'].to_list(),
+                         'balance': robot_balance_data['close_balance'].to_list(),
+                         'cash_flow': robot_balance_data['cash_flow'].to_list(),
+                         'return': robot_balance_data['ret'].to_list(),
+                         'id': robot_balance_data['ret'].to_list()}
+                        )
 
     print("Sending message to front end")
 

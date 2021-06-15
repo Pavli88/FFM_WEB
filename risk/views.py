@@ -96,15 +96,35 @@ def update_robot_risk(request):
     return JsonResponse(response, safe=False)
 
 
-def get_robot_risk(request):
+def get_robot_risk(request, env):
     print("===================")
     print("GET ROBOT RISK")
     print("===================")
+    print("ENVIRONMENT:", env)
 
-    robot_risk = RobotRisk.objects.filter().values()
+    if request.method == "GET":
+        robots = Robots.objects.filter(env=env).values_list('name', flat=True)
 
-    response = list(robot_risk)
+    print(robots)
 
+    response = []
+
+    all_robot_risk_data = pd.DataFrame(RobotRisk.objects.filter().values())
+
+    for robot in robots:
+        robot_risk_data = all_robot_risk_data[all_robot_risk_data['robot'] == robot]
+
+        response.append({
+            'robot': robot,
+            'daily_risk': robot_risk_data['daily_risk_perc'].to_list(),
+            'daily_trade_limit': robot_risk_data['daily_trade_limit'].to_list(),
+            'risk_per_trade': robot_risk_data['risk_per_trade'].to_list(),
+            'pyramiding_level': robot_risk_data['pyramiding_level'].to_list(),
+            'quantity': robot_risk_data['quantity'].to_list(),
+            'quantity_type': robot_risk_data['quantity_type'].to_list(),
+        })
+
+    print(response)
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
