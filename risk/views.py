@@ -122,6 +122,7 @@ def get_robot_risk(request, env):
             'pyramiding_level': robot_risk_data['pyramiding_level'].to_list(),
             'quantity': robot_risk_data['quantity'].to_list(),
             'quantity_type': robot_risk_data['quantity_type'].to_list(),
+            'id': robot_risk_data['id'].to_list(),
         })
 
     print(response)

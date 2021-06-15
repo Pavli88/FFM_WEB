@@ -21,6 +21,7 @@ from mysite.models import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.calculations import *
 from instrument.instruments_functions import *
+import json
 
 
 # Main site for robot configuration
@@ -38,6 +39,7 @@ def robots_main(request):
                                                             "robots": robots})
 
 
+@csrf_exempt
 def new_robot(request):
 
     print("==================")
@@ -45,13 +47,13 @@ def new_robot(request):
     print("==================")
 
     if request.method == "POST":
-
-        robot_name = request.POST.get("robot_name")
-        strategy = request.POST.get("strategy")
-        broker = request.POST.get("broker")
-        env = request.POST.get("env")
-        security = request.POST.get("security")
-        account_number = request.POST.get("account")
+        request_data = json.loads(request.body.decode('utf-8'))
+        robot_name = request_data["robot_name"]
+        strategy = request_data["strategy"]
+        broker = request_data["broker"]
+        env = request_data["env"]
+        security = request_data["security"]
+        account_number = request_data["account"]
 
         print("ROBOT NAME:", robot_name)
         print("STRATEGY:", strategy)
