@@ -44,7 +44,7 @@ def new_instrument(request):
         return redirect('instruments main')
 
 
-def get_instruments_url(request):
+def get_instruments(request):
     print("*** GET INSTRUMENTS ***")
 
     print("Sending data to front end")

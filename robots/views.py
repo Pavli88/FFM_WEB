@@ -649,12 +649,11 @@ def get_robot_data(request, data_type):
     return JsonResponse(response, safe=False)
 
 
-def get_robot_balances(request, type):
+def get_robot_balances(request, env):
 
     print("Robot balances")
 
     if request.method == "GET":
-        env = request.GET.get("env")
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
 
@@ -662,9 +661,7 @@ def get_robot_balances(request, type):
     print("START DATE:", start_date)
     print("END DATE:", end_date)
 
-    if type == "all":
-        print("All robots")
-        robots = Robots.objects.filter(env=env).values_list('name', flat=True)
+    robots = Robots.objects.filter(env=env).values_list('name', flat=True)
 
     response = []
 
@@ -674,14 +671,16 @@ def get_robot_balances(request, type):
 
         robot_balance_data = all_balance_data[all_balance_data['robot_name'] == robot]
 
-        response.append({'robot': robot,
-                         'date': robot_balance_data['date'].to_list(),
-                         'balance': robot_balance_data['close_balance'].to_list(),
-                         'cash_flow': robot_balance_data['cash_flow'].to_list(),
-                         'return': robot_balance_data['ret'].to_list(),
-                         'id': robot_balance_data['ret'].to_list()}
-                        )
+        response.append({
+            'robot': robot,
+            'date': robot_balance_data['date'].to_list(),
+            'balance': robot_balance_data['close_balance'].to_list(),
+            'cash_flow': robot_balance_data['cash_flow'].to_list(),
+            'return': robot_balance_data['ret'].to_list(),
+            'id': robot_balance_data['ret'].to_list()
+        })
 
+    print(pd.DataFrame.from_dict(response))
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
