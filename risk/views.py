@@ -125,7 +125,6 @@ def get_robot_risk(request, env):
             'id': robot_risk_data['id'].to_list(),
         })
 
-    print(pd.DataFrame.from_dict(response))
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)

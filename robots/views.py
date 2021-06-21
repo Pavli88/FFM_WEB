@@ -680,7 +680,6 @@ def get_robot_balances(request, env):
             'id': robot_balance_data['ret'].to_list()
         })
 
-    print(pd.DataFrame.from_dict(response))
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
