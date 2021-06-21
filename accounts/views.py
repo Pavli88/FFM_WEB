@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from accounts.models import *
 from accounts.account_functions import *
 from django.http import JsonResponse
-import json
+from django.core import serializers
 
 # Accounts main page
 def accounts_main(request):
@@ -82,19 +82,17 @@ def get_account_balances():
 def get_account_data(request):
     print("*** GET ACCOUNT DATA ***")
     print("Requesting account data from front end")
-    print(request.body)
+
     if request.method == "GET":
-        print("Get request")
-        request_data = json.loads(request.body)
-    print(request_data)
-    accounts = BrokerAccounts.objects.filter(broker_name=request_data['broker']).filter(env=request_data['env']).values()
-    print(accounts)
 
-    response = {"accounts": list(accounts)}
+        broker = request.GET.get("broker")
+        env = request.GET.get("env")
 
-    print("Sending response to front end")
+        accounts = BrokerAccounts.objects.filter(broker_name=broker).filter(env=env).values()
 
-    return JsonResponse(response, safe=False)
+        print("Sending response to front end")
+
+        return JsonResponse({'accounts': list(accounts)}, safe=False)
 
 
 def new_cash_flow(request):

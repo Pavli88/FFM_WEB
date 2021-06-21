@@ -107,18 +107,7 @@ def new_robot(request):
 # ===================================
 
 
-def load_robots(request):
 
-    print("Request from front end to load all robot data")
-
-    robots = Robots.objects.filter().values()
-
-    response = list(robots)
-
-    print("Sending data to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
 
 
 def load_securities(request):
@@ -649,6 +638,8 @@ def get_robot_data(request, data_type):
     return JsonResponse(response, safe=False)
 
 
+# Revieved functions
+
 def get_robot_balances(request, env):
 
     print("Robot balances")
@@ -683,6 +674,22 @@ def get_robot_balances(request, env):
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
+
+
+def get_robots(request, env):
+
+    print("Request from front end to load all robot data")
+
+    if request.method == "GET":
+
+        robots = Robots.objects.filter(env=env).values()
+
+        response = list(robots)
+
+        print("Sending data to front end")
+        print("")
+
+        return JsonResponse(response, safe=False)
 
 
 
