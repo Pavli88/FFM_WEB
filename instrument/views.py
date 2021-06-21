@@ -46,10 +46,20 @@ def new_instrument(request):
 
 def get_instruments(request):
     print("*** GET INSTRUMENTS ***")
+    print("BROKER:")
+
+    if request.method == "GET":
+
+        broker = request.GET.get('broker')
+
+        if broker == 'all':
+            instruments = Instruments.objects.filter().values()
+        else:
+            instruments = Instruments.objects.filter(source=broker).values()
 
     print("Sending data to front end")
 
-    response = {"message": "instruments"}
+    response = list(instruments)
 
     return JsonResponse(response, safe=False)
 

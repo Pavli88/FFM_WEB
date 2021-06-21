@@ -90,9 +90,11 @@ def get_account_data(request):
 
         accounts = BrokerAccounts.objects.filter(broker_name=broker).filter(env=env).values()
 
+        response = list(accounts)
+
         print("Sending response to front end")
 
-        return JsonResponse({'accounts': list(accounts)}, safe=False)
+        return JsonResponse(response, safe=False)
 
 
 def new_cash_flow(request):
