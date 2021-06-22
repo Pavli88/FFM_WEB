@@ -7,45 +7,37 @@ from mysite.models import *
 from django.http import JsonResponse
 from robots.processes.robot_processes import *
 from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
 
 
-def trade_main(request):
-
-    print("---------------")
-    print("TRADE MAIN PAGE")
-    print("---------------")
-
-    print("Loading active robots to trade panel")
-
-    robots = Robots.objects.filter(status="active").values()
-
-    return render(request, 'trade/trade_main.html', {"robots": robots})
-
-
-def get_open_trades(request):
+def get_open_trades(request, env):
 
     print("Loading open trades to open trade table")
 
-    trades = RobotTrades.objects.filter(status="OPEN").values()
+    if request.method == "GET":
+        robots = Robots.objects.filter(env=env).values_list('name', flat=True)
+        trades = RobotTrades.objects.filter(status="OPEN").filter(robot__in=robots).values()
 
-    response = {"trades": list(trades)}
+        response = list(trades)
 
-    print("Sending data to front end")
+        print("Sending data to front end")
 
-    return JsonResponse(response, safe=False)
+        return JsonResponse(response, safe=False)
 
 
+@csrf_exempt
 def close_trade(request):
     print("================")
     print("MANUAL TRADE CLOSE")
     print("================")
 
     if request.method == "POST":
-        trade_id = request.POST.get("broker_id")
-        robot = request.POST.get("robot")
-        trd_id = request.POST.get("trd_id")
+        request_data = json.loads(request.body.decode('utf-8'))
+        broker_id = request_data["broker_id"]
+        robot = request_data["robot"]
+        trd_id = request_data["trd_id"]
 
-    print("BROKER ID", trade_id)
+    print("BROKER ID", broker_id)
     print("ROBOT", robot)
     print("ID", trd_id)
 
@@ -62,7 +54,8 @@ def close_trade(request):
 
     open_trade = OandaV20(access_token=account_data[0]["access_token"],
                           account_id=account_data[0]["account_number"],
-                          environment=env).close_trades(trd_id=trade_id)
+                          environment=env).close_trades(trd_id=broker_id)
+
     print("Update -> Database ID:", trd_id)
 
     trade_record = RobotTrades.objects.get(id=trd_id)
@@ -92,6 +85,7 @@ def submit_trade(request):
     print("================")
 
     if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
         robot = request.POST.get("robot")
         quantity = request.POST.get("quantity")
         sl = request.POST.get("sl")
