@@ -65,6 +65,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'pavliati.pythonanywhere.com',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
