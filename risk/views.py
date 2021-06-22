@@ -58,19 +58,22 @@ def update_risk_per_trade(request):
     return JsonResponse(response, safe=False)
 
 
+@csrf_exempt
 def update_robot_risk(request):
     print("===================")
     print("UPDATING ROBOT RISK")
     print("===================")
 
     if request.method == "POST":
-        robot = request.POST.get("robot")
-        daily_risk = request.POST.get("daily_risk")
-        nbm_trades = request.POST.get("daily_nmb_trades")
-        risk_per_trade = request.POST.get("risk_per_trade")
-        pyramiding_level = request.POST.get("pyramiding_level")
-        quantity_type = request.POST.get("quantity_type")
-        quantity = request.POST.get("quantity")
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+        robot = body_data["robot"]
+        daily_risk = body_data["daily_risk"]
+        nbm_trades = body_data["nbm_trades"]
+        risk_per_trade = body_data["risk_per_trade"]
+        pyramiding_level = body_data["pyramiding_level"]
+        quantity_type = body_data["quantity_type"]
+        quantity = body_data["quantity"]
 
     print("ROBOT:", robot)
     print("DAILY RISK LIMIT:", daily_risk)
@@ -105,8 +108,6 @@ def get_robot_risk(request, env):
     if request.method == "GET":
         robots = Robots.objects.filter(env=env).values_list('name', flat=True)
 
-    print(robots)
-
     response = []
 
     all_robot_risk_data = pd.DataFrame(RobotRisk.objects.filter().values())
@@ -116,15 +117,15 @@ def get_robot_risk(request, env):
 
         response.append({
             'robot': robot,
-            'daily_risk': robot_risk_data['daily_risk_perc'].to_list(),
-            'daily_trade_limit': robot_risk_data['daily_trade_limit'].to_list(),
-            'risk_per_trade': robot_risk_data['risk_per_trade'].to_list(),
-            'pyramiding_level': robot_risk_data['pyramiding_level'].to_list(),
-            'quantity': robot_risk_data['quantity'].to_list(),
-            'quantity_type': robot_risk_data['quantity_type'].to_list(),
+            'daily_risk': robot_risk_data['daily_risk_perc'].to_list()[0],
+            'daily_trade_limit': robot_risk_data['daily_trade_limit'].to_list()[0],
+            'risk_per_trade': robot_risk_data['risk_per_trade'].to_list()[0],
+            'pyramiding_level': robot_risk_data['pyramiding_level'].to_list()[0],
+            'quantity': robot_risk_data['quantity'].to_list()[0],
+            'quantity_type': robot_risk_data['quantity_type'].to_list()[0],
             'id': robot_risk_data['id'].to_list(),
         })
 
-    print("Sending message to front end")
+    print("Sending data to front end")
 
     return JsonResponse(response, safe=False)

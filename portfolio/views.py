@@ -9,24 +9,7 @@ from datetime import datetime
 from mysite.models import *
 from django.views.decorators.csrf import csrf_exempt
 from portfolio.portfolio_functions import *
-
-
-# Main site for portfolios *********************************************************************************************
-def portfolios_main(request):
-    print("*** PORTFOLIO MAIN PAGE ***")
-
-    try:
-        portfolio_data = get_portfolios()
-        portfolios = get_portfolios(port_type="Portfolio")
-        port_groups = get_portfolios(port_type="Portfolio Group")
-
-        print("Loading portfolios to main page")
-    except:
-        portfolios = []
-
-    return render(request, 'portfolios/portfolios_main.html', {"portfolios": portfolios,
-                                                               "port_groups": port_groups,
-                                                               "all_portfolios": portfolio_data})
+import json
 
 
 # URL Processes ********************************************************************************************************
@@ -56,13 +39,16 @@ def new_cash_flow(request):
     return redirect('portfolio main')
 
 
+@csrf_exempt
 def create_portfolio(request):
     print("*** NEW PORTFOLIO CREATION ***")
 
     if request.method == "POST":
-        port_name = request.POST.get("port_name")
-        port_type = request.POST.get("port_type")
-        port_currency = request.POST.get("port_currency")
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+        port_name = body_data["port_name"]
+        port_type = body_data["port_type"]
+        port_currency = body_data["port_currency"]
 
         print("PORTFOLIO NAME:", port_name, "PORTFOLIO TYPE:", port_type, "PORTFOLIO CURRENCY", port_currency)
 
@@ -71,16 +57,16 @@ def create_portfolio(request):
                       portfolio_type=port_type,
                       currency=port_currency,
                       status="Not Funded").save()
-            print("New Portfolio was created!")
+            response = "New Portfolio was created!"
         except:
-            print("Portfolio exists in database!")
+            response = "Portfolio exists in database!"
 
         print("Creating nav record for the portfolio")
 
         if port_type == "Portfolio":
             Nav(portfolio_name=port_name).save()
 
-    return redirect('portfolio main')
+    return JsonResponse(response, safe=False)
 
 
 def get_portfolio_data(request):
@@ -94,16 +80,13 @@ def get_portfolio_data(request):
     print("Request for portfolio data")
 
     if request.method == "GET":
-        portfolio_type = request.GET.get("port_type")
 
-        print("PORTFOLIO TYPE:", portfolio_type)
-
-        portfolio_data = get_portfolios(port_type=portfolio_type)
+        portfolio_data = Portfolio.objects.filter().values()
 
         print("Sending response to front end")
 
-        response = {"portData": list(portfolio_data)}
-
+        response = list(portfolio_data)
+        print(response)
         return JsonResponse(response, safe=False)
 
 
