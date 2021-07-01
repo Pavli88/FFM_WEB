@@ -39,6 +39,7 @@ def robots_main(request):
                                                             "robots": robots})
 
 
+# Reviewed
 @csrf_exempt
 def new_robot(request):
 
@@ -105,9 +106,6 @@ def new_robot(request):
 # ===================================
 # Functions to load data to front end
 # ===================================
-
-
-
 
 
 def load_securities(request):
@@ -208,23 +206,23 @@ def amend_robot(request):
         return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
 
+@csrf_exempt
 def robot_process_hub(request):
     print("=================")
     print("ROBOT PROCESS HUB")
     print("=================")
 
     if request.method == "POST":
-        process = request.POST.get("process")
-        robot = request.POST.get("robot")
-        date = request.POST.get("date")
-        end_date_str = request.POST.get("endDate")
+        request_data = json.loads(request.body.decode('utf-8'))
+        process = request_data["process"]
+        robot = request_data["robot"]
+        date = request_data["start_date"]
+        end_date = datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
 
     print("PROCESS:", process)
     print("ROBOT:", robot)
-    print("START DATE:", date, )
-    print("END DATE:", end_date_str)
-
-    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    print("START DATE:", date)
+    print("END DATE:", end_date)
 
     if process == "Balance":
 
@@ -233,7 +231,7 @@ def robot_process_hub(request):
         print("=========================")
 
         if robot == "ALL":
-            robot_list = [record["name"] for record in get_robots(status="active")]
+            robot_list = Robots.objects.filter().values_list('name', flat=True)
         else:
             robot_list = [robot]
 
@@ -579,13 +577,13 @@ def calculate_robot_balance(request):
     print("-----------------------------")
     print("Loading robots from database")
 
-    robots = pd.DataFrame(list(Robots.objects.filter().values()))
+    robots = Robots.objects.filter().values_list('name', flat=True)
 
     print(robots)
     print("")
     print("Calculating balances")
 
-    for robot in robots["name"]:
+    for robot in robots:
         bal_calc_msg = balance_calc(robot=robot, calc_date=str(get_today()))
         print(datetime.now(), bal_calc_msg)
 

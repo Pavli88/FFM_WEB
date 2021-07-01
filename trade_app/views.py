@@ -37,46 +37,53 @@ def close_trade(request):
         robot = request_data["robot"]
         trd_id = request_data["trd_id"]
 
-    print("BROKER ID", broker_id)
-    print("ROBOT", robot)
-    print("ID", trd_id)
+        print("BROKER ID", broker_id)
+        print("ROBOT", robot)
+        print("ID", trd_id)
 
-    robot_data = Robots.objects.filter(name=robot).values()
-    account_data = BrokerAccounts.objects.filter(account_number=robot_data[0]["account_number"]).values()
-    environment = robot_data[0]["env"]
+        robot_data = Robots.objects.filter(name=robot).values()
+        account_data = BrokerAccounts.objects.filter(account_number=robot_data[0]["account_number"]).values()
+        environment = robot_data[0]["env"]
 
-    if environment == "live":
-        env = "live"
-    else:
-        env = "practice"
+        if environment == "live":
+            env = "live"
+        else:
+            env = "practice"
 
-    print("Closing Trade")
+        print("Closing Trade")
 
-    open_trade = OandaV20(access_token=account_data[0]["access_token"],
-                          account_id=account_data[0]["account_number"],
-                          environment=env).close_trades(trd_id=broker_id)
+        try:
+            open_trade = OandaV20(access_token=account_data[0]["access_token"],
+                                  account_id=account_data[0]["account_number"],
+                                  environment=env).close_trades(trd_id=broker_id)
+        except:
+            print('Trade does is not open at broker s side!')
+            response = 'Trade does is not open at broker s side!'
+            return JsonResponse(response, safe=False)
 
-    print("Update -> Database ID:", trd_id)
+        print("Update -> Database ID:", trd_id)
 
-    trade_record = RobotTrades.objects.get(id=trd_id)
-    trade_record.status = "CLOSED"
-    trade_record.close_price = open_trade["price"]
-    trade_record.pnl = open_trade["pl"]
-    trade_record.close_time = datetime.today().date()
-    trade_record.save()
+        trade_record = RobotTrades.objects.get(id=trd_id)
+        trade_record.status = "CLOSED"
+        trade_record.close_price = open_trade["price"]
+        trade_record.pnl = open_trade["pl"]
+        trade_record.close_time = datetime.today().date()
+        trade_record.save()
 
-    print("Calculating balance for robot")
+        print("Calculating balance for robot")
 
-    balance_calc_msg = balance_calc(robot=robot, calc_date=str(datetime.today().date()))
+        balance_calc_msg = balance_calc(robot=robot, calc_date=str(datetime.today().date()))
 
-    print(balance_calc_msg)
+        print(balance_calc_msg)
 
-    print("Sending message to system messages table")
+        print("Sending message to system messages table")
 
-    SystemMessages(msg_type="TRADE EXECUTION",
-                   msg=robot + ": Closing trade manually").save()
+        SystemMessages(msg_type="TRADE EXECUTION",
+                       msg=robot + ": Closing trade manually").save()
 
-    return redirect('trade_app main')
+        response = 'Trade was closed successfully!'
+
+        return JsonResponse(response, safe=False)
 
 
 def submit_trade(request):
