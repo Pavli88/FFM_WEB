@@ -328,7 +328,7 @@ def incoming_trade(request):
 
         # ROBOT INFORMATION ********************************************************************************************
         try:
-            robot_data = get_robots(name=robot)[0]
+            robot_data = Robots.objects.filter(name=robot).values()[0]
             security = robot_data["security"]
             status = robot_data["status"]
             environment = robot_data["env"]
