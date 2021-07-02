@@ -12,63 +12,69 @@ from portfolio.portfolio_functions import *
 import json
 
 
-# URL Processes ********************************************************************************************************
 @csrf_exempt
 def new_cash_flow(request):
     print("*** PORTFOLIO NEW CASH FLOW ***")
 
     if request.method == "POST":
-        portfolio_name = request.POST.get("port_name")
-        amount = request.POST.get("amount")
-        type = request.POST.get("type")
+        body_data = json.loads(request.body.decode('utf-8'))
+        portfolio_name = body_data["port_name"]
+        amount = body_data["amount"]
+        type = body_data["type"]
 
         print("PORTFOLIO NAME:", portfolio_name, "TYPE:", type, "AMOUNT:", amount)
 
-        CashFlow(portfolio_name=portfolio_name,
+        CashFlow(portfolio_code=portfolio_name,
                  amount=amount,
                  type=type).save()
 
         print("New cashflow was created!")
 
-        if type == "Funding":
+        if type == "FUNDING":
             port = Portfolio.objects.get(portfolio_name=portfolio_name)
             port.status = "Funded"
             port.save()
             print("")
 
-    return redirect('portfolio main')
+        response = "Transaction was recorded successfully!"
+
+    return JsonResponse(response, safe=False)
 
 
+# Reviewed
 @csrf_exempt
 def create_portfolio(request):
     print("*** NEW PORTFOLIO CREATION ***")
 
     if request.method == "POST":
-        body_unicode = request.body.decode('utf-8')
-        body_data = json.loads(body_unicode)
+        body_data = json.loads(request.body.decode('utf-8'))
         port_name = body_data["port_name"]
         port_type = body_data["port_type"]
         port_currency = body_data["port_currency"]
+        port_code = body_data["port_code"]
 
         print("PORTFOLIO NAME:", port_name, "PORTFOLIO TYPE:", port_type, "PORTFOLIO CURRENCY", port_currency)
 
         try:
             Portfolio(portfolio_name=port_name,
+                      portfolio_code=port_code,
                       portfolio_type=port_type,
                       currency=port_currency,
                       status="Not Funded").save()
+
             response = "New Portfolio was created!"
+
+            print("Creating nav record for the portfolio")
+
+            Nav(portfolio_name=port_name).save()
+
         except:
             response = "Portfolio exists in database!"
-
-        print("Creating nav record for the portfolio")
-
-        if port_type == "Portfolio":
-            Nav(portfolio_name=port_name).save()
 
     return JsonResponse(response, safe=False)
 
 
+# Reviewed
 def get_portfolio_data(request):
 
     """
@@ -86,30 +92,8 @@ def get_portfolio_data(request):
         print("Sending response to front end")
 
         response = list(portfolio_data)
-        print(response)
+
         return JsonResponse(response, safe=False)
-
-
-def get_securities_by_type(request):
-
-    print("==============================")
-    print("LOADING SECURITIES BY SEC TYPE")
-    print("==============================")
-
-    if request.method == "POST":
-        security_type = request.POST.get("data")
-
-        print("SECURITY TYPE:", security_type)
-
-        instruments = Instruments.objects.filter(instrument_type=security_type).values()
-
-        print(instruments)
-
-    response = {"securities": list(instruments)}
-
-    print("Sending data to front end")
-
-    return JsonResponse(response, safe=False)
 
 
 def trade(request):
