@@ -15,6 +15,7 @@ class CashFlow(models.Model):
     amount = models.FloatField(default=0.0)
     type = models.CharField(max_length=30, default="")
     user = models.CharField(max_length=30, default="")
+    currency = models.CharField(max_length=30, default="")
     date = models.DateField(auto_now=True)
 
 

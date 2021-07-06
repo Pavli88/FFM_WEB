@@ -12,14 +12,10 @@ class Robots(models.Model):
     broker = models.CharField(max_length=50, default='')
     status = models.CharField(max_length=50, default='')
     env = models.CharField(max_length=50, default='')
-    pyramiding_level = models.FloatField(default=0.0)
-    in_exp = models.FloatField(default=0.0)
-    quantity = models.FloatField(default=0.0)
     time_frame = models.CharField(max_length=50, default='')
     account_number = models.CharField(max_length=50, default='')
-    sl_policy = models.CharField(max_length=50, default='')
-    prec = models.IntegerField(default=1)
     inception_date = models.DateField(default=datetime.date.today)
+    currency = models.CharField(max_length=50, default='')
 
 
 class RobotCashFlow(models.Model):

@@ -21,12 +21,14 @@ def new_cash_flow(request):
         portfolio_name = body_data["port_name"]
         amount = body_data["amount"]
         type = body_data["type"]
+        currency = body_data["currency"]
 
         print("PORTFOLIO NAME:", portfolio_name, "TYPE:", type, "AMOUNT:", amount)
 
         CashFlow(portfolio_code=portfolio_name,
                  amount=amount,
-                 type=type).save()
+                 type=type,
+                 currency=currency).save()
 
         print("New cashflow was created!")
 
@@ -96,19 +98,21 @@ def get_portfolio_data(request):
         return JsonResponse(response, safe=False)
 
 
-def trade(request):
+@csrf_exempt
+def portfolio_trade(request):
 
     print("===============")
     print("PORTFOLIO TRADE")
     print("===============")
 
     if request.method == "POST":
-        quantity = request.POST.get("qty")
-        price = request.POST.get("price")
-        portfolio = request.POST.get("portfolio")
-        security = request.POST.get("sec")
-        security_type = request.POST.get("sec_type")
-        security_id = request.POST.get("sec_id")
+        body_data = json.loads(request.body.decode('utf-8'))
+        quantity = body_data["unit"]
+        price = 1.0 #body_data["price"]
+        portfolio = body_data["portfolio"]
+        security = body_data["sec"]
+        security_type = body_data["sec_type"]
+        security_id = body_data["sec_id"]
         market_value = float(quantity) * float(price)
         cash_flow = market_value * -1
 
@@ -136,19 +140,20 @@ def trade(request):
               source=source).save()
 
         print("Saving new trade record to", portfolio)
+        print("Updating robot and portfolio cash flow tables")
+        print('Adding cash flow record to', portfolio)
 
-        CashFlow(portfolio_name=portfolio,
-                 amount=cash_flow,
-                 type="TRADE").save()
-
-        print("Amending cash flow table for", portfolio)
+        CashFlow(portfolio_code=portfolio,
+                 amount=market_value * -1,
+                 type="TRADE",
+                 currency="USD").save()
 
         if security_type == "Robot":
-            print("Amending robot cash flow table")
-            print("ROBOT CASH FLOW:", cash_flow * -1)
+            print("Adding cash flow record to", security)
+            print("ROBOT CASH FLOW:", market_value)
 
             RobotCashFlow(robot_name=security,
-                          cash_flow=cash_flow * -1).save()
+                          cash_flow=market_value).save()
 
             print("New cash flow was recorded for", security)
             print("Calculating robot balance")
@@ -162,7 +167,9 @@ def trade(request):
             SystemMessages(msg_type="Cash Flow",
                            msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
-    return redirect('portfolio main')
+        response = 'Portfolio trade was executed successfully!'
+
+        return JsonResponse(response, safe=False)
 
 
 def process_hub(request):

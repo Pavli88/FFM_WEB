@@ -4,17 +4,6 @@ from instrument.models import *
 from django.http import JsonResponse
 
 
-def instruments_main(request):
-
-    print("====================")
-    print("INSTRUMENT MAIN PAGE")
-    print("====================")
-
-    instrument_form = InstrumentForm()
-
-    return render(request, 'instruments/instruments_main.html', {"instrument_form": instrument_form})
-
-
 def new_instrument(request):
     print("==============")
     print("NEW INSTRUMENT")
@@ -46,16 +35,27 @@ def new_instrument(request):
 
 def get_instruments(request):
     print("*** GET INSTRUMENTS ***")
-    print("BROKER:")
 
     if request.method == "GET":
 
         broker = request.GET.get('broker')
+        inst_type = request.GET.get('type')
 
-        if broker == 'all':
-            instruments = Instruments.objects.filter().values()
+        print('BROKER:', broker)
+        print('INSTRUMENT TYPE:', inst_type)
+
+        if broker is None:
+            pass
         else:
-            instruments = Instruments.objects.filter(source=broker).values()
+            if broker == 'all':
+                instruments = Instruments.objects.filter().values()
+            else:
+                instruments = Instruments.objects.filter(source=broker).values()
+
+        if inst_type is None:
+            pass
+        else:
+            instruments = Instruments.objects.filter(instrument_type=inst_type).values()
 
     print("Sending data to front end")
 

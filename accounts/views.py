@@ -5,17 +5,6 @@ from accounts.account_functions import *
 from django.http import JsonResponse
 from django.core import serializers
 
-# Accounts main page
-def accounts_main(request):
-    print("==================")
-    print("ACCOUNTS MAIN PAGE")
-    print("==================")
-
-    accounts = get_accounts()
-    print(accounts)
-    return render(request, 'accounts/accounts_main.html', {"accounts": accounts})
-
-
 def create_broker(request):
 
     """
@@ -79,7 +68,27 @@ def get_account_balances():
     return balances
 
 
-def get_account_data(request):
+def get_account_data(request, account):
+
+    """
+    Get data for a single account.
+    :param request:
+    :param account:
+    :return:
+    """
+
+    print("Get data for a single account.")
+
+    if request.method == "GET":
+        account = BrokerAccounts.objects.filter(broker_name=account).values()
+        response = list(account)
+        print(account)
+        print("Sending response to front end")
+
+        return JsonResponse(response, safe=False)
+
+
+def get_accounts_data(request):
     print("*** GET ACCOUNT DATA ***")
     print("Requesting account data from front end")
 

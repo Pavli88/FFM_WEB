@@ -680,7 +680,10 @@ def get_robots(request, env):
 
     if request.method == "GET":
 
-        robots = Robots.objects.filter(env=env).values()
+        if env == "all":
+            robots = Robots.objects.filter().values()
+        else:
+            robots = Robots.objects.filter(env=env).values()
 
         response = list(robots)
 
