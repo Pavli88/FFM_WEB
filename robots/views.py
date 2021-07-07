@@ -24,9 +24,16 @@ from instrument.instruments_functions import *
 import json
 
 
-# Reviewed
+# CRUD -----------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def new_robot(request):
+
+    """
+    New robot creator function. It saves down an empty record to the robot balance table and robot risk table.
+    The robot is also saved down to the instruments table.
+    :param request:
+    :return:
+    """
 
     print("==================")
     print("NEW ROBOT CREATION")
@@ -136,59 +143,47 @@ def amend_robot(request):
         return render(request, 'robots_app/create_robot.html', {"robots": Robots.objects.filter().values()})
 
 
-@csrf_exempt
-def robot_process_hub(request):
-    print("=================")
-    print("ROBOT PROCESS HUB")
-    print("=================")
+def delete_robot(request):
+    print("============")
+    print("DELETE ROBOT")
+    print("============")
 
     if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        process = request_data["process"]
-        robot = request_data["robot"]
-        date = request_data["start_date"]
-        end_date = datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
+        robot = request.POST.get("robot_name")
 
-    print("PROCESS:", process)
     print("ROBOT:", robot)
-    print("START DATE:", date)
-    print("END DATE:", end_date)
 
-    if process == "Balance":
+    print("Deleting robot from database")
 
-        print("=========================")
-        print("ROBOT BALANCE CALCULATION")
-        print("=========================")
+    Robots.objects.filter(name=robot).delete()
+    RobotRisk.objects.filter(robot=robot).delete()
 
-        if robot == "ALL":
-            robot_list = Robots.objects.filter().values_list('name', flat=True)
-        else:
-            robot_list = [robot]
+    response = {"message": "Robot was deleted"}
 
-        print("ROBOTS:", robot_list)
-        print("")
-
-        for active_robot in robot_list:
-            print("")
-            print(">>> ROBOT:", active_robot)
-
-            start_date = datetime.strptime(date, '%Y-%m-%d').date()
-
-            message_list = []
-
-            while start_date < end_date:
-                start_date = start_date + timedelta(days=1)
-                process_response = balance_calc(robot=active_robot, calc_date=str(start_date))
-                message_list.append(process_response)
-
-                # if process_response != "Calculation is completed!":
-                #     break
-
-    response = {"message": message_list}
-
-    print("Sending message to front end")
+    print("Sending data to front end")
 
     return JsonResponse(response, safe=False)
+
+
+def get_robots(request, env):
+
+    print("Request from front end to load all robot data")
+
+    if request.method == "GET":
+
+        if env == "all":
+            robots = Robots.objects.filter().values()
+        else:
+            robots = Robots.objects.filter(env=env).values()
+
+        response = list(robots)
+
+        print("Sending data to front end")
+        print("")
+
+        return JsonResponse(response, safe=False)
+
+# Trading --------------------------------------------------------------------------------------------------------------
 
 
 def close_trade(robot, account_number, broker, environment, token=None):
@@ -479,94 +474,54 @@ def incoming_trade(request):
     return JsonResponse(response, safe=False)
 
 
-def delete_robot(request):
-    print("============")
-    print("DELETE ROBOT")
-    print("============")
+# Revieved functions ---------------------------------------------------------------------------------------------------
+
+@csrf_exempt
+def robot_balance_calc(request):
+
+    """
+    This function calculates robot balance based on front end request.
+    :param request:
+    :return:
+    """
+
+    print("=========================")
+    print("ROBOT BALANCE CALCULATION")
+    print("=========================")
 
     if request.method == "POST":
-        robot = request.POST.get("robot_name")
+        request_data = json.loads(request.body.decode('utf-8'))
+        robot = request_data["robot"]
+        date = datetime.datetime.strptime(request_data["start_date"], '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
 
-    print("ROBOT:", robot)
+        print("ROBOT:", robot)
+        print("START DATE:", date)
+        print("END DATE:", end_date)
 
-    print("Deleting robot from database")
+        if robot == "ALL":
+            robot_list = Robots.objects.filter().values_list('name', flat=True)
+        else:
+            robot_list = [robot]
 
-    Robots.objects.filter(name=robot).delete()
-    RobotRisk.objects.filter(robot=robot).delete()
+        print("ROBOTS:", robot_list)
 
-    response = {"message": "Robot was deleted"}
+        for active_robot in robot_list:
+            print(">>> ROBOT:", active_robot)
 
-    print("Sending data to front end")
+            start_date = date
 
-    return JsonResponse(response, safe=False)
+            while start_date <= end_date:
+                print("    DATE:", start_date)
+                balance_calc(robot=active_robot, calc_date=start_date)
+                start_date = start_date + timedelta(days=1)
 
-
-def calculate_robot_balance(request):
-    print("-----------------------------")
-    print("ROBOT BALANCE CALCULATION JOB")
-    print("-----------------------------")
-    print("Loading robots from database")
-
-    robots = Robots.objects.filter().values_list('name', flat=True)
-
-    print(robots)
-    print("")
-    print("Calculating balances")
-
-    for robot in robots:
-        bal_calc_msg = balance_calc(robot=robot, calc_date=str(get_today()))
-        print(datetime.now(), bal_calc_msg)
-
-    SystemMessages(msg_type="Robot Balance Calculation",
-                   msg="Robot balance calculation job run successfully for all robots at " + str(datetime.now())).save()
-
-    return HttpResponse(None)
-
-
-# Javascript based calls from front end to transfer robot data
-def get_robot_data(request, data_type):
-    print("------------------")
-    print("ROBOT DATA REQUEST")
-    print("------------------")
-    print("DATA TYPE REQUEST:", data_type)
-
-    if request.method == "GET":
-        robot = request.GET.get("robot")
-        start_date = request.GET.get("start_date")
-        end_date = request.GET.get("end_date")
-
-    print("ROBOT:", robot)
-    print("START DATE:", start_date)
-    print("END DATE:", end_date)
-
-    if data_type == "balance":
-        response_data = get_robot_balance(robot_name=robot)
-    elif data_type == "trade":
-        response_data = get_robot_trades(robot=robot)
-    elif data_type == "cumulative_return":
-        balance = pd.DataFrame(list(get_robot_balance(robot_name=robot)))
-        response_data = []
-
-        for record in cumulative_return_calc(balance["ret"]):
-            response_data.append({"data": record})
-
-    elif data_type == "drawdown":
-        raw_data = pd.DataFrame(list(get_robot_balance(robot_name=robot)))
-        draw_down_data = drawdown_calc(raw_data["ret"].tolist())
-
-        response_data = []
-
-        for record in draw_down_data:
-            response_data.append({"data": record})
-
-    response = {"message": list(response_data)}
+    response = "Process is over!"
 
     print("Sending message to front end")
 
     return JsonResponse(response, safe=False)
 
-
-# Revieved functions
 
 def get_robot_balances(request, env):
 
@@ -604,23 +559,6 @@ def get_robot_balances(request, env):
     return JsonResponse(response, safe=False)
 
 
-def get_robots(request, env):
-
-    print("Request from front end to load all robot data")
-
-    if request.method == "GET":
-
-        if env == "all":
-            robots = Robots.objects.filter().values()
-        else:
-            robots = Robots.objects.filter(env=env).values()
-
-        response = list(robots)
-
-        print("Sending data to front end")
-        print("")
-
-        return JsonResponse(response, safe=False)
 
 
 

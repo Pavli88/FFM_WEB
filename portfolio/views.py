@@ -6,44 +6,16 @@ from portfolio.processes.processes import *
 from robots.processes.robot_processes import *
 from instrument.models import *
 from datetime import datetime
+import datetime
 from mysite.models import *
+from mysite.my_functions.general_functions import *
 from django.views.decorators.csrf import csrf_exempt
 from portfolio.portfolio_functions import *
 import json
+from portfolio.processes.port_pos import *
 
 
-@csrf_exempt
-def new_cash_flow(request):
-    print("*** PORTFOLIO NEW CASH FLOW ***")
-
-    if request.method == "POST":
-        body_data = json.loads(request.body.decode('utf-8'))
-        portfolio_name = body_data["port_name"]
-        amount = body_data["amount"]
-        type = body_data["type"]
-        currency = body_data["currency"]
-
-        print("PORTFOLIO NAME:", portfolio_name, "TYPE:", type, "AMOUNT:", amount)
-
-        CashFlow(portfolio_code=portfolio_name,
-                 amount=amount,
-                 type=type,
-                 currency=currency).save()
-
-        print("New cashflow was created!")
-
-        if type == "FUNDING":
-            port = Portfolio.objects.get(portfolio_name=portfolio_name)
-            port.status = "Funded"
-            port.save()
-            print("")
-
-        response = "Transaction was recorded successfully!"
-
-    return JsonResponse(response, safe=False)
-
-
-# Reviewed
+# CRUD------------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def create_portfolio(request):
     print("*** NEW PORTFOLIO CREATION ***")
@@ -76,7 +48,6 @@ def create_portfolio(request):
     return JsonResponse(response, safe=False)
 
 
-# Reviewed
 def get_portfolio_data(request):
 
     """
@@ -98,6 +69,7 @@ def get_portfolio_data(request):
         return JsonResponse(response, safe=False)
 
 
+# Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
 def portfolio_trade(request):
 
@@ -158,7 +130,7 @@ def portfolio_trade(request):
             print("New cash flow was recorded for", security)
             print("Calculating robot balance")
 
-            balance_calc_message = balance_calc(robot=security, calc_date=str(datetime.today().date()))
+            balance_calc_message = balance_calc(robot=security, calc_date=get_today())
 
             print(balance_calc_message)
 
@@ -172,33 +144,55 @@ def portfolio_trade(request):
         return JsonResponse(response, safe=False)
 
 
-def process_hub(request):
+@csrf_exempt
+def pos_calc(request):
+    if request.method == "POST":
+        print("Incoming request to calculate portfolio positions")
+        body_data = json.loads(request.body.decode('utf-8'))
+        calc_date = body_data['date']
+        portfolio = body_data['portfolio']
 
-    print("=====================")
-    print("PORTFOLIO PROCESS HUB")
-    print("=====================")
+        print("Parameters: ", "DATE:", calc_date, "PORTFOLIO:", portfolio)
+
+        portfolio_cositions(portfolio=portfolio, calc_date=calc_date)
+
+        response = "Calc ended"
+
+        return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def new_cash_flow(request):
+    print("*** PORTFOLIO NEW CASH FLOW ***")
 
     if request.method == "POST":
-        process = request.POST.get("process")
-        portfolio = request.POST.get("portfolio")
-        start_date = request.POST.get("start_date")
+        body_data = json.loads(request.body.decode('utf-8'))
+        portfolio_name = body_data["port_name"]
+        amount = body_data["amount"]
+        type = body_data["type"]
+        currency = body_data["currency"]
 
-        print("PROCESS:", process)
-        print("START DATE:", start_date)
+        print("PORTFOLIO NAME:", portfolio_name, "TYPE:", type, "AMOUNT:", amount)
 
-    if process == "Positions":
-        pos_calc(portfolio=portfolio, calc_date=start_date)
-    elif process == "Portfolio Holdings":
-        port_holding(portfolio=portfolio, calc_date=start_date)
-    elif process == "NAV":
-        response = nav_calc(portfolio=portfolio, calc_date=start_date)
+        CashFlow(portfolio_code=portfolio_name,
+                 amount=amount,
+                 type=type,
+                 currency=currency).save()
 
-    print("Sending data to front end")
+        print("New cashflow was created!")
+
+        if type == "FUNDING":
+            port = Portfolio.objects.get(portfolio_name=portfolio_name)
+            port.status = "Funded"
+            port.save()
+            print("")
+
+        response = "Transaction was recorded successfully!"
 
     return JsonResponse(response, safe=False)
 
 
-# Portfolio Group Related Processes
+# Portfolio Group Related Processes-------------------------------------------------------------------------------------
 @csrf_exempt
 def add_port_to_group(request):
     print("*** PORTFOLIO GROUP ADDITION ***")
@@ -213,4 +207,5 @@ def add_port_to_group(request):
             response = {"message": "Connection exists in database!"}
 
     return JsonResponse(response, safe=False)
+
 

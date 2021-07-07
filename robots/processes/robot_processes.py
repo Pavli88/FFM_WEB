@@ -6,91 +6,13 @@ from datetime import timedelta
 from mysite.models import *
 
 
-class RobotProcesses:
-
-    def __init__(self):
-
-        self.robot = ""
-
-    def get_robot(self, name):
-
-        """
-        Gets robot parameters from database
-        :param name:
-        :return:
-        """
-
-        self.robot = Robots.objects.filter(name=name).values()
-        return self.robot
-
-    def create_order(self, trade_side, quantity, security, bid_ask, initial_exposure, balance, precision):
-
-        """
-        Function that generates order based on risk parameters
-        :param trade_side:
-        :param quantity:
-        :param security:
-        :param bid_ask:
-        :param initial_exposure:
-        :param balance:
-        :return:
-        """
-
-        print("----------------")
-        print("Generating order")
-        print("----------------")
-        print("Checking SL policy.Fetching out risk parameters from database")
-
-        self.bid = bid_ask["bid"]
-        self.ask = bid_ask["ask"]
-
-        print("BID:", self.bid)
-        print("ASK:", self.ask)
-        print("SIDE:", trade_side)
-        print("SECURITY:", security)
-
-        if trade_side == "BUY":
-            self.units = quantity
-        elif trade_side == "SELL":
-            self.units = quantity * -1
-
-        print("QUANTITY:", self.units)
-        print("Calculation SL")
-
-        # Generating stop loss level
-        print("Generating stop loss level")
-
-        sl_risk_amount = balance * initial_exposure
-
-        if self.units > 0:
-            sl_level = float(self.ask) - (sl_risk_amount / abs(self.units))
-        else:
-            sl_level = float(self.bid) + (sl_risk_amount / abs(self.units))
-
-        print("SL Level:", sl_level)
-        print("SL Risk Amount:", balance * initial_exposure)
-
-        self.order = {"instrument": str(security),
-                      "units": str(self.units),
-                      "type": "MARKET",
-                      "stopLossOnFill": {"price": str(round(sl_level, precision))}
-                      }
-
-        print("Order:", self.order)
-        return self.order
-
-    def close_position(self):
-        print("close")
-
-
 def balance_calc(robot, calc_date):
 
-    date = datetime.datetime.strptime(calc_date, '%Y-%m-%d')
-
+    date = calc_date #datetime.datetime.strptime(calc_date, '%Y-%m-%d')
     robot_data = Robots.objects.filter(name=robot).values()
 
     # Checking if calculation date is less then robot inception data
-    if date.date() < robot_data[0]["inception_date"]:
+    if date < robot_data[0]["inception_date"]:
         return robot + " - " + "Calculation date (" + str(date.date()) +") is less than robot inception date (" + \
                str(robot_data[0]["inception_date"]) + ". Calculation is stopped."
 
@@ -125,10 +47,10 @@ def balance_calc(robot, calc_date):
     else:
         cash_flow = cash_flow_table["cash_flow"].sum()
 
-    open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date.date()).values()))
+    open_balance_table = pd.DataFrame(list(Balance.objects.filter(robot_name=robot, date=t_min_one_date).values()))
 
     if open_balance_table.empty:
-        if robot_data[0]["inception_date"] == date.date():
+        if robot_data[0]["inception_date"] == date:
             open_balance = 0.0
             if cash_flow == 0.0:
                 return robot + " - " + str(calc_date) + " - Robot is not funded. Calculation is not possible."
@@ -171,6 +93,6 @@ def balance_calc(robot, calc_date):
         rec_status = "New Record"
 
     return robot + " - " + str(rec_status) + " - Date " + str(calc_date) + " - T-1 Date " + \
-           str(t_min_one_date.date()) + " - Realized Pnl " + str(round(realized_pnl, 2)) + \
+           str(t_min_one_date) + " - Realized Pnl " + str(round(realized_pnl, 2)) + \
            " - Cash Flow " + str(cash_flow) + " - Opening Balance " + str(round(open_balance, 2)) + \
            " - Closing Balance: " + str(round(close_balance, 2)) + " - Return " + str(round(ret, 4))
