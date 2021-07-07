@@ -24,21 +24,6 @@ from instrument.instruments_functions import *
 import json
 
 
-# Main site for robot configuration
-def robots_main(request):
-
-    print("===============")
-    print("ROBOT MAIN PAGE")
-    print("===============")
-    print("Loading brokers from database")
-
-    robots = get_robots(status="active")
-    robot_form = RobotEntryForm()
-
-    return render(request, 'robots_app/create_robot.html', {"robot_form": robot_form,
-                                                            "robots": robots})
-
-
 # Reviewed
 @csrf_exempt
 def new_robot(request):
@@ -102,61 +87,6 @@ def new_robot(request):
     print("")
 
     return JsonResponse(response, safe=False)
-
-# ===================================
-# Functions to load data to front end
-# ===================================
-
-
-def load_securities(request):
-    print("Request from front end to load security data")
-
-    if request.method == "GET":
-        broker = request.GET.get("broker")
-
-    print("BROKER:", broker)
-
-    securities = get_securities(broker=broker)
-
-    response = {"securities": list(securities)}
-
-    print("Sending data to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
-
-
-def load_accounts(request):
-    print("Request from front end to load accounts data")
-
-    if request.method == "GET":
-        broker = request.GET.get("broker")
-        env= request.GET.get("env")
-
-    print("BROKER:", broker)
-    print("ENVIRONTMENT:", env)
-
-    accounts = get_accounts(broker=broker, environment=env)
-
-    response = {"accounts": list(accounts)}
-
-    print("Sending data to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
-
-# ===================================
-# Functions to get data from database
-# ===================================
-
-
-def get_accounts(broker=None, environment=None):
-    if broker is None:
-        accounts = BrokerAccounts.objects.filter().values()
-    else:
-        accounts = BrokerAccounts.objects.filter(broker_name=broker, env=environment).values()
-
-    return accounts
 
 
 def amend_robot(request):
