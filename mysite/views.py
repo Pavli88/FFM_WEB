@@ -15,17 +15,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from robots.processes.robot_processes import *
 from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
-
-
-def test_calc(request):
-    print("Loading robot stats to dashboard")
-
-    respo = get_account_balance_history(account="001-004-2840244-004", )
-
-    return JsonResponse([0,0,0], safe=False)
 
 
 def load_robot_stats(request, env):
@@ -223,84 +214,7 @@ def get_account_data(account_number="All"):
     return accounts
 
 
-def save_layout(request):
-
-    print("Saving home page layout")
-
-    if request.method == "POST":
-        account = request.POST.get("account")
-
-    default = HomePageDefault.objects.filter()[0]
-    default.account_number = account
-    default.save()
-
-    print("Account:", account)
-
-    return redirect('home_page')
-
-
-# # Settings
-def go_to_settings(request):
-
-    print("Load settings")
-
-    try:
-        settings = Settings.objects.filter(id=1).values()
-        st_time = settings[0]["ov_st_time"].strftime("%H:%M")
-        en_time = settings[0]["ov_en_time"].strftime("%H:%M")
-        print(settings[0])
-        print(st_time)
-    except:
-        return render(request, 'settings.html')
-
-    return render(request, 'settings.html', {"st_time": st_time,
-                                             "en_time": en_time})
-
-
-def save_settings(request):
-
-    if request.method == "POST":
-        switch = request.POST.get("switch")
-        st_time = request.POST.get("st_time")
-        en_time = request.POST.get("en_time")
-
-    print("Amending settings")
-    print("")
-    print("Overnight trading:", switch)
-    print("Start Time:", st_time)
-    print("End Time:", en_time)
-
-    print("Saving settings to data base")
-
-    if switch == "on":
-        ov_status = True
-    else:
-        ov_status = False
-
-    try:
-        print("Amending existing settings in database")
-        settings = Settings.objects.get(id=1)
-        settings.ov_status = ov_status
-        settings.ov_st_time = st_time
-        settings.ov_en_time = en_time
-        settings.save()
-        print("Settings has been amended")
-
-    except:
-        print("Settings is empty first record is being created")
-
-        print("Saving first record to database")
-        settings = Settings(ov_status=ov_status,
-                            ov_st_time=st_time,
-                            ov_en_time=en_time)
-
-        settings.save()
-        print("Record has been saved")
-
-    return redirect('settings main')
-
-
-def get_messages(request):
+def system_messages(request):
     print("===================")
     print("GET SYSTEM MESSAGES")
     print("===================")

@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
 from mysite.processes.oanda import *
 from mysite.models import *
 from robots.models import *
 from accounts.models import *
 from mysite.models import *
-from django.http import JsonResponse
-from robots.processes.robot_processes import *
+
+from robots.processes.robot_balance_calc import *
 from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt
 
 
 def get_open_trades(request, env):

@@ -3,7 +3,7 @@ from portfolio.models import *
 from robots.models import *
 from django.http import JsonResponse
 from portfolio.processes.processes import *
-from robots.processes.robot_processes import *
+from robots.processes.robot_balance_calc import *
 from instrument.models import *
 from datetime import datetime
 import datetime
