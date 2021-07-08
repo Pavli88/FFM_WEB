@@ -1,7 +1,11 @@
 from django.shortcuts import render, redirect
+from django.db import connection
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from portfolio.models import *
 from robots.models import *
-from django.http import JsonResponse
+
 from portfolio.processes.processes import *
 from robots.processes.robot_balance_calc import *
 from instrument.models import *
@@ -9,7 +13,7 @@ from datetime import datetime
 import datetime
 from mysite.models import *
 from mysite.my_functions.general_functions import *
-from django.views.decorators.csrf import csrf_exempt
+
 from portfolio.portfolio_functions import *
 import json
 from portfolio.processes.port_pos import *
@@ -48,6 +52,7 @@ def create_portfolio(request):
     return JsonResponse(response, safe=False)
 
 
+# READ
 def get_portfolio_data(request):
 
     """
@@ -68,6 +73,21 @@ def get_portfolio_data(request):
 
         return JsonResponse(response, safe=False)
 
+
+def get_port_transactions(request, portfolio):
+    print("Portfolio transactions")
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""select pt.id, pt.portfolio_name, pt.quantity, pt.price, 
+        pt.mv, pt.date, inst.instrument_name, inst.instrument_type, inst.source 
+        from portfolio_trade as pt, 
+        instrument_instruments as inst 
+        where pt.security=inst.id and pt.portfolio_name='{port_name}';""".format(port_name=portfolio))
+        row = cursor.fetchall()
+
+        print(portfolio)
+
+        return JsonResponse(row, safe=False)
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
