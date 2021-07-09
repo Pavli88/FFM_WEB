@@ -18,9 +18,9 @@ def balance_calc(robot, calc_date):
 
     # Checking if calculation date is weekend or not
     if date.weekday() == 6:
-        return robot + " - " + calc_date + " is Sunday. Calculation is not executed at weekends"
+        return robot + " - " + str(calc_date) + " is Sunday. Calculation is not executed at weekends"
     elif date.weekday() == 5:
-        return robot + " - " + calc_date + " is Saturday. Calculation is not executed at weekends"
+        return robot + " - " + str(calc_date) + " is Saturday. Calculation is not executed at weekends"
     elif date.weekday() == 0:
         day_swift = 3
     else:
