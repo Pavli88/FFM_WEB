@@ -19,6 +19,13 @@ class CashFlow(models.Model):
     date = models.DateField(auto_now=True)
 
 
+class CashHolding(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    amount = models.FloatField(default=0.0)
+    currency = models.CharField(max_length=30, default="")
+    date = models.DateField(auto_now=True)
+
+
 class Nav(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     pos_val = models.FloatField(default=0.0)

@@ -159,6 +159,9 @@ def portfolio_trade(request):
             SystemMessages(msg_type="Cash Flow",
                            msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
+        print('Portfolio positions calculation')
+        portfolio_cositions(portfolio=portfolio, calc_date=get_today())
+
         response = 'Portfolio trade was executed successfully!'
 
         return JsonResponse(response, safe=False)
@@ -167,14 +170,29 @@ def portfolio_trade(request):
 @csrf_exempt
 def pos_calc(request):
     if request.method == "POST":
+        print("")
         print("Incoming request to calculate portfolio positions")
         body_data = json.loads(request.body.decode('utf-8'))
-        calc_date = body_data['date']
+        date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
         portfolio = body_data['portfolio']
 
-        print("Parameters: ", "DATE:", calc_date, "PORTFOLIO:", portfolio)
+        print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
 
-        portfolio_cositions(portfolio=portfolio, calc_date=calc_date)
+        if portfolio == "ALL":
+            portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
+        else:
+            portfolio_list = [portfolio]
+
+        for port in portfolio_list:
+            print(">>> PORTFOLIO:", port)
+
+            start_date = date
+
+            while start_date <= end_date:
+                print("    DATE:", start_date)
+                portfolio_cositions(portfolio=port, calc_date=start_date)
+                start_date = start_date + timedelta(days=1)
 
         response = "Calc ended"
 

@@ -28,5 +28,3 @@ def previous_business_day(currenct_day):
     else:
         result = date + timedelta(-1)
     return result.date()
-
-print(get_today())
