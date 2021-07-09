@@ -23,7 +23,7 @@ class CashHolding(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     amount = models.FloatField(default=0.0)
     currency = models.CharField(max_length=30, default="")
-    date = models.DateField(auto_now=True)
+    date = models.DateField()
 
 
 class Nav(models.Model):

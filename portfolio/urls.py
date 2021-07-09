@@ -8,6 +8,7 @@ urlpatterns = [
     path('portfolios/portfolio_trade/', portfolio_trade),
     path('portfolios/get_portfolio_data/', get_portfolio_data),
     path('portfolios/port_group/add/', add_port_to_group),
-    path('portfolios/positions', pos_calc),
+    path('portfolios/positions/', pos_calc),
+    path('portfolios/cash_holding/', cash_calc),
     path('portfolios/get_portfolio_transactions/<str:portfolio>/', get_port_transactions),
 ]

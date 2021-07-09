@@ -17,6 +17,7 @@ from mysite.my_functions.general_functions import *
 from portfolio.portfolio_functions import *
 import json
 from portfolio.processes.port_pos import *
+from portfolio.processes.cash_holding import *
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
@@ -89,6 +90,7 @@ def get_port_transactions(request, portfolio):
 
         return JsonResponse(row, safe=False)
 
+
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
 def portfolio_trade(request):
@@ -160,7 +162,10 @@ def portfolio_trade(request):
                            msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
         print('Portfolio positions calculation')
-        portfolio_cositions(portfolio=portfolio, calc_date=get_today())
+        portfolio_positions(portfolio=portfolio, calc_date=get_today())
+
+        print('Portfolio cash holdings calculation')
+        cash_holding(portfolio=portfolio, calc_date=get_today())
 
         response = 'Portfolio trade was executed successfully!'
 
@@ -191,12 +196,43 @@ def pos_calc(request):
 
             while start_date <= end_date:
                 print("    DATE:", start_date)
-                portfolio_cositions(portfolio=port, calc_date=start_date)
+                portfolio_positions(portfolio=port, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
 
         response = "Calc ended"
 
         return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def cash_calc(request):
+    print("")
+    print("Incoming request to calculate cash holdings")
+    body_data = json.loads(request.body.decode('utf-8'))
+    date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
+    portfolio = body_data['portfolio']
+
+    print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
+
+    if portfolio == "ALL":
+        portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
+    else:
+        portfolio_list = [portfolio]
+
+    for port in portfolio_list:
+        print(">>> PORTFOLIO:", port)
+
+        start_date = date
+
+        while start_date <= end_date:
+            print("    DATE:", start_date)
+            cash_holding(portfolio=portfolio, calc_date=start_date)
+            start_date = start_date + timedelta(days=1)
+
+    response = "Calc ended"
+
+    return JsonResponse(response, safe=False)
 
 
 @csrf_exempt
