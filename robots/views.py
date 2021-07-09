@@ -230,7 +230,7 @@ def robot_balance_calc(request):
                 balance_calc(robot=active_robot, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
 
-    response = "Process is over!"
+    response = "Completed"
 
     print("Sending message to front end")
 

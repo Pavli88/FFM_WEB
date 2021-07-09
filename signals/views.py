@@ -128,8 +128,8 @@ def incoming_trade(request):
             return HttpResponse(None)
 
         # BALANCE INFORMATION ******************************************************************************************
-        balance_params = Balance.objects.filter(robot_name=robot, date=get_today()).values()[0]
-
+        balance_params = Balance.objects.filter(robot_name=robot, date=get_today()).values()
+        print(balance_params)
         # Check if balance is calculated for a robot
         if not balance_params:
             print(" " + robot + ": Not calculated balance" + " on " + str(get_today()) + ". Execution stopped")
@@ -141,9 +141,9 @@ def incoming_trade(request):
             return HttpResponse(None)
 
         # Balance main variable
-        balance = balance_params["close_balance"]
-        daily_return = balance_params["ret"]
-
+        balance = balance_params[0]["close_balance"]
+        daily_return = balance_params[0]["ret"]
+        print(balance)
         # Zero balance check
         if balance == 0.0:
             print(" " + robot + ": Zero balance" + " on " + str(get_today()) + ". Execution stopped")
