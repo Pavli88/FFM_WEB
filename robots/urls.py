@@ -9,4 +9,5 @@ urlpatterns = [
     path('robots/new_robot/', views.new_robot),
     path('robots/calculate_robot_balance/', views.robot_balance_calc),
     path('robots/get_robot_balance/<str:env>/', views.get_robot_balances),
+    path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
 ]
