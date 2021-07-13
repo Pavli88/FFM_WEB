@@ -17,7 +17,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
-
+from mysite.processes.return_calculation import *
 
 def load_robot_stats(request, env):
     print("*** Robot Cumulative Performance Calculation ***")
