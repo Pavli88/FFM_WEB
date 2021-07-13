@@ -4,6 +4,7 @@ from signals.views import *
 
 urlpatterns = [
     path('robots/get_robots/<str:env>/', views.get_robots),
+    path('robots/get_robot/<str:robot>/', views.get_robot),
     path('robots/amend_robot/', views.amend_robot),
     path('robots/delete_robot/', views.delete_robot),
     path('robots/new_robot/', views.new_robot),
@@ -12,5 +13,6 @@ urlpatterns = [
     path('robots/get_balance/', views.get_robot_balance),
     path('robots/drawdown/<str:robot>/', views.robot_drawdown),
     path('robots/cumulative_ret/<str:robot>/', views.cumulative_return),
+    path('robots/trades/<str:robot>/', views.get_trades),
     path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
 ]

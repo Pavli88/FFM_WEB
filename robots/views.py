@@ -332,5 +332,23 @@ def cumulative_return(request, robot):
         return JsonResponse(list(cum_rets), safe=False)
 
 
+def get_trades(request, robot):
+    if request.method == "GET":
+
+        if robot == 'all':
+            trades = RobotTrades.objects.filter().values()
+        else:
+            trades = RobotTrades.objects.filter(robot=robot).values()
+
+        return JsonResponse(list(trades), safe=False)
+
+
+def get_robot(request, robot):
+    if request.method == "GET":
+        print(robot)
+        robot = Robots.objects.filter(name=robot).values()
+        print(robot)
+        return JsonResponse(list(robot), safe=False)
+
 
 
