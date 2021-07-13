@@ -14,6 +14,8 @@ import json
 
 # Process imports
 from robots.processes.robot_balance_calc import *
+from mysite.processes.risk_calculations import *
+from mysite.processes.return_calculation import *
 
 # Date imports
 import datetime
@@ -273,6 +275,23 @@ def get_robot_balances(request, env):
     return JsonResponse(response, safe=False)
 
 
+def get_robot_balance(request):
+    print("single robot balance")
+
+    if request.method == "GET":
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
+
+        print("ROBOT:", robot)
+        print("START DATE:", start_date)
+        print("END DATE:", end_date)
+
+        balance = Balance.objects.filter(robot_name=robot).values()
+
+        return JsonResponse(list(balance), safe=False)
+
+
 def get_robot_cf(request, robot):
     if request.method == "GET":
 
@@ -283,6 +302,34 @@ def get_robot_cf(request, robot):
 
         return JsonResponse(list(robot_cash_flow), safe=False)
 
+
+def robot_drawdown(request, robot):
+
+    print("Drawdown calculation")
+
+    if request.method == "GET":
+
+        if robot == 'all':
+            balance = Balance.objects.filter().values()
+        else:
+            balance = Balance.objects.filter(robot_name=robot).values_list('ret', flat=True)
+
+        drawdown = drawdown_calc(list(balance))
+
+        return JsonResponse(list(drawdown), safe=False)
+
+
+def cumulative_return(request, robot):
+    if request.method == "GET":
+
+        if robot == 'all':
+            balance = Balance.objects.filter().values()
+        else:
+            balance = Balance.objects.filter(robot_name=robot).values_list('ret', flat=True)
+
+        cum_rets = cumulative_return_calc(list(balance))
+
+        return JsonResponse(list(cum_rets), safe=False)
 
 
 
