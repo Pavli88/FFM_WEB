@@ -54,7 +54,7 @@ def create_portfolio(request):
 
 
 # READ
-def get_portfolio_data(request):
+def get_portfolio_data(request, portfolio):
 
     """
     Function to load portfolio information to front end
@@ -66,7 +66,10 @@ def get_portfolio_data(request):
 
     if request.method == "GET":
 
-        portfolio_data = Portfolio.objects.filter().values()
+        if portfolio == 'all':
+            portfolio_data = Portfolio.objects.filter().values()
+        else:
+            portfolio_data = Portfolio.objects.filter(portfolio_code=portfolio).values()
 
         print("Sending response to front end")
 
@@ -89,6 +92,31 @@ def get_port_transactions(request, portfolio):
         print(portfolio)
 
         return JsonResponse(row, safe=False)
+
+
+def get_cash_flow(request):
+
+    if request.method == "GET":
+
+        portfolio = request.GET.get('portfolio')
+        start_date= request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        cash_flow_data = CashFlow.objects.filter(portfolio_code=portfolio).values()
+
+        response = {'amount': [record['amount'] for record in cash_flow_data],
+                    'type': [record['type'] for record in cash_flow_data]}
+
+
+        return JsonResponse(response, safe=False)
+
+
+def get_cash_holdings(request):
+    portfolio = request.GET.get('portfolio')
+    date = request.GET.get('date')
+    cash_holding_data = CashHolding.objects.filter(portfolio_code=portfolio).values()
+
+    return JsonResponse(list(cash_holding_data), safe=False)
 
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
@@ -176,7 +204,7 @@ def portfolio_trade(request):
 def pos_calc(request):
     if request.method == "POST":
         print("")
-        print("Incoming request to calculate portfolio positions")
+        print("PORTFOLIO POSITIONS CALCULATION")
         body_data = json.loads(request.body.decode('utf-8'))
         date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
@@ -192,11 +220,17 @@ def pos_calc(request):
         for port in portfolio_list:
             print(">>> PORTFOLIO:", port)
 
+            port_data = Portfolio.objects.filter(portfolio_code=port).values()
+            inception_date = port_data[0]['inception_date']
             start_date = date
 
             while start_date <= end_date:
-                print("    DATE:", start_date)
-                portfolio_positions(portfolio=port, calc_date=start_date)
+                if inception_date > start_date:
+                    print("    DATE:", start_date,
+                          ' - Calculation date is less than inception date. Calculation is not possible.')
+                else:
+                    print("    DATE:", start_date)
+                    portfolio_positions(portfolio=port, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
 
         response = "Calc ended"
@@ -207,7 +241,7 @@ def pos_calc(request):
 @csrf_exempt
 def cash_calc(request):
     print("")
-    print("Incoming request to calculate cash holdings")
+    print("CASH HOLDING CALCULATION")
     body_data = json.loads(request.body.decode('utf-8'))
     date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
     end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
@@ -223,11 +257,16 @@ def cash_calc(request):
     for port in portfolio_list:
         print(">>> PORTFOLIO:", port)
 
+        port_data = Portfolio.objects.filter(portfolio_code=port).values()
+        inception_date = port_data[0]['inception_date']
         start_date = date
 
         while start_date <= end_date:
-            print("    DATE:", start_date)
-            cash_holding(portfolio=portfolio, calc_date=start_date)
+            if inception_date > start_date:
+                print("    DATE:", start_date, ' - Calculation date is less than inception date. Calculation is not possible.')
+            else:
+                print("    DATE:", start_date)
+                cash_holding(portfolio=port, calc_date=start_date)
             start_date = start_date + timedelta(days=1)
 
     response = "Calc ended"
