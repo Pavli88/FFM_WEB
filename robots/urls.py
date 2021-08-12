@@ -11,8 +11,8 @@ urlpatterns = [
     path('robots/calculate_robot_balance/', views.robot_balance_calc),
     path('robots/get_robot_balance/<str:env>/', views.get_robot_balances),
     path('robots/get_balance/', views.get_robot_balance),
-    path('robots/drawdown/<str:robot>/', views.robot_drawdown),
-    path('robots/cumulative_ret/<str:robot>/', views.cumulative_return),
-    path('robots/trades/<str:robot>/', views.get_trades),
+    path('robots/drawdown/', views.robot_drawdown),
+    path('robots/cumulative_ret/', views.cumulative_return),
+    path('robots/trades/', views.get_trades),
     path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
 ]

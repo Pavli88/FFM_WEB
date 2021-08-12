@@ -303,42 +303,54 @@ def get_robot_cf(request, robot):
         return JsonResponse(list(robot_cash_flow), safe=False)
 
 
-def robot_drawdown(request, robot):
+def robot_drawdown(request):
 
     print("Drawdown calculation")
 
     if request.method == "GET":
 
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
+
         if robot == 'all':
             balance = Balance.objects.filter().values()
         else:
-            balance = Balance.objects.filter(robot_name=robot).values_list('ret', flat=True)
+            balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
 
         drawdown = drawdown_calc(list(balance))
 
         return JsonResponse(list(drawdown), safe=False)
 
 
-def cumulative_return(request, robot):
+def cumulative_return(request):
     if request.method == "GET":
+
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
 
         if robot == 'all':
             balance = Balance.objects.filter().values()
         else:
-            balance = Balance.objects.filter(robot_name=robot).values_list('ret', flat=True)
+            balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
 
         cum_rets = cumulative_return_calc(list(balance))
 
         return JsonResponse(list(cum_rets), safe=False)
 
 
-def get_trades(request, robot):
+def get_trades(request):
     if request.method == "GET":
+
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
 
         if robot == 'all':
             trades = RobotTrades.objects.filter().values()
         else:
-            trades = RobotTrades.objects.filter(robot=robot).values()
+            trades = RobotTrades.objects.filter(robot=robot).filter(close_time__gte=start_date).filter(close_time__lte=end_date).values()
 
         return JsonResponse(list(trades), safe=False)
 
