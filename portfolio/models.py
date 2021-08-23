@@ -62,3 +62,16 @@ class PortGroup(models.Model):
     parent_id = models.IntegerField()
     children_id = models.IntegerField()
     connection_id = models.CharField(max_length=30, default="", unique=True)
+
+
+class PortfolioHoldings(models.Model):
+    portfolio_code = models.CharField(max_length=30, unique=True)
+    portfolio_name = models.CharField(max_length=30, default="")
+    date = models.DateField()
+    security = models.IntegerField(default=0)
+    quantity = models.FloatField(default=0.0)
+    price = models.FloatField(default=0.0)
+    opening_mv = models.FloatField(default=0.0)
+    closing_mv = models.FloatField(default=0.0)
+    weight = models.FloatField(default=0.0)
+

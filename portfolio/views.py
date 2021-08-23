@@ -18,6 +18,7 @@ from portfolio.portfolio_functions import *
 import json
 from portfolio.processes.port_pos import *
 from portfolio.processes.cash_holding import *
+from portfolio.processes.port_holdings import *
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
@@ -272,6 +273,44 @@ def cash_calc(request):
     response = "Calc ended"
 
     return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def holdings_calc(request):
+    if request.method == "POST":
+        print("")
+        print("PORTFOLIO HOLDINGS CALCULATION")
+        body_data = json.loads(request.body.decode('utf-8'))
+        date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
+        portfolio = body_data['portfolio']
+
+        print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
+
+        if portfolio == "ALL":
+            portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
+        else:
+            portfolio_list = [portfolio]
+
+        for port in portfolio_list:
+            print(">>> PORTFOLIO:", port)
+
+            port_data = Portfolio.objects.filter(portfolio_code=port).values()
+            inception_date = port_data[0]['inception_date']
+            start_date = date
+
+            while start_date <= end_date:
+                if inception_date > start_date:
+                    print("    DATE:", start_date,
+                          ' - Calculation date is less than inception date. Calculation is not possible.')
+                else:
+                    print("    DATE:", start_date)
+                portfolio_holdings_calc(portfolio=port, calc_date=start_date)
+                start_date = start_date + timedelta(days=1)
+
+        response = "Calc ended"
+
+        return JsonResponse(response, safe=False)
 
 
 @csrf_exempt

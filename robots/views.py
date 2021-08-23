@@ -16,6 +16,7 @@ import json
 from robots.processes.robot_balance_calc import *
 from mysite.processes.risk_calculations import *
 from mysite.processes.return_calculation import *
+from robots.processes.robot_pricing import *
 
 # Date imports
 import datetime
@@ -338,6 +339,52 @@ def cumulative_return(request):
         cum_rets = cumulative_return_calc(list(balance))
 
         return JsonResponse(list(cum_rets), safe=False)
+
+
+@csrf_exempt
+def robot_pricing(request):
+    """
+        This function calculates robot balance based on front end request.
+        :param request:
+        :return:
+        """
+
+    print("=========================")
+    print("ROBOT PRICING CALCULATION")
+    print("=========================")
+
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        robot = request_data["robot"]
+        date = datetime.datetime.strptime(request_data["start_date"], '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
+
+        print("ROBOT:", robot)
+        print("START DATE:", date)
+        print("END DATE:", end_date)
+
+        if robot == "ALL":
+            robot_list = Robots.objects.filter().values_list('name', flat=True)
+        else:
+            robot_list = [robot]
+
+        print("ROBOTS:", robot_list)
+
+        for active_robot in robot_list:
+            print(">>> ROBOT:", active_robot)
+
+            start_date = date
+
+            while start_date <= end_date:
+                print("    DATE:", start_date)
+                pricing(robot=active_robot, calc_date=start_date)
+                start_date = start_date + timedelta(days=1)
+
+    response = "Completed"
+
+    print("Sending message to front end")
+
+    return JsonResponse(response, safe=False)
 
 
 def get_trades(request):
