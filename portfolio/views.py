@@ -131,7 +131,7 @@ def portfolio_trade(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
         quantity = body_data["unit"]
-        price = 1.0 #body_data["price"]
+        price = body_data["price"]
         portfolio = body_data["portfolio"]
         security = body_data["sec"]
         security_type = body_data["sec_type"]

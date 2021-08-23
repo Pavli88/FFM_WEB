@@ -82,6 +82,15 @@ def new_robot(request):
                         instrument_type="Robot",
                         source="ffm_system").save()
 
+            print("Saving new robot to instruments table")
+
+            robot_instrument = Instruments.objects.filter(instrument_name=robot_name).values()
+            Prices(inst_code=robot_instrument[0]['id'],
+                   price=1.0,
+                   source='ffm_system').save()
+
+            print("Creating initial pricing to 1")
+
             print("Creating new record in robot risk table")
 
             RobotRisk(robot=robot_name).save()
