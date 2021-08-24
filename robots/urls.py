@@ -14,6 +14,8 @@ urlpatterns = [
     path('robots/drawdown/', views.robot_drawdown),
     path('robots/cumulative_ret/', views.cumulative_return),
     path('robots/pricing/', views.robot_pricing),
+    path('robots/get_prices/', views.get_prices),
+    path('robots/get_last_price/', views.get_last_price),
     path('robots/trades/', views.get_trades),
     path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
 ]

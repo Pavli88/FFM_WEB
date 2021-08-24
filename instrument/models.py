@@ -13,4 +13,4 @@ class Prices(models.Model):
     inst_code = models.CharField(max_length=30, default="")
     price = models.FloatField(default=0.0)
     source = models.CharField(max_length=30, default="")
-    date = models.DateField(auto_now=True)
+    date = models.DateField()

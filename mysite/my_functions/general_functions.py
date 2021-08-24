@@ -4,7 +4,6 @@ from datetime import date
 from datetime import timedelta
 import datetime
 
-
 def get_today():
     return date.today()
 

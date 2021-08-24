@@ -84,13 +84,6 @@ def new_robot(request):
 
             print("Saving new robot to instruments table")
 
-            robot_instrument = Instruments.objects.filter(instrument_name=robot_name).values()
-            Prices(inst_code=robot_instrument[0]['id'],
-                   price=1.0,
-                   source='ffm_system').save()
-
-            print("Creating initial pricing to 1")
-
             print("Creating new record in robot risk table")
 
             RobotRisk(robot=robot_name).save()
@@ -297,9 +290,34 @@ def get_robot_balance(request):
         print("START DATE:", start_date)
         print("END DATE:", end_date)
 
-        balance = Balance.objects.filter(robot_name=robot).values()
+        balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).values()
 
         return JsonResponse(list(balance), safe=False)
+
+
+def get_prices(request):
+    if request.method == "GET":
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
+
+        instrument = Instruments.objects.filter(instrument_name=robot).values()[0]
+        print(instrument)
+        prices = Prices.objects.filter(inst_code=instrument['id']).values()
+        print(prices)
+    return JsonResponse(list(prices), safe=False)
+
+
+def get_last_price(request):
+    if request.method == "GET":
+        start_date = request.GET.get("start_date")
+        end_date = request.GET.get("end_date")
+        robot = request.GET.get("robot")
+
+        instrument = Instruments.objects.filter(instrument_name=robot).values()[0]
+        prices = Prices.objects.filter(inst_code=instrument['id']).order_by('-id').values()[0]
+
+    return JsonResponse(prices, safe=False)
 
 
 def get_robot_cf(request, robot):
@@ -379,21 +397,38 @@ def robot_pricing(request):
 
         print("ROBOTS:", robot_list)
 
+        response_list = []
+
         for active_robot in robot_list:
-            print(">>> ROBOT:", active_robot)
+            instrument_id = Instruments.objects.filter(instrument_name=robot).values()[0]['id']
+            print(">>> ROBOT:", active_robot, "INSTRUMENT ID:", instrument_id)
 
             start_date = date
 
+            responses = {}
+
             while start_date <= end_date:
-                print("    DATE:", start_date)
-                pricing(robot=active_robot, calc_date=start_date)
+                # print("    DATE:", start_date)
+                pricing_response = pricing(robot=active_robot, calc_date=start_date, instrument_id=instrument_id)
+
+                if pricing_response is None:
+                    pass
+                else:
+                    responses[start_date.strftime('%Y-%m-%d')] = pricing_response
+
+                if pricing_response == "There is no calculated balance and return.":
+                    break
+
                 start_date = start_date + timedelta(days=1)
 
-    response = "Completed"
+            response_list.append({active_robot:responses})
+
+    for i in response_list:
+        print(i)
 
     print("Sending message to front end")
 
-    return JsonResponse(response, safe=False)
+    return JsonResponse(response_list, safe=False)
 
 
 def get_trades(request):
