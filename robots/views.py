@@ -192,6 +192,30 @@ def get_robots(request, env):
 
         return JsonResponse(response, safe=False)
 
+
+def get_robots_with_instrument_data(request):
+    if request.method == "GET":
+        print("ROBOT WITH INSTRUMENT")
+        env = request.GET.get("env")
+
+        print("ENV", env)
+
+        if env == "all":
+            robots = Robots.objects.filter().values()
+        else:
+            cursor = connection.cursor()
+            cursor.execute("""select rb.id, inst.id, rb.name, rb.strategy,
+                                        rb.security, rb.broker, rb.status, rb.env,
+                                        rb.account_number, rb.inception_date
+                                from robots_robots as rb,
+                                    instrument_instruments as inst
+                            where inst.instrument_name=rb.name and rb.env='{env}';""".format(env=env))
+            row = cursor.fetchall()
+
+        response = list(row)
+
+        return JsonResponse(response, safe=False)
+
 # Revieved functions ---------------------------------------------------------------------------------------------------
 
 
@@ -315,7 +339,11 @@ def get_last_price(request):
         robot = request.GET.get("robot")
 
         instrument = Instruments.objects.filter(instrument_name=robot).values()[0]
-        prices = Prices.objects.filter(inst_code=instrument['id']).order_by('-id').values()[0]
+
+        try:
+            prices = Prices.objects.filter(inst_code=instrument['id']).order_by('-id').values()[0]
+        except:
+            prices = {'price': 0.0, 'date': 'Missing price!'}
 
     return JsonResponse(prices, safe=False)
 

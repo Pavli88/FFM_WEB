@@ -4,6 +4,7 @@ from signals.views import *
 
 urlpatterns = [
     path('robots/get_robots/<str:env>/', views.get_robots),
+    path('robots/get_robots_with_instrument/', views.get_robots_with_instrument_data),
     path('robots/get_robot/<str:robot>/', views.get_robot),
     path('robots/amend_robot/', views.amend_robot),
     path('robots/delete_robot/', views.delete_robot),
