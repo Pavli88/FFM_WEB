@@ -191,20 +191,15 @@ class OandaV20:
         """
         Pricing stream on a given instrument
         :param instrument:
-        :return:
+        :return: a price stream connection instance
         """
 
         params ={"instruments": instrument}
 
         r = pricing.PricingStream(accountID=self.account_id, params=params)
         rv = self.api.request(r)
-        maxrecs = 12
 
-        for ticks in rv:
-            print(ticks)
-            # print(json.dumps(ticks, indent=4), ",")
-            if maxrecs == 0:
-                r.terminate("maxrecs records received")
+        return rv
 
     def submit_market_order(self, security, quantity, sl_price=None):
 
@@ -281,16 +276,23 @@ class OandaV20:
 
         return response['prices'][0]
 
-# if __name__ == "__main__":
-#     # .pricing_stream(instrument="XAG_USD")
-#
-#     o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
-#              account_id="001-004-2840244-004",
-#                  environment="live")
-#
-#     o.get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
-#     # f = o.close_trades(trd_id=7369)
-    # print(f)
+
+if __name__ == "__main__":
+    o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
+                 account_id="001-004-2840244-004",
+                 environment="live").pricing_stream(instrument="XAG_USD")
+
+    for ticks in o:
+        try:
+            prices = {'bid' : ticks['bids'][0]['price'],
+                      'ask' : ticks['asks'][0]['price']}
+            print(prices)
+        except:
+            pass
+
+    # o.get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
+    # f = o.close_trades(trd_id=7369)
+
 
 
 

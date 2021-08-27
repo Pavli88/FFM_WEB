@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'trade_app',
     'instrument',
     'corsheaders',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -88,6 +89,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
+ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -97,8 +99,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # it will updated ffm_system_test database
 # test
 credentials = Credentials().db_parameters
-DATABASES = credentials
 
+DATABASES = credentials
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
