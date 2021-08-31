@@ -29,28 +29,6 @@ class PriceStream(AsyncWebsocketConsumer):
         print("Streaming request received from front end")
         print("STREAMING REQUEST:", text_data)
 
-        # if text_data == "start":
-        #     print("Start of streaming")
-        #     loop = asyncio.get_event_loop()
-        #     print(loop)
-        #     task = asyncio.create_task(self.streaming(), name='streaming')
-        #     print(task)
-        #
-        # elif text_data == "stop":
-        #     running_tasks = asyncio.Task.all_tasks()
-
-    async def post(self, event):
-        print(event)
-
-    async def run_task(self, task):
-        print("Running task")
-        asyncio.run(task)
-
-    async def streaming(self):
-        # for i in range(1000):
-        #     await self.send(json.dumps({'Instance':  instance,'value': randint(-20, 20)}))
-        #     await sleep(1)
-
         self.price_stream = self.oanda_connection.pricing_stream(instrument='EUR_USD')
 
         print("PRICING STREAM:", self.price_stream)
@@ -65,4 +43,14 @@ class PriceStream(AsyncWebsocketConsumer):
                 await sleep(1)
             except:
                 pass
+
+    async def post(self, event):
+        print(event)
+
+    async def run_task(self, task):
+        print("Running task")
+        asyncio.run(task)
+
+
+
 
