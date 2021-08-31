@@ -30,6 +30,10 @@ from accounts.models import *
 from mysite.models import *
 from portfolio.models import *
 
+import socketio
+import requests
+
+from trade_app.consumers import *
 
 # CRUD -----------------------------------------------------------------------------------------------------------------
 @csrf_exempt
@@ -357,6 +361,17 @@ def get_robot_cf(request, robot):
             robot_cash_flow = RobotCashFlow.objects.filter(robot_name=robot).values()
 
         return JsonResponse(list(robot_cash_flow), safe=False)
+
+
+def test_socket(request):
+    if request.method == "GET":
+        print("TEST SOCKET CONNECTION")
+
+        sio = socketio.Server()
+        print(sio)
+        app = socketio.ASGIApp(sio)
+        print(app)
+        return JsonResponse(list({}), safe=False)
 
 
 def robot_drawdown(request):
