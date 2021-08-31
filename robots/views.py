@@ -30,9 +30,6 @@ from accounts.models import *
 from mysite.models import *
 from portfolio.models import *
 
-import socketio
-import requests
-
 from trade_app.consumers import *
 
 # CRUD -----------------------------------------------------------------------------------------------------------------
@@ -367,10 +364,10 @@ def test_socket(request):
     if request.method == "GET":
         print("TEST SOCKET CONNECTION")
 
-        sio = socketio.Server()
-        print(sio)
-        app = socketio.ASGIApp(sio)
-        print(app)
+        # sio = socketio.Server()
+        # print(sio)
+        # app = socketio.ASGIApp(sio)
+        # print(app)
         return JsonResponse(list({}), safe=False)
 
 
