@@ -18,7 +18,6 @@ from portfolio.portfolio_functions import *
 import json
 from portfolio.processes.port_pos import *
 from portfolio.processes.cash_holding import *
-from portfolio.processes.port_holdings import *
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
@@ -119,6 +118,19 @@ def get_cash_holdings(request):
 
     return JsonResponse(list(cash_holding_data), safe=False)
 
+
+def get_positions(request):
+    print("PORTFOLIO POSITIONS REQUEST")
+
+    if request.method == "GET":
+        portfolio = request.GET.get('portfolio')
+        date = request.GET.get('date')
+        positions = Positions.objects.filter(portfolio_name=portfolio).filter(date=date).values()
+        print("PORTFOLIO:", portfolio)
+        print("DATE:", date)
+        print(positions)
+
+        return JsonResponse(list({}), safe=False)
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
@@ -305,7 +317,7 @@ def holdings_calc(request):
                           ' - Calculation date is less than inception date. Calculation is not possible.')
                 else:
                     print("    DATE:", start_date)
-                portfolio_holdings_calc(portfolio=port, calc_date=start_date)
+
                 start_date = start_date + timedelta(days=1)
 
         response = "Calc ended"
