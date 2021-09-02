@@ -32,6 +32,7 @@ from portfolio.models import *
 
 from trade_app.consumers import *
 
+
 # CRUD -----------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def new_robot(request):
@@ -358,33 +359,6 @@ def get_robot_cf(request, robot):
             robot_cash_flow = RobotCashFlow.objects.filter(robot_name=robot).values()
 
         return JsonResponse(list(robot_cash_flow), safe=False)
-
-
-def test_socket(request):
-    if request.method == "GET":
-        print("TEST SOCKET CONNECTION")
-        oanda_connection = OandaV20(
-            access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
-            account_id="001-004-2840244-004",
-            environment="live")
-
-        price_stream = oanda_connection.pricing_stream(instrument='EUR_USD')
-
-        print("PRICING STREAM:", price_stream)
-
-        for ticks in price_stream:
-            try:
-                prices = {'bid': ticks['bids'][0]['price'],
-                          'ask': ticks['asks'][0]['price']}
-                print(prices)
-            except:
-                pass
-
-        # sio = socketio.Server()
-        # print(sio)
-        # app = socketio.ASGIApp(sio)
-        # print(app)
-        return JsonResponse(list({}), safe=False)
 
 
 def robot_drawdown(request):

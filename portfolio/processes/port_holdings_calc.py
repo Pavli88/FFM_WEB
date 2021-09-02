@@ -19,13 +19,11 @@ def portfolio_holdings_calc():
     portfolio = args.portfolio
     calc_date = args.date
 
+    print("----------------------------")
+    print("PORTFOLIO HOLDING CALCULATOR")
+    print("----------------------------")
     print("PORTFOLIO:", portfolio)
     print("CALC DATE:", calc_date)
-
-    process_id = os.getpid()
-
-    print("PROCESS ID:", process_id)
-
 
     # Fetching portfolios settings for calculations
 
@@ -35,7 +33,9 @@ def portfolio_holdings_calc():
     positions_request = requests.get(url="http://127.0.0.1:8000/portfolios/get_positions", params={'portfolio' : portfolio,
                                                                                                    'date' : calc_date})
     print("")
-
+    while True:
+        print("test")
+        time.sleep(1)
     # Fetching prices for positions
 
     # Saving down holdings to holdings table

@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'trade_app',
     'instrument',
     'corsheaders',
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -89,7 +88,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-ASGI_APPLICATION = 'mysite.asgi.application'
+# ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

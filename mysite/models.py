@@ -36,3 +36,10 @@ class SystemMessages(models.Model):
     msg_type = models.CharField(max_length=100, default="")
     msg = models.CharField(max_length=200, default="")
     date = models.DateField(auto_now=True)
+
+
+class ProcessInfo(models.Model):
+    name = models.CharField(max_length=100, default="")
+    is_done = models.BooleanField(blank=False,default=False )
+    run_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(auto_now=True)

@@ -1,23 +1,36 @@
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, redirect
-from mysite.models import *
+# Package imports
 import pandas as pd
+import os
+import time
 from datetime import date
 from datetime import datetime
-from robots.models import *
-from accounts.models import *
+import threading
+
 from accounts.account_functions import *
 from portfolio.models import *
 from mysite.processes.oanda import *
 from mysite.processes.calculations import *
+
+from robots.robot_functions import *
+from mysite.my_functions.general_functions import *
+from mysite.processes.return_calculation import *
+
+# Django imports
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from robots.robot_functions import *
-from mysite.my_functions.general_functions import *
-from mysite.processes.return_calculation import *
+from asgiref.sync import sync_to_async
+
+
+# Database imports
+from mysite.models import *
+from robots.models import *
+from accounts.models import *
+
 
 def load_robot_stats(request, env):
     print("*** Robot Cumulative Performance Calculation ***")
@@ -199,21 +212,6 @@ def home(request, default_load=None):
                                          "accounts": get_accounts()})
 
 
-def get_account_data(account_number="All"):
-
-    """
-    Function to get all account data
-    :return:
-    """
-
-    if account_number == "All":
-        accounts = BrokerAccounts.objects.filter().values()
-    else:
-        accounts = BrokerAccounts.objects.filter(account_number=account_number).values()
-
-    return accounts
-
-
 def system_messages(request):
     print("===================")
     print("GET SYSTEM MESSAGES")
@@ -229,7 +227,39 @@ def system_messages(request):
     return JsonResponse(response, safe=False)
 
 
+# Long Running Process Management --------------------------------------------------------------------------------------
 
+def task_executor(request):
+    print('----------------')
+    print("PROCESS EXECUTOR")
+    print('----------------')
+    task = ProcessInfo(name='test process')
+    task.save()
+    command = "/home/pavlicseka/python/ffm_web/bin/python /home/pavlicseka/ffm_web/portfolio/processes/port_holdings_calc.py --portfolio TEST --date '2021-08-25'"
+    print("COMMAND:", command)
+    t = threading.Thread(target=longTask, args=[task.id, command])
+    t.setDaemon(True)
+    t.start()
+    print("Process is kicked off with ID:", task.id)
+    return JsonResponse(list({}), safe=False)
+
+
+def stop_task(request):
+    return JsonResponse(list({}), safe=False)
+
+
+def get_running_tasks(request):
+    task = ProcessInfo.objects.filter(is_done=0).values()
+    return JsonResponse(list(task), safe=False)
+
+def longTask(id, command):
+    print("Received task", id)
+    print("Executing task")
+    os.system(command)
+    task = ProcessInfo.objects.get(pk=id)
+    task.is_done = True
+    task.save()
+    print("Finishing task", id)
 
 
 
