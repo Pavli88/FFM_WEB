@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'trade_app',
     'instrument',
     'corsheaders',
+    'django_q',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -67,6 +68,20 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://pavliati.pythonanywhere.com'
 ]
+
+Q_CLUSTER = {
+    'name': 'ffm_web',
+    'workers': 8,
+    'recycle': 500,
+    'timeout': 60,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'orm': 'default'
+}
+
 
 ROOT_URLCONF = 'mysite.urls'
 

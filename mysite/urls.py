@@ -23,7 +23,9 @@ urlpatterns = [
     path('home/get_robot_risk/', get_robot_risk),
     path('home/update/risk_per_trade/', update_risk_per_trade),
     path('home/system_messages/', system_messages),
-    path('new_process/', views.task_executor),
-    path('get_running_tasks/', views.get_running_tasks),
-    path('stop_tasks/', views.stop_task),
+    path('new_task/', views.new_task),
+    path('get_task/', views.get_task),
+    path('stop_task/', views.stop_task),
+    path('new_streaming_task/', views.new_streaming_task),
+    path('kill_streaming_task/', views.kill_streaming_task),
 ]

@@ -4,7 +4,9 @@ import os
 import time
 from datetime import date
 from datetime import datetime
-import threading
+import datetime
+from multiprocessing import Process
+import subprocess
 
 from accounts.account_functions import *
 from portfolio.models import *
@@ -23,8 +25,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from asgiref.sync import sync_to_async
-
+from django_q.tasks import async_task, result, fetch, delete_cached
+from django_q import cluster
 
 # Database imports
 from mysite.models import *
@@ -229,37 +231,87 @@ def system_messages(request):
 
 # Long Running Process Management --------------------------------------------------------------------------------------
 
-def task_executor(request):
-    print('----------------')
-    print("PROCESS EXECUTOR")
-    print('----------------')
-    task = ProcessInfo(name='test process')
-    task.save()
-    command = "/home/pavlicseka/python/ffm_web/bin/python /home/pavlicseka/ffm_web/portfolio/processes/port_holdings_calc.py --portfolio TEST --date '2021-08-25'"
-    print("COMMAND:", command)
-    t = threading.Thread(target=longTask, args=[task.id, command])
-    t.setDaemon(True)
-    t.start()
-    print("Process is kicked off with ID:", task.id)
+def new_task(request):
+    print('--------------')
+    print("NEW ASYNC TASK")
+    print('--------------')
+
+    task_id = async_task(longTask, 1, hook='mysite.views.task_hook', task_name='running task')
+    print(task_id)
+    print(result(task_id, 200))
+
+    return JsonResponse(list({}), safe=False)
+
+
+def new_streaming_task(request):
+    print('------------------')
+    print("NEW STREAMING TASK")
+    print('------------------')
+    print("Requesting new streaming process")
+    p = Process(target=streaming_task, args=(1, 'My command'))
+    p.start()
+    ProcessInfo(name="My streaming",
+                type="streaming",
+                pid=p.pid).save()
+    print("PROCESS KICKED OFF. PID:", p.pid)
+
     return JsonResponse(list({}), safe=False)
 
 
 def stop_task(request):
+    print(cluster.Cluster().stop())
     return JsonResponse(list({}), safe=False)
 
 
-def get_running_tasks(request):
-    task = ProcessInfo.objects.filter(is_done=0).values()
-    return JsonResponse(list(task), safe=False)
+def get_task(request):
+    print('FETCH TASK FROM TASK QUEUE')
+    task = delete_cached(task_id='2103541c98a54273bbfdc6bac34da39a')
+    print(task)
+    return JsonResponse(list({}), safe=False)
+
+
+@csrf_exempt
+def kill_streaming_task(request):
+    print("----------------------")
+    print("KILLING STREAMING TASK")
+    print("----------------------")
+    if request.method == "POST":
+        pid = request.POST["pid"]
+        print("PID to kill:", pid)
+        p = Process(target=kill_command, args=(pid,))
+        p.start()
+        print("Updating database")
+        process = ProcessInfo.objects.get(pid=pid, is_done=0)
+        process.is_done = 1
+        process.end_date = datetime.datetime.now()
+        process.save()
+        return JsonResponse(list({}), safe=False)
+
 
 def longTask(id, command):
     print("Received task", id)
+    print('Command:', command)
     print("Executing task")
-    os.system(command)
-    task = ProcessInfo.objects.get(pk=id)
-    task.is_done = True
-    task.save()
-    print("Finishing task", id)
+    print("PID",os.getpid())
+
+
+def streaming_task(id, command):
+    print("Received task", id)
+    print('Command:', command)
+    print("Executing task")
+    print("PID", os.getpid())
+    while True:
+        time.sleep(2)
+        print(datetime.datetime.now(), os.getpid())
+
+
+def kill_command(pid):
+    subprocess.run('/bin/kill -9 {pid}'.format(pid=pid), shell=True)
+    print("Process is killed")
+
+
+
+
 
 
 

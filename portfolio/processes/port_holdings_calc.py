@@ -34,7 +34,6 @@ def portfolio_holdings_calc():
                                                                                                    'date' : calc_date})
     print("")
     while True:
-        print("test")
         time.sleep(1)
     # Fetching prices for positions
 

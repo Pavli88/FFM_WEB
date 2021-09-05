@@ -40,6 +40,8 @@ class SystemMessages(models.Model):
 
 class ProcessInfo(models.Model):
     name = models.CharField(max_length=100, default="")
+    type = models.CharField(max_length=100, default="")
+    pid = models.IntegerField(default=0)
     is_done = models.BooleanField(blank=False,default=False )
     run_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(auto_now=True)
