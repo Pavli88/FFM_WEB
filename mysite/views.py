@@ -7,6 +7,7 @@ from datetime import datetime
 import datetime
 from multiprocessing import Process
 import subprocess
+import json
 
 from accounts.account_functions import *
 from portfolio.models import *
@@ -16,6 +17,8 @@ from mysite.processes.calculations import *
 from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.return_calculation import *
+from portfolio.processes.processes import *
+from robots.processes.processes import *
 
 # Django imports
 from django.http import HttpResponse
@@ -25,8 +28,6 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django_q.tasks import async_task, result, fetch, delete_cached
-from django_q import cluster
 
 # Database imports
 from mysite.models import *
@@ -231,50 +232,48 @@ def system_messages(request):
 
 # Long Running Process Management --------------------------------------------------------------------------------------
 
+@csrf_exempt
 def new_task(request):
-    print('--------------')
-    print("NEW ASYNC TASK")
-    print('--------------')
+    print('--------')
+    print("NEW TASK")
+    print('--------')
+    if request.method == "POST":
+        # request_data = json.loads(request.body.decode('utf-8'))
+        process = "run_robot"
+        arguments = ['EUR_USD_TRD1']
 
-    task_id = async_task(longTask, 1, hook='mysite.views.task_hook', task_name='running task')
-    print(task_id)
-    print(result(task_id, 200))
+        print("Task:", process)
+        print("Arguments:", arguments)
 
-    return JsonResponse(list({}), safe=False)
+        if process == "portfolio_holding_calc":
+            task = portfolio_holding_calc
+            process_name = "PHC_" + '_'.join(arguments) + ":" + datetime.datetime.now().strftime("%m/%d/%Y/%H:%M")
+            process_info = "portfolio holding calculation"
 
+        if process == "run_robot":
+            task = run_robot
+            process_name = "RR_" + '_'.join(arguments) + ":" + datetime.datetime.now().strftime("%m/%d/%Y/%H:%M")
+            process_info = "running robot"
 
-def new_streaming_task(request):
-    print('------------------')
-    print("NEW STREAMING TASK")
-    print('------------------')
-    print("Requesting new streaming process")
-    p = Process(target=streaming_task, args=(1, 'My command'))
-    p.start()
-    ProcessInfo(name="My streaming",
-                type="streaming",
-                pid=p.pid).save()
-    print("PROCESS KICKED OFF. PID:", p.pid)
+        print("Creating new task object")
+        p = Process(target=task, args=tuple(arguments))
+        print("Starting task")
+        print(p.pid)
+        p.start()
+        print("Saving new task information to database")
+        ProcessInfo(name=process_name,
+                    type=process_info,
+                    pid=p.pid).save()
+        print("Process kicked off at PID:", p.pid)
 
-    return JsonResponse(list({}), safe=False)
-
-
-def stop_task(request):
-    print(cluster.Cluster().stop())
-    return JsonResponse(list({}), safe=False)
-
-
-def get_task(request):
-    print('FETCH TASK FROM TASK QUEUE')
-    task = delete_cached(task_id='2103541c98a54273bbfdc6bac34da39a')
-    print(task)
-    return JsonResponse(list({}), safe=False)
+        return JsonResponse(list({}), safe=False)
 
 
 @csrf_exempt
-def kill_streaming_task(request):
-    print("----------------------")
-    print("KILLING STREAMING TASK")
-    print("----------------------")
+def kill_task(request):
+    print("--------------------")
+    print("KILLING RUNNING TASK")
+    print("--------------------")
     if request.method == "POST":
         pid = request.POST["pid"]
         print("PID to kill:", pid)
@@ -284,30 +283,18 @@ def kill_streaming_task(request):
         process = ProcessInfo.objects.get(pid=pid, is_done=0)
         process.is_done = 1
         process.end_date = datetime.datetime.now()
+        process.msg = "Manual Task Kill"
         process.save()
         return JsonResponse(list({}), safe=False)
-
-
-def longTask(id, command):
-    print("Received task", id)
-    print('Command:', command)
-    print("Executing task")
-    print("PID",os.getpid())
-
-
-def streaming_task(id, command):
-    print("Received task", id)
-    print('Command:', command)
-    print("Executing task")
-    print("PID", os.getpid())
-    while True:
-        time.sleep(2)
-        print(datetime.datetime.now(), os.getpid())
 
 
 def kill_command(pid):
     subprocess.run('/bin/kill -9 {pid}'.format(pid=pid), shell=True)
     print("Process is killed")
+
+
+
+
 
 
 

@@ -2,20 +2,50 @@ from portfolio.models import *
 import pandas as pd
 import datetime
 from datetime import timedelta
+import time
+import os
 import numpy as np
+
+# Django imports
 from django.http import JsonResponse
+from mysite.models import *
 
 
-
-
-
-def port_holding(portfolio, calc_date):
+def portfolio_holding_calc(portfolio, calc_date):
     print("=============================")
     print("PORTFOLIO HOLDING CALCULATION")
     print("=============================")
     print("PORTFOLIO:", portfolio)
     print("CALCULATION DATE:", calc_date)
+    pid = os.getpid()
+    print("PROCESS ID:", pid)
     print("")
+
+    # Fetching portfolios settings for calculations
+
+    # Fetching positions
+    print("Fetching positions data from database")
+    print("Sending request to server")
+
+    print("")
+    x = 0
+    while x < 5:
+        time.sleep(1)
+        print(datetime.datetime.now(), "Positions", x)
+        x=x+1
+    # Fetching prices for positions
+
+    # Saving down holdings to holdings table
+
+    # Updating process info table
+    print("Updating process info table")
+    process = ProcessInfo.objects.get(pid=pid, is_done=0)
+    process.is_done = 1
+    process.end_date = datetime.datetime.now()
+    process.msg = "Succesfull Execution"
+    process.save()
+
+    return ""
 
 
 def nav_calc(portfolio, calc_date):
