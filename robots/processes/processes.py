@@ -27,7 +27,7 @@ def run_robot(robot):
                         format='%(asctime)s %(message)s',
                         filemode='w')
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # Fetching robot info from database
     cursor = connection.cursor()
@@ -41,6 +41,7 @@ def run_robot(robot):
     row = cursor.fetchall()[0]
 
     logger.info("NEW ROBOT EXUECUTION PROCESS")
+    logger.info("BASE DIR: " + str(base_dir))
     logger.info("PID: " + str(pid))
     logger.info("Creating oanda instance")
     logger.info("ACCESS TOKEN: " + str(row[8]))
