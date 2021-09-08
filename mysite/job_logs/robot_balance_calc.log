@@ -10,3 +10,4 @@ Calculating balances
 2021-01-19 00:10:02.213956 TEST - Updated Record - Date 2021-01-19 - T-1 Date 2021-01-18 - Realized Pnl 0.0 - Cash Flow 0.0 - Opening Balance 3460.0 - Closing Balance: 3460.0 - Return 0.0
 2021-01-19 00:10:02.258532 DEMO - New Record - Date 2021-01-19 - T-1 Date 2021-01-18 - Realized Pnl 0.0 - Cash Flow 0.0 - Opening Balance 2000.0 - Closing Balance: 2000.0 - Return 0.0
 2021-07-08
+BASE DIR /home/pavlicseka/ffm_web

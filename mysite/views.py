@@ -28,6 +28,10 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from django_q.tasks import async_task, result
+from django_q.tasks import AsyncTask
+from django_q.cluster import *
+from django_q.monitor import Stat
 
 # Database imports
 from mysite.models import *
@@ -231,66 +235,15 @@ def system_messages(request):
 
 
 # Long Running Process Management --------------------------------------------------------------------------------------
-
 @csrf_exempt
 def new_task(request):
-    print('--------')
-    print("NEW TASK")
-    print('--------')
-    if request.method == "POST":
-        # request_data = json.loads(request.body.decode('utf-8'))
-        process = "run_robot"
-        arguments = ['EUR_USD_TRD1']
+    print("NEW TASK EXECUTION")
+    task = AsyncTask("robots.processes.processes.run_robot", task_name="test task 6")
+    task.args = ('WTI_USD_TRD1', )
+    task.run()
 
-        print("Task:", process)
-        print("Arguments:", arguments)
+    return JsonResponse(list({}), safe=False)
 
-        if process == "portfolio_holding_calc":
-            task = portfolio_holding_calc
-            process_name = "PHC_" + '_'.join(arguments) + ":" + datetime.datetime.now().strftime("%m/%d/%Y/%H:%M")
-            process_info = "portfolio holding calculation"
-
-        if process == "run_robot":
-            task = run_robot
-            process_name = "RR_" + '_'.join(arguments) + ":" + datetime.datetime.now().strftime("%m/%d/%Y/%H:%M")
-            process_info = "running robot"
-
-        print("Creating new task object")
-        p = Process(target=task, args=tuple(arguments))
-        print("Starting task")
-        print(p.pid)
-        p.start()
-        print("Saving new task information to database")
-        ProcessInfo(name=process_name,
-                    type=process_info,
-                    pid=p.pid).save()
-        print("Process kicked off at PID:", p.pid)
-
-        return JsonResponse(list({}), safe=False)
-
-
-@csrf_exempt
-def kill_task(request):
-    print("--------------------")
-    print("KILLING RUNNING TASK")
-    print("--------------------")
-    if request.method == "POST":
-        pid = request.POST["pid"]
-        print("PID to kill:", pid)
-        p = Process(target=kill_command, args=(pid,))
-        p.start()
-        print("Updating database")
-        process = ProcessInfo.objects.get(pid=pid, is_done=0)
-        process.is_done = 1
-        process.end_date = datetime.datetime.now()
-        process.msg = "Manual Task Kill"
-        process.save()
-        return JsonResponse(list({}), safe=False)
-
-
-def kill_command(pid):
-    subprocess.run('/bin/kill -9 {pid}'.format(pid=pid), shell=True)
-    print("Process is killed")
 
 
 

@@ -15,7 +15,7 @@ from mysite.credentials import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+print("BASE DIR", BASE_DIR)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -70,17 +70,18 @@ CORS_ALLOWED_ORIGINS = [
 
 Q_CLUSTER = {
     'name': 'ffm_web',
-    'workers': 8,
+    'workers': 20,
     'recycle': 500,
-    'timeout': 60,
+    'timeout': None,
     'compress': True,
     'save_limit': 250,
     'queue_limit': 500,
     'cpu_affinity': 1,
     'label': 'Django Q',
-    'orm': 'default'
+    'max_attempts' : 0,
+    'orm': 'default',
+    'retry:': 5,
 }
-
 
 ROOT_URLCONF = 'mysite.urls'
 
@@ -161,9 +162,5 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = '/home/pavliati/mysite/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/home/pavliati/mysite/static'
-
 LOGIN_URL = "/home/"
 
-CRONJOBS = [
-    ('15 00 * * *', 'mysite.jobs.robot_balance_calculation', '>> ' + BASE_DIR + '/mysite/job_logs/robot_balance_calc.log')
-]

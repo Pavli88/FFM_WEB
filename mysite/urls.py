@@ -24,5 +24,4 @@ urlpatterns = [
     path('home/update/risk_per_trade/', update_risk_per_trade),
     path('home/system_messages/', system_messages),
     path('new_task/', views.new_task),
-    path('kill_task/', views.kill_task),
 ]
