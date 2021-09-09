@@ -80,7 +80,7 @@ Q_CLUSTER = {
     'label': 'Django Q',
     'max_attempts' : 0,
     'orm': 'default',
-    'retry:': 5,
+    'retry' : 3000,
 }
 
 ROOT_URLCONF = 'mysite.urls'
@@ -115,6 +115,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 credentials = Credentials().db_parameters
 
 DATABASES = credentials
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators

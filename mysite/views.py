@@ -28,10 +28,11 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django_q.tasks import async_task, result
-from django_q.tasks import AsyncTask
+from django_q.tasks import async_task, result, fetch
+from django_q.tasks import AsyncTask, Task
 from django_q.cluster import *
 from django_q.monitor import Stat
+from django_q.brokers.orm import ORM
 
 # Database imports
 from mysite.models import *
@@ -237,15 +238,58 @@ def system_messages(request):
 # Long Running Process Management --------------------------------------------------------------------------------------
 @csrf_exempt
 def new_task(request):
-    print("NEW TASK EXECUTION")
-    task = AsyncTask("robots.processes.processes.run_robot", task_name="test task 6")
-    task.args = ('WTI_USD_TRD1', )
-    task.run()
+    print("NEW TASK EXECUTION TO BROKER QUEUE")
+    if request.method == "POST":
+        process = request.POST["process"]
+        task_name = request.POST["task_name"]
+        arguments = [request.POST["argument1"]]
+
+        print("PROCESS:", process)
+        print("TASK NAME:", task_name)
+        print("ARGUMENTS:", arguments)
+
+        # Executing task at message broker queue
+        task = AsyncTask(process, task_name=task_name, hook='mysite.views.hook', timeout=2000)
+        task.args = tuple(arguments)
+        task.run()
+        print("TASK ID:", task.id)
 
     return JsonResponse(list({}), safe=False)
 
 
+def test(request):
+    a = run_robot("EUR_USD_TRD1")
+    print(a)
+    return JsonResponse(list({}), safe=False)
 
+def hook(task):
+    print("HOOK")
+    print(task.result)
+    print(task.id)
+
+@csrf_exempt
+def update_task(request):
+    print("UPDATING RUNNING TASK")
+    if request.method == "POST":
+        id = request.POST["id"]
+        print(id)
+
+        task = fetch(task_id=id)
+        print(task)
+        print(task.args)
+        task.args = ('NEW',)
+        print(task.args)
+        Task().run
+
+    return JsonResponse(list({}), safe=False)
+
+
+def delete_task(request):
+    print("DELETING TASK FROM BROKER QUEUE")
+    if request.method == "POST":
+        id = request.POST["id"]
+        ORM().delete(task_id=id)
+    return JsonResponse(list({}), safe=False)
 
 
 

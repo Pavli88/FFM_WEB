@@ -1,0 +1,11 @@
+2021-09-09 15:54:13,125 NEW ROBOT EXUECUTION PROCESS
+2021-09-09 15:54:13,125 BASE DIR: /home/pavlicseka/ffm_web
+2021-09-09 15:54:13,125 Creating oanda instance
+2021-09-09 15:54:13,125 ACCESS TOKEN: acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac
+2021-09-09 15:54:13,125 ACCOUNT ID: 001-004-2840244-004
+2021-09-09 15:54:13,125 ENV: live
+2021-09-09 15:54:13,125 SECURITY: EUR_USD
+2021-09-09 15:54:13,136 setting up API-client for environment live
+2021-09-09 15:54:13,137 performing request https://stream-fxtrade.oanda.com/v3/accounts/001-004-2840244-004/pricing/stream
+2021-09-09 15:54:18,864 Error occured during streaming. Connection lost
+2021-09-09 15:59:40,143 /home/pavlicseka/ffm_web/robots/processes/processes.py changed, reloading.

@@ -3,6 +3,11 @@ from django.urls import path, include
 from . import views
 from risk.views import *
 
+def my_process():
+    print("Initial caching run")
+
+my_process()
+
 urlpatterns = [
     path('', views.main_page, name="main_page"),
     path('react/', views.main_page_react),
@@ -24,4 +29,6 @@ urlpatterns = [
     path('home/update/risk_per_trade/', update_risk_per_trade),
     path('home/system_messages/', system_messages),
     path('new_task/', views.new_task),
+    path('update_task/', views.update_task),
+    path('test/', views.test),
 ]
