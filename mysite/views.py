@@ -242,7 +242,7 @@ def new_task(request):
     if request.method == "POST":
         process = request.POST["process"]
         task_name = request.POST["task_name"]
-        arguments = [request.POST["argument1"]]
+        arguments = [request.POST["arguments"]]
 
         print("PROCESS:", process)
         print("TASK NAME:", task_name)
@@ -258,7 +258,7 @@ def new_task(request):
 
 
 def test(request):
-    a = run_robot("EUR_USD_TRD1")
+    a = run_robot("step_trade")
     print(a)
     return JsonResponse(list({}), safe=False)
 

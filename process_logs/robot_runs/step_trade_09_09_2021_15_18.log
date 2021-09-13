@@ -1,9 +1,0 @@
-2021-09-09 15:18:03,561 NEW ROBOT EXUECUTION PROCESS
-2021-09-09 15:18:03,562 BASE DIR: /home/pavlicseka/ffm_web
-2021-09-09 15:18:03,562 Creating oanda instance
-2021-09-09 15:18:03,562 ACCESS TOKEN: acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac
-2021-09-09 15:18:03,562 ACCOUNT ID: 001-004-2840244-004
-2021-09-09 15:18:03,562 ENV: live
-2021-09-09 15:18:03,562 SECURITY: XAG_USD
-2021-09-09 15:18:03,571 Execution stopped. Reason: Position COntroll -> No open trades
-2021-09-09 15:20:07,646 /home/pavlicseka/ffm_web/robots/processes/processes.py changed, reloading.

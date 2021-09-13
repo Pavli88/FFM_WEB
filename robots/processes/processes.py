@@ -4,6 +4,7 @@ import datetime
 import os
 import pandas as pd
 import logging
+import json
 
 # Database imports
 from mysite.models import *
@@ -13,9 +14,17 @@ from robots.models import *
 from django.db import connection
 from robots.models import *
 from django.conf import settings
+from django.core.cache import cache
 
 # Process imports
 from mysite.processes.oanda import *
+
+
+class LoadRobotStatus:
+    def __init__(self):
+        base_dir = settings.BASE_DIR
+        with open(base_dir + "/process_logs/cache_2.json") as json_file:
+            data = json.load(json_file)
 
 
 def run_robot(robot):
@@ -41,7 +50,7 @@ def run_robot(robot):
     print(row)
 
     risk_exposure = row[13]
-    print(risk_exposure)
+
     logger.info("NEW ROBOT EXUECUTION PROCESS")
     logger.info("BASE DIR: " + str(base_dir))
     logger.info("Creating oanda instance")
@@ -53,22 +62,26 @@ def run_robot(robot):
     # Fetching open trades for robot
     trades = pd.DataFrame(RobotTrades.objects.filter(robot=robot).filter(status="OPEN").values())
 
-    if len(trades) == 0:
-        logger.info("Execution stopped. Reason: Position Cntroll -> No open trades")
-        return "Execution stopped. Reason: Position COntroll -> No open trades"
+    # if len(trades) == 0:
+    #     logger.info("Execution stopped. Reason: Position Cntroll -> No open trades")
+    #     return "Execution stopped. Reason: Position COntroll -> No open trades"
 
     robot_balance = Balance.objects.filter(robot_name=robot).order_by('-id')[0].close_balance
 
-    # Creating broker connection instance
+    # Creating broker connection instance for the price streaming
     oanda_api = OandaV20(access_token=row[8],
                          account_id=row[7],
                          environment=row[6]).pricing_stream(instrument=row[3])
 
     # Running trade and risk live evaluation
     for ticks in oanda_api:
-        robot_status = Robots.objects.get(name=robot)
-        print(robot_status.status)
-        if robot_status.status == "inactive":
+        # Requesting robot data from cache
+        # This part is responsible for allowing the robot either run in the task qouee or not. It is based on
+        # the robot status
+        with open(base_dir + "/process_logs/robot_status.json") as json_file:
+            data = json.load(json_file)
+
+        if data[robot] == "inactive":
             logger.info("Execution stopped. Inactive robot status")
             return "Execution stopped. Inactive robot status"
         try:
