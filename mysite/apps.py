@@ -13,17 +13,22 @@ class MySiteConfig(AppConfig):
         base_dir = settings.BASE_DIR
         from robots.models import Robots
 
-        robots = Robots.objects.filter().values()
-        robot_dict = {}
-        for robot in robots:
-            a = robot['name']
-            try:
-                robot_dict[a] = robot['status']
-            finally:
-                pass
+        # Initial robot info load to files
+        # robots = Robots.objects.filter().values()
+        # robot_dict = {}
+        #
+        # for robot in robots:
+        #     robot_name = robot['name']
+        #     try:
+        #         with open(base_dir + '/cache/robots/info/' + robot_name + '_status.json', "w") as outfile:
+        #             robot_dict[robot_name] = robot['status']
+        #             json.dump(robot_dict, outfile)
+        #     finally:
+        #         pass
 
-        with open(base_dir + '/process_logs/robot_status.json', "w") as outfile:
-            json.dump(robot_dict, outfile)
+        # Initial open trades load to files
+
+
 
 
 
