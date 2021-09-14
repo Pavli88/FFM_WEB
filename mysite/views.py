@@ -18,7 +18,7 @@ from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.return_calculation import *
 from portfolio.processes.processes import *
-from robots.processes.processes import *
+# from robots.processes.processes import *
 
 # Django imports
 from django.http import HttpResponse
@@ -238,34 +238,34 @@ def system_messages(request):
 # Long Running Process Management --------------------------------------------------------------------------------------
 @csrf_exempt
 def new_task(request):
-    print("NEW TASK EXECUTION TO BROKER QUEUE")
+    print("----------------------------------")
+    print("SENDING NEW TASK TO BROKER QUEUE  ")
     if request.method == "POST":
-        process = request.POST["process"]
-        task_name = request.POST["task_name"]
-        arguments = [request.POST["arguments"]]
+        request_data = json.loads(request.body.decode('utf-8'))
+        process = request_data["process"]
+        task_name = request_data["task_name"]
+        arguments = request_data["arguments"]
+        hook = 'mysite.views.hook'
+        timeout = 2000
 
         print("PROCESS:", process)
         print("TASK NAME:", task_name)
         print("ARGUMENTS:", arguments)
 
         # Executing task at message broker queue
-        task = AsyncTask(process, task_name=task_name, hook='mysite.views.hook', timeout=2000)
+        task = AsyncTask(process, task_name=task_name, hook=hook, timeout=timeout)
         task.args = tuple(arguments)
         task.run()
         print("TASK ID:", task.id)
+        print("----------------------------------")
+        return JsonResponse({'response' : 'task executed'}, safe=False)
 
-    return JsonResponse(list({}), safe=False)
-
-
-def test(request):
-    a = run_robot("step_trade")
-    print(a)
-    return JsonResponse(list({}), safe=False)
 
 def hook(task):
     print("HOOK")
     print(task.result)
     print(task.id)
+
 
 @csrf_exempt
 def update_task(request):

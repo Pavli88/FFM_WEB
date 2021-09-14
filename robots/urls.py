@@ -6,7 +6,7 @@ urlpatterns = [
     path('robots/get_robots/<str:env>/', views.get_robots),
     path('robots/get_robots_with_instrument/', views.get_robots_with_instrument_data),
     path('robots/get_robot/<str:robot>/', views.get_robot),
-    path('robots/amend_robot/', views.amend_robot),
+    path('robots/update_robot/', views.update_robot),
     path('robots/delete_robot/', views.delete_robot),
     path('robots/new_robot/', views.new_robot),
     path('robots/calculate_robot_balance/', views.robot_balance_calc),

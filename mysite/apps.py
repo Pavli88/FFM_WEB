@@ -16,16 +16,18 @@ class MySiteConfig(AppConfig):
         robots = Robots.objects.filter().values()
         robot_dict = {}
         for robot in robots:
-            print(robot['name'])
             a = robot['name']
             try:
                 robot_dict[a] = robot['status']
             finally:
                 pass
 
-        print(robot_dict)
         with open(base_dir + '/process_logs/robot_status.json', "w") as outfile:
             json.dump(robot_dict, outfile)
+
+
+
+
         # with open(base_dir + '/process_logs/cache_2.json', "w") as out:
         #     mast_point = serializers.serialize("json", robots)
         #     out.write(mast_point)

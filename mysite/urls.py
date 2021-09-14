@@ -30,5 +30,4 @@ urlpatterns = [
     path('home/system_messages/', system_messages),
     path('new_task/', views.new_task),
     path('update_task/', views.update_task),
-    path('test/', views.test),
 ]
