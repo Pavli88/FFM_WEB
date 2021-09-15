@@ -54,7 +54,7 @@ def load_robot_stats(request, env):
         print("")
 
         # Fetching robots from database based on environment
-        robots = Robots.objects.filter(status="active", env=env).values()
+        robots = Robots.objects.filter(env=env).values()
 
         response = []
         robot_list = []

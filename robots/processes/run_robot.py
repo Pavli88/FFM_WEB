@@ -29,7 +29,7 @@ def run_robot(robot):
     cursor = connection.cursor()
     cursor.execute("""select r.id, r.name, r.strategy, r.security,
                             r.broker, r.status, r.env, r.account_number,
-                            ba.access_token, ri.quantity, ri.quantity_type, 
+                            ba.access_token, ri.quantity, ri.quantity_type,
                             ri.daily_risk_perc,ri.daily_trade_limit, ri.risk_per_trade
                         from robots_robots as r, accounts_brokeraccounts as ba, risk_robotrisk as ri
                         where r.account_number=ba.account_number
@@ -45,18 +45,25 @@ def run_robot(robot):
     robot_status = Robots.objects.get(name=robot)
     robot_status.status = 'active'
     robot_status.save()
-    with open(base_dir + '/cache/robots/info/' + robot + '_status.json', "w") as outfile:
-        json.dump({robot: 'active'}, outfile)
 
-    # Fetching open trades for robot
-    robot_balance = Balance.objects.filter(robot_name=robot).order_by('-id')[0].close_balance
+    with open(base_dir + '/cache/robots/info/' + robot + '_status.json') as outfile:
+        data = json.load(outfile)
+
+    with open(base_dir + '/cache/robots/info/' + robot + '_status.json', "w") as outfile:
+        json.dump({'id': data['id'],
+                   'name': data['name'],
+                   'status': 'active',
+                   'risk_on_trade': data['risk_on_trade'],
+                   'balance': data['balance'],
+                   'sl': data['sl'],
+                   'win_exp': data['win_exp']}, outfile)
 
     # Creating broker connection instance for the price streaming
     oanda_api = OandaV20(access_token=row[8],
                          account_id=row[7],
                          environment=row[6]).pricing_stream(instrument=row[3])
-
-    # Running trade and risk live evaluation
+    #
+    # # Running trade and risk live evaluation
     for ticks in oanda_api:
 
         # FETCHING DATA FROM CACHE--------------------------------------------------------------------------------------
@@ -68,7 +75,7 @@ def run_robot(robot):
         except:
             return "Execution stopped. Error during cache file data load"
 
-        if data[robot] == "inactive":
+        if data['status'] == "inactive":
             return "Execution stopped. Inactive robot status"
 
         # Fetching open trades
@@ -87,12 +94,16 @@ def run_robot(robot):
             return "Error occured during streaming. Connection lost"
 
         # Risk controll
-        risk_control(trades_data=trades_data, current_price=mid_price, robot_balance=robot_balance, risk_exposure=risk_exposure)
+        risk_control(trades_data=trades_data,
+                     current_price=mid_price,
+                     robot_balance=data['balance'],
+                     risk_exposure=data['risk_on_trade'],
+                     sl=data['sl'])
 
     return "End of task"
 
 
-def risk_control(trades_data, current_price, robot_balance, risk_exposure):
+def risk_control(trades_data, current_price, robot_balance, risk_exposure, sl):
     total_pnl = 0.0
     for trade in trades_data:
         print(trade)
@@ -108,8 +119,16 @@ def risk_control(trades_data, current_price, robot_balance, risk_exposure):
 
     pnl_info = " Total P&L:" + str(total_pnl) + " Total Return:" + str(
         total_pnl / robot_balance) + " Max Risk Loss Exposure:" + str((risk_exposure * -1) * 100)
-    print(pnl_info)
+
+    print(pnl_info, "SL", sl, "Price", current_price)
 
     # Loss treshold breached
     if (total_pnl / robot_balance) < (risk_exposure * -1):
         return "Execution stopped. Reason: Risk Controll -> Exposure treshold"
+
+    # Stop loss check
+    if side == "BUY" and current_price < sl:
+        print("BUY SL Trigger")
+
+    if side == "SELL" and current_price > sl:
+        print("SELL SL Trigger")
