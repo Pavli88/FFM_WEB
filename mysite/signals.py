@@ -70,7 +70,6 @@ def load_robot_trades(sender, **kwargs):
     print("------------------------------")
     print("SIGNAL -> Robot Trades Update")
     robot_data = kwargs.get('instance')
-    print()
     print("ROBOT: ", robot_data.robot)
     robot_trades = RobotTrades.objects.filter(robot=robot_data.robot).filter(status="OPEN").values()
 

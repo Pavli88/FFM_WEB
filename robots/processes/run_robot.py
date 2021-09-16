@@ -20,6 +20,7 @@ from django.dispatch import receiver
 
 # Process imports
 from mysite.processes.oanda import *
+from trade_app.processes.close_trade import close_trade_task
 
 
 def run_robot(robot):
@@ -59,9 +60,13 @@ def run_robot(robot):
                    'win_exp': data['win_exp']}, outfile)
 
     # Creating broker connection instance for the price streaming
+    if row[6] == 'demo':
+        env = 'practice'
+    else:
+        env = 'live'
     oanda_api = OandaV20(access_token=row[8],
                          account_id=row[7],
-                         environment=row[6]).pricing_stream(instrument=row[3])
+                         environment=env).pricing_stream(instrument=row[3])
     #
     # # Running trade and risk live evaluation
     for ticks in oanda_api:
@@ -94,17 +99,20 @@ def run_robot(robot):
             return "Error occured during streaming. Connection lost"
 
         # Risk controll
-        risk_control(trades_data=trades_data,
-                     current_price=mid_price,
-                     robot_balance=data['balance'],
-                     risk_exposure=data['risk_on_trade'],
-                     sl=data['sl'])
+        risk_control(
+            robot=robot, trades_data=trades_data,
+            current_price=mid_price,
+            robot_balance=data['balance'],
+            risk_exposure=data['risk_on_trade'],
+            sl=data['sl'])
 
     return "End of task"
 
 
-def risk_control(trades_data, current_price, robot_balance, risk_exposure, sl):
+def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):
     total_pnl = 0.0
+
+    # Loop to look through all open position to evaluate risk checks
     for trade in trades_data:
         print(trade)
         side = trade['side']
@@ -117,6 +125,14 @@ def risk_control(trades_data, current_price, robot_balance, risk_exposure, sl):
             pnl = (quantity * current_price) - (quantity * open_price)
         total_pnl = + total_pnl + pnl
 
+        # Stop loss check
+        if side == "BUY" and float(current_price) < float(sl):
+            print("BUY SL Trigger")
+            close_trade_task(robot=robot, broker_id=trade['broker_id'])
+
+        if side == "SELL" and float(current_price) > float(sl):
+            print("SELL SL Trigger")
+
     pnl_info = " Total P&L:" + str(total_pnl) + " Total Return:" + str(
         total_pnl / robot_balance) + " Max Risk Loss Exposure:" + str((risk_exposure * -1) * 100)
 
@@ -126,9 +142,4 @@ def risk_control(trades_data, current_price, robot_balance, risk_exposure, sl):
     if (total_pnl / robot_balance) < (risk_exposure * -1):
         return "Execution stopped. Reason: Risk Controll -> Exposure treshold"
 
-    # Stop loss check
-    if side == "BUY" and current_price < sl:
-        print("BUY SL Trigger")
 
-    if side == "SELL" and current_price > sl:
-        print("SELL SL Trigger")

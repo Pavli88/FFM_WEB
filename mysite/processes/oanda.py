@@ -4,6 +4,7 @@ from oandapyV20 import API
 import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.pricing as pricing
 import oandapyV20.endpoints.orders as orders
+import oandapyV20.endpoints.instruments as instruments
 import json
 
 pd.set_option('display.max_rows', None)
@@ -276,24 +277,43 @@ class OandaV20:
 
         return response['prices'][0]
 
+    def candle_data(self, instrument, count, time_frame):
+
+        params = {
+            "count": count,
+            "granularity": time_frame
+        }
+
+        r = instruments.InstrumentsCandles(instrument=instrument, params = params)
+        self.api.request(r)
+
+        return r.response
 
 if __name__ == "__main__":
     o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
                  account_id="001-004-2840244-004",
-                 environment="live").pricing_stream(instrument="XAG_USD")
+                 environment="live").candle_data(instrument="EUR_USD", count=205, time_frame="M5")
 
-    for ticks in o:
-        try:
-            prices = {'bid' : ticks['bids'][0]['price'],
-                      'ask' : ticks['asks'][0]['price']}
-            print(prices)
-        except:
-            pass
+    time_list = []
+    open_list = []
+    close_list = []
+    low_list = []
+    high_list = []
 
-    # o.get_open_trades() #submit_market_order(security="XAG_USD", sl_price="24.4", quantity="-10")
-    # f = o.close_trades(trd_id=7369)
+    for record in o['candles']:
+        time_list.append(record['time'])
+        open_list.append(record['mid']['o'])
+        close_list.append(record['mid']['c'])
+        low_list.append(record['mid']['l'])
+        high_list.append(record['mid']['h'])
 
+    df = pd.DataFrame({'time': time_list,
+                       'open': open_list,
+                       'high': high_list,
+                       'low': low_list,
+                       'close': close_list})
 
+    print(df)
 
 
 

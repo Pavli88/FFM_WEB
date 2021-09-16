@@ -11,6 +11,9 @@ from mysite.models import *
 from robots.processes.robot_balance_calc import *
 from datetime import datetime
 
+from trade_app.processes.close_trade import *
+from trade_app.processes.open_trade import *
+
 
 def get_open_trades(request, env):
 
@@ -151,3 +154,20 @@ def submit_trade(request):
                    msg="Trade executed for " + robot + "@" + quantity).save()
 
     return redirect('trade_app main')
+
+
+def close_trade_test(request):
+
+    robot='SNPMANUALD'
+    broker_id=10705
+
+    close_trade_task(robot=robot, broker_id=broker_id)
+
+    return JsonResponse(list({}), safe=False)
+
+
+def execute_trade(request):
+
+    execute_trade(robot='SNPMANUALD', side='BUY')
+
+    return JsonResponse(list({}), safe=False)
