@@ -134,11 +134,32 @@ class RobotExecution:
         if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
             print("TRADE EXECUTION:", signal)
 
+            if self.side == "BUY":
+                quantity = self.quantity
+
+            # Executing trade at broker
+            trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
+
+            # Saving executed trade to FFM database
+            self.save_trade(quantity=quantity, open_price=trade["price"], broker_id=trade['id'])
+
+
         if (self.side == 'BUY' and signal == 'SELL') or (self.side == 'SELL' and signal == 'BUY'):
             print("TRADE EXECUTION:", 'close')
 
     def close_trade(self):
         return ""
+
+    def save_trade(self, quantity, open_price, broker_id):
+        RobotTrades(security=self.instrument,
+                    robot=self.robot,
+                    quantity=quantity,
+                    status="OPEN",
+                    pnl=0.0,
+                    open_price=open_price,
+                    side=self.side,
+                    broker_id=broker_id,
+                    broker="oanda").save()
 
     def close_all_trades(self):
         return ""
