@@ -5,102 +5,56 @@ from datetime import datetime
 
 
 class MarketForceStrategy:
-    def __init__(self, token, account_id, environment, instrument, initial_frame_count, time_frame):
-        self.time_frame = time_frame
-        self.instrument = instrument
-        self.connection = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
-                                   account_id="001-004-2840244-004",
-                                   environment="live")
+    def __init__(self, df):
+        self.df = df
 
-        self.initial_data = self.get_candle_data(count=initial_frame_count)
-        self.df = self.create_dataframe(self.initial_data)
+    def calculate_indicators(self):
 
-        if self.time_frame == 'M1':
-            self.time_multiplier = 1
-        elif self.time_frame == 'M5':
-            self.time_multiplier = 5
+        self.df['MA50'] = self.df['close'].rolling(window=50).mean()
+        self.df['MA100'] = self.df['close'].rolling(window=100).mean()
+        self.df['MA200'] = self.df['close'].rolling(window=200).mean()
+        self.df['Dist50'] = (self.df['close']-self.df['MA50']) / self.df['MA50']
+        self.df['Dist100'] = (self.df['close']-self.df['MA100']) / self.df['MA100']
+        self.df['Dist200'] = (self.df['close']-self.df['MA200']) / self.df['MA200']
+        self.df['MA100_DIST100'] = self.df['Dist100'].rolling(window=100).mean()
+        self.df['50Under'] = self.df['Dist50'].le(self.df['MA100_DIST100'])
+        self.df['200Under'] = self.df['Dist200'].le(self.df['MA100_DIST100'])
 
-        print(self.df)
+    def signal_generator(self):
+        self.df = self.df.iloc[-2:]
+        df50_list = list(self.df['50Under'])
+        df200_list = list(self.df['200Under'])
+        now = datetime.now()
+        current_time = now.strftime("%H:%M")
 
-    def get_candle_data(self, count):
-        return self.connection.candle_data(instrument=self.instrument,
-                                           count=count,
-                                           time_frame=self.time_frame)['candles']
+        # Current Condition
+        if df50_list[-1] is True and df200_list[-1] is True:
+            current_condition = "SELL"
+        elif df50_list[-1] is False and df200_list[-1] is False:
+            current_condition = "BUY"
+        else:
+            current_condition = "NETURAL"
 
-    def create_dataframe(self, data):
+        # Previous condition
+        if df50_list[0] is True and df200_list[0] is True:
+            prev_condition = "SELL"
+        elif df50_list[0] is False and df200_list[0] is False:
+            prev_condition = "BUY"
+        else:
+            prev_condition = "NETURAL"
 
-        time_list = []
-        open_list = []
-        close_list = []
-        low_list = []
-        high_list = []
+        print(current_time, 'Previous Condition:', prev_condition)
+        print(current_time, 'Current Condition:', current_condition)
 
-        for record in data:
-            time_list.append(record['time'])
-            open_list.append(float(record['mid']['o']))
-            close_list.append(float(record['mid']['c']))
-            low_list.append(float(record['mid']['l']))
-            high_list.append(float(record['mid']['h']))
+        if prev_condition == 'NETURAL' and current_condition == 'BUY':
+            return 'BUY'
 
-        df = pd.DataFrame({'time': time_list,
-                           'open': open_list,
-                           'high': high_list,
-                           'low': low_list,
-                           'close': close_list})
+        if prev_condition == 'NETURAL' and current_condition == 'SELL':
+            return 'SELL'
 
-        return df
 
-    def calculate_indicators(self, df):
+def strategy_evaluate(df):
+    strategy = MarketForceStrategy(df=df)
+    strategy.calculate_indicators()
+    return strategy.signal_generator()
 
-        df['MA50'] = df['close'].rolling(window=50).mean()
-        df['MA100'] = df['close'].rolling(window=100).mean()
-        df['MA200'] = df['close'].rolling(window=200).mean()
-        df['Dist50'] = (df['close']-df['MA50']) / df['MA50']
-        df['Dist100'] = (df['close']-df['MA100']) / df['MA100']
-        df['Dist200'] = (df['close']-df['MA200']) / df['MA200']
-        df['MA100_DIST100'] = df['Dist100'].rolling(window=100).mean()
-        df['50Under'] = df['Dist50'].le(df['MA100_DIST100'])
-        df['200Under'] = df['Dist200'].le(df['MA100_DIST100'])
-
-        return df
-
-    def add_new_row(self, df):
-        self.df = self.df.append(df)
-
-    def run(self):
-        # self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
-        # df = self.calculate_indicators(df=self.df)
-        #
-        # print(df.iloc[-2:])
-        # plt.figure(figsize=[15,10])
-        # plt.grid(True)
-        # plt.plot(df['Dist200'],label='data')
-        # plt.plot(df['Dist50'],label='data')
-        # plt.plot(df['MA100_DIST100'],label='data')
-        # plt.legend(loc=2)
-        # plt.show()
-        while True:
-            sleep(60 * self.time_multiplier - time() % 60 * self.time_multiplier)
-            now = datetime.now()
-            current_time = now.strftime("%H:%M")
-            self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
-            df = self.calculate_indicators(df=self.df)
-            print(df)
-            print(df.iloc[-2:])
-
-strategy = MarketForceStrategy(token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
-                               account_id="001-004-2840244-004",
-                               environment='live',
-                               instrument='EUR_USD',
-                               initial_frame_count=500,
-                               time_frame='M1')
-
-strategy.run()
-
-# plt.figure(figsize=[15,10])
-# plt.grid(True)
-# plt.plot(df['Dist200'],label='data')
-# plt.plot(df['Dist50'],label='data')
-# plt.plot(df['MA100_DIST100'],label='data')
-# plt.legend(loc=2)
-# plt.show()

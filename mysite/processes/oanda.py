@@ -184,7 +184,12 @@ class OandaV20:
         :param account_id:
         """
 
-        self.api = API(access_token=access_token, environment=environment)
+        if environment == 'demo':
+            self.env = 'practice'
+        else:
+            self.env = 'live'
+
+        self.api = API(access_token=access_token, environment=self.env)
         self.account_id = account_id
 
     def pricing_stream(self, instrument):
