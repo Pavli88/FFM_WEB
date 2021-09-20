@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import logging
 import json
+import importlib
+from mysite.my_functions.general_functions import *
 
 # Database imports
 from mysite.models import *
@@ -14,24 +16,16 @@ from risk.models import *
 # Django imports
 from django.db import connection
 from robots.models import *
-from django.conf import settings
-from django.core.cache import cache
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 # Process imports
 from mysite.processes.oanda import *
-from trade_app.processes.close_trade import close_trade_task
-
-# Strategy import
-from signals.strategies.market_force_strategy import strategy_evaluate
 
 
 class RobotExecution:
     def __init__(self, robot):
         self.robot = robot
 
-        # Data soruce is handled on robot level
+        # Data source is handled on robot level
 
         # Fetching robot info from database
         cursor = connection.cursor()
@@ -44,28 +38,27 @@ class RobotExecution:
                                 and r.name='{robot}' and ri.robot = r.name;""".format(robot=self.robot))
         row = cursor.fetchall()[0]
 
-        robot = row[1]
-        strategy = row[2]
+        self.strategy = row[2]
         self.instrument = row[3]
-        broker = row[4]
+        self.broker = row[4]
         self.status = row[5]
         self.environment = row[6]
-        self.account_number = [7]
+        self.account_number = row[7]
         self.token = row[8]
         self.time_frame = row[14]
-        self.side = "BUY"
 
-        print(robot)
-        print(strategy)
-        print(self.instrument)
-        print(broker)
-        print(self.environment)
-        print(self.account_number)
-        print(self.token)
+        print("")
+        print("ROBOT EXECUTION")
+        print("Robot:", self.robot, "- Strategy:", self.strategy, "- Instrument:", self.instrument)
 
-        # Fetching Risk parameters
-        self.risk_params = self.get_risk_params()
-        print(self.risk_params)
+        # Loading strategy and its parameters
+        self.side = "SELL"
+
+        # this goes to a variable and loaded from db
+        self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
+        self.strategy_evaluate = getattr(self.strategy_location, "strategy_evaluate")
+
+        print('Strategy Location:', self.strategy_location)
 
         if self.time_frame == 'M1':
             self.time_multiplier = 1
@@ -76,18 +69,24 @@ class RobotExecution:
         print('Time Multiplier:', self.time_multiplier)
 
         # Setting up broker connection
-        module = __import__('mysite.processes')
-        print('MODULE', module)
+        # This part has to be loaded with importlib as well in the future to create connection function
+        print("Setting up broker connection")
+        print("Broker:", self.broker)
+        print("Environment:", self.environment)
+        print("Account Number", self.account_number)
+        print("Token:", self.token)
         self.connection = OandaV20(access_token=self.token,
                                    account_id=self.account_number,
                                    environment=self.environment)
 
         # Requesting initial candle data from broker
+        print("Requesting initial candles from broker")
         candle_data = self.connection.candle_data(instrument=self.instrument,
                                                   count=500,
                                                   time_frame=self.time_frame)['candles']
 
         # Setting up initial dataframe
+        print("Setting up initial dataframe for candle evaluation")
         self.initial_df = self.create_dataframe(data=candle_data)
 
     def get_candle_data(self, count):
@@ -125,32 +124,52 @@ class RobotExecution:
         return Robots.objects.get(name=self.robot).status
 
     def get_risk_params(self):
-        return pd.DataFrame(RobotRisk.objects.filter(robot=self.robot).values())
+        return RobotRisk.objects.filter(robot=self.robot).values()[0]
 
     def get_open_trades(self):
         return pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
 
     def execute_trade(self, signal):
+        # New trade execution
         if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
             print("TRADE EXECUTION:", signal)
 
-            if self.side == "BUY":
-                quantity = self.quantity
+            # Quantity calculation
+            quantity = self.quantity_calc()
 
             # Executing trade at broker
-            trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
+            try:
+                trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
+            except:
+                SystemMessages(msg_type="Trade Execution",
+                               msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
+                return None
 
             # Saving executed trade to FFM database
-            self.save_trade(quantity=quantity, open_price=trade["price"], broker_id=trade['id'])
+            self.save_new_trade(quantity=quantity, open_price=trade["price"], broker_id=trade['id'])
 
-
+        # Closing trade execution
         if (self.side == 'BUY' and signal == 'SELL') or (self.side == 'SELL' and signal == 'BUY'):
             print("TRADE EXECUTION:", 'close')
+            self.close_all_trades()
 
-    def close_trade(self):
-        return ""
+    def quantity_calc(self):
+        risk_params = self.get_risk_params()
+        if risk_params['quantity_type'] == "Fix":
+            if self.side == "BUY":
+                quantity = risk_params['quantity']
+            elif self.side == "SELL":
+                quantity = risk_params['quantity'] * -1
+        return quantity
 
-    def save_trade(self, quantity, open_price, broker_id):
+    def save_new_trade(self, quantity, open_price, broker_id):
+        """
+        Saves new trade data to ffm system database
+        :param quantity:
+        :param open_price:
+        :param broker_id:
+        :return:
+        """
         RobotTrades(security=self.instrument,
                     robot=self.robot,
                     quantity=quantity,
@@ -161,33 +180,55 @@ class RobotExecution:
                     broker_id=broker_id,
                     broker="oanda").save()
 
-    def close_all_trades(self):
+        SystemMessages(msg_type="Trade Execution",
+                       msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(open_price)).save()
+
+    def close_trade(self):
         return ""
 
+    def close_all_trades(self):
+        open_trades = self.get_open_trades()
+        if len(open_trades) == 0:
+            return None
+
+        for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
+            print("Close -> OANDA ID:", trd)
+
+            open_trade = self.connection.close_trades(trd_id=trd)
+
+            print("Update -> Database ID:", id)
+
+            trade_record = RobotTrades.objects.get(id=id)
+            trade_record.status = "CLOSED"
+            trade_record.close_price = open_trade["price"]
+            trade_record.pnl = open_trade["pl"]
+            trade_record.close_time = get_today()
+            trade_record.save()
+
+            SystemMessages(msg_type="Trade Execution",
+                           msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(open_trade["pl"])).save()
+
     def run(self):
+        print("Start of strategy execution")
         while True:
-            # sleep((60 * self.time_multiplier - time() % 60 * self.time_multiplier))
+            sleep((60 * self.time_multiplier - time() % 60 * self.time_multiplier))
             sleep(2)
 
             # Checking robot status
             status = self.get_status()
-            print("ROBOT STATUS:", status)
             if status == 'inactive':
-                print("End of process")
-                print("Searching for open trades")
                 open_trades = self.get_open_trades()
-                print(open_trades)
                 if len(open_trades) > 0:
                     print("Closing open trades")
                 break
 
             # Generating Signal based on strategy
-            new_candle_data = self.create_dataframe(self.get_candle_data(count=1))
-            print(new_candle_data)
-            self.add_new_row(df=new_candle_data)
-            signal = strategy_evaluate(df=self.initial_df)
+            self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
+            signal = self.strategy_evaluate(df=self.initial_df)
 
             print(self.initial_df.tail(5))
+
+            # Pre Trade risk evaluation processes
 
             # Executing Trade
             self.execute_trade(signal=signal)
@@ -203,7 +244,6 @@ def run_robot(robot):
     else:
         robot_status.status = "active"
         robot_status.save()
-        print("Start of execution")
         RobotExecution(robot=robot).run()
 
 

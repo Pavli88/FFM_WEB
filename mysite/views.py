@@ -253,18 +253,22 @@ def new_task(request):
         print("ARGUMENTS:", arguments)
 
         # Executing task at message broker queue
-        task = AsyncTask(process, task_name=task_name, hook=hook, timeout=timeout)
+        task = AsyncTask(process, task_name=task_name, hook=task_hook, timeout=timeout)
         task.args = tuple(arguments)
         task.run()
+        SystemMessages(msg_type="Process Execution",
+                       msg=task_name).save()
         print("TASK ID:", task.id)
         print("----------------------------------")
         return JsonResponse({'response' : 'task executed'}, safe=False)
 
 
-def hook(task):
+def task_hook(task):
     print("HOOK")
     print(task.result)
-    print(task.id)
+    print(task.name)
+    SystemMessages(msg_type="Finished Process",
+                   msg=task.name).save()
 
 
 @csrf_exempt
