@@ -242,7 +242,6 @@ class RobotExecution:
                 signal = self.strategy_evaluate(df=self.initial_df)
 
                 print(self.initial_df.tail(5))
-                self.plot_chart()
                 # Pre Trade risk evaluation processes
 
                 # Executing Trade
