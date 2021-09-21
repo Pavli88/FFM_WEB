@@ -229,9 +229,9 @@ class RobotExecution:
             # Checking robot status
             status = self.get_status()
             if status == 'inactive':
-                open_trades = self.get_open_trades()
-                if len(open_trades) > 0:
-                    print("Closing open trades")
+                # open_trades = self.get_open_trades()
+                # if len(open_trades) > 0:
+                #     print("Closing open trades")
                 break
 
             if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
