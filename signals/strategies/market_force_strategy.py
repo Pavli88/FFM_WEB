@@ -1,5 +1,5 @@
 from mysite.processes.oanda import *
-import matplotlib.pyplot as plt
+
 from time import time, sleep
 from datetime import datetime
 

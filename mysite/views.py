@@ -216,7 +216,7 @@ def register(request):
 def system_messages(request):
     if request.method == "GET":
         date = request.GET.get("date")
-        system_messages = SystemMessages.objects.filter(date=date).values()
+        system_messages = SystemMessages.objects.filter(date=date).order_by('-id').values()
         return JsonResponse(list(system_messages), safe=False)
 
 
@@ -230,30 +230,38 @@ def new_task(request):
         process = request_data["process"]
         task_name = request_data["task_name"]
         arguments = request_data["arguments"]
-        hook = 'mysite.views.hook'
-        timeout = 2000
 
         print("PROCESS:", process)
         print("TASK NAME:", task_name)
         print("ARGUMENTS:", arguments)
 
+        timeout = 10000
+
         # Executing task at message broker queue
-        task = AsyncTask(process, task_name=task_name, hook=task_hook, timeout=timeout)
+        task = AsyncTask(process, task_name=task_name, hook=robot_task_hook, timeout=timeout)
         task.args = tuple(arguments)
         task.run()
-        SystemMessages(msg_type="Process Execution",
-                       msg=task_name).save()
+        SystemMessages(msg_type="Process",
+                       msg="Execution: " + task_name).save()
         print("TASK ID:", task.id)
         print("----------------------------------")
         return JsonResponse({'response' : 'task executed'}, safe=False)
 
 
-def task_hook(task):
-    print("HOOK")
-    print(task.result)
-    print(task.name)
-    SystemMessages(msg_type="Finished Process",
-                   msg=task.name).save()
+def robot_task_hook(task):
+    print("ROBOT TASK HOOK")
+    result = str(task.result).split(".")
+    if result[0] == "Timeout":
+        print(result[0])
+        robot_status = Robots.objects.get(name=result[1])
+        robot_status.status = "inactive"
+        robot_status.save()
+        SystemMessages(msg_type="Process",
+                       msg=result[0] + ": " + task.name).save()
+    elif result[0] == "Interrupted":
+        print(result[0])
+        SystemMessages(msg_type="Process",
+                       msg=result[0] + ": " + task.name).save()
 
 
 @csrf_exempt

@@ -87,7 +87,6 @@ Q_CLUSTER = {
     'label': 'Django Q',
     'max_attempts' : 0,
     'orm': 'default',
-    'retry' : 3000,
 }
 
 ROOT_URLCONF = 'mysite.urls'

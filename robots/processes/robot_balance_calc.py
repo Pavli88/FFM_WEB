@@ -8,7 +8,7 @@ from mysite.models import *
 
 def balance_calc(robot, calc_date):
 
-    date = calc_date #datetime.datetime.strptime(calc_date, '%Y-%m-%d')
+    date = calc_date
     robot_data = Robots.objects.filter(name=robot).values()
 
     # Checking if calculation date is less then robot inception data

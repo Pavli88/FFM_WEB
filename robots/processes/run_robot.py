@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import logging
 import json
+import matplotlib.pyplot as plt
 import importlib
 from django.core.cache import cache
 from mysite.my_functions.general_functions import *
@@ -142,7 +143,7 @@ class RobotExecution:
             try:
                 trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
             except:
-                SystemMessages(msg_type="Trade Execution",
+                SystemMessages(msg_type="Trade",
                                msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
                 return None
 
@@ -181,7 +182,7 @@ class RobotExecution:
                     broker_id=broker_id,
                     broker="oanda").save()
 
-        SystemMessages(msg_type="Trade Execution",
+        SystemMessages(msg_type="Trade",
                        msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(open_price)).save()
 
     def close_trade(self):
@@ -206,8 +207,18 @@ class RobotExecution:
             trade_record.close_time = get_today()
             trade_record.save()
 
-            SystemMessages(msg_type="Trade Execution",
+            SystemMessages(msg_type="Trade",
                            msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(open_trade["pl"])).save()
+
+    def plot_chart(self):
+        plt.figure(figsize=[15, 10])
+        plt.grid(True)
+        plt.plot(self.initial_df['MA100_DIST100'], label='data')
+        plt.plot(self.initial_df['Dist200'], label='SMA 3 Months')
+        plt.plot(self.initial_df['Dist100'], label='SMA 4 Months')
+        plt.legend(loc=2)
+        # plt.savefig('/home/pavlicseka/Documents/test.png')
+        plt.show()
 
     def run(self):
         print("Start of strategy execution")
@@ -223,13 +234,15 @@ class RobotExecution:
                     print("Closing open trades")
                 break
 
-            if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 5:
+            if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
                 # Generating Signal based on strategy
-                self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
+                new_candles = self.create_dataframe(self.get_candle_data(count=1))
+                print(new_candles)
+                self.add_new_row(df=new_candles)
                 signal = self.strategy_evaluate(df=self.initial_df)
 
                 print(self.initial_df.tail(5))
-
+                self.plot_chart()
                 # Pre Trade risk evaluation processes
 
                 # Executing Trade
@@ -241,13 +254,12 @@ def run_robot(robot, side):
     robot_status = Robots.objects.get(name=robot)
 
     if robot_status.status == "active":
-        print("Robot is running")
-        return "Robot is already running. End of execution"
+        return "Timeout." + robot
     else:
         robot_status.status = "active"
         robot_status.save()
         RobotExecution(robot=robot, side=side).run()
-
+        return "Interrupted." + robot
 
 def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):
     total_pnl = 0.0
