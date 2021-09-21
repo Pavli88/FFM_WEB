@@ -68,6 +68,13 @@ CORS_ALLOWED_ORIGINS = [
     'https://pavliati.pythonanywhere.com'
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR + '/ffm_web/cache',
+    }
+}
+
 Q_CLUSTER = {
     'name': 'ffm_web',
     'workers': 20,

@@ -6,6 +6,7 @@ import pandas as pd
 import logging
 import json
 import importlib
+from django.core.cache import cache
 from mysite.my_functions.general_functions import *
 
 # Database imports
@@ -121,7 +122,9 @@ class RobotExecution:
         self.initial_df = self.initial_df.append(df)
 
     def get_status(self):
-        return Robots.objects.get(name=self.robot).status
+        print(self.robot, cache.get(self.robot))
+        return cache.get(self.robot)
+        # return Robots.objects.get(name=self.robot).status
 
     def get_risk_params(self):
         return RobotRisk.objects.filter(robot=self.robot).values()[0]
@@ -210,9 +213,15 @@ class RobotExecution:
 
     def run(self):
         print("Start of strategy execution")
+        period = 60 * self.time_multiplier
+        print("PERIOD", period)
         while True:
-            sleep((60 * self.time_multiplier - time() % 60 * self.time_multiplier))
-            sleep(2)
+            sleep(1)
+            now = datetime.datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            print(current_time, int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)))
+            # print(int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)))
+            # sleep((60 * self.time_multiplier - time() % 60 * self.time_multiplier))
 
             # Checking robot status
             status = self.get_status()
@@ -222,17 +231,20 @@ class RobotExecution:
                     print("Closing open trades")
                 break
 
-            # Generating Signal based on strategy
-            self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
-            signal = self.strategy_evaluate(df=self.initial_df)
+            if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 5:
+                print('New request')
 
-            print(self.initial_df.tail(5))
+                # Generating Signal based on strategy
+                self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
+                signal = self.strategy_evaluate(df=self.initial_df)
 
-            # Pre Trade risk evaluation processes
+                print(self.initial_df.tail(5))
 
-            # Executing Trade
-            self.execute_trade(signal=signal)
-            print("SIGNAL:", signal)
+                # Pre Trade risk evaluation processes
+
+                # Executing Trade
+                self.execute_trade(signal=signal)
+                print("SIGNAL:", signal)
 
 
 def run_robot(robot):
@@ -266,7 +278,6 @@ def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure
         # Stop loss check
         if side == "BUY" and float(current_price) < float(sl):
             print("BUY SL Trigger")
-            close_trade_task(robot=robot, broker_id=trade['broker_id'])
 
         if side == "SELL" and float(current_price) > float(sl):
             print("SELL SL Trigger")

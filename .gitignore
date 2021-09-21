@@ -2,7 +2,7 @@ node_modules/
 *.pyc
 #mysite/credentials.py
 __pycache__/
-
+cache/
 robots/__pycache__/
 
 .idea/
