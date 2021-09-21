@@ -213,26 +213,11 @@ def register(request):
 # **********************************************************************************************************************
 # HOME PAGE
 # @login_required(login_url="/")
-def home(request, default_load=None):
-    print("*** HOME PAGE ***")
-
-    return render(request, 'home.html', {"robots": get_robots(status="active"),
-                                         "accounts": get_accounts()})
-
-
 def system_messages(request):
-    print("===================")
-    print("GET SYSTEM MESSAGES")
-    print("===================")
-
     if request.method == "GET":
-        system_messages = SystemMessages.objects.filter().values()
-
-    response = {"message": list(system_messages)}
-
-    print("Sending data to front end")
-
-    return JsonResponse(response, safe=False)
+        date = request.GET.get("date")
+        system_messages = SystemMessages.objects.filter(date=date).values()
+        return JsonResponse(list(system_messages), safe=False)
 
 
 # Long Running Process Management --------------------------------------------------------------------------------------

@@ -71,7 +71,7 @@ CORS_ALLOWED_ORIGINS = [
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR + '/ffm_web/cache',
+        'LOCATION': BASE_DIR + '/cache',
     }
 }
 

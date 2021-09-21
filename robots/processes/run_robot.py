@@ -23,7 +23,7 @@ from mysite.processes.oanda import *
 
 
 class RobotExecution:
-    def __init__(self, robot):
+    def __init__(self, robot, side):
         self.robot = robot
 
         # Data source is handled on robot level
@@ -47,13 +47,13 @@ class RobotExecution:
         self.account_number = row[7]
         self.token = row[8]
         self.time_frame = row[14]
+        self.side = side
 
         print("")
         print("ROBOT EXECUTION")
-        print("Robot:", self.robot, "- Strategy:", self.strategy, "- Instrument:", self.instrument)
+        print("Robot:", self.robot, "- Strategy:", self.strategy, "- Instrument:", self.instrument, '- Side:', self.side)
 
         # Loading strategy and its parameters
-        self.side = "SELL"
 
         # this goes to a variable and loaded from db
         self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
@@ -122,9 +122,7 @@ class RobotExecution:
         self.initial_df = self.initial_df.append(df)
 
     def get_status(self):
-        print(self.robot, cache.get(self.robot))
         return cache.get(self.robot)
-        # return Robots.objects.get(name=self.robot).status
 
     def get_risk_params(self):
         return RobotRisk.objects.filter(robot=self.robot).values()[0]
@@ -217,12 +215,6 @@ class RobotExecution:
         print("PERIOD", period)
         while True:
             sleep(1)
-            now = datetime.datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            print(current_time, int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)))
-            # print(int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)))
-            # sleep((60 * self.time_multiplier - time() % 60 * self.time_multiplier))
-
             # Checking robot status
             status = self.get_status()
             if status == 'inactive':
@@ -232,8 +224,6 @@ class RobotExecution:
                 break
 
             if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 5:
-                print('New request')
-
                 # Generating Signal based on strategy
                 self.add_new_row(df=self.create_dataframe(self.get_candle_data(count=1)))
                 signal = self.strategy_evaluate(df=self.initial_df)
@@ -247,7 +237,7 @@ class RobotExecution:
                 print("SIGNAL:", signal)
 
 
-def run_robot(robot):
+def run_robot(robot, side):
     robot_status = Robots.objects.get(name=robot)
 
     if robot_status.status == "active":
@@ -256,7 +246,7 @@ def run_robot(robot):
     else:
         robot_status.status = "active"
         robot_status.save()
-        RobotExecution(robot=robot).run()
+        RobotExecution(robot=robot, side=side).run()
 
 
 def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):
