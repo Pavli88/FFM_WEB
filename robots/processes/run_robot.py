@@ -25,13 +25,13 @@ from django.core.cache import cache
 from mysite.processes.oanda import *
 
 
-def get_risk_params(self):
-    robot_risk = RobotRisk.objects.filter(robot=self.robot).values()[0]
+def get_risk_params(robot):
+    robot_risk = RobotRisk.objects.filter(robot=robot).values()[0]
     return robot_risk
 
 
-def get_open_trades(self):
-    open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
+def get_open_trades(robot):
+    open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=robot).filter(status="OPEN").values())
     return open_trades
 
 
@@ -160,7 +160,7 @@ class RobotExecution:
             self.close_all_trades()
 
     def quantity_calc(self):
-        risk_params = get_risk_params()
+        risk_params = get_risk_params(robot=self.robot)
         if risk_params['quantity_type'] == "Fix":
             if self.side == "BUY":
                 quantity = risk_params['quantity']
@@ -186,15 +186,16 @@ class RobotExecution:
                     broker_id=broker_id,
                     broker="oanda").save()
 
-        SystemMessages(msg_type="Trade",
-                       msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(
-                           open_price)).save()
+        # SystemMessages(msg_type="Trade",
+        #                msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(
+        #                    open_price)).save()
 
     def close_trade(self):
         return ""
 
     def close_all_trades(self):
-        open_trades = get_open_trades()
+        open_trades = get_open_trades(robot=self.robot)
+
         if len(open_trades) == 0:
             return None
 
@@ -212,9 +213,9 @@ class RobotExecution:
             trade_record.close_time = get_today()
             trade_record.save()
 
-            SystemMessages(msg_type="Trade",
-                           msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(
-                               open_trade["pl"])).save()
+            # SystemMessages(msg_type="Trade",
+            #                msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(
+            #                    open_trade["pl"])).save()
 
     def run(self):
         print("Start of strategy execution")
