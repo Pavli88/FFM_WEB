@@ -7,22 +7,31 @@ import logging
 import json
 import matplotlib.pyplot as plt
 import importlib
-import django
-from django.db import connections
-from django.core.cache import cache
+
 from mysite.my_functions.general_functions import *
 
 # Database imports
 from mysite.models import *
 from robots.models import *
 from risk.models import *
-
-# Django imports
 from robots.models import *
 from accounts.models import BrokerAccounts
 
+# Django imports
+from django.db import connections
+from django.db.utils import DEFAULT_DB_ALIAS, load_backend
+from django.core.cache import cache
+
 # Process imports
 from mysite.processes.oanda import *
+
+
+def create_db_connection(alias=DEFAULT_DB_ALIAS):
+    connections.ensure_defaults(alias)
+    connections.prepare_test_settings(alias)
+    db = connections.databases[alias]
+    backend = load_backend(db['ENGINE'])
+    return backend.DatabaseWrapper(db, alias)
 
 
 class RobotExecution:
@@ -115,11 +124,15 @@ class RobotExecution:
         return cache.get(self.robot)
 
     def get_risk_params(self):
+        conn = create_db_connection()
         robot_risk = RobotRisk.objects.filter(robot=self.robot).values()[0]
+        conn.close()
         return robot_risk
 
     def get_open_trades(self):
+        conn = create_db_connection()
         open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
+        conn.close()
         return open_trades
 
     def execute_trade(self, signal):
@@ -218,8 +231,6 @@ class RobotExecution:
 
         while True:
             sleep(1)
-            db_conn = connections['default']
-            print(self.robot, db_conn)
             # Checking robot status
             status = self.get_status()
             if status == 'inactive':
@@ -252,6 +263,7 @@ def run_robot(robot, side):
     else:
         robot_status.status = "active"
         robot_status.save()
+
         RobotExecution(robot=robot,
                        side=side,
                        time_frame=robot_status.time_frame,
