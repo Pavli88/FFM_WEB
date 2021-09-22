@@ -18,7 +18,6 @@ from robots.models import *
 from accounts.models import BrokerAccounts
 
 # Django imports
-from django.db import connections
 from django.db.utils import DEFAULT_DB_ALIAS, load_backend
 from django.core.cache import cache
 
@@ -26,12 +25,25 @@ from django.core.cache import cache
 from mysite.processes.oanda import *
 
 
-def create_db_connection(alias=DEFAULT_DB_ALIAS):
-    connections.ensure_defaults(alias)
-    connections.prepare_test_settings(alias)
-    db = connections.databases[alias]
-    backend = load_backend(db['ENGINE'])
-    return backend.DatabaseWrapper(db, alias)
+def get_risk_params(self):
+    robot_risk = RobotRisk.objects.filter(robot=self.robot).values()[0]
+    return robot_risk
+
+
+def get_open_trades(self):
+    open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
+    return open_trades
+
+
+def plot_chart(df):
+    plt.figure(figsize=[15, 10])
+    plt.grid(True)
+    plt.plot(df['MA100_DIST100'], label='data')
+    plt.plot(df['Dist200'], label='SMA 3 Months')
+    plt.plot(df['Dist100'], label='SMA 4 Months')
+    plt.legend(loc=2)
+    # plt.savefig('/home/pavlicseka/Documents/test.png')
+    plt.show()
 
 
 class RobotExecution:
@@ -123,18 +135,6 @@ class RobotExecution:
     def get_status(self):
         return cache.get(self.robot)
 
-    def get_risk_params(self):
-        conn = create_db_connection()
-        robot_risk = RobotRisk.objects.filter(robot=self.robot).values()[0]
-        conn.close()
-        return robot_risk
-
-    def get_open_trades(self):
-        conn = create_db_connection()
-        open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
-        conn.close()
-        return open_trades
-
     def execute_trade(self, signal):
         # New trade execution
         if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
@@ -160,7 +160,7 @@ class RobotExecution:
             self.close_all_trades()
 
     def quantity_calc(self):
-        risk_params = self.get_risk_params()
+        risk_params = get_risk_params()
         if risk_params['quantity_type'] == "Fix":
             if self.side == "BUY":
                 quantity = risk_params['quantity']
@@ -187,13 +187,14 @@ class RobotExecution:
                     broker="oanda").save()
 
         SystemMessages(msg_type="Trade",
-                       msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(open_price)).save()
+                       msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(
+                           open_price)).save()
 
     def close_trade(self):
         return ""
 
     def close_all_trades(self):
-        open_trades = self.get_open_trades()
+        open_trades = get_open_trades()
         if len(open_trades) == 0:
             return None
 
@@ -212,17 +213,8 @@ class RobotExecution:
             trade_record.save()
 
             SystemMessages(msg_type="Trade",
-                           msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(open_trade["pl"])).save()
-
-    def plot_chart(self):
-        plt.figure(figsize=[15, 10])
-        plt.grid(True)
-        plt.plot(self.initial_df['MA100_DIST100'], label='data')
-        plt.plot(self.initial_df['Dist200'], label='SMA 3 Months')
-        plt.plot(self.initial_df['Dist100'], label='SMA 4 Months')
-        plt.legend(loc=2)
-        # plt.savefig('/home/pavlicseka/Documents/test.png')
-        plt.show()
+                           msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(
+                               open_trade["pl"])).save()
 
     def run(self):
         print("Start of strategy execution")
@@ -308,5 +300,3 @@ def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure
     # Loss treshold breached
     if (total_pnl / robot_balance) < (risk_exposure * -1):
         return "Execution stopped. Reason: Risk Controll -> Exposure treshold"
-
-
