@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import logging
 import json
+import requests
 import matplotlib.pyplot as plt
 import importlib
 
@@ -18,21 +19,12 @@ from robots.models import *
 from accounts.models import BrokerAccounts
 
 # Django imports
-from django.db.utils import DEFAULT_DB_ALIAS, load_backend
 from django.core.cache import cache
+from django.contrib.sites.shortcuts import get_current_site
+from django.http import HttpRequest
 
 # Process imports
 from mysite.processes.oanda import *
-
-
-def get_risk_params(robot):
-    robot_risk = RobotRisk.objects.filter(robot=robot).values()[0]
-    return robot_risk
-
-
-def get_open_trades(robot):
-    open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=robot).filter(status="OPEN").values())
-    return open_trades
 
 
 def plot_chart(df):
@@ -58,6 +50,7 @@ class RobotExecution:
         self.token = token
         self.time_frame = time_frame
         self.side = side
+        self.url = 'https://pavliati.pythonanywhere.com/' # 'https://pavliati.pythonanywhere.com/'  'http://127.0.0.1:8000/'
 
         print("")
         print("ROBOT EXECUTION")
@@ -152,7 +145,12 @@ class RobotExecution:
                 return None
 
             # Saving executed trade to FFM database
-            self.save_new_trade(quantity=quantity, open_price=trade["price"], broker_id=trade['id'])
+            r = requests.post(self.url + 'trade_page/new_trade/save/', data={'security': self.instrument,
+                                                                                        'robot': self.robot,
+                                                                                        'quantity': quantity,
+                                                                                        'open_price': trade["price"],
+                                                                                        'side': self.side,
+                                                                                        'broker_id': trade['id']})
 
         # Closing trade execution
         if (self.side == 'BUY' and signal == 'SELL') or (self.side == 'SELL' and signal == 'BUY'):
@@ -160,58 +158,35 @@ class RobotExecution:
             self.close_all_trades()
 
     def quantity_calc(self):
-        risk_params = get_risk_params(robot=self.robot)
+        risk_params = requests.get(self.url + 'risk/get_risk/' + self.robot).json()
+
         if risk_params['quantity_type'] == "Fix":
             if self.side == "BUY":
                 quantity = risk_params['quantity']
             elif self.side == "SELL":
                 quantity = risk_params['quantity'] * -1
+
         return quantity
-
-    def save_new_trade(self, quantity, open_price, broker_id):
-        """
-        Saves new trade data to ffm system database
-        :param quantity:
-        :param open_price:
-        :param broker_id:
-        :return:
-        """
-        RobotTrades(security=self.instrument,
-                    robot=self.robot,
-                    quantity=quantity,
-                    status="OPEN",
-                    pnl=0.0,
-                    open_price=open_price,
-                    side=self.side,
-                    broker_id=broker_id,
-                    broker="oanda").save()
-
-        # SystemMessages(msg_type="Trade",
-        #                msg="Open [" + str(broker_id) + "] " + self.robot + " " + str(quantity) + "@" + str(
-        #                    open_price)).save()
 
     def close_trade(self):
         return ""
 
     def close_all_trades(self):
-        open_trades = get_open_trades(robot=self.robot)
+        open_trades = pd.DataFrame(requests.get(self.url + 'trade_page/open_trades/' + self.robot).json())
 
         if len(open_trades) == 0:
             return None
 
         for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
-            print("Close -> OANDA ID:", trd)
 
+            print("Close -> OANDA ID:", trd)
+            print("Update -> Database ID:", id)
             open_trade = self.connection.close_trades(trd_id=trd)
 
-            print("Update -> Database ID:", id)
-
-            trade_record = RobotTrades.objects.get(id=id)
-            trade_record.status = "CLOSED"
-            trade_record.close_price = open_trade["price"]
-            trade_record.pnl = open_trade["pl"]
-            trade_record.close_time = get_today()
-            trade_record.save()
+            # Saving record in ffm database
+            r = requests.post(self.url + 'trade_page/close_trade/test/', data={'id': id,
+                                                                               'close_price': open_trade["price"],
+                                                                               'pnl': open_trade["pl"]})
 
             # SystemMessages(msg_type="Trade",
             #                msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(
@@ -237,7 +212,7 @@ class RobotExecution:
                 new_candles = self.create_dataframe(self.get_candle_data(count=1))
                 print(new_candles)
                 self.add_new_row(df=new_candles)
-                signal = self.strategy_evaluate(df=self.initial_df)
+                signal = "BUY"#self.strategy_evaluate(df=self.initial_df)
 
                 print(self.initial_df.tail(5))
                 # Pre Trade risk evaluation processes

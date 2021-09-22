@@ -135,3 +135,10 @@ def get_robot_risk(request, env):
         print("Sending data to front end")
 
     return JsonResponse(response, safe=False)
+
+
+def get_risk(request, robot):
+    if request.method == "GET":
+        robot_risk = RobotRisk.objects.filter(robot=robot).values()[0]
+
+        return JsonResponse(robot_risk, safe=False)

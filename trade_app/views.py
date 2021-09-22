@@ -156,14 +156,26 @@ def submit_trade(request):
     return redirect('trade_app main')
 
 
+@csrf_exempt
 def close_trade_test(request):
+    print("CLOSE TRADE REQUEST")
+    if request.method == "POST":
+        id = request.POST.get("id")
+        close_price = request.POST.get("close_price")
+        pnl = request.POST.get("pnl")
 
-    robot='SNPMANUALD'
-    broker_id=10705
+        print("ID:", id)
+        print("CLOSE PRICE:", close_price)
+        print("P&L:", pnl)
 
-    close_trade_task(robot=robot, broker_id=broker_id)
+        trade_record = RobotTrades.objects.get(id=id)
+        trade_record.status = "CLOSED"
+        trade_record.close_price = close_price
+        trade_record.pnl = pnl
+        trade_record.close_time = get_today()
+        trade_record.save()
 
-    return JsonResponse(list({}), safe=False)
+        return JsonResponse(list({}), safe=False)
 
 
 def execute_trade(request):
@@ -171,3 +183,38 @@ def execute_trade(request):
     execute_trade(robot='SNPMANUALD', side='BUY')
 
     return JsonResponse(list({}), safe=False)
+
+
+@csrf_exempt
+def save_new_trade(request):
+    print("Saving new trade")
+    if request.method == "POST":
+        security = request.POST.get("security")
+        robot = request.POST.get("robot")
+        quantity = request.POST.get("quantity")
+        open_price = request.POST.get("open_price")
+        side = request.POST.get("side")
+        broker_id = request.POST.get("broker_id")
+
+        RobotTrades(security=security,
+                    robot=robot,
+                    quantity=quantity,
+                    status="OPEN",
+                    pnl=0.0,
+                    open_price=open_price,
+                    side=side,
+                    broker_id=broker_id,
+                    broker="oanda").save()
+
+        # SystemMessages(msg_type="Trade",
+        #                msg="Open [" + str(broker_id) + "] " + robot + " " + str(quantity) + "@" + str(
+        #                    open_price)).save()
+
+    return JsonResponse(list({"Response": 'trade saved'}), safe=False)
+
+
+def get_open_trades_robot(request, robot):
+    if request.method == "GET":
+        open_trades = RobotTrades.objects.filter(robot=robot).filter(status='OPEN').values()
+
+    return JsonResponse(list(open_trades), safe=False)
