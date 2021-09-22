@@ -114,10 +114,12 @@ class RobotExecution:
         return cache.get(self.robot)
 
     def get_risk_params(self):
-        return RobotRisk.objects.filter(robot=self.robot).values()[0]
+        robot_risk = RobotRisk.objects.filter(robot=self.robot).values()[0]
+        return robot_risk
 
     def get_open_trades(self):
-        return pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
+        open_trades = pd.DataFrame(RobotTrades.objects.filter(robot=self.robot).filter(status="OPEN").values())
+        return open_trades
 
     def execute_trade(self, signal):
         # New trade execution
