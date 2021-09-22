@@ -8,6 +8,7 @@ import json
 import matplotlib.pyplot as plt
 import importlib
 import django
+from django.db import connections
 from django.core.cache import cache
 from mysite.my_functions.general_functions import *
 
@@ -214,8 +215,10 @@ class RobotExecution:
         print("Start of strategy execution")
         period = 60 * self.time_multiplier
         print("PERIOD", period)
+        db_conn = connections['default']
         while True:
             sleep(1)
+            print(self.robot, db_conn)
             # Checking robot status
             status = self.get_status()
             if status == 'inactive':
