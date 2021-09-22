@@ -212,7 +212,7 @@ class RobotExecution:
                 new_candles = self.create_dataframe(self.get_candle_data(count=1))
                 print(new_candles)
                 self.add_new_row(df=new_candles)
-                signal = "BUY"#self.strategy_evaluate(df=self.initial_df)
+                signal = self.strategy_evaluate(df=self.initial_df)
 
                 print(self.initial_df.tail(5))
                 # Pre Trade risk evaluation processes
