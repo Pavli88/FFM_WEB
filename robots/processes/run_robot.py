@@ -19,44 +19,31 @@ from risk.models import *
 # Django imports
 from django.db import connection, connections
 from robots.models import *
+from accounts.models import BrokerAccounts
 
 # Process imports
 from mysite.processes.oanda import *
 
 
 class RobotExecution:
-    def __init__(self, robot, side):
+    def __init__(self, robot, side, time_frame, strategy, instrument, broker, status, env, account_number, token):
         self.robot = robot
-
-        # Data source is handled on robot level
-
-        # Fetching robot info from database
-        cursor = connection.cursor()
-        cursor.execute("""select r.id, r.name, r.strategy, r.security,
-                                    r.broker, r.status, r.env, r.account_number,
-                                    ba.access_token, ri.quantity, ri.quantity_type,
-                                    ri.daily_risk_perc,ri.daily_trade_limit, ri.risk_per_trade, r.time_frame
-                                from robots_robots as r, accounts_brokeraccounts as ba, risk_robotrisk as ri
-                                where r.account_number=ba.account_number
-                                and r.name='{robot}' and ri.robot = r.name;""".format(robot=self.robot))
-        row = cursor.fetchall()[0]
-        cursor.close()
-
-        self.strategy = row[2]
-        self.instrument = row[3]
-        self.broker = row[4]
-        self.status = row[5]
-        self.environment = row[6]
-        self.account_number = row[7]
-        self.token = row[8]
-        self.time_frame = row[14]
+        self.strategy = strategy
+        self.instrument = instrument
+        self.broker = broker
+        self.status = status
+        self.environment = env
+        self.account_number = account_number
+        self.token = token
+        self.time_frame = time_frame
         self.side = side
 
         print("")
         print("ROBOT EXECUTION")
-        print("Robot:", self.robot, "- Strategy:", self.strategy, "- Instrument:", self.instrument, '- Side:', self.side)
-
-        # Loading strategy and its parameters
+        print("Robot:", self.robot)
+        print("Strategy:", self.strategy)
+        print("Instrument:", self.instrument)
+        print('Side:', self.side)
 
         # this goes to a variable and loaded from db
         self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
@@ -253,14 +240,25 @@ class RobotExecution:
 
 def run_robot(robot, side):
     robot_status = Robots.objects.get(name=robot)
+    account_data = BrokerAccounts.objects.get(account_number=robot_status.account_number)
 
     if robot_status.status == "active":
         return "Timeout." + robot
     else:
         robot_status.status = "active"
         robot_status.save()
-        RobotExecution(robot=robot, side=side).run()
+        RobotExecution(robot=robot,
+                       side=side,
+                       time_frame=robot_status.time_frame,
+                       strategy=robot_status.strategy,
+                       instrument=robot_status.security,
+                       broker=robot_status.broker,
+                       status='active',
+                       env=robot_status.env,
+                       account_number=robot_status.account_number,
+                       token=account_data.access_token).run()
         return "Interrupted." + robot
+
 
 def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):
     total_pnl = 0.0
