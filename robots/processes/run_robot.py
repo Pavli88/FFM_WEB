@@ -17,7 +17,6 @@ from robots.models import *
 from risk.models import *
 
 # Django imports
-from django.db import connection, connections
 from robots.models import *
 from accounts.models import BrokerAccounts
 
