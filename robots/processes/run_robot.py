@@ -215,9 +215,10 @@ class RobotExecution:
         print("Start of strategy execution")
         period = 60 * self.time_multiplier
         print("PERIOD", period)
-        db_conn = connections['default']
+
         while True:
             sleep(1)
+            db_conn = connections['default']
             print(self.robot, db_conn)
             # Checking robot status
             status = self.get_status()
