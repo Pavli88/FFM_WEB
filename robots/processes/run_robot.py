@@ -7,6 +7,7 @@ import logging
 import json
 import matplotlib.pyplot as plt
 import importlib
+import django
 from django.core.cache import cache
 from mysite.my_functions.general_functions import *
 
@@ -16,7 +17,7 @@ from robots.models import *
 from risk.models import *
 
 # Django imports
-from django.db import connection
+from django.db import connection, connections
 from robots.models import *
 
 # Process imports
@@ -39,6 +40,7 @@ class RobotExecution:
                                 where r.account_number=ba.account_number
                                 and r.name='{robot}' and ri.robot = r.name;""".format(robot=self.robot))
         row = cursor.fetchall()[0]
+        cursor.close()
 
         self.strategy = row[2]
         self.instrument = row[3]
