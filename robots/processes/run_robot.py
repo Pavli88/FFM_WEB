@@ -140,8 +140,9 @@ class RobotExecution:
             try:
                 trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
             except:
-                SystemMessages(msg_type="Trade",
-                               msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
+                print("Error during trade execution")
+                # SystemMessages(msg_type="Trade",
+                #                msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
                 return None
 
             # Saving executed trade to FFM database
