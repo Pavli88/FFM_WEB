@@ -235,7 +235,7 @@ def new_task(request):
         print("TASK NAME:", task_name)
         print("ARGUMENTS:", arguments)
 
-        timeout = 10000
+        timeout = 100000
 
         # Executing task at message broker queue
         task = AsyncTask(process, task_name=task_name, hook=robot_task_hook, timeout=timeout)
