@@ -131,12 +131,7 @@ class RobotExecution:
     def execute_trade(self, signal):
         # New trade execution
         if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
-            print("TRADE EXECUTION:", signal)
-
-            # Quantity calculation
             quantity = self.quantity_calc()
-
-            # Executing trade at broker
             try:
                 trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
             except:
@@ -144,7 +139,6 @@ class RobotExecution:
                 # SystemMessages(msg_type="Trade",
                 #                msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
                 return None
-
             # Saving executed trade to FFM database
             r = requests.post(self.url + 'trade_page/new_trade/save/', data={'security': self.instrument,
                                                                                         'robot': self.robot,
@@ -152,10 +146,8 @@ class RobotExecution:
                                                                                         'open_price': trade["price"],
                                                                                         'side': self.side,
                                                                                         'broker_id': trade['id']})
-
         # Closing trade execution
-        if (self.side == 'BUY' and signal == 'SELL') or (self.side == 'SELL' and signal == 'BUY'):
-            print("TRADE EXECUTION:", 'close')
+        if (self.side == 'BUY' and signal == 'BUY Close') or (self.side == 'SELL' and signal == 'SELL Close'):
             self.close_all_trades()
 
     def quantity_calc(self):
@@ -208,19 +200,24 @@ class RobotExecution:
                 #     print("Closing open trades")
                 break
 
+            # new_candles = self.create_dataframe(self.get_candle_data(count=1))
+            # print(new_candles)
+            # self.add_new_row(df=new_candles)
+            # signal = self.strategy_evaluate(df=self.initial_df)
+            #
+            # print(self.initial_df.tail(200))
+
             if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
                 # Generating Signal based on strategy
                 new_candles = self.create_dataframe(self.get_candle_data(count=1))
-                print(new_candles)
+
                 self.add_new_row(df=new_candles)
                 signal = self.strategy_evaluate(df=self.initial_df)
 
-                print(self.initial_df.tail(5))
-                # Pre Trade risk evaluation processes
+                # print(self.initial_df.tail(5))
+                print(self.time_frame, self.robot, self.side, 'Signal:', signal)
 
-                # Executing Trade
                 self.execute_trade(signal=signal)
-                print("SIGNAL:", signal)
 
 
 def run_robot(robot, side):

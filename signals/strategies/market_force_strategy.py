@@ -2,6 +2,9 @@ from mysite.processes.oanda import *
 
 from time import time, sleep
 from datetime import datetime
+import matplotlib.pyplot as plt
+# Indicator import
+from signals.functions.indicators import *
 
 
 class MarketForceStrategy:
@@ -9,48 +12,44 @@ class MarketForceStrategy:
         self.df = df
 
     def calculate_indicators(self):
+        # Moving averages
+        ma50 = moving_avg(df=self.df, source='close', length=50)
+        ma100 = moving_avg(df=self.df, source='close', length=100)
+        ma200 = moving_avg(df=self.df, source='close', length=200)
 
-        self.df['MA50'] = self.df['close'].rolling(window=50).mean()
-        self.df['MA100'] = self.df['close'].rolling(window=100).mean()
-        self.df['MA200'] = self.df['close'].rolling(window=200).mean()
-        self.df['Dist50'] = (self.df['close']-self.df['MA50']) / self.df['MA50']
-        self.df['Dist100'] = (self.df['close']-self.df['MA100']) / self.df['MA100']
-        self.df['Dist200'] = (self.df['close']-self.df['MA200']) / self.df['MA200']
-        self.df['MA100_DIST100'] = self.df['Dist100'].rolling(window=100).mean()
-        self.df['50Under'] = self.df['Dist50'].le(self.df['MA100_DIST100'])
-        self.df['200Under'] = self.df['Dist200'].le(self.df['MA100_DIST100'])
+        # Distances
+        dist50 = percentage_distance(df=self.df, comparator='close', compared=ma50)
+        dist100 = percentage_distance(df=self.df, comparator='close', compared=ma100)
+        dist200 = percentage_distance(df=self.df, comparator='close', compared=ma200)
+        #
+        ma100_dist100 = moving_avg(df=self.df, source=dist100, length=100)
+        ma10_dist50 = moving_avg(df=self.df, source=dist50, length=10)
+
+        crossover(self.df, self.df[ma10_dist50], 0, name='MA10_D50_CO_0')
+        crossunder(self.df, self.df[ma10_dist50], 0, name='MA10_D50_CA_0')
+        crossover(self.df, self.df[ma100_dist100], 0, name='MA100_D100_CO_0')
+        crossunder(self.df, self.df[ma100_dist100], 0, name='MA100_D100_CA_0')
+        above(self.df, self.df[ma100_dist100], 0, name='MA100_D100_Above_0')
+        below(self.df, self.df[ma100_dist100], 0, name='MA100_D100_Below_0')
 
     def signal_generator(self):
-        self.df = self.df.iloc[-2:]
-        df50_list = list(self.df['50Under'])
-        df200_list = list(self.df['200Under'])
-        now = datetime.now()
-        current_time = now.strftime("%H:%M")
+        df = self.df.tail(1)
 
-        # Current Condition
-        if df50_list[-1] is True and df200_list[-1] is True:
-            current_condition = "SELL"
-        elif df50_list[-1] is False and df200_list[-1] is False:
-            current_condition = "BUY"
-        else:
-            current_condition = "NETURAL"
-
-        # Previous condition
-        if df50_list[0] is True and df200_list[0] is True:
-            prev_condition = "SELL"
-        elif df50_list[0] is False and df200_list[0] is False:
-            prev_condition = "BUY"
-        else:
-            prev_condition = "NETURAL"
-
-        print(current_time, 'Previous Condition:', prev_condition)
-        print(current_time, 'Current Condition:', current_condition)
-
-        if prev_condition == 'NETURAL' and current_condition == 'BUY':
+        # BUY Signal
+        if df['MA10_D50_CO_0'] is True and df['MA100_D100_Above_0'] is True:
             return 'BUY'
 
-        if prev_condition == 'NETURAL' and current_condition == 'SELL':
+        # Sell Signal
+        if df['MA10_D50_CA_0'] is True and df['MA100_D100_Below_0'] is True:
             return 'SELL'
+
+        # Buy Close Signal
+        if df['MA100_D100_CA_0'] is True:
+            return 'BUY Close'
+
+        # Sell Close Signal
+        if df['MA100_D100_CO_0'] is True:
+            return 'SELL Close'
 
 
 def strategy_evaluate(df):
