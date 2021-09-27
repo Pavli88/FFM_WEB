@@ -189,58 +189,65 @@ class RobotExecution:
         print("Start of strategy execution")
         period = 60 * self.time_multiplier
         print("PERIOD", period)
+        sleep(5)
+        # new_candles = self.create_dataframe(self.get_candle_data(count=1))
+        # print(new_candles)
+        # self.add_new_row(df=new_candles)
+        signal = self.strategy_evaluate(df=self.initial_df)
 
-        while True:
-            sleep(1)
-            # Checking robot status
-            status = self.get_status()
-            if status == 'inactive':
-                # open_trades = self.get_open_trades()
-                # if len(open_trades) > 0:
-                #     print("Closing open trades")
-                break
-
-            # new_candles = self.create_dataframe(self.get_candle_data(count=1))
-            # print(new_candles)
-            # self.add_new_row(df=new_candles)
-            # signal = self.strategy_evaluate(df=self.initial_df)
-            #
-            # print(self.initial_df.tail(200))
-
-            if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
-                # Generating Signal based on strategy
-                new_candles = self.create_dataframe(self.get_candle_data(count=1))
-
-                self.add_new_row(df=new_candles)
-                signal = self.strategy_evaluate(df=self.initial_df)
-
-                # print(self.initial_df.tail(5))
-                print(self.time_frame, self.robot, self.side, 'Signal:', signal)
-
-                self.execute_trade(signal=signal)
+        print(self.initial_df.tail(5))
+        print(self.time_frame, self.robot, self.side, 'Signal:', signal)
+        # while True:
+        #     sleep(1)
+        #     # Checking robot status
+        #     status = self.get_status()
+        #     if status == 'inactive':
+        #         # open_trades = self.get_open_trades()
+        #         # if len(open_trades) > 0:
+        #         #     print("Closing open trades")
+        #         break
+        #
+        #     # new_candles = self.create_dataframe(self.get_candle_data(count=1))
+        #     # print(new_candles)
+        #     # self.add_new_row(df=new_candles)
+        #     # signal = self.strategy_evaluate(df=self.initial_df)
+        #     #
+        #     # print(self.initial_df.tail(200))
+        #
+        #     if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
+        #         # Generating Signal based on strategy
+        #         new_candles = self.create_dataframe(self.get_candle_data(count=1))
+        #
+        #         self.add_new_row(df=new_candles)
+        #         signal = self.strategy_evaluate(df=self.initial_df)
+        #
+        #         # print(self.initial_df.tail(5))
+        #         print(self.time_frame, self.robot, self.side, 'Signal:', signal)
+        #
+        #         self.execute_trade(signal=signal)
 
 
 def run_robot(robot, side):
     robot_status = Robots.objects.get(name=robot)
     account_data = BrokerAccounts.objects.get(account_number=robot_status.account_number)
 
-    if robot_status.status == "active":
-        return "Timeout." + robot
-    else:
-        robot_status.status = "active"
-        robot_status.save()
+    # if robot_status.status == "active":
+    #     return "Timeout." + robot
+    # else:
+    #     robot_status.status = "active"
+    #     robot_status.save()
 
-        RobotExecution(robot=robot,
-                       side=side,
-                       time_frame=robot_status.time_frame,
-                       strategy=robot_status.strategy,
-                       instrument=robot_status.security,
-                       broker=robot_status.broker,
-                       status='active',
-                       env=robot_status.env,
-                       account_number=robot_status.account_number,
-                       token=account_data.access_token).run()
-        return "Interrupted." + robot
+    RobotExecution(robot=robot,
+                   side=side,
+                   time_frame=robot_status.time_frame,
+                   strategy=robot_status.strategy,
+                   instrument=robot_status.security,
+                   broker=robot_status.broker,
+                   status='active',
+                   env=robot_status.env,
+                   account_number=robot_status.account_number,
+                   token=account_data.access_token).run()
+    return "Interrupted." + robot
 
 
 def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):

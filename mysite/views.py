@@ -29,6 +29,7 @@ from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django_q.tasks import async_task, result, fetch
+from django_q.models import Schedule
 from django_q.tasks import AsyncTask, Task
 from django_q.cluster import *
 from django_q.monitor import Stat
@@ -247,6 +248,29 @@ def new_task(request):
         print("----------------------------------")
         return JsonResponse({'response' : 'task executed'}, safe=False)
 
+
+@csrf_exempt
+def new_schedule(request):
+    print("----------------------------------")
+    print("NEW SCHEDULE  ")
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        process = request_data["process"]
+        task_name = request_data["task_name"]
+        arguments = request_data["arguments"]
+
+        print("PROCESS:", process)
+        print("TASK NAME:", task_name)
+        print("ARGUMENTS:", str(arguments))
+
+        Schedule.objects.create(func=process,
+                                args="'EUR_USD_TRD1','BUY'",
+                                schedule_type=Schedule.MINUTES,
+                                name=task_name,
+                                minutes=1,
+                                repeats=-1
+                                )
+        return JsonResponse({'response': 'schedule executed'}, safe=False)
 
 def robot_task_hook(task):
     print("ROBOT TASK HOOK")
