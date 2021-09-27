@@ -1,6 +1,8 @@
+# Models
 from robots.models import Robots, RobotTrades, Balance
 from risk.models import RobotRisk
 from portfolio.models import Positions
+from django_q.models import Schedule
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -8,17 +10,6 @@ from django.core.cache import cache
 from mysite.my_functions.general_functions import *
 
 from robots.processes.robot_balance_calc import *
-
-
-@receiver(post_save, sender=Robots)
-def load_robot_status(sender, **kwargs):
-    print("------------------------------")
-    print("SIGNAL -> Robot Info Update")
-    instance = kwargs.get('instance')
-    print("Loading data to cache")
-    cache.set(instance.name, instance.status, 30)
-    print("Robot Name - ", instance.name)
-    print("Robot Status - ", instance.status)
 
 
 @receiver(post_save, sender=RobotTrades)
@@ -35,5 +26,17 @@ def trade_closed(sender, **kwargs):
         SystemMessages(msg_type="Process",
                        msg="Robot Balance Calculation: " + balance_msg).save()
     print("------------------------------")
-#
-#
+
+
+@receiver(post_save, sender=Robots)
+def delete_robot_execution_schedule(sender, **kwargs):
+    print("------------------------------")
+    print("SIGNAL -> Robot Info Update")
+    instance = kwargs.get('instance')
+
+    print("Robot Name - ", instance.name)
+    print("Robot Status - ", instance.status)
+
+    if instance.status == 'inactive':
+        print("Robot became inactive. Shuting down open exectuion schedule")
+        Schedule.objects.filter(name=instance.name).delete()

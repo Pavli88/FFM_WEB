@@ -29,5 +29,6 @@ urlpatterns = [
     path('home/system_messages/', system_messages),
     path('new_task/', views.new_task),
     path('new/schedule/', views.new_schedule),
+    path('delete/schedule/', views.delete_schedule),
     path('update_task/', views.update_task),
 ]

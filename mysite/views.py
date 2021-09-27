@@ -1,7 +1,7 @@
 # Package imports
 import pandas as pd
 import os
-import time
+from time import time, sleep
 from datetime import date
 from datetime import datetime
 import datetime
@@ -252,25 +252,44 @@ def new_task(request):
 @csrf_exempt
 def new_schedule(request):
     print("----------------------------------")
-    print("NEW SCHEDULE  ")
+    print("          NEW SCHEDULE            ")
+    print("----------------------------------")
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         process = request_data["process"]
         task_name = request_data["task_name"]
-        arguments = request_data["arguments"]
+        minutes = request_data["minutes"]
+        schedule_type = request_data["schedule_type"]
+        arguments = "'" + "','".join(str(arg) for arg in request_data["arguments"]) + "'"
 
         print("PROCESS:", process)
         print("TASK NAME:", task_name)
         print("ARGUMENTS:", str(arguments))
+        print("MINUTES:", minutes)
+        print("SCHED TYPE:", schedule_type)
 
         Schedule.objects.create(func=process,
-                                args="'EUR_USD_TRD1','BUY'",
-                                schedule_type=Schedule.MINUTES,
+                                args=arguments,
+                                schedule_type=schedule_type,
                                 name=task_name,
-                                minutes=1,
-                                repeats=-1
-                                )
+                                minutes=minutes,
+                                repeats=-1)
+
         return JsonResponse({'response': 'schedule executed'}, safe=False)
+
+
+@csrf_exempt
+def delete_schedule(request):
+    print("----------------------------------")
+    print("         DELETE SCHEDULE          ")
+    print("----------------------------------")
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        task_name = request_data["task_name"]
+        Schedule.objects.filter(name=task_name).delete()
+
+        return JsonResponse({'response': 'schedule deleted'}, safe=False)
+
 
 def robot_task_hook(task):
     print("ROBOT TASK HOOK")

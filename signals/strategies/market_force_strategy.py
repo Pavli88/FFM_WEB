@@ -11,7 +11,7 @@ class MarketForceStrategy:
     def __init__(self, df):
         self.df = df
 
-    def calculate_indicators(self):
+    def calculate_indicators(self, threshold):
         # Moving averages
         ma50 = moving_avg(df=self.df, source='close', length=50)
         ma100 = moving_avg(df=self.df, source='close', length=100)
@@ -25,12 +25,12 @@ class MarketForceStrategy:
         ma100_dist100 = moving_avg(df=self.df, source=dist100, length=100)
         ma10_dist50 = moving_avg(df=self.df, source=dist50, length=10)
 
-        crossover(self.df, self.df[ma10_dist50], 0, name='MA10_D50_CO_0')
-        crossunder(self.df, self.df[ma10_dist50], 0, name='MA10_D50_CA_0')
-        crossover(self.df, self.df[ma100_dist100], 0, name='MA100_D100_CO_0')
-        crossunder(self.df, self.df[ma100_dist100], 0, name='MA100_D100_CA_0')
-        above(self.df, self.df[ma100_dist100], 0, name='MA100_D100_Above_0')
-        below(self.df, self.df[ma100_dist100], 0, name='MA100_D100_Below_0')
+        crossover(self.df, self.df[ma10_dist50], threshold, name='MA10_D50_CO_0')
+        crossunder(self.df, self.df[ma10_dist50], threshold, name='MA10_D50_CA_0')
+        crossover(self.df, self.df[ma100_dist100], threshold, name='MA100_D100_CO_0')
+        crossunder(self.df, self.df[ma100_dist100], threshold, name='MA100_D100_CA_0')
+        above(self.df, self.df[ma100_dist100], threshold, name='MA100_D100_Above_0')
+        below(self.df, self.df[ma100_dist100], threshold, name='MA100_D100_Below_0')
 
     def signal_generator(self):
         df = self.df.tail(1)
@@ -52,8 +52,8 @@ class MarketForceStrategy:
             return 'SELL Close'
 
 
-def strategy_evaluate(df):
+def strategy_evaluate(df, params):
     strategy = MarketForceStrategy(df=df)
-    strategy.calculate_indicators()
+    strategy.calculate_indicators(threshold=params['th'])
     return strategy.signal_generator()
 

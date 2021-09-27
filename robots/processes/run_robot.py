@@ -39,12 +39,13 @@ def plot_chart(df):
 
 
 class RobotExecution:
-    def __init__(self, robot, side, time_frame, strategy, instrument, broker, status, env, account_number, token):
+    def __init__(self, robot, side, time_frame,
+                 strategy, instrument, broker,
+                 env, account_number, token, threshold):
         self.robot = robot
         self.strategy = strategy
         self.instrument = instrument
         self.broker = broker
-        self.status = status
         self.environment = env
         self.account_number = account_number
         self.token = token
@@ -63,15 +64,10 @@ class RobotExecution:
         self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
         self.strategy_evaluate = getattr(self.strategy_location, "strategy_evaluate")
 
+        self.params = {'th': float(threshold)}
+
         print('Strategy Location:', self.strategy_location)
-
-        if self.time_frame == 'M1':
-            self.time_multiplier = 1
-        elif self.time_frame == 'M5':
-            self.time_multiplier = 5
-
         print("Time Frame:", self.time_frame)
-        print('Time Multiplier:', self.time_multiplier)
 
         # Setting up broker connection
         # This part has to be loaded with importlib as well in the future to create connection function
@@ -93,11 +89,6 @@ class RobotExecution:
         # Setting up initial dataframe
         print("Setting up initial dataframe for candle evaluation")
         self.initial_df = self.create_dataframe(data=candle_data)
-
-    def get_candle_data(self, count):
-        return self.connection.candle_data(instrument=self.instrument,
-                                           count=count,
-                                           time_frame=self.time_frame)['candles']
 
     def create_dataframe(self, data):
 
@@ -122,12 +113,6 @@ class RobotExecution:
 
         return df
 
-    def add_new_row(self, df):
-        self.initial_df = self.initial_df.append(df)
-
-    def get_status(self):
-        return cache.get(self.robot)
-
     def execute_trade(self, signal):
         # New trade execution
         if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
@@ -141,11 +126,11 @@ class RobotExecution:
                 return None
             # Saving executed trade to FFM database
             r = requests.post(self.url + 'trade_page/new_trade/save/', data={'security': self.instrument,
-                                                                                        'robot': self.robot,
-                                                                                        'quantity': quantity,
-                                                                                        'open_price': trade["price"],
-                                                                                        'side': self.side,
-                                                                                        'broker_id': trade['id']})
+                                                                             'robot': self.robot,
+                                                                             'quantity': quantity,
+                                                                             'open_price': trade["price"],
+                                                                             'side': self.side,
+                                                                             'broker_id': trade['id']})
         # Closing trade execution
         if (self.side == 'BUY' and signal == 'BUY Close') or (self.side == 'SELL' and signal == 'SELL Close'):
             self.close_all_trades()
@@ -160,9 +145,6 @@ class RobotExecution:
                 quantity = risk_params['quantity'] * -1
 
         return quantity
-
-    def close_trade(self):
-        return ""
 
     def close_all_trades(self):
         open_trades = pd.DataFrame(requests.get(self.url + 'trade_page/open_trades/' + self.robot).json())
@@ -187,66 +169,45 @@ class RobotExecution:
 
     def run(self):
         print("Start of strategy execution")
-        period = 60 * self.time_multiplier
-        print("PERIOD", period)
         sleep(5)
-        # new_candles = self.create_dataframe(self.get_candle_data(count=1))
-        # print(new_candles)
-        # self.add_new_row(df=new_candles)
-        signal = self.strategy_evaluate(df=self.initial_df)
+
+        print(self.params, self.params['th'])
+        signal = self.strategy_evaluate(df=self.initial_df, params=self.params)
+        # self.execute_trade(signal=signal)
 
         print(self.initial_df.tail(5))
         print(self.time_frame, self.robot, self.side, 'Signal:', signal)
-        # while True:
-        #     sleep(1)
-        #     # Checking robot status
-        #     status = self.get_status()
-        #     if status == 'inactive':
-        #         # open_trades = self.get_open_trades()
-        #         # if len(open_trades) > 0:
-        #         #     print("Closing open trades")
-        #         break
-        #
-        #     # new_candles = self.create_dataframe(self.get_candle_data(count=1))
-        #     # print(new_candles)
-        #     # self.add_new_row(df=new_candles)
-        #     # signal = self.strategy_evaluate(df=self.initial_df)
-        #     #
-        #     # print(self.initial_df.tail(200))
-        #
+
+        # plt.figure(figsize=[15, 10])
+        # plt.grid(True)
+        # plt.plot(self.initial_df['MA10(close_to_MA50(close))'], label='data')
+        # plt.plot(self.initial_df['MA100(close_to_MA100(close))'], label='SMA 3 Months')
+        # plt.plot(self.initial_df['close_to_MA200(close)'], label='SMA 4 Months')
+        # plt.plot(self.initial_df['close_to_MA50(close)'], label='SMA 4 Months')
+        # plt.legend(loc=2)
+        # plt.axhline(y=self.params['th'], color='r', linestyle='-')
+        # plt.savefig('/home/pavlicseka/Documents/' + self.robot + self.time_frame + '.png')
+        # plt.close()
+
         #     if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
-        #         # Generating Signal based on strategy
-        #         new_candles = self.create_dataframe(self.get_candle_data(count=1))
-        #
-        #         self.add_new_row(df=new_candles)
-        #         signal = self.strategy_evaluate(df=self.initial_df)
-        #
-        #         # print(self.initial_df.tail(5))
-        #         print(self.time_frame, self.robot, self.side, 'Signal:', signal)
-        #
-        #         self.execute_trade(signal=signal)
 
 
-def run_robot(robot, side):
+def run_robot(robot, side, threshold):
     robot_status = Robots.objects.get(name=robot)
+    robot_status.status = 'active'
+    robot_status.save()
     account_data = BrokerAccounts.objects.get(account_number=robot_status.account_number)
-
-    # if robot_status.status == "active":
-    #     return "Timeout." + robot
-    # else:
-    #     robot_status.status = "active"
-    #     robot_status.save()
-
     RobotExecution(robot=robot,
                    side=side,
                    time_frame=robot_status.time_frame,
                    strategy=robot_status.strategy,
                    instrument=robot_status.security,
                    broker=robot_status.broker,
-                   status='active',
                    env=robot_status.env,
                    account_number=robot_status.account_number,
-                   token=account_data.access_token).run()
+                   token=account_data.access_token,
+                   threshold=threshold).run()
+
     return "Interrupted." + robot
 
 
