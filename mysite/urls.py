@@ -31,4 +31,5 @@ urlpatterns = [
     path('new/schedule/', views.new_schedule),
     path('delete/schedule/', views.delete_schedule),
     path('update_task/', views.update_task),
+    path('test/', views.test),
 ]

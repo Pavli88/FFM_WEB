@@ -35,25 +35,28 @@ class MarketForceStrategy:
     def signal_generator(self):
         df = self.df.tail(1)
 
-        # BUY Signal
-        if df['MA10_D50_CO_0'] is True and df['MA100_D100_Above_0'] is True:
+        # Buy Signal
+        if df['MA10_D50_CO_0'].iloc[0] and df['MA100_D100_Above_0'].iloc[0]:
+            print("BUY SIGNAL")
             return 'BUY'
 
         # Sell Signal
-        if df['MA10_D50_CA_0'] is True and df['MA100_D100_Below_0'] is True:
+        elif df['MA10_D50_CA_0'].iloc[0] and df['MA100_D100_Below_0'].iloc[0]:
+            print("SELL SIGNAL")
             return 'SELL'
 
         # Buy Close Signal
-        if df['MA100_D100_CA_0'] is True:
+        elif df['MA100_D100_CA_0'].iloc[0]:
             return 'BUY Close'
 
         # Sell Close Signal
-        if df['MA100_D100_CO_0'] is True:
+        elif df['MA100_D100_CO_0'].iloc[0]:
             return 'SELL Close'
+        else:
+            return None
 
 
 def strategy_evaluate(df, params):
     strategy = MarketForceStrategy(df=df)
     strategy.calculate_indicators(threshold=params['th'])
     return strategy.signal_generator()
-

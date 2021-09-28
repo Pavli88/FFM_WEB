@@ -30,13 +30,6 @@ def trade_closed(sender, **kwargs):
 
 @receiver(post_save, sender=Robots)
 def delete_robot_execution_schedule(sender, **kwargs):
-    print("------------------------------")
-    print("SIGNAL -> Robot Info Update")
     instance = kwargs.get('instance')
-
-    print("Robot Name - ", instance.name)
-    print("Robot Status - ", instance.status)
-
     if instance.status == 'inactive':
-        print("Robot became inactive. Shuting down open exectuion schedule")
         Schedule.objects.filter(name=instance.name).delete()

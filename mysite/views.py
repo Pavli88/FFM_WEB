@@ -41,6 +41,8 @@ from robots.models import *
 from accounts.models import *
 
 
+from robots.processes.run_robot import run_robot
+
 def load_robot_stats(request, env):
     print("*** Robot Cumulative Performance Calculation ***")
 
@@ -222,6 +224,16 @@ def system_messages(request):
 
 
 # Long Running Process Management --------------------------------------------------------------------------------------
+@csrf_exempt
+def test(request):
+    if request.method == "POST":
+        robot = request.POST.get("robot")
+        side = request.POST.get("side")
+        threshold = request.POST.get("threshold")
+        run_robot(robot=robot, side=side, threshold=threshold)
+        return JsonResponse({'response': 'task executed'}, safe=False)
+
+
 @csrf_exempt
 def new_task(request):
     print("----------------------------------")

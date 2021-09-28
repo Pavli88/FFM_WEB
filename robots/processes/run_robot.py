@@ -53,41 +53,24 @@ class RobotExecution:
         self.side = side
         self.url = 'https://pavliati.pythonanywhere.com/' # 'https://pavliati.pythonanywhere.com/'  'http://127.0.0.1:8000/'
 
-        print("")
-        print("ROBOT EXECUTION")
-        print("Robot:", self.robot)
-        print("Strategy:", self.strategy)
-        print("Instrument:", self.instrument)
-        print('Side:', self.side)
-
         # this goes to a variable and loaded from db
         self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
         self.strategy_evaluate = getattr(self.strategy_location, "strategy_evaluate")
 
         self.params = {'th': float(threshold)}
 
-        print('Strategy Location:', self.strategy_location)
-        print("Time Frame:", self.time_frame)
-
         # Setting up broker connection
         # This part has to be loaded with importlib as well in the future to create connection function
-        print("Setting up broker connection")
-        print("Broker:", self.broker)
-        print("Environment:", self.environment)
-        print("Account Number", self.account_number)
-        print("Token:", self.token)
         self.connection = OandaV20(access_token=self.token,
                                    account_id=self.account_number,
                                    environment=self.environment)
 
         # Requesting initial candle data from broker
-        print("Requesting initial candles from broker")
         candle_data = self.connection.candle_data(instrument=self.instrument,
                                                   count=500,
                                                   time_frame=self.time_frame)['candles']
 
         # Setting up initial dataframe
-        print("Setting up initial dataframe for candle evaluation")
         self.initial_df = self.create_dataframe(data=candle_data)
 
     def create_dataframe(self, data):
@@ -133,6 +116,7 @@ class RobotExecution:
                                                                              'broker_id': trade['id']})
         # Closing trade execution
         if (self.side == 'BUY' and signal == 'BUY Close') or (self.side == 'SELL' and signal == 'SELL Close'):
+            print("Close signal")
             self.close_all_trades()
 
     def quantity_calc(self):
@@ -168,15 +152,12 @@ class RobotExecution:
             #                    open_trade["pl"])).save()
 
     def run(self):
-        print("Start of strategy execution")
         sleep(5)
-
-        print(self.params, self.params['th'])
         signal = self.strategy_evaluate(df=self.initial_df, params=self.params)
-        # self.execute_trade(signal=signal)
-
-        print(self.initial_df.tail(5))
         print(self.time_frame, self.robot, self.side, 'Signal:', signal)
+        self.execute_trade(signal=signal)
+
+        # print(self.initial_df.tail(30))
 
         # plt.figure(figsize=[15, 10])
         # plt.grid(True)
