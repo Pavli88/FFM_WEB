@@ -16,6 +16,7 @@ class Robots(models.Model):
     account_number = models.CharField(max_length=50, default='')
     inception_date = models.DateField(default=datetime.date.today)
     currency = models.CharField(max_length=50, default='')
+    strategy_params = models.JSONField()
 
 
 class RobotCashFlow(models.Model):

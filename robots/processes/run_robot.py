@@ -17,11 +17,9 @@ from robots.models import *
 from risk.models import *
 from robots.models import *
 from accounts.models import BrokerAccounts
+from signals.models import Strategies
 
 # Django imports
-from django.core.cache import cache
-from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpRequest
 
 # Process imports
 from mysite.processes.oanda import *
@@ -39,9 +37,9 @@ def plot_chart(df):
 
 
 class RobotExecution:
-    def __init__(self, robot, side, time_frame,
+    def __init__(self, robot, time_frame,
                  strategy, instrument, broker,
-                 env, account_number, token, threshold):
+                 env, account_number, token, strategy_location, params):
         self.robot = robot
         self.strategy = strategy
         self.instrument = instrument
@@ -50,14 +48,13 @@ class RobotExecution:
         self.account_number = account_number
         self.token = token
         self.time_frame = time_frame
-        self.side = side
+        self.side = params['side']
         self.url = 'https://pavliati.pythonanywhere.com/' # 'https://pavliati.pythonanywhere.com/'  'http://127.0.0.1:8000/'
 
         # this goes to a variable and loaded from db
-        self.strategy_location = importlib.import_module('signals.strategies.market_force_strategy')
+        self.strategy_location = importlib.import_module(strategy_location)
         self.strategy_evaluate = getattr(self.strategy_location, "strategy_evaluate")
-
-        self.params = {'th': float(threshold)}
+        self.params = params['strategy_params']
 
         # Setting up broker connection
         # This part has to be loaded with importlib as well in the future to create connection function
@@ -178,8 +175,8 @@ def run_robot(robot, side, threshold):
     robot_status.status = 'active'
     robot_status.save()
     account_data = BrokerAccounts.objects.get(account_number=robot_status.account_number)
+    strategy = Strategies.objects.get(name=robot_status.strategy)
     RobotExecution(robot=robot,
-                   side=side,
                    time_frame=robot_status.time_frame,
                    strategy=robot_status.strategy,
                    instrument=robot_status.security,
@@ -187,7 +184,8 @@ def run_robot(robot, side, threshold):
                    env=robot_status.env,
                    account_number=robot_status.account_number,
                    token=account_data.access_token,
-                   threshold=threshold).run()
+                   strategy_location=strategy.location,
+                   params=robot_status.strategy_params).run()
 
     return "Interrupted." + robot
 

@@ -58,5 +58,5 @@ class MarketForceStrategy:
 
 def strategy_evaluate(df, params):
     strategy = MarketForceStrategy(df=df)
-    strategy.calculate_indicators(threshold=params['th'])
+    strategy.calculate_indicators(threshold=params['threshold'])
     return strategy.signal_generator()
