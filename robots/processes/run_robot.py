@@ -151,7 +151,7 @@ class RobotExecution:
     def run(self):
         sleep(5)
         signal = self.strategy_evaluate(df=self.initial_df, params=self.params)
-        print(self.time_frame, self.robot, self.side, 'Signal:', signal)
+        print(self.time_frame, self.robot, self.side, 'Signal:', signal, 'Strategy Params:', self.params)
         self.execute_trade(signal=signal)
 
         # print(self.initial_df.tail(30))
@@ -170,7 +170,7 @@ class RobotExecution:
         #     if int((60 * self.time_multiplier) - time() % (60 * self.time_multiplier)) == period - 10:
 
 
-def run_robot(robot, side, threshold):
+def run_robot(robot):
     robot_status = Robots.objects.get(name=robot)
     robot_status.status = 'active'
     robot_status.save()

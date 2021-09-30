@@ -430,7 +430,6 @@ def robot_pricing(request):
 
 def get_trades(request):
     if request.method == "GET":
-
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         robot = request.GET.get("robot")
@@ -450,5 +449,19 @@ def get_robot(request, robot):
         print(robot)
         return JsonResponse(list(robot), safe=False)
 
+
+@csrf_exempt
+def update_strategy_params(request):
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        robot = request_data["robot"]
+        strategy_params = request_data["strategy_params"]
+
+        robot = Robots.objects.get(name=robot)
+        robot.strategy_params = strategy_params
+        robot.save()
+
+        print(strategy_params)
+        return JsonResponse({'response': 'updated'}, safe=False)
 
 
