@@ -8,6 +8,7 @@ import datetime
 from multiprocessing import Process
 import subprocess
 import json
+import logging
 
 from accounts.account_functions import *
 from portfolio.models import *
@@ -34,14 +35,15 @@ from django_q.tasks import AsyncTask, Task
 from django_q.cluster import *
 from django_q.monitor import Stat
 from django_q.brokers.orm import ORM
+from django.conf import settings
 
 # Database imports
 from mysite.models import *
 from robots.models import *
 from accounts.models import *
 
-
 from robots.processes.run_robot import run_robot
+
 
 def load_robot_stats(request, env):
     print("*** Robot Cumulative Performance Calculation ***")
@@ -224,13 +226,11 @@ def system_messages(request):
 
 
 # Long Running Process Management --------------------------------------------------------------------------------------
-@csrf_exempt
+
 def test(request):
-    if request.method == "POST":
+    if request.method == "GET":
         robot = request.POST.get("robot")
-        side = request.POST.get("side")
-        threshold = request.POST.get("threshold")
-        run_robot(robot=robot, side=side, threshold=threshold)
+        run_robot(robot='NATGAS_USD_TRD_M')
         return JsonResponse({'response': 'task executed'}, safe=False)
 
 
@@ -286,6 +286,17 @@ def new_schedule(request):
                                 name=task_name,
                                 minutes=minutes,
                                 repeats=-1)
+
+        logging.basicConfig(format='%(asctime)s %(message)s',
+                            datefmt='%m/%d/%Y %I:%M:%S %p',
+                            filename=settings.BASE_DIR + '/process_logs/schedules/' + task_name + '.log',
+                            filemode='w',
+                            level=logging.INFO)
+        logging.info(str(' ').join(['Process:', str(process)]))
+        logging.info(str(' ').join(['Task Name:', str(task_name)]))
+        logging.info(str(' ').join(['Arguments:', str(arguments)]))
+        logging.info(str(' ').join(['Minutes:', str(minutes)]))
+        logging.info(str(' ').join(['Schedule Type:', str(schedule_type)]))
 
         return JsonResponse({'response': 'schedule executed'}, safe=False)
 

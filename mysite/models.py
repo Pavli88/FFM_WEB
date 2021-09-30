@@ -34,6 +34,7 @@ class Settings(models.Model):
 
 class SystemMessages(models.Model):
     msg_type = models.CharField(max_length=100, default="")
+    msg_sub_type = models.CharField(max_length=100, default="")
     msg = models.CharField(max_length=200, default="")
     date = models.DateField(auto_now=True)
 

@@ -1,0 +1,6 @@
+09/30/2021 09:38:44 PM Process: robots.processes.run_robot.run_robot
+09/30/2021 09:38:44 PM Task Name: step_trade
+09/30/2021 09:38:44 PM Arguments: 'step_trade'
+09/30/2021 09:38:44 PM Minutes: 1
+09/30/2021 09:38:44 PM Schedule Type: I
+09/30/2021 09:39:08 PM /home/pavlicseka/ffm_web/mysite/views.py changed, reloading.
