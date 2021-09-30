@@ -292,6 +292,7 @@ def new_schedule(request):
                             filename=settings.BASE_DIR + '/process_logs/schedules/' + task_name + '.log',
                             filemode='w',
                             level=logging.INFO)
+        print(settings.BASE_DIR)
         logging.info(str(' ').join(['Process:', str(process)]))
         logging.info(str(' ').join(['Task Name:', str(task_name)]))
         logging.info(str(' ').join(['Arguments:', str(arguments)]))

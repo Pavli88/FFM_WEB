@@ -147,7 +147,7 @@ class RobotExecution:
         self.execute_trade(signal=signal)
         logging.basicConfig(format='%(asctime)s %(message)s',
                             datefmt='%m/%d/%Y %I:%M:%S %p',
-                            filename=settings.BASE_DIR + self.robot + '.log',
+                            filename=settings.BASE_DIR + '/process_logs/schedules/' + self.robot + '.log',
                             level=logging.INFO)
         logging.info(str(' ').join(['ROBOT:', self.robot,
                                     '- TIMEFRAME:', str(self.time_frame),
