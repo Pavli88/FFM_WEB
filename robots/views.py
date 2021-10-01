@@ -162,6 +162,16 @@ def get_robots(request, env):
         return JsonResponse(response, safe=False)
 
 
+def get_robot_data(request):
+    if request.method == "GET":
+        env = request.GET.get('env')
+        status = request.GET.get('status')
+        robots = Robots.objects.filter(env=env).filter(status=status).values()
+        print(robots)
+        response = list(robots)
+        return JsonResponse(response, safe=False)
+
+
 def get_robots_with_instrument_data(request):
     if request.method == "GET":
         print("ROBOT WITH INSTRUMENT")

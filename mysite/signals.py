@@ -21,10 +21,30 @@ def trade_closed(sender, **kwargs):
     print("BROKER ID: ", robot_data.broker_id)
     print("STATUS: ", robot_data.status)
 
+    SystemMessages(msg_type="Trade",
+                   msg_sub_type='Open',
+                   msg=str(' ').join([robot_data.robot,
+                                      str(robot_data.quantity),
+                                      '@',
+                                      str(robot_data.open_price),
+                                      ])).save()
+
     if robot_data.status == "CLOSED":
         balance_msg = balance_calc(robot=robot_data.robot, calc_date=get_today())
+
+        SystemMessages(msg_type="Trade",
+                       msg_sub_type='Close',
+                       msg=str(' ').join([robot_data.robot,
+                                          str(robot_data.quantity),
+                                          '@',
+                                          str(robot_data.close_price),
+                                          'P&L',
+                                          str(robot_data.pnl)
+                                          ])).save()
+
         SystemMessages(msg_type="Process",
-                       msg="Robot Balance Calculation: " + balance_msg).save()
+                       msg_sub_type='Balance Calculation',
+                       msg=balance_msg).save()
     print("------------------------------")
 
 
