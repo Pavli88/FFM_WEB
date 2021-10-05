@@ -103,7 +103,7 @@ class RobotExecution:
                                                                              'broker_id': trade['id']})
         # Closing trade execution
         if (self.side == 'BUY' and signal == 'BUY Close') or (self.side == 'SELL' and signal == 'SELL Close'):
-            logging.info('Close Signal')
+            # logging.info('Close Signal')
             print("Close signal")
             self.close_all_trades()
 
@@ -119,42 +119,38 @@ class RobotExecution:
         return quantity
 
     def close_all_trades(self):
-        logging.info('Closing all trades')
+    #     logging.info('Closing all trades')
         open_trades = pd.DataFrame(requests.get(self.url + 'trade_page/open_trades/' + self.robot).json())
 
         if len(open_trades) == 0:
-            logging.info("There are no open trades for robot")
+            # logging.info("There are no open trades for robot")
             return None
 
         for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
-            logging.info("Close -> OANDA ID: " + str(trd))
+            # logging.info("Close -> OANDA ID: " + str(trd))
             open_trade = self.connection.close_trades(trd_id=trd)
-            logging.info("Trade closed at broker s side")
+            # logging.info("Trade closed at broker s side")
 
             # Saving record in ffm database
             r = requests.post(self.url + 'trade_page/close_trade/test/', data={'id': id,
                                                                                'close_price': open_trade["price"],
                                                                                'pnl': open_trade["pl"]})
-            logging.info("Update -> Database ID: " + str(id))
-            # SystemMessages(msg_type="Trade",
-            #                msg="Close all trades [" + str(trd) + "] " + self.robot + " P&L: " + str(
-            #                    open_trade["pl"])).save()
 
     def run(self):
         sleep(5)
         signal = self.strategy_evaluate(df=self.initial_df, params=self.params)
         # print(self.time_frame, self.robot, self.side, 'Signal:', signal, 'Strategy Params:', self.params)
         self.execute_trade(signal=signal)
-        logging.basicConfig(format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p',
-                            filename=settings.BASE_DIR + '/process_logs/schedules/' + self.robot + '.log',
-                            level=logging.INFO)
-        logging.info(str(' ').join(['ROBOT:', self.robot,
-                                    '- TIMEFRAME:', str(self.time_frame),
-                                    '- STRATEGY PARAMETERS:', str(self.params),
-                                    '---> | SIDE:', self.side,
-                                    '- SIGNAL:', str(signal),
-                                    '|']))
+        # logging.basicConfig(format='%(asctime)s %(message)s',
+        #                     datefmt='%m/%d/%Y %I:%M:%S %p',
+        #                     filename=settings.BASE_DIR + '/process_logs/schedules/' + self.robot + '.log',
+        #                     level=logging.INFO)
+        # logging.info(str(' ').join(['ROBOT:', self.robot,
+        #                             '- TIMEFRAME:', str(self.time_frame),
+        #                             '- STRATEGY PARAMETERS:', str(self.params),
+        #                             '---> | SIDE:', self.side,
+        #                             '- SIGNAL:', str(signal),
+        #                             '|']))
         # print(self.initial_df.tail(30))
 
         # plt.figure(figsize=[15, 10])

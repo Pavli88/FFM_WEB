@@ -218,11 +218,23 @@ def register(request):
 # **********************************************************************************************************************
 # HOME PAGE
 # @login_required(login_url="/")
-def system_messages(request):
+def system_messages(request, type):
     if request.method == "GET":
         date = request.GET.get("date")
-        system_messages = SystemMessages.objects.filter(date=date).order_by('-id').values()
+        if type == 'All':
+            system_messages = SystemMessages.objects.filter(date=date).order_by('-id').values()
+        elif type == 'not_verified':
+            system_messages = SystemMessages.objects.filter(date=date).filter(verified=0).order_by('-id').values()
         return JsonResponse(list(system_messages), safe=False)
+
+
+def verify_system_message(request, msg_id):
+    if request.method == "GET":
+        msg = SystemMessages.objects.get(id=msg_id)
+        msg.verified = 1
+        msg.save()
+
+        return JsonResponse(list({}), safe=False)
 
 
 # Long Running Process Management --------------------------------------------------------------------------------------
@@ -287,17 +299,17 @@ def new_schedule(request):
                                 minutes=minutes,
                                 repeats=-1)
 
-        logging.basicConfig(format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S %p',
-                            filename=settings.BASE_DIR + '/process_logs/schedules/' + task_name + '.log',
-                            filemode='w',
-                            level=logging.INFO)
-        print(settings.BASE_DIR)
-        logging.info(str(' ').join(['Process:', str(process)]))
-        logging.info(str(' ').join(['Task Name:', str(task_name)]))
-        logging.info(str(' ').join(['Arguments:', str(arguments)]))
-        logging.info(str(' ').join(['Minutes:', str(minutes)]))
-        logging.info(str(' ').join(['Schedule Type:', str(schedule_type)]))
+        # logging.basicConfig(format='%(asctime)s %(message)s',
+        #                     datefmt='%m/%d/%Y %I:%M:%S %p',
+        #                     filename=settings.BASE_DIR + '/process_logs/schedules/' + task_name + '.log',
+        #                     filemode='w',
+        #                     level=logging.INFO)
+        # print(settings.BASE_DIR)
+        # logging.info(str(' ').join(['Process:', str(process)]))
+        # logging.info(str(' ').join(['Task Name:', str(task_name)]))
+        # logging.info(str(' ').join(['Arguments:', str(arguments)]))
+        # logging.info(str(' ').join(['Minutes:', str(minutes)]))
+        # logging.info(str(' ').join(['Schedule Type:', str(schedule_type)]))
 
         return JsonResponse({'response': 'schedule executed'}, safe=False)
 
