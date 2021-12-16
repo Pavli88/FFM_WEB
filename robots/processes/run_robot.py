@@ -83,64 +83,11 @@ class RobotExecution:
 
         return df
 
-    def execute_trade(self, signal):
-        # New trade execution
-        if (self.side == 'BUY' and signal == 'BUY') or (self.side == 'SELL' and signal == 'SELL'):
-            quantity = self.quantity_calc()
-            try:
-                trade = self.connection.submit_market_order(security=self.instrument, quantity=quantity)
-            except:
-                print("Error during trade execution")
-                # SystemMessages(msg_type="Trade",
-                #                msg="ERROR - " + self.robot + " - Error during trade execution at broker").save()
-                return None
-            # Saving executed trade to FFM database
-            r = requests.post(self.url + 'trade_page/new_trade/save/', data={'security': self.instrument,
-                                                                             'robot': self.robot,
-                                                                             'quantity': quantity,
-                                                                             'open_price': trade["price"],
-                                                                             'side': self.side,
-                                                                             'broker_id': trade['id']})
-        # Closing trade execution
-        if (self.side == 'BUY' and signal == 'BUY Close') or (self.side == 'SELL' and signal == 'SELL Close'):
-            # logging.info('Close Signal')
-            print("Close signal")
-            self.close_all_trades()
-
-    def quantity_calc(self):
-        risk_params = requests.get(self.url + 'risk/get_risk/' + self.robot).json()
-
-        if risk_params['quantity_type'] == "Fix":
-            if self.side == "BUY":
-                quantity = risk_params['quantity']
-            elif self.side == "SELL":
-                quantity = risk_params['quantity'] * -1
-
-        return quantity
-
-    def close_all_trades(self):
-    #     logging.info('Closing all trades')
-        open_trades = pd.DataFrame(requests.get(self.url + 'trade_page/open_trades/' + self.robot).json())
-
-        if len(open_trades) == 0:
-            # logging.info("There are no open trades for robot")
-            return None
-
-        for id, trd in zip(open_trades["id"], open_trades["broker_id"]):
-            # logging.info("Close -> OANDA ID: " + str(trd))
-            open_trade = self.connection.close_trades(trd_id=trd)
-            # logging.info("Trade closed at broker s side")
-
-            # Saving record in ffm database
-            r = requests.post(self.url + 'trade_page/close_trade/test/', data={'id': id,
-                                                                               'close_price': open_trade["price"],
-                                                                               'pnl': open_trade["pl"]})
-
     def run(self):
         sleep(5)
         signal = self.strategy_evaluate(df=self.initial_df, params=self.params)
         # print(self.time_frame, self.robot, self.side, 'Signal:', signal, 'Strategy Params:', self.params)
-        self.execute_trade(signal=signal)
+
         # logging.basicConfig(format='%(asctime)s %(message)s',
         #                     datefmt='%m/%d/%Y %I:%M:%S %p',
         #                     filename=settings.BASE_DIR + '/process_logs/schedules/' + self.robot + '.log',
@@ -186,35 +133,3 @@ def run_robot(robot):
 
     return "Interrupted." + robot
 
-
-def risk_control(robot, trades_data, current_price, robot_balance, risk_exposure, sl):
-    total_pnl = 0.0
-
-    # Loop to look through all open position to evaluate risk checks
-    for trade in trades_data:
-        print(trade)
-        side = trade['side']
-        quantity = trade['quantity']
-        open_price = trade['open_price']
-
-        if side == "SELL":
-            pnl = ((quantity * open_price) - (quantity * current_price)) * -1
-        if side == "BUY":
-            pnl = (quantity * current_price) - (quantity * open_price)
-        total_pnl = + total_pnl + pnl
-
-        # Stop loss check
-        if side == "BUY" and float(current_price) < float(sl):
-            print("BUY SL Trigger")
-
-        if side == "SELL" and float(current_price) > float(sl):
-            print("SELL SL Trigger")
-
-    pnl_info = " Total P&L:" + str(total_pnl) + " Total Return:" + str(
-        total_pnl / robot_balance) + " Max Risk Loss Exposure:" + str((risk_exposure * -1) * 100)
-
-    print(pnl_info, "SL", sl, "Price", current_price)
-
-    # Loss treshold breached
-    if (total_pnl / robot_balance) < (risk_exposure * -1):
-        return "Execution stopped. Reason: Risk Controll -> Exposure treshold"
