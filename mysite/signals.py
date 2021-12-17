@@ -1,7 +1,8 @@
 # Models
 from robots.models import Robots, RobotTrades, Balance
 from risk.models import RobotRisk
-from portfolio.models import Positions
+from portfolio.models import Positions, CashFlow, CashHolding
+from instrument.models import Instruments
 from django_q.models import Schedule
 
 from django.db.models.signals import post_save
@@ -9,8 +10,10 @@ from django.dispatch import receiver
 from django.core.cache import cache
 from mysite.my_functions.general_functions import *
 
+# Processes
 from robots.processes.robot_balance_calc import *
-
+from robots.processes.robot_pricing import pricing_robot
+from portfolio.processes.cash_holding import cash_holding
 
 @receiver(post_save, sender=RobotTrades)
 def trade_closed(sender, **kwargs):
@@ -54,3 +57,29 @@ def delete_robot_execution_schedule(sender, **kwargs):
     instance = kwargs.get('instance')
     if instance.status == 'inactive':
         Schedule.objects.filter(name=instance.name).delete()
+
+
+@receiver(post_save, sender=Balance)
+def calculate_robot_price(sender, **kwargs):
+    print("------------------------------")
+    print("SIGNAL -> Balance Calculation")
+    balance_data = kwargs.get('instance')
+    instrument = Instruments.objects.filter(instrument_name=balance_data.robot_name).values()[0]
+
+    print(balance_data)
+    print("ROBOT: ", balance_data.robot_name)
+    print(instrument['id'])
+    print(get_today())
+    pricing_response = pricing_robot(robot=balance_data.robot_name, calc_date=get_today(), instrument_id=instrument['id'])
+    print(pricing_response)
+
+
+# Portfolio related signals
+@receiver(post_save, sender=CashFlow)
+def run_port_cash_holding(sender, **kwargs):
+    print("--------------------------------------------")
+    print("SIGNAL -> Portfolio Cash Holding Calculation")
+    cash_data = kwargs.get('instance')
+    print("PORTFOLIO: ", cash_data.portfolio_code)
+    cash_holding_calc_response = cash_holding(portfolio=cash_data.portfolio_code, calc_date=get_today())
+    print(cash_holding_calc_response)

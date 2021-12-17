@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
+from django.db import connection
 
 from mysite.processes.oanda import *
 from accounts.account_functions import *
@@ -16,7 +17,7 @@ import json
 from robots.processes.robot_balance_calc import *
 from mysite.processes.risk_calculations import *
 from mysite.processes.return_calculation import *
-from robots.processes.robot_pricing import *
+from robots.processes.robot_pricing import pricing_robot
 
 # Date imports
 import datetime
@@ -416,7 +417,7 @@ def robot_pricing(request):
 
             while start_date <= end_date:
                 # print("    DATE:", start_date)
-                pricing_response = pricing(robot=active_robot, calc_date=start_date, instrument_id=instrument_id)
+                pricing_response = pricing_robot(robot=active_robot, calc_date=start_date, instrument_id=instrument_id)
 
                 if pricing_response is None:
                     pass

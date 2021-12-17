@@ -6,7 +6,7 @@ from robots.models import *
 from instrument.models import *
 
 
-def pricing(robot, calc_date, instrument_id):
+def pricing_robot(robot, calc_date, instrument_id):
 
     t_min_one_date = previous_business_day(currenct_day=calc_date.strftime('%Y-%m-%d'))
     robot_data = Robots.objects.filter(name=robot).values()
@@ -44,7 +44,7 @@ def pricing(robot, calc_date, instrument_id):
                     print("    T-1 Robot Price:", price)
                     print("")
                 except:
-                    return "There is no price for T-1 for"
+                    return "There is no price for T-1 date"
 
             # Get latest robot balance for daily return
             try:

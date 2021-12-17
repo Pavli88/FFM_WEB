@@ -3,21 +3,23 @@ from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+# Model imports
 from portfolio.models import *
 from robots.models import *
-
-from portfolio.processes.processes import *
-from robots.processes.robot_balance_calc import *
+from mysite.models import *
 from instrument.models import *
+
 from datetime import datetime
 import datetime
-from mysite.models import *
-from mysite.my_functions.general_functions import *
-
-from portfolio.portfolio_functions import *
 import json
+
+# Process imports
+from mysite.my_functions.general_functions import *
+from portfolio.portfolio_functions import *
 from portfolio.processes.port_pos import *
 from portfolio.processes.cash_holding import *
+from portfolio.processes.processes import *
+from robots.processes.robot_balance_calc import *
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
@@ -46,7 +48,7 @@ def create_portfolio(request):
             print("Creating nav record for the portfolio")
 
             Nav(portfolio_name=port_name).save()
-
+            CashFlow(portfolio_code=port_code, amount=0.0, type='INFLOW', currency=port_currency).save()
         except:
             response = "Portfolio exists in database!"
 
@@ -112,11 +114,12 @@ def get_cash_flow(request):
 
 
 def get_cash_holdings(request):
-    portfolio = request.GET.get('portfolio')
-    date = request.GET.get('date')
-    cash_holding_data = CashHolding.objects.filter(portfolio_code=portfolio).values()
+    if request.method == "GET":
+        portfolio = request.GET.get('portfolio')
+        date = request.GET.get('date')
+        cash_holding_data = CashHolding.objects.filter(portfolio_code=portfolio).filter(date=date).values()
 
-    return JsonResponse(list(cash_holding_data), safe=False)
+        return JsonResponse(list(cash_holding_data), safe=False)
 
 
 def get_positions(request):

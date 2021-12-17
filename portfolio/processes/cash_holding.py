@@ -48,4 +48,4 @@ def cash_holding(portfolio, calc_date):
                             amount=row['amount'],
                             date=date).save()
 
-    return ""
+    return "Ending Balance " + str(row['amount'])
