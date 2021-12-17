@@ -15,6 +15,7 @@ from robots.processes.robot_balance_calc import *
 from robots.processes.robot_pricing import pricing_robot
 from portfolio.processes.cash_holding import cash_holding
 
+
 @receiver(post_save, sender=RobotTrades)
 def trade_closed(sender, **kwargs):
     print("------------------------------")
@@ -65,12 +66,9 @@ def calculate_robot_price(sender, **kwargs):
     print("SIGNAL -> Balance Calculation")
     balance_data = kwargs.get('instance')
     instrument = Instruments.objects.filter(instrument_name=balance_data.robot_name).values()[0]
-
-    print(balance_data)
     print("ROBOT: ", balance_data.robot_name)
     print(instrument['id'])
-    print(get_today())
-    pricing_response = pricing_robot(robot=balance_data.robot_name, calc_date=get_today(), instrument_id=instrument['id'])
+    pricing_response = pricing_robot(robot=balance_data.robot_name, calc_date=balance_data.date, instrument_id=instrument['id'])
     print(pricing_response)
 
 
