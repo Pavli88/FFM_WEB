@@ -18,8 +18,8 @@ def portfolio_positions(portfolio, calc_date):
     t_min_one_date = previous_business_day(str(calc_date))
     date = datetime.datetime.strptime(str(calc_date), '%Y-%m-%d')
 
+    # Intraday positioning
     try:
-        # Intraday positioning
         trades_df = pd.DataFrame(list(Trade.objects.filter(portfolio_name=portfolio).filter(date=date).values('portfolio_name', 'security', 'quantity', 'date')))
     except:
         trades_df = pd.DataFrame(columns=['portfolio_name', 'security', 'quantity', 'date'])
@@ -29,17 +29,17 @@ def portfolio_positions(portfolio, calc_date):
         previous_day_positions = pd.DataFrame(list(Positions.objects.filter(date=t_min_one_date).filter(portfolio_name=portfolio).values()))
     except:
         previous_day_positions = pd.DataFrame(columns=['portfolio_name', 'security', 'quantity', 'date'])
-
     added_df = trades_df.append(previous_day_positions)
 
     if added_df.empty is True:
-        return 'empty portfolio'
+        return [{'msg': 'Empty portfolio'}]
     else:
         aggregated_df = pd.pivot_table(added_df, values='quantity', index='security', aggfunc=np.sum)
 
     # Saving data to database
+    response = []
     for index, row in aggregated_df.iterrows():
-
+        response.append({'msg': 'Security: ' + str(index) + ' - Quantity: ' + str(round(row['quantity'], 2))})
         if row['quantity'] == 0.0:
             try:
                 Positions.objects.get(portfolio_name=portfolio, security=index, date=date).delete()
@@ -55,7 +55,4 @@ def portfolio_positions(portfolio, calc_date):
                           security=index,
                           quantity=row['quantity'],
                           date=date).save()
-
-    response = "Process finished"
-
     return response

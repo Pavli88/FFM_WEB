@@ -43,12 +43,10 @@ def create_portfolio(request):
                       currency=port_currency,
                       status="Not Funded").save()
 
-            response = "New Portfolio was created!"
-
-            print("Creating nav record for the portfolio")
-
+            response = "New Portfolio is created!"
             Nav(portfolio_name=port_name).save()
             CashFlow(portfolio_code=port_code, amount=0.0, type='INFLOW', currency=port_currency).save()
+            CashHolding(portfolio_code=port_code, currency=port_currency, amount=0.0, date=get_today()).save()
         except:
             response = "Portfolio exists in database!"
 
@@ -232,26 +230,22 @@ def pos_calc(request):
             portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
         else:
             portfolio_list = [portfolio]
-
+        response_list = []
         for port in portfolio_list:
-            print(">>> PORTFOLIO:", port)
-
             port_data = Portfolio.objects.filter(portfolio_code=port).values()
             inception_date = port_data[0]['inception_date']
             start_date = date
-
+            responses = []
             while start_date <= end_date:
                 if inception_date > start_date:
-                    print("    DATE:", start_date,
-                          ' - Calculation date is less than inception date. Calculation is not possible.')
+                    responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                      'msgs': [{'msg': 'Calculation date is less than inception date.'}]})
                 else:
-                    print("    DATE:", start_date)
-                    portfolio_positions(portfolio=port, calc_date=start_date)
+                    responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                      'msgs': portfolio_positions(portfolio=port, calc_date=start_date)})
                 start_date = start_date + timedelta(days=1)
-
-        response = "Calc ended"
-
-        return JsonResponse(response, safe=False)
+            response_list.append({'portfolio': port, 'response': responses})
+        return JsonResponse(response_list, safe=False)
 
 
 @csrf_exempt
@@ -289,7 +283,6 @@ def cash_calc(request):
                                   'msg': cash_holding(portfolio=port, calc_date=start_date)})
             start_date = start_date + timedelta(days=1)
         response_list.append({'portfolio': port, 'response': responses})
-
     return JsonResponse(response_list, safe=False)
 
 
