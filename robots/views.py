@@ -408,34 +408,21 @@ def robot_pricing(request):
         response_list = []
 
         for active_robot in robot_list:
-            instrument_id = Instruments.objects.filter(instrument_name=robot).values()[0]['id']
+            instrument_id = Instruments.objects.filter(instrument_name=active_robot).values()[0]['id']
             print(">>> ROBOT:", active_robot, "INSTRUMENT ID:", instrument_id)
-
             start_date = date
-
-            responses = {}
-
+            responses = []
             while start_date <= end_date:
-                # print("    DATE:", start_date)
                 pricing_response = pricing_robot(robot=active_robot, calc_date=start_date, instrument_id=instrument_id)
-
                 if pricing_response is None:
                     pass
                 else:
-                    responses[start_date.strftime('%Y-%m-%d')] = pricing_response
-
+                    responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                      'msg': pricing_response})
                 if pricing_response == "There is no calculated balance and return.":
                     break
-
                 start_date = start_date + timedelta(days=1)
-
-            response_list.append({active_robot:responses})
-
-    for i in response_list:
-        print(i)
-
-    print("Sending message to front end")
-
+            response_list.append({'robot': active_robot, 'response': responses})
     return JsonResponse(response_list, safe=False)
 
 

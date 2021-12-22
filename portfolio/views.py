@@ -109,7 +109,6 @@ def get_cash_flow(request):
         response = {'amount': [record['amount'] for record in cash_flow_data],
                     'type': [record['type'] for record in cash_flow_data]}
 
-
         return JsonResponse(response, safe=False)
 
 
@@ -134,6 +133,7 @@ def get_positions(request):
         print(positions)
 
         return JsonResponse(list({}), safe=False)
+
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
@@ -205,11 +205,11 @@ def portfolio_trade(request):
             SystemMessages(msg_type="Cash Flow",
                            msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
-        print('Portfolio positions calculation')
-        portfolio_positions(portfolio=portfolio, calc_date=get_today())
+        # print('Portfolio positions calculation')
+        # portfolio_positions(portfolio=portfolio, calc_date=get_today())
 
-        print('Portfolio cash holdings calculation')
-        cash_holding(portfolio=portfolio, calc_date=get_today())
+        # print('Portfolio cash holdings calculation')
+        # cash_holding(portfolio=portfolio, calc_date=get_today())
 
         response = 'Portfolio trade was executed successfully!'
 
@@ -270,24 +270,27 @@ def cash_calc(request):
     else:
         portfolio_list = [portfolio]
 
+    response_list = []
+
     for port in portfolio_list:
         print(">>> PORTFOLIO:", port)
-
         port_data = Portfolio.objects.filter(portfolio_code=port).values()
         inception_date = port_data[0]['inception_date']
         start_date = date
-
+        responses = []
         while start_date <= end_date:
             if inception_date > start_date:
-                print("    DATE:", start_date, ' - Calculation date is less than inception date. Calculation is not possible.')
+                print("    DATE:", start_date, )
+                responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                  'msg': 'Calculation date is less than inception date.'})
             else:
                 print("    DATE:", start_date)
-                cash_holding(portfolio=port, calc_date=start_date)
+                responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                  'msg': cash_holding(portfolio=port, calc_date=start_date)})
             start_date = start_date + timedelta(days=1)
+        response_list.append({'portfolio': port, 'response': responses})
 
-    response = "Calc ended"
-
-    return JsonResponse(response, safe=False)
+    return JsonResponse(response_list, safe=False)
 
 
 @csrf_exempt

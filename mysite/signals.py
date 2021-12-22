@@ -1,7 +1,7 @@
 # Models
 from robots.models import Robots, RobotTrades, Balance
 from risk.models import RobotRisk
-from portfolio.models import Positions, CashFlow, CashHolding
+from portfolio.models import Positions, CashFlow, CashHolding, Trade
 from instrument.models import Instruments
 from django_q.models import Schedule
 
@@ -14,6 +14,7 @@ from mysite.my_functions.general_functions import *
 from robots.processes.robot_balance_calc import *
 from robots.processes.robot_pricing import pricing_robot
 from portfolio.processes.cash_holding import cash_holding
+from portfolio.processes.port_pos import portfolio_positions
 
 
 @receiver(post_save, sender=RobotTrades)
@@ -81,3 +82,19 @@ def run_port_cash_holding(sender, **kwargs):
     print("PORTFOLIO: ", cash_data.portfolio_code)
     cash_holding_calc_response = cash_holding(portfolio=cash_data.portfolio_code, calc_date=get_today())
     print(cash_holding_calc_response)
+    SystemMessages(msg_type="Process",
+                   msg_sub_type='Portfolio Cash Holding',
+                   msg=cash_holding_calc_response).save()
+
+
+@receiver(post_save, sender=Trade)
+def run_port_positions(sender, **kwargs):
+    print("--------------------------------------------")
+    print("SIGNAL -> Portfolio Positions Calculation")
+    trade_data = kwargs.get('instance')
+    print(trade_data.portfolio_name, trade_data.date)
+    positions_calc_response = portfolio_positions(portfolio=trade_data.portfolio_name, calc_date=trade_data.date)
+    print(positions_calc_response)
+    SystemMessages(msg_type="Process",
+                   msg_sub_type='Portfolio Positions',
+                   msg=positions_calc_response).save()

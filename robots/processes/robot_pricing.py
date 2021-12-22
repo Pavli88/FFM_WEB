@@ -5,17 +5,15 @@ from mysite.my_functions.general_functions import *
 from robots.models import *
 from instrument.models import *
 
+# Process imports
+from robots.processes.robot_balance_calc import balance_calc
+
 
 def pricing_robot(robot, calc_date, instrument_id):
 
     t_min_one_date = previous_business_day(currenct_day=calc_date.strftime('%Y-%m-%d'))
     robot_data = Robots.objects.filter(name=robot).values()
     robot_inception_date = robot_data[0]['inception_date']
-
-    print("")
-    print("    CALC DATE:", calc_date)
-    print("    T-1 DATE:", t_min_one_date)
-
     cursor = connection.cursor()
 
     if calc_date.weekday() == 6 or calc_date.weekday() == 5:
@@ -40,9 +38,6 @@ def pricing_robot(robot, calc_date, instrument_id):
 
                     row = cursor.fetchall()[0]
                     price = row[-1]
-
-                    print("    T-1 Robot Price:", price)
-                    print("")
                 except:
                     return "There is no price for T-1 date"
 
@@ -55,19 +50,16 @@ def pricing_robot(robot, calc_date, instrument_id):
             ret = balance['ret']
             t_price = price*(1+ret)
 
-            print("    PRICE RETURN:", ret)
-            print("    T PRICE:", t_price)
-
             # Saving calculated price to database
             try:
                 price_record = Prices.objects.get(inst_code=instrument_id, date=calc_date)
                 price_record.price = t_price
                 price_record.source = "ffm_system"
                 price_record.save()
-                print("    Overwriting existing record.")
+                return "Existing record is updated : " + str(round(t_price, 3))
             except:
                 Prices(inst_code=instrument_id,
                        date=calc_date,
                        price=t_price,
                        source='ffm_system').save()
-                print("    New record saved to database")
+                return "New record is saved : " + str(round(t_price, 3))
