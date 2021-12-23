@@ -20,6 +20,7 @@ from portfolio.processes.port_pos import *
 from portfolio.processes.cash_holding import *
 from portfolio.processes.processes import *
 from robots.processes.robot_balance_calc import *
+from portfolio.processes.portfolio_holding import portfolio_holding_calc
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
@@ -304,8 +305,6 @@ def holdings_calc(request):
             portfolio_list = [portfolio]
 
         for port in portfolio_list:
-            print(">>> PORTFOLIO:", port)
-
             port_data = Portfolio.objects.filter(portfolio_code=port).values()
             inception_date = port_data[0]['inception_date']
             start_date = date
@@ -316,7 +315,7 @@ def holdings_calc(request):
                           ' - Calculation date is less than inception date. Calculation is not possible.')
                 else:
                     print("    DATE:", start_date)
-
+                    portfolio_holding_calc(portfolio=port, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
 
         response = "Calc ended"

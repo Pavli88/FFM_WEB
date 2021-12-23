@@ -36,6 +36,7 @@ from django_q.cluster import *
 from django_q.monitor import Stat
 from django_q.brokers.orm import ORM
 from django.conf import settings
+from django.db import connection
 
 # Database imports
 from mysite.models import *
@@ -43,6 +44,22 @@ from robots.models import *
 from accounts.models import *
 
 from robots.processes.run_robot import run_robot
+
+
+def aggregated_robot_pnl(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""select rb.date, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as diff
+                            from robots_balance as rb, robots_robots as r
+                            where rb.robot_name=r.name
+                            and rb.date>='2021-06-01'
+                            and r.env='live' group by date;""")
+        row = cursor.fetchall()
+        response_list=[]
+        for item in row:
+            response_list.append({'date': item[0], 'value': item[1]})
+
+        return JsonResponse(response_list, safe=False)
 
 
 def load_robot_stats(request, env):

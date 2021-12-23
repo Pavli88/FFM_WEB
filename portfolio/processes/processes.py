@@ -38,12 +38,7 @@ def portfolio_holding_calc(portfolio, calc_date):
     # Saving down holdings to holdings table
 
     # Updating process info table
-    print("Updating process info table")
-    process = ProcessInfo.objects.get(pid=pid, is_done=0)
-    process.is_done = 1
-    process.end_date = datetime.datetime.now()
-    process.msg = "Succesfull Execution"
-    process.save()
+
 
     return ""
 
