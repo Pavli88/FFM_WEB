@@ -32,6 +32,8 @@ urlpatterns = [
     path('new/schedule/', views.new_schedule),
     path('delete/schedule/', views.delete_schedule),
     path('update_task/', views.update_task),
-    path('home/aggregated_robot_balances', views.aggregated_robot_pnl),
+    path('home/daily_robot_balances/', views.aggregated_robot_pnl_by_date),
+    path('home/robot_pnl/', views.aggregated_robot_pnl),
+    path('home/total_robot_pnl/', views.total_robot_pnl),
     path('test/', views.test),
 ]

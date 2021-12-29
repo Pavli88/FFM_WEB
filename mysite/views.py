@@ -46,18 +46,53 @@ from accounts.models import *
 from robots.processes.run_robot import run_robot
 
 
-def aggregated_robot_pnl(request):
+def aggregated_robot_pnl_by_date(request):
     if request.method == "GET":
+        print(date.today().year)
         cursor = connection.cursor()
         cursor.execute("""select rb.date, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as diff
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_name=r.name
-                            and rb.date>='2021-06-01'
-                            and r.env='live' group by date;""")
+                            and rb.date>='{date}'
+                            and r.env='live' group by date;""".format(date=str(date.today().year)+'-01-01'))
         row = cursor.fetchall()
-        response_list=[]
+        response_list = []
         for item in row:
-            response_list.append({'date': item[0], 'value': item[1]})
+            response_list.append({'x': item[0], 'y': item[1]})
+
+        return JsonResponse(response_list, safe=False)
+
+
+def aggregated_robot_pnl(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""select rb.robot_name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
+                            from robots_balance as rb, robots_robots as r
+                            where rb.robot_name=r.name
+                            and rb.date>='{date}'
+                            and r.env='live' group by rb.robot_name;""".format(date=str(date.today().year)+'-01-01'))
+        row = cursor.fetchall()
+        response_list = []
+        for item in row:
+            response_list.append({'x': item[0], 'y': item[1]})
+
+        return JsonResponse(response_list, safe=False)
+
+
+def total_robot_pnl(request):
+    if request.method == "GET":
+        start_date = request.GET.get("start_date")
+        cursor = connection.cursor()
+        cursor.execute("""select sum(rb.realized_pnl) as total_pnl
+                        from robots_balance rb, robots_robots as r
+                        where rb.robot_name=r.name
+                        and r.env='live' and rb.date >='{date}';""".format(date=start_date))
+        row = cursor.fetchall()
+        print(row)
+        if row[0][0] is None:
+            response_list = [{'data': 0.0}]
+        else:
+            response_list = [{'data': round(row[0][0], 2)}]
 
         return JsonResponse(response_list, safe=False)
 
