@@ -65,23 +65,24 @@ def aggregated_robot_pnl_by_date(request):
 
 def aggregated_robot_pnl(request):
     if request.method == "GET":
+        start_date = request.GET.get("start_date")
         cursor = connection.cursor()
         cursor.execute("""select rb.robot_name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_name=r.name
                             and rb.date>='{date}'
-                            and r.env='live' group by rb.robot_name;""".format(date=str(date.today().year)+'-01-01'))
+                            and r.env='live' group by rb.robot_name;""".format(date=start_date))
         row = cursor.fetchall()
         response_list = []
         for item in row:
-            response_list.append({'x': item[0], 'y': item[1]})
-
+            response_list.append({'x': item[0], 'y': round(item[1], 2)})
         return JsonResponse(response_list, safe=False)
 
 
 def total_robot_pnl(request):
     if request.method == "GET":
         start_date = request.GET.get("start_date")
+        print(start_date)
         cursor = connection.cursor()
         cursor.execute("""select sum(rb.realized_pnl) as total_pnl
                         from robots_balance rb, robots_robots as r
