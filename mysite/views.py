@@ -71,7 +71,7 @@ def aggregated_robot_pnl(request):
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_name=r.name
                             and rb.date>='{date}'
-                            and r.env='live' group by rb.robot_name;""".format(date=start_date))
+                            and r.env='live' group by rb.robot_name order by pnl desc;""".format(date=start_date))
         row = cursor.fetchall()
         response_list = []
         for item in row:
