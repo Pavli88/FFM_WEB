@@ -97,18 +97,27 @@ def total_robot_pnl(request):
         return JsonResponse(response_list, safe=False)
 
 
-def load_robot_stats(request, env):
-    print("*** Robot Cumulative Performance Calculation ***")
+def total_robot_balances_by_date(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""select rb.robot_name , rb.close_balance as total_pnl
+                            from robots_balance rb, robots_robots as r
+                            where rb.robot_name=r.name
+                            and r.env='live' 
+                            and rb.date ='{date}';""".format(date=get_today()))
+        row = cursor.fetchall()
+        response_list = []
+        for item in row:
+            response_list.append({'x': item[0], 'y': item[1]})
 
+        return JsonResponse(response_list, safe=False)
+
+
+def load_robot_stats(request, env):
     if request.method == "GET":
 
         year_beg = beginning_of_year()
         month_beg = beginning_of_month()
-
-        print("Environment:", env)
-        print("Year Start:", year_beg)
-        print("Month Start:", month_beg)
-        print("")
 
         # Fetching robots from database based on environment
         robots = Robots.objects.filter(env=env).values()
@@ -170,16 +179,6 @@ def load_robot_stats(request, env):
                 'ytd_ret': ytd,
                 'balance': last_balance,
             })
-
-            print(robot["name"], " - YTD PnL", ytd_pnl, " - YTD Ret - ", ytd)
-            print(robot["name"], " - MTD PnL", mtd_pnl, " - MTD Ret - ", mtd)
-            print(robot["name"], " - DTD PnL", dtd_pnl, " - DTD Ret - ", dtd)
-            print(robot["name"], " - Latest Balance - ", last_balance)
-            print("")
-
-        print("TOTAL P&L - YTD - ", total_ytd_pnl, " - MTD - ", total_mtd_pnl, " - DTD - ", total_dtd_pnl)
-        print("Sending data to front end")
-
         return JsonResponse(response, safe=False)
 
 
