@@ -238,12 +238,18 @@ class OandaV20:
 
         r = orders.OrderCreate(self.account_id, data=data)
         self.api.request(r)
-
-        print("Market Order was executed successfully!")
-
         response = r.response
 
-        return response['orderFillTransaction']
+        if list(response.keys())[1] == 'orderFillTransaction':
+            print("ACCEPTED TRADE")
+            response = response['orderFillTransaction']
+            status = 'accepted'
+        if list(response.keys())[1] == 'orderCancelTransaction':
+            print("REJECTED TRADE")
+            print("REASON:", response['orderCancelTransaction']['reason'])
+            response = response['orderCancelTransaction']
+            status = 'rejected'
+        return {'response': response, 'status': status}
 
     def get_open_trades(self):
 

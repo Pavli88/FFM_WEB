@@ -61,6 +61,7 @@ class TradeExecution:
             return self.risk_data.quantity * multiplier
         else:
             if stop_level is None:
+                print('Empty stop level')
                 return 0
             risk_exposure = self.risk_data.risk_per_trade
             prices = self.connection.get_prices(instruments=self.instrument)
@@ -79,6 +80,7 @@ class TradeExecution:
         else:
             trade = self.connection.submit_market_order(security=self.instrument,
                                                         quantity=quantity)
-            self.save_trade_to_db(open_price=trade["price"],
-                                  broker_id=trade['id'],
-                                  quantity=quantity)
+            if trade['status'] == 'accepted':
+                self.save_trade_to_db(open_price=trade['response']["price"],
+                                      broker_id=trade['response']['id'],
+                                      quantity=quantity)
