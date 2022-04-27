@@ -77,13 +77,16 @@ def trade_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
         signal = message.split()
-
-        trade = TradeExecution(robot=signal[0])
-
+        trade = TradeExecution(robot=signal[0], side=signal[1])
+        if len(signal) == 2:
+            stop_level = None
+        else:
+            stop_level = float(signal[2])
         if signal[1] == 'Close':
             trade.close_all_trades()
         else:
-            trade.open_trade(side=signal[1])
+            quantity = trade.quantity_calculation(stop_level=stop_level)
+            trade.open_trade(quantity=quantity)
 
         return HttpResponse(None)
 
