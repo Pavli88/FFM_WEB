@@ -90,3 +90,19 @@ def trade_execution(request):
 
         return HttpResponse(None)
 
+
+@csrf_exempt
+def edit_transaction(request):
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        status = request_data['status']
+        quantity = request_data['quantity']
+        pnl = request_data['pnl']
+        open_price = request_data['open_price']
+        close_price = request_data['close_price']
+        open_time = request_data['open_time']
+        close_time = request_data['close_time']
+
+        print(status, quantity,pnl,open_price, open_time, close_price, close_time)
+
+        return HttpResponse(None)
