@@ -431,12 +431,10 @@ def get_trades(request):
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         robot = request.GET.get("robot")
-
         if robot == 'all':
             trades = RobotTrades.objects.filter().values()
         else:
             trades = RobotTrades.objects.filter(robot=robot).filter(close_time__gte=start_date).filter(close_time__lte=end_date).values()
-
         return JsonResponse(list(trades), safe=False)
 
 
