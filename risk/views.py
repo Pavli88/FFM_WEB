@@ -140,5 +140,4 @@ def get_robot_risk(request, env):
 def get_risk(request, robot):
     if request.method == "GET":
         robot_risk = RobotRisk.objects.filter(robot=robot).values()[0]
-
         return JsonResponse(robot_risk, safe=False)
