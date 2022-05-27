@@ -289,13 +289,10 @@ def get_robot_balance(request):
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         robot = request.GET.get("robot")
-
         print("ROBOT:", robot)
         print("START DATE:", start_date)
         print("END DATE:", end_date)
-
         balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).values()
-
         return JsonResponse(list(balance), safe=False)
 
 
