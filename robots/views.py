@@ -337,39 +337,29 @@ def get_robot_cf(request, robot):
 
 
 def robot_drawdown(request):
-
     print("Drawdown calculation")
-
     if request.method == "GET":
-
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         robot = request.GET.get("robot")
-
         if robot == 'all':
             balance = Balance.objects.filter().values()
         else:
             balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
-
         drawdown = drawdown_calc(list(balance))
-
         return JsonResponse(list(drawdown), safe=False)
 
 
 def cumulative_return(request):
     if request.method == "GET":
-
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         robot = request.GET.get("robot")
-
         if robot == 'all':
             balance = Balance.objects.filter().values()
         else:
             balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
-
         cum_rets = cumulative_return_calc(list(balance))
-
         return JsonResponse(list(cum_rets), safe=False)
 
 
@@ -384,26 +374,21 @@ def robot_pricing(request):
     print("=========================")
     print("ROBOT PRICING CALCULATION")
     print("=========================")
-
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         robot = request_data["robot"]
         date = datetime.datetime.strptime(request_data["start_date"], '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
-
         print("ROBOT:", robot)
         print("START DATE:", date)
         print("END DATE:", end_date)
-
         if robot == "ALL":
             robot_list = Robots.objects.filter().values_list('name', flat=True)
         else:
             robot_list = [robot]
 
         print("ROBOTS:", robot_list)
-
         response_list = []
-
         for active_robot in robot_list:
             instrument_id = Instruments.objects.filter(instrument_name=active_robot).values()[0]['id']
             print(">>> ROBOT:", active_robot, "INSTRUMENT ID:", instrument_id)

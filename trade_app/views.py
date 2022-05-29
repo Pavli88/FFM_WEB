@@ -95,14 +95,13 @@ def trade_execution(request):
 def edit_transaction(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        status = request_data['status']
-        quantity = request_data['quantity']
-        pnl = request_data['pnl']
-        open_price = request_data['open_price']
-        close_price = request_data['close_price']
-        open_time = request_data['open_time']
-        close_time = request_data['close_time']
-
-        print(status, quantity,pnl,open_price, open_time, close_price, close_time)
-
+        transaction = RobotTrades.objects.get(id=request_data['id'])
+        transaction.status = request_data['status']
+        transaction.quantity = request_data['quantity']
+        transaction.pnl = request_data['pnl']
+        transaction.open_price = request_data['open_price']
+        transaction.close_price = request_data['close_price']
+        transaction.open_time = request_data['open_time']
+        transaction.close_time = request_data['close_time']
+        transaction.save()
         return HttpResponse(None)
