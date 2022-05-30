@@ -327,12 +327,10 @@ def get_last_price(request):
 
 def get_robot_cf(request, robot):
     if request.method == "GET":
-
         if robot == 'all':
             robot_cash_flow = RobotCashFlow.objects.filter().values()
         else:
             robot_cash_flow = RobotCashFlow.objects.filter(robot_name=robot).values()
-
         return JsonResponse(list(robot_cash_flow), safe=False)
 
 
