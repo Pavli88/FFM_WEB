@@ -21,13 +21,13 @@ from datetime import datetime, timedelta
 @receiver(post_save, sender=RobotTrades)
 def trade_closed(sender, **kwargs):
     print("------------------------------")
-    print("SIGNAL -> Robot Trades Closed")
+    print("SIGNAL -> Robot Transaction Table Updated")
     robot_data = kwargs.get('instance')
     print("ROBOT: ", robot_data.robot)
     print("BROKER ID: ", robot_data.broker_id)
-    print("STATUS: ", robot_data.status)
+    print("SIGNAL: ", robot_data.status)
     print("CLOSE TIME:", robot_data.close_time)
-    close_time = datetime.strptime(robot_data.close_time, "%Y-%m-%d").date()
+
     if robot_data.status == "OPEN":
         SystemMessages(msg_type="Trade",
                        msg_sub_type='Open',
@@ -37,10 +37,12 @@ def trade_closed(sender, **kwargs):
                                           str(robot_data.open_price),
                                           ])).save()
     if robot_data.status == "CLOSED":
-        while close_time <= get_today():
-            print(close_time)
-            balance_msg = balance_calc(robot=robot_data.robot, calc_date=close_time)
-            close_time=close_time+timedelta(days=1)
+        # close_time = datetime.strptime(robot_data.close_time, "%Y-%m-%d").date()
+        # while close_time <= get_today():
+        #     print(close_time)
+        #
+        #     close_time=close_time+timedelta(days=1)
+        balance_msg = balance_calc(robot=robot_data.robot, calc_date=get_today())
         SystemMessages(msg_type="Trade",
                        msg_sub_type='Close',
                        msg=str(' ').join([robot_data.robot,
