@@ -48,30 +48,33 @@ from robots.processes.run_robot import run_robot
 
 def aggregated_robot_pnl_by_date(request):
     if request.method == "GET":
-        print(date.today().year)
+        env = request.GET.get("env")
+        print(env)
         cursor = connection.cursor()
         cursor.execute("""select rb.date, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as diff
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_name=r.name
                             and rb.date>='{date}'
-                            and r.env='live' group by date;""".format(date=str(date.today().year)+'-01-01'))
+                            and r.status='active'
+                            and r.env='{env}' group by date;""".format(env=env, date=str(date.today().year)+'-01-01'))
         row = cursor.fetchall()
         response_list = []
         for item in row:
             response_list.append({'x': item[0], 'y': item[1]})
-
         return JsonResponse(response_list, safe=False)
 
 
 def aggregated_robot_pnl(request):
     if request.method == "GET":
         start_date = request.GET.get("start_date")
+        env = request.GET.get("env")
         cursor = connection.cursor()
         cursor.execute("""select rb.robot_name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_name=r.name
                             and rb.date>='{date}'
-                            and r.env='live' group by rb.robot_name order by pnl desc;""".format(date=start_date))
+                            and status='active'
+                            and r.env='{env}' group by rb.robot_name order by pnl desc;""".format(date=start_date, env=env))
         row = cursor.fetchall()
         response_list = []
         for item in row:
@@ -82,47 +85,43 @@ def aggregated_robot_pnl(request):
 def total_robot_pnl(request):
     if request.method == "GET":
         start_date = request.GET.get("start_date")
-        print(start_date)
+        env = request.GET.get("env")
         cursor = connection.cursor()
         cursor.execute("""select sum(rb.realized_pnl) as total_pnl
                         from robots_balance rb, robots_robots as r
                         where rb.robot_name=r.name
-                        and r.env='live' and rb.date >='{date}';""".format(date=start_date))
+                        and r.status='active'
+                        and r.env='{env}' and rb.date >='{date}';""".format(date=start_date, env=env))
         row = cursor.fetchall()
-        print(row)
         if row[0][0] is None:
             response_list = [{'data': 0.0}]
         else:
             response_list = [{'data': round(row[0][0], 2)}]
-
         return JsonResponse(response_list, safe=False)
 
 
 def total_robot_balances_by_date(request):
     if request.method == "GET":
+        env = request.GET.get("env")
         cursor = connection.cursor()
         cursor.execute("""select rb.robot_name , rb.close_balance as total_pnl
                             from robots_balance rb, robots_robots as r
                             where rb.robot_name=r.name
-                            and r.env='live' 
-                            and rb.date ='{date}';""".format(date=get_today()))
+                            and r.env='{env}'
+                            and r.status='active' 
+                            and rb.date ='{date}';""".format(date=get_today(), env=env))
         row = cursor.fetchall()
         response_list = []
         for item in row:
             response_list.append({'x': item[0], 'y': item[1]})
-
         return JsonResponse(response_list, safe=False)
 
 
 def load_robot_stats(request, env):
     if request.method == "GET":
-
         year_beg = beginning_of_year()
         month_beg = beginning_of_month()
-
-        # Fetching robots from database based on environment
-        robots = Robots.objects.filter(env=env).values()
-
+        robots = Robots.objects.filter(env=env).filter(status='active').values()
         response = []
         robot_list = []
         dtd_list = []
@@ -135,35 +134,25 @@ def load_robot_stats(request, env):
         total_dtd_pnl = 0.0
         total_mtd_pnl = 0.0
         total_ytd_pnl = 0.0
-
         for robot in robots:
-
             robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
-
             yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
             monthly_trades = robot_trades_all[robot_trades_all["date"] >= month_beg]
-
             mtd_series = cumulative_return_calc(data_series=monthly_trades["ret"].tolist())
             ytd_series = cumulative_return_calc(data_series=yearly_trades["ret"].tolist())
-
             last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
-
             dtd = round(list(robot_trades_all["ret"])[-1]*100, 1)
             mtd = round(mtd_series[-1]-100, 1)
             ytd = round(ytd_series[-1]-100, 1)
-
             ytd_pnl = round(total_pnl_calc(yearly_trades["realized_pnl"].tolist()), 2)
             mtd_pnl = round(total_pnl_calc(monthly_trades["realized_pnl"].tolist()), 2)
-
             try:
                 dtd_pnl = round(monthly_trades["realized_pnl"].tolist()[-1], 2)
             except:
                 dtd_pnl = 0.0
-
             total_ytd_pnl = total_ytd_pnl + ytd_pnl
             total_mtd_pnl = total_mtd_pnl + mtd_pnl
             total_dtd_pnl = total_dtd_pnl + dtd_pnl
-
             robot_list.append(robot["name"])
             dtd_list.append(dtd)
             mtd_list.append(mtd)
@@ -172,7 +161,6 @@ def load_robot_stats(request, env):
             mtd_pnl_list.append(mtd_pnl)
             ytd_pnl_list.append(ytd_pnl)
             balance_list.append(last_balance)
-
             response.append({
                 'robot': robot,
                 'dtd_ret': dtd,

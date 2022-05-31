@@ -441,3 +441,11 @@ def update_strategy_params(request):
         return JsonResponse({'response': 'updated'}, safe=False)
 
 
+@csrf_exempt
+def update_status(request):
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        robot = Robots.objects.get(name=request_data["robot"])
+        robot.status = request_data["status"]
+        robot.save()
+        return JsonResponse({'response': 'updated'}, safe=False)
