@@ -22,4 +22,5 @@ urlpatterns = [
     path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
     path('robots/update_strategy_params/', views.update_strategy_params),
     path('robots/update_status/', views.update_status),
+    path('robots/monthly_returns_calc/', views.monthly_returns_calculation),
 ]

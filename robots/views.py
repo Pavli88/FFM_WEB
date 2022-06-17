@@ -18,6 +18,7 @@ from robots.processes.robot_balance_calc import *
 from mysite.processes.risk_calculations import *
 from mysite.processes.return_calculation import *
 from robots.processes.robot_pricing import pricing_robot
+from robots.processes.monthly_returns_calc import monthly_returns_calc
 
 # Date imports
 import datetime
@@ -359,6 +360,18 @@ def cumulative_return(request):
             balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
         cum_rets = cumulative_return_calc(list(balance))
         return JsonResponse(list(cum_rets), safe=False)
+
+
+def monthly_returns_calculation(request):
+    if request.method == "GET":
+        robot = request.GET.get("robot")
+        year = request.GET.get("year")
+        start_date = year + '-01-01'
+        end_date = year + '-12-31'
+        print(start_date)
+        balance_data = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values()
+        monthly_returns = monthly_returns_calc(data=balance_data)
+        return JsonResponse(list(monthly_returns), safe=False)
 
 
 @csrf_exempt
