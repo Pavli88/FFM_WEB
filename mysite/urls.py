@@ -9,8 +9,7 @@ def my_process():
 my_process()
 
 urlpatterns = [
-    path('', views.main_page, name="main_page"),
-    path('react/', views.main_page_react),
+    path('', views.main_page_react),
     path('login/', views.login, name="login"),
     path('logout/', views.logout_user, name="logout"),
     path('register/', views.register, name="register"),
