@@ -28,6 +28,7 @@ class CashHolding(models.Model):
 
 class Nav(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
+    portfolio_code = models.CharField(max_length=30, default="")
     pos_val = models.FloatField(default=0.0)
     cash_val = models.FloatField(default=0.0)
     accured_income = models.FloatField(default=0.0)

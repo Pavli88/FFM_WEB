@@ -12,6 +12,7 @@ from instrument.models import *
 from datetime import datetime
 import datetime
 import json
+import pandas as pd
 
 # Process imports
 from mysite.my_functions.general_functions import *
@@ -134,6 +135,18 @@ def get_positions(request):
         return JsonResponse(list({}), safe=False)
 
 
+def get_portfolio_nav(request, portfolio_code):
+    if request.method == "GET":
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        print('Portfolio Page')
+        print(portfolio_code)
+        print(start_date)
+        print(end_date)
+        portfolio_nav = Nav.objects.filter(portfolio_code=portfolio_code).values()
+        print(portfolio_nav)
+        return JsonResponse(list({}), safe=False)
+
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
 def portfolio_trade(request):
@@ -179,28 +192,20 @@ def portfolio_trade(request):
         print("Saving new trade record to", portfolio)
         print("Updating robot and portfolio cash flow tables")
         print('Adding cash flow record to', portfolio)
-
         CashFlow(portfolio_code=portfolio,
                  amount=market_value * -1,
                  type="TRADE",
                  currency="USD").save()
-
         if security_type == "Robot":
             print("Adding cash flow record to", security)
             print("ROBOT CASH FLOW:", market_value)
-
             RobotCashFlow(robot_name=security,
                           cash_flow=market_value).save()
-
             print("New cash flow was recorded for", security)
             print("Calculating robot balance")
-
             balance_calc_message = balance_calc(robot=security, calc_date=get_today())
-
             print(balance_calc_message)
-
             print("Sending message to system messages table")
-
             SystemMessages(msg_type="Cash Flow",
                            msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
 
@@ -358,16 +363,48 @@ def new_cash_flow(request):
 @csrf_exempt
 def add_port_to_group(request):
     print("*** PORTFOLIO GROUP ADDITION ***")
-
     if request.method == "POST":
         parent_id = request.POST.get("process")
         children_id = request.POST.get("process")
-
         try:
             PortGroup(parent_id=parent_id, children_id=children_id, connection_id=str(parent_id)+str(children_id)).save()
         except:
             response = {"message": "Connection exists in database!"}
-
     return JsonResponse(response, safe=False)
+
+
+# Portfolio Import stream related processes
+@csrf_exempt
+def portfolio_import_stream(request, import_stream):
+    if request.method == "POST":
+        body_data = json.loads(request.body.decode('utf-8'))
+        data_stream = body_data["data"]
+        df = pd.DataFrame(data_stream)
+        if import_stream=='NAV':
+            for index, row in df.iterrows():
+                print(row['id'], row['portfolio_name'], row['accured_expenses'], row['date'])
+                print(row)
+                portfolio_nav = Nav.objects.filter(portfolio_code=row['portfolio_code']).filter(date=row['date'])
+                if len(portfolio_nav) == 0:
+                    new_nav_record = Nav(portfolio_name=row['portfolio_name'],
+                                         accured_expenses=row['accured_expenses'],
+                                         date=row['date'],
+                                         accured_income=row['accured_income'],
+                                         cash_val=row['cash_val'],
+                                         long_liab=row['long_liab'],
+                                         nav_per_share=row['nav_per_share'],
+                                         pos_val=row['pos_val'],
+                                         short_liab=row['short_liab'],
+                                         total=row['total'],
+                                         portfolio_code=row['portfolio_code'])
+                    new_nav_record.save()
+
+                print(len(portfolio_nav))
+        # print(import_stream)
+        # print(df)
+        response = {"message": "Connection exists in database!"}
+        return JsonResponse(response, safe=False)
+
+
 
 

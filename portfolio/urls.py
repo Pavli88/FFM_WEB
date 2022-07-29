@@ -14,5 +14,7 @@ urlpatterns = [
     path('portfolios/cash_holding/', cash_calc),
     path('portfolios/holdings_calc/', holdings_calc),
     path('portfolios/get_positions/', get_positions),
+    path('portfolios/nav/<str:portfolio_code>', get_portfolio_nav),
     path('portfolios/get_portfolio_transactions/<str:portfolio>/', get_port_transactions),
+    path('portfolios/import/<str:import_stream>', portfolio_import_stream),
 ]
