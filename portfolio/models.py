@@ -38,7 +38,7 @@ class Nav(models.Model):
     total = models.FloatField(default=0.0)
     units = models.FloatField(default=0.0)
     nav_per_share = models.FloatField(default=0.0)
-    date = models.DateField(auto_now=True)
+    date = models.DateField()
 
 
 class Trade(models.Model):
@@ -50,6 +50,9 @@ class Trade(models.Model):
     mv = models.FloatField(default=0.0)
     source = models.CharField(max_length=30, default="")
     date = models.DateField(auto_now=True)
+    currency = models.CharField(max_length=30, default="")
+    trading_cost = models.FloatField(default=0.0)
+    transaction_type = models.CharField(max_length=30, default="")
 
 
 class Positions(models.Model):

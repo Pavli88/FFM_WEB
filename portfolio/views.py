@@ -27,56 +27,34 @@ from portfolio.processes.portfolio_holding import portfolio_holding_calc
 # CRUD------------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def create_portfolio(request):
-    print("*** NEW PORTFOLIO CREATION ***")
-
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
         port_name = body_data["port_name"]
         port_type = body_data["port_type"]
         port_currency = body_data["port_currency"]
         port_code = body_data["port_code"]
-
-        print("PORTFOLIO NAME:", port_name, "PORTFOLIO TYPE:", port_type, "PORTFOLIO CURRENCY", port_currency)
-
+        inception_date = body_data["inception_date"]
         try:
             Portfolio(portfolio_name=port_name,
                       portfolio_code=port_code,
                       portfolio_type=port_type,
                       currency=port_currency,
-                      status="Not Funded").save()
-
+                      status="Not Funded",
+                      inception_date=inception_date).save()
             response = "New Portfolio is created!"
-            Nav(portfolio_name=port_name).save()
-            CashFlow(portfolio_code=port_code, amount=0.0, type='INFLOW', currency=port_currency).save()
-            CashHolding(portfolio_code=port_code, currency=port_currency, amount=0.0, date=get_today()).save()
         except:
             response = "Portfolio exists in database!"
-
     return JsonResponse(response, safe=False)
 
 
 # READ
 def get_portfolio_data(request, portfolio):
-
-    """
-    Function to load portfolio information to front end
-    :param request:
-    :return:
-    """
-
-    print("Request for portfolio data")
-
     if request.method == "GET":
-
         if portfolio == 'all':
             portfolio_data = Portfolio.objects.filter().values()
         else:
             portfolio_data = Portfolio.objects.filter(portfolio_code=portfolio).values()
-
-        print("Sending response to front end")
-
         response = list(portfolio_data)
-
         return JsonResponse(response, safe=False)
 
 
@@ -90,25 +68,18 @@ def get_port_transactions(request, portfolio):
         instrument_instruments as inst 
         where pt.security=inst.id and pt.portfolio_name='{port_name}';""".format(port_name=portfolio))
         row = cursor.fetchall()
-
         print(portfolio)
-
         return JsonResponse(row, safe=False)
 
 
 def get_cash_flow(request):
-
     if request.method == "GET":
-
         portfolio = request.GET.get('portfolio')
         start_date= request.GET.get('start_date')
         end_date = request.GET.get('end_date')
-
         cash_flow_data = CashFlow.objects.filter(portfolio_code=portfolio).values()
-
         response = {'amount': [record['amount'] for record in cash_flow_data],
                     'type': [record['type'] for record in cash_flow_data]}
-
         return JsonResponse(response, safe=False)
 
 
@@ -116,7 +87,7 @@ def get_cash_holdings(request):
     if request.method == "GET":
         portfolio = request.GET.get('portfolio')
         date = request.GET.get('date')
-        cash_holding_data = CashHolding.objects.filter(portfolio_code=portfolio).filter(date=date).values()
+        cash_holding_data = CashHolding.objects.filter(portfolio_code=portfolio).values()
 
         return JsonResponse(list(cash_holding_data), safe=False)
 
@@ -138,14 +109,9 @@ def get_positions(request):
 def get_portfolio_nav(request, portfolio_code):
     if request.method == "GET":
         start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-        print('Portfolio Page')
-        print(portfolio_code)
-        print(start_date)
-        print(end_date)
-        portfolio_nav = Nav.objects.filter(portfolio_code=portfolio_code).values()
-        print(portfolio_nav)
-        return JsonResponse(list({}), safe=False)
+        portfolio_nav = Nav.objects.filter(portfolio_code=portfolio_code).filter(date__gte=start_date).values()
+        return JsonResponse(list(portfolio_nav), safe=False)
+
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
@@ -301,19 +267,15 @@ def holdings_calc(request):
         date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
         portfolio = body_data['portfolio']
-
         print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
-
         if portfolio == "ALL":
             portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
         else:
             portfolio_list = [portfolio]
-
         for port in portfolio_list:
             port_data = Portfolio.objects.filter(portfolio_code=port).values()
             inception_date = port_data[0]['inception_date']
             start_date = date
-
             while start_date <= end_date:
                 if inception_date > start_date:
                     print("    DATE:", start_date,
@@ -322,9 +284,7 @@ def holdings_calc(request):
                     print("    DATE:", start_date)
                     portfolio_holding_calc(portfolio=port, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
-
         response = "Calc ended"
-
         return JsonResponse(response, safe=False)
 
 
@@ -380,11 +340,10 @@ def portfolio_import_stream(request, import_stream):
         body_data = json.loads(request.body.decode('utf-8'))
         data_stream = body_data["data"]
         df = pd.DataFrame(data_stream)
+        print(df)
         if import_stream=='NAV':
             for index, row in df.iterrows():
-                print(row['id'], row['portfolio_name'], row['accured_expenses'], row['date'])
-                print(row)
-                portfolio_nav = Nav.objects.filter(portfolio_code=row['portfolio_code']).filter(date=row['date'])
+                portfolio_nav = Nav.objects.filter(portfolio_code=row['portfolio_code']).filter(date=row['date']).values()
                 if len(portfolio_nav) == 0:
                     new_nav_record = Nav(portfolio_name=row['portfolio_name'],
                                          accured_expenses=row['accured_expenses'],
@@ -398,10 +357,20 @@ def portfolio_import_stream(request, import_stream):
                                          total=row['total'],
                                          portfolio_code=row['portfolio_code'])
                     new_nav_record.save()
-
-                print(len(portfolio_nav))
-        # print(import_stream)
-        # print(df)
+                elif len(portfolio_nav) > 0:
+                    p = Nav.objects.get(id=portfolio_nav[0]['id'])
+                    p.portfolio_name = row['portfolio_name']
+                    p.accured_expenses = row['accured_expenses']
+                    p.date = row['date']
+                    p.accured_income = row['accured_income']
+                    p.cash_val = row['cash_val']
+                    p.long_liab = row['long_liab']
+                    p.nav_per_share = row['nav_per_share']
+                    p.pos_val = row['pos_val']
+                    p.short_liab = row['short_liab']
+                    p.total = row['total']
+                    p.portfolio_code = row['portfolio_code']
+                    p.save()
         response = {"message": "Connection exists in database!"}
         return JsonResponse(response, safe=False)
 
