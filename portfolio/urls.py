@@ -5,7 +5,7 @@ from portfolio.views import *
 urlpatterns = [
     path('portfolios/new/', create_portfolio),
     path('portfolios/new_cash_flow/', new_cash_flow),
-    path('portfolios/portfolio_trade/', portfolio_trade),
+    path('portfolios/new_transaction/', new_transaction),
     path('portfolios/get_portfolio_data/<str:portfolio>/', get_portfolio_data),
     path('portfolios/get_cash_flow/', get_cash_flow),
     path('portfolios/get_cash_holdings/', get_cash_holdings),

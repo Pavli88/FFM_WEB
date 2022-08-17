@@ -2,64 +2,40 @@ from django.shortcuts import render, redirect
 from instrument.forms import *
 from instrument.models import *
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
+@csrf_exempt
 def new_instrument(request):
-    print("==============")
-    print("NEW INSTRUMENT")
-    print("==============")
-
     if request.method == "POST":
-        instrument_form = InstrumentForm(request.POST)
+        request_data = json.loads(request.body.decode('utf-8'))
+        try:
+            Instruments(instrument_name=request_data['inst_name'],
+                        instrument_type=request_data['inst_name'],
+                        inst_code=request_data['internal_code'],
+                        source_code=request_data['source_code'],
+                        currency=request_data['currency'],
+                        source=request_data['broker']).save()
+            response = 'Instrument is Saved!'
+        except:
+            response = 'Instrument Internal Code Exists in Database!'
 
-        if instrument_form.is_valid():
-            instrument_name = instrument_form.cleaned_data["instrument_name"]
-            instrument_type = instrument_form.cleaned_data["instrument_type"]
-            source = instrument_form.cleaned_data["broker"]
-
-            print("INSTRUMENT NAME:", instrument_name)
-            print("INSTRUMENT TYPE:", instrument_type)
-
-            print("SOURCE:", source)
-
-            print("Saving new instrument to database")
-
-            Instruments(instrument_name=instrument_name,
-                        instrument_type=instrument_type,
-                        source=source).save()
-
-            print("New instrument was saved successfully")
-
-        return redirect('instruments main')
+        return JsonResponse(response, safe=False)
 
 
 def get_instruments(request):
-    print("*** GET INSTRUMENTS ***")
-
     if request.method == "GET":
-
-        broker = request.GET.get('broker')
-        inst_type = request.GET.get('type')
-
-        print('BROKER:', broker)
-        print('INSTRUMENT TYPE:', inst_type)
-
-        if broker is None:
-            pass
+        if request.GET.get('instrument_name') is None:
+            instrument_name = ''
         else:
-            if broker == 'all':
-                instruments = Instruments.objects.filter().values()
-            else:
-                instruments = Instruments.objects.filter(source=broker).values()
-
-        if inst_type is None:
-            pass
-        else:
-            instruments = Instruments.objects.filter(instrument_type=inst_type).values()
-
-    print("Sending data to front end")
-
-    response = list(instruments)
-
-    return JsonResponse(response, safe=False)
+            instrument_name = request.GET.get('instrument_name')
+        filters = {}
+        for key, value in request.GET.items():
+            if key in ['id', 'instrument_type', 'source', 'inst_code', 'currency']:
+                filters[key] = value
+        instruments = Instruments.objects.filter(instrument_name__contains=instrument_name).filter(**filters).values()
+        print(instruments)
+        response = list(instruments)
+        return JsonResponse(response, safe=False)
 

@@ -115,12 +115,7 @@ def get_portfolio_nav(request, portfolio_code):
 
 # Portfolio related processes-------------------------------------------------------------------------------------------
 @csrf_exempt
-def portfolio_trade(request):
-
-    print("===============")
-    print("PORTFOLIO TRADE")
-    print("===============")
-
+def new_transaction(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
         quantity = body_data["unit"]
