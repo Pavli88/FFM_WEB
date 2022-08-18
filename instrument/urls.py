@@ -6,4 +6,5 @@ urlpatterns = [
     path('instruments/new/', views.new_instrument, name="new instrument"),
     path('instruments/get_instruments/', views.get_instruments),
     path('instruments/update_instrument/', views.update_instrument),
+    path('instruments/delete_instrument/', views.delete_instrument),
 ]

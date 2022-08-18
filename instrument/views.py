@@ -38,6 +38,21 @@ def update_instrument(request):
         return JsonResponse(response, safe=False)
 
 
+@csrf_exempt
+def delete_instrument(request):
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        # I will have to add here a validation section which checks if the security is included in transactions
+        try:
+            Instruments.objects.get(id=request_data['id']).delete()
+            response = 'Instrument is deleted!'
+        except:
+            response = 'Please select an instrument!'
+        # print(Instruments.objects.get(id=request_data['id']))
+
+        return JsonResponse(response, safe=False)
+
+
 def get_instruments(request):
     if request.method == "GET":
         if request.GET.get('instrument_name') is None:
