@@ -59,16 +59,15 @@ def get_portfolio_data(request, portfolio):
 
 
 def get_port_transactions(request, portfolio):
-    print("Portfolio transactions")
     if request.method == "GET":
         cursor = connection.cursor()
-        cursor.execute("""select pt.id, pt.portfolio_name, pt.quantity, pt.price, 
-        pt.mv, pt.date, inst.instrument_name, inst.instrument_type, inst.source 
+        cursor.execute("""select pt.id, pt.portfolio_code, pt.quantity, pt.price, 
+        pt.mv, pt.date, inst.instrument_name, inst.instrument_type, inst.source , inst.currency, pt.transaction_type
         from portfolio_trade as pt, 
         instrument_instruments as inst 
-        where pt.security=inst.id and pt.portfolio_name='{port_name}';""".format(port_name=portfolio))
+        where pt.security=inst.id and pt.portfolio_code='{port_name}';""".format(port_name=portfolio))
         row = cursor.fetchall()
-        print(portfolio)
+        print(row)
         return JsonResponse(row, safe=False)
 
 
@@ -118,64 +117,42 @@ def get_portfolio_nav(request, portfolio_code):
 def new_transaction(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
-        quantity = body_data["unit"]
-        price = body_data["price"]
-        portfolio = body_data["portfolio"]
-        security = body_data["sec"]
-        security_type = body_data["sec_type"]
-        security_id = body_data["sec_id"]
-        market_value = float(quantity) * float(price)
-        cash_flow = market_value * -1
-
-        if security_type == "Robot":
-            source = "ffm_system"
+        if body_data["transaction_type"] == 'sale':
+            multiplier = -1
+            settlement_trade = 'sale settlement'
         else:
-            source = "oanda"
+            multiplier = 1
+            settlement_trade = 'purchase settlement'
+        transaction_link = datetime.datetime.now()
+        Trade(portfolio_code=body_data["portfolio_code"],
+              quantity=float(body_data["quantity"])*multiplier,
+              price=body_data["price"],
+              mv=float(body_data["quantity"])*float(body_data["price"])*multiplier,
+              security=body_data["security"],
+              transaction_type=body_data["transaction_type"],
+              transaction_link_code=transaction_link).save()
 
-        print("QUANTITY:", quantity)
-        print("PRICE:", price)
-        print("PORTFOLIO:", portfolio)
-        print("SECURITY:", security)
-        print("SECURITY TYPE:", security_type)
-        print("SECURITY ID:", security_id)
-        print("MARKET VALUE:", market_value)
-        print("CASH FLOW:", cash_flow)
-        print("SOURCE:", source)
+        if body_data["transaction_type"] == 'sale' or body_data["transaction_type"] == 'purchase':
+            Trade(portfolio_code=body_data["portfolio_code"],
+                  quantity=float(body_data["quantity"])*multiplier*-1,
+                  price=body_data["price"],
+                  mv=float(body_data["quantity"]) * multiplier*-1*float(body_data["price"]),
+                  security=body_data["security"],
+                  transaction_type=settlement_trade,
+                  transaction_link_code=transaction_link).save()
 
-        Trade(portfolio_name=portfolio,
-              quantity=quantity,
-              price=price,
-              mv=market_value,
-              sec_type=security_type,
-              security=security_id,
-              source=source).save()
-
-        print("Saving new trade record to", portfolio)
-        print("Updating robot and portfolio cash flow tables")
-        print('Adding cash flow record to', portfolio)
-        CashFlow(portfolio_code=portfolio,
-                 amount=market_value * -1,
-                 type="TRADE",
-                 currency="USD").save()
-        if security_type == "Robot":
-            print("Adding cash flow record to", security)
-            print("ROBOT CASH FLOW:", market_value)
-            RobotCashFlow(robot_name=security,
-                          cash_flow=market_value).save()
-            print("New cash flow was recorded for", security)
-            print("Calculating robot balance")
-            balance_calc_message = balance_calc(robot=security, calc_date=get_today())
-            print(balance_calc_message)
-            print("Sending message to system messages table")
-            SystemMessages(msg_type="Cash Flow",
-                           msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
-
-        # print('Portfolio positions calculation')
-        # portfolio_positions(portfolio=portfolio, calc_date=get_today())
-
-        # print('Portfolio cash holdings calculation')
-        # cash_holding(portfolio=portfolio, calc_date=get_today())
-
+        # if security_type == "Robot":
+        #     print("Adding cash flow record to", security)
+        #     print("ROBOT CASH FLOW:", market_value)
+        #     RobotCashFlow(robot_name=security,
+        #                   cash_flow=market_value).save()
+        #     print("New cash flow was recorded for", security)
+        #     print("Calculating robot balance")
+        #     balance_calc_message = balance_calc(robot=security, calc_date=get_today())
+        #     print(balance_calc_message)
+        #     print("Sending message to system messages table")
+        #     SystemMessages(msg_type="Cash Flow",
+        #                    msg=str(cash_flow * -1) + "cash flow to " + str(security)).save()
         response = 'Portfolio trade was executed successfully!'
 
         return JsonResponse(response, safe=False)

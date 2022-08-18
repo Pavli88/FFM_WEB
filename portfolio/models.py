@@ -42,17 +42,15 @@ class Nav(models.Model):
 
 
 class Trade(models.Model):
-    portfolio_name = models.CharField(max_length=30, default="")
+    portfolio_code = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)
-    sec_type = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
-    source = models.CharField(max_length=30, default="")
     date = models.DateField(auto_now=True)
-    currency = models.CharField(max_length=30, default="")
     trading_cost = models.FloatField(default=0.0)
     transaction_type = models.CharField(max_length=30, default="")
+    transaction_link_code = models.CharField(max_length=50, default="")
 
 
 class Positions(models.Model):
