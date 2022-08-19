@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from portfolio.views import *
+from portfolio.portfolio_queries.portfolio_cash.portfolio_cash_get import *
 
 urlpatterns = [
     path('portfolios/new/', create_portfolio),
@@ -17,4 +18,5 @@ urlpatterns = [
     path('portfolios/nav/<str:portfolio_code>', get_portfolio_nav),
     path('portfolios/get_portfolio_transactions/<str:portfolio>/', get_port_transactions),
     path('portfolios/import/<str:import_stream>', portfolio_import_stream),
+    path('portfolios/cash/total/by_type/<str:portfolio_code>', get_port_total_cash_by_type),
 ]

@@ -117,7 +117,8 @@ def get_portfolio_nav(request, portfolio_code):
 def new_transaction(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
-        if body_data["transaction_type"] == 'sale':
+        if body_data["transaction_type"] == 'sale' or body_data["transaction_type"] == 'cash withdrawal' \
+                or body_data["transaction_type"] == 'fee' or body_data["transaction_type"] == 'trading cost':
             multiplier = -1
             settlement_trade = 'sale settlement'
         else:
@@ -129,6 +130,7 @@ def new_transaction(request):
               price=body_data["price"],
               mv=float(body_data["quantity"])*float(body_data["price"])*multiplier,
               security=body_data["security"],
+              date=body_data['date'],
               transaction_type=body_data["transaction_type"],
               transaction_link_code=transaction_link).save()
 
@@ -138,6 +140,7 @@ def new_transaction(request):
                   price=body_data["price"],
                   mv=float(body_data["quantity"]) * multiplier*-1*float(body_data["price"]),
                   security=body_data["security"],
+                  date=body_data['date'],
                   transaction_type=settlement_trade,
                   transaction_link_code=transaction_link).save()
 
@@ -214,19 +217,18 @@ def cash_calc(request):
         print(">>> PORTFOLIO:", port)
         port_data = Portfolio.objects.filter(portfolio_code=port).values()
         inception_date = port_data[0]['inception_date']
+        print(inception_date)
         start_date = date
         responses = []
-        while start_date <= end_date:
-            if inception_date > start_date:
-                print("    DATE:", start_date, )
-                responses.append({'date': start_date.strftime('%Y-%m-%d'),
-                                  'msg': 'Calculation date is less than inception date.'})
-            else:
-                print("    DATE:", start_date)
-                responses.append({'date': start_date.strftime('%Y-%m-%d'),
-                                  'msg': cash_holding(portfolio=port, calc_date=start_date)})
-            start_date = start_date + timedelta(days=1)
-        response_list.append({'portfolio': port, 'response': responses})
+        if inception_date > start_date:
+            print("    DATE:", start_date, )
+            responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                              'msg': 'Calculation date is less than inception date.'})
+        else:
+            print("    DATE:", start_date)
+            cash_holding(portfolio_code=port, start_date=start_date)
+            # responses.append({'date': start_date.strftime('%Y-%m-%d'),
+            #                   'msg': })
     return JsonResponse(response_list, safe=False)
 
 
