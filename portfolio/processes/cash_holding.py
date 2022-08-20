@@ -32,6 +32,7 @@ and pt.date >= '{start_date}';""".format(portfolio_code=portfolio_code, start_da
                                                          3: 'transaction_type',
                                                          4: 'security_code',
                                                          5: 'currency'})
+    print(df)
     currencies = list(dict.fromkeys(list(df['currency'])))
     for currency in currencies:
         beginning_date = start_date

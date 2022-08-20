@@ -8,23 +8,26 @@ from portfolio.models import CashHolding
 def get_port_total_cash_by_type(request, portfolio_code):
     if request.method == "GET":
         cursor = connection.cursor()
-        query = """select transaction_type, sum(mv)
-from portfolio_trade
-where portfolio_code = '{portfolio_code}'
-and (transaction_type = 'fee'
-    or transaction_type = 'cash deposit'
-    or transaction_type = 'cash withdrawal'
-    or transaction_type = 'income'
-    or transaction_type = 'dividend'
-    or transaction_type = 'trading cost')
-group by transaction_type;""".format(portfolio_code=portfolio_code)
+        query = """select transaction_type, sum(mv) as mv
+from portfolio_trade as pt, instrument_instruments as inst
+where pt.security = inst.id
+      and pt.portfolio_code = '{portfolio_code}'
+and (pt.transaction_type = 'fee'
+    or pt.transaction_type = 'cash deposit'
+    or pt.transaction_type = 'cash withdrawal'
+    or pt.transaction_type = 'income'
+    or pt.transaction_type = 'dividend'
+    or pt.transaction_type = 'trading cost')
+and inst.currency = '{currency}'
+group by pt.transaction_type""".format(portfolio_code=portfolio_code, currency='HUF')
         cursor.execute(query)
         row = cursor.fetchall()
-        response = {}
+        response = []
+        id = 0
         for record in row:
-            response[record[0]] = record[1]
-        print(response)
-        return JsonResponse(list([response]), safe=False)
+            response.append({'id': id, 'name': record[0], 'value': record[1]})
+            id = id + 1
+        return JsonResponse(response, safe=False)
 
 
 def get_port_daily_cash_flows(request):
@@ -37,5 +40,7 @@ def get_port_daily_cash_flows(request):
 def get_cash_holding_by_date(request, date):
     if request.method == "GET":
         portfolio_code = request.GET.get('portfolio_code')
+        print(portfolio_code)
         cash_holding_data = CashHolding.objects.filter(date=date).filter(portfolio_code=portfolio_code).values()
+        print(cash_holding_data)
         return JsonResponse(list(cash_holding_data), safe=False)
