@@ -34,6 +34,7 @@ and pt.date >= '{start_date}';""".format(portfolio_code=portfolio_code, start_da
                                                          5: 'currency'})
     print(df)
     currencies = list(dict.fromkeys(list(df['currency'])))
+    print(currencies)
     for currency in currencies:
         beginning_date = start_date
         currency_df = df[df['currency'] == currency]
@@ -44,19 +45,25 @@ and pt.date >= '{start_date}';""".format(portfolio_code=portfolio_code, start_da
             except:
                 current_cash_value = 0.0
             t_min_one_cash_holding = CashHolding.objects.filter(date=previous_business_day(str(beginning_date))).filter(
-                currency=currency).values()
+                currency=currency).filter(portfolio_code=portfolio_code).values()
+
             if len(t_min_one_cash_holding) == 0:
                 previous_cash_value = 0.0
             else:
                 previous_cash_value = t_min_one_cash_holding[0]['amount']
-            total_cash_Value = current_cash_value + previous_cash_value
+            total_cash_value = current_cash_value + previous_cash_value
             try:
-                CashHolding.objects.get(portfolio_code=portfolio_code, currency=currency, date=beginning_date).delete()
-            except:
-                pass
-            CashHolding(portfolio_code=portfolio_code,
-                        currency=currency,
-                        amount=total_cash_Value,
-                        date=beginning_date).save()
+                existing_cash_record = CashHolding.objects.get(portfolio_code=portfolio_code,
+                                                               currency=currency,
+                                                               date=beginning_date)
+                existing_cash_record.amount = total_cash_value
+                existing_cash_record.save()
+                print(existing_cash_record)
+            except CashHolding.DoesNotExist:
+                print('record doesnot exist')
+                CashHolding(portfolio_code=portfolio_code,
+                            currency=currency,
+                            amount=total_cash_value,
+                            date=beginning_date).save()
             beginning_date = beginning_date + timedelta(days=1)
     return 'test'

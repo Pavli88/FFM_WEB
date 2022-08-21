@@ -7,13 +7,8 @@ from mysite.my_functions.general_functions import *
 
 
 def portfolio_positions(portfolio, calc_date):
-
-    """
-    Portfolio position calculator
-    :param portfolio: name of the porfolio
-    :param calc_date: calculation date. Date time format
-    :return:
-    """
+    #First query the positions for the start calculation day. This will be the base for the later calculations.
+    # 2. calculate the aggregated daily flows for each of the securities
 
     t_min_one_date = previous_business_day(str(calc_date))
     date = datetime.datetime.strptime(str(calc_date), '%Y-%m-%d')
