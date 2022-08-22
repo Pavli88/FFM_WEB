@@ -4,50 +4,61 @@ import datetime
 import numpy as np
 from datetime import timedelta
 from mysite.my_functions.general_functions import *
+from django.db import connection
 
 
-def portfolio_positions(portfolio, calc_date):
-    #First query the positions for the start calculation day. This will be the base for the later calculations.
-    # 2. calculate the aggregated daily flows for each of the securities
+def portfolio_positions(portfolio_code, start_date):
+    date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d')
+    curent_date = get_today()
+    cursor = connection.cursor()
+    query = """select
+       date,
+       sum(quantity) as aggregated_quantity,
+       security
+from portfolio_trade
+where portfolio_code = '{portfolio_code}'
+and (transaction_type = 'purchase' or transaction_type = 'sale'
+and date >= '{start_date}') group by date, security;""".format(portfolio_code=portfolio_code, start_date=date)
 
-    t_min_one_date = previous_business_day(str(calc_date))
-    date = datetime.datetime.strptime(str(calc_date), '%Y-%m-%d')
-
-    # Intraday positioning
-    try:
-        trades_df = pd.DataFrame(list(Trade.objects.filter(portfolio_name=portfolio).filter(date=date).values('portfolio_name', 'security', 'quantity', 'date')))
-    except:
-        trades_df = pd.DataFrame(columns=['portfolio_name', 'security', 'quantity', 'date'])
-
-    # Previous day positioning
-    try:
-        previous_day_positions = pd.DataFrame(list(Positions.objects.filter(date=t_min_one_date).filter(portfolio_name=portfolio).values()))
-    except:
-        previous_day_positions = pd.DataFrame(columns=['portfolio_name', 'security', 'quantity', 'date'])
-    added_df = trades_df.append(previous_day_positions)
-
-    if added_df.empty is True:
-        return [{'msg': 'Empty portfolio'}]
-    else:
-        aggregated_df = pd.pivot_table(added_df, values='quantity', index='security', aggfunc=np.sum)
-
-    # Saving data to database
-    response = []
-    for index, row in aggregated_df.iterrows():
-        response.append({'msg': 'Security: ' + str(index) + ' - Quantity: ' + str(round(row['quantity'], 2))})
-        if row['quantity'] == 0.0:
-            try:
-                Positions.objects.get(portfolio_name=portfolio, security=index, date=date).delete()
-            except:
+    cursor.execute(query)
+    df = pd.DataFrame(cursor.fetchall()).rename(columns={0: 'date',
+                                                         1: 'quantity',
+                                                         2: 'security',
+                                                         })
+    securities_list = list(dict.fromkeys(list(df['security'])))
+    for security in securities_list:
+        beginning_date = start_date
+        filtered_df = df[df['security']==security]
+        start_value = 0.0
+        start_df = pd.DataFrame({'date': beginning_date, 'quantity': start_value, 'security': security}, index=[0])
+        while beginning_date <= curent_date:
+            second_filtered_df = filtered_df[(filtered_df['date']==beginning_date) & (filtered_df['security'] == security)]
+            if second_filtered_df.empty:
                 pass
-        else:
+            else:
+                start_value = start_value + list(second_filtered_df['quantity'])[0]
+            start_df = start_df.append({'date': beginning_date, 'quantity': start_value, 'security': security},
+                                           ignore_index=True)
+            beginning_date = beginning_date + timedelta(days=1)
+        for index, row in start_df.iterrows():
             try:
-                position = Positions.objects.get(portfolio_name=portfolio, security=index, date=date)
-                position.quantity = row['quantity']
-                position.save()
-            except:
-                Positions(portfolio_name=portfolio,
-                          security=index,
-                          quantity=row['quantity'],
-                          date=date).save()
+                existing_position_record = Positions.objects.get(portfolio_name=portfolio_code,
+                                                                 security=int(row['security']),
+                                                                 date=row['date'])
+                if row['quantity'] == 0:
+                    existing_position_record.delete()
+                else:
+                    existing_position_record.quantity = row['quantity']
+                    existing_position_record.save()
+            except Positions.DoesNotExist:
+                if row['quantity'] == 0:
+                    pass
+                else:
+                    Positions(portfolio_name=portfolio_code,
+                              security=int(row['security']),
+                              quantity=row['quantity'],
+                              date=row['date']).save()
+
+        print(start_df)
+    response = ''
     return response

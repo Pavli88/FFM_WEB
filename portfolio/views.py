@@ -183,14 +183,14 @@ def pos_calc(request):
             inception_date = port_data[0]['inception_date']
             start_date = date
             responses = []
-            while start_date <= end_date:
-                if inception_date > start_date:
-                    responses.append({'date': start_date.strftime('%Y-%m-%d'),
-                                      'msgs': [{'msg': 'Calculation date is less than inception date.'}]})
-                else:
-                    responses.append({'date': start_date.strftime('%Y-%m-%d'),
-                                      'msgs': portfolio_positions(portfolio=port, calc_date=start_date)})
-                start_date = start_date + timedelta(days=1)
+            if inception_date > start_date:
+                responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                                  'msgs': [{'msg': 'Calculation date is less than inception date.'}]})
+            else:
+                portfolio_positions(portfolio_code=port, start_date=start_date)
+                # responses.append({'date': start_date.strftime('%Y-%m-%d'),
+                #                   'msgs': })
+
             response_list.append({'portfolio': port, 'response': responses})
         return JsonResponse(response_list, safe=False)
 
@@ -203,21 +203,14 @@ def cash_calc(request):
     date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
     end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
     portfolio = body_data['portfolio']
-
-    print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
-
     if portfolio == "ALL":
         portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
     else:
         portfolio_list = [portfolio]
-
     response_list = []
-
     for port in portfolio_list:
-        print(">>> PORTFOLIO:", port)
         port_data = Portfolio.objects.filter(portfolio_code=port).values()
         inception_date = port_data[0]['inception_date']
-        print(inception_date)
         start_date = date
         responses = []
         if inception_date > start_date:
