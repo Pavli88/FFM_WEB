@@ -15,7 +15,8 @@ def new_instrument(request):
                         inst_code=request_data['internal_code'],
                         source_code=request_data['source_code'],
                         currency=request_data['currency'],
-                        source=request_data['broker']).save()
+                        source=request_data['broker'],
+                        instrument_type=request_data['instrument_type']).save()
             response = 'Instrument is Saved!'
         except:
             response = 'Instrument Internal Code Exists in Database!'
