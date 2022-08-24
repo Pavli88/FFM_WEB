@@ -16,3 +16,10 @@ class Prices(models.Model):
     price = models.FloatField(default=0.0)
     source = models.CharField(max_length=30, default="")
     date = models.DateField()
+
+
+class Tickers(models.Model):
+    inst_code = models.CharField(max_length=30, default="")
+    internal_ticker = models.CharField(max_length=30, default="", unique=True)
+    source_ticker = models.CharField(max_length=30, default="")
+    source = models.CharField(max_length=30, default="")

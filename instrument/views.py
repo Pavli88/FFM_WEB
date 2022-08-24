@@ -12,10 +12,7 @@ def new_instrument(request):
         request_data = json.loads(request.body.decode('utf-8'))
         try:
             Instruments(instrument_name=request_data['inst_name'],
-                        inst_code=request_data['internal_code'],
-                        source_code=request_data['source_code'],
                         currency=request_data['currency'],
-                        source=request_data['broker'],
                         instrument_type=request_data['instrument_type']).save()
             response = 'Instrument is Saved!'
         except:
@@ -62,7 +59,7 @@ def get_instruments(request):
             instrument_name = request.GET.get('instrument_name')
         filters = {}
         for key, value in request.GET.items():
-            if key in ['id', 'instrument_type', 'source', 'inst_code', 'currency']:
+            if key in ['id', 'instrument_type', 'currency']:
                 filters[key] = value
         instruments = Instruments.objects.filter(instrument_name__contains=instrument_name).filter(**filters).values()
         response = list(instruments)
