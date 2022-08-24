@@ -9,15 +9,6 @@ import json
 
 @csrf_exempt
 def create_broker(request):
-
-    """
-    This process creates new broker account record in the broker table.
-    :param request:
-    :return:
-    """
-
-    print("New broker creation request received.")
-
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         broker_name = request_data['broker_name']
@@ -74,19 +65,30 @@ def get_account_data(request, account):
 
 
 def get_accounts_data(request):
-    print("*** GET ACCOUNT DATA ***")
-    print("Requesting account data from front end")
-
     if request.method == "GET":
-
         broker = request.GET.get("broker")
         env = request.GET.get("env")
-
         accounts = BrokerAccounts.objects.filter(broker_name=broker).filter(env=env).values()
-
         response = list(accounts)
-
-        print("Sending response to front end")
-
         return JsonResponse(response, safe=False)
 
+
+def get_brokers(request):
+    if request.method == "GET":
+        brokers = Brokers.objects.all().values()
+        print(brokers)
+        return JsonResponse(list(brokers), safe=False)
+
+
+@csrf_exempt
+def new_broker(request):
+    if request.method == "POST":
+        print('New broker')
+        request_data = json.loads(request.body.decode('utf-8'))
+        try:
+            Brokers(broker=request_data['broker'],
+                    broker_code=request_data['broker_code']).save()
+            response = 'New broker saved to database!'
+        except:
+            response = 'Broker code exists in database!'
+        return JsonResponse(response, safe=False)

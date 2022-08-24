@@ -22,3 +22,8 @@ class AccountCashFlow(models.Model):
     cash_flow = models.FloatField(default=0.0)
     currency = models.CharField(max_length=100, default="")
     date = models.DateField(auto_now=True)
+
+
+class Brokers(models.Model):
+    broker = models.CharField(max_length=50, default="")
+    broker_code = models.CharField(max_length=50, default="", unique=True)
