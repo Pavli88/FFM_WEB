@@ -1,5 +1,5 @@
 from django.db import models
-
+import datetime
 "Restarting migration"
 "python manage.py migrate --fake robots zero"
 
@@ -44,7 +44,18 @@ class ProcessInfo(models.Model):
     name = models.CharField(max_length=100, default="")
     broker_id = models.CharField(max_length=100, default="")
     type = models.CharField(max_length=100, default="")
-    is_done = models.BooleanField(blank=False,default=False )
+    is_done = models.BooleanField(blank=False, default=False )
     run_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(auto_now=True)
     msg = models.CharField(max_length=100, default="")
+
+
+class Exceptions(models.Model):
+    exception_level = models.CharField(max_length=100, default="")
+    entity_code = models.CharField(max_length=100, default="")
+    exception_type = models.CharField(max_length=100, default="")
+    process = models.CharField(max_length=100, default="")
+    status = models.CharField(max_length=100, default="")
+    calculation_date = models.DateField(default=datetime.date.today)
+    creation_date = models.DateTimeField()
+    security_id = models.CharField(max_length=100, default="")

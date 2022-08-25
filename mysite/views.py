@@ -43,6 +43,7 @@ from mysite.models import *
 from robots.models import *
 from accounts.models import *
 
+
 from robots.processes.run_robot import run_robot
 
 
@@ -406,6 +407,14 @@ def delete_task(request):
         id = request.POST["id"]
         ORM().delete(task_id=id)
     return JsonResponse(list({}), safe=False)
+
+
+def get_exceptions(request):
+    if request.method == "GET":
+        exceptions = Exceptions.objects.filter(entity_code=request.GET.get('entity_code'),
+                                               calculation_date=request.GET.get('calculation_date'),
+                                               exception_level=request.GET.get('exception_level')).values()
+        return JsonResponse(list(exceptions), safe=False)
 
 
 

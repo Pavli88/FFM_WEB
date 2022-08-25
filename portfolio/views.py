@@ -225,10 +225,11 @@ def cash_calc(request):
     return JsonResponse(response_list, safe=False)
 
 
-# @csrf_exempt
+@csrf_exempt
 def holdings_calc(request):
-    if request.method == "GET":
-        portfolio_holding_calc(portfolio_code='MAP_TEST', calc_date='2022-08-22')
+    if request.method == "POST":
+        body_data = json.loads(request.body.decode('utf-8'))
+        portfolio_holding_calc(portfolio_code=body_data['portfolio_code'], calc_date=body_data['calculation_date'])
         # print("")
         # print("PORTFOLIO HOLDINGS CALCULATION")
         # body_data = json.loads(request.body.decode('utf-8'))
@@ -252,7 +253,7 @@ def holdings_calc(request):
         #             print("    DATE:", start_date)
         #             portfolio_holding_calc(portfolio=port, calc_date=start_date)
         #         start_date = start_date + timedelta(days=1)
-        response = "Calc ended"
+        response = {'status': 'finished'}
         return JsonResponse(response, safe=False)
 
 

@@ -36,4 +36,5 @@ urlpatterns = [
     path('home/total_robot_pnl/', views.total_robot_pnl),
     path('home/total_robot_balances_by_date/', views.total_robot_balances_by_date),
     path('test/', views.test),
+    path('exceptions/get/', views.get_exceptions)
 ]
