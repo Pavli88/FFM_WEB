@@ -14,7 +14,22 @@ def portfolio_holding_calc(portfolio_code, calc_date):
     print(portfolio_code, calc_date)
 
     positions = pd.DataFrame(Positions.objects.filter(portfolio_name=portfolio_code, date=calc_date).values())
-    price_hierarchy = [] #'ffm_system' 'MAP', 'ffm_system'
+    if len(positions) == 0:
+        try:
+            existing_exception = Exceptions.objects.get(entity_code=portfolio_code,
+                                                        exception_type='No Positions',
+                                                        calculation_date=calc_date)
+            existing_exception.status = 'Alert'
+            existing_exception.save()
+        except Exceptions.DoesNotExist:
+            Exceptions(exception_level='Portfolio',
+                       entity_code=portfolio_code,
+                       exception_type='No Positions',
+                       process='Portfolio Holding',
+                       status='Alert',
+                       creation_date=datetime.datetime.now(),
+                       calculation_date=calc_date).save()
+    price_hierarchy = ['MAP', 'ffm_system', 'oanda'] # 'MAP', 'ffm_system', 'oanda'
     if len(price_hierarchy) == 0:
         try:
             existing_exception = Exceptions.objects.get(entity_code=portfolio_code,
@@ -22,7 +37,6 @@ def portfolio_holding_calc(portfolio_code, calc_date):
                                                         calculation_date=calc_date)
             existing_exception.status = 'Error'
             existing_exception.save()
-            print(existing_exception)
         except Exceptions.DoesNotExist:
             Exceptions(exception_level='Portfolio',
                        entity_code=portfolio_code,
@@ -31,7 +45,8 @@ def portfolio_holding_calc(portfolio_code, calc_date):
                        status='Error',
                        creation_date=datetime.datetime.now(),
                        calculation_date=calc_date).save()
-        return 'pricess finished'
+    if len(positions) == 0 or len(price_hierarchy) == 0:
+        return 'End of process'
 
     print(positions)
     prices = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=list(positions['security'])).values())
@@ -67,8 +82,8 @@ def portfolio_holding_calc(portfolio_code, calc_date):
     for missing_price in missing_prices_list:
         print(missing_price)
         try:
-            existing_exception = Exceptions.objects.get(security_id=missing_price)
-            existing_exception.status = 'Verified'
+            existing_exception = Exceptions.objects.get(security_id=missing_price, calculation_date=calc_date)
+            existing_exception.status = 'Error'
             existing_exception.save()
             print(existing_exception)
         except Exceptions.DoesNotExist:

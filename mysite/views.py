@@ -417,6 +417,13 @@ def get_exceptions(request):
         return JsonResponse(list(exceptions), safe=False)
 
 
+def update_exception_by_id(request):
+    if request.method == "GET":
+        exception = Exceptions.objects.get(id=request.GET.get('id'))
+        exception.status = request.GET.get('status')
+        exception.save()
+        return JsonResponse(list(''), safe=False)
+
 
 
 

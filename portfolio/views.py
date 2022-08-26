@@ -229,12 +229,11 @@ def cash_calc(request):
 def holdings_calc(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
-        portfolio_holding_calc(portfolio_code=body_data['portfolio_code'], calc_date=body_data['calculation_date'])
-        # print("")
-        # print("PORTFOLIO HOLDINGS CALCULATION")
-        # body_data = json.loads(request.body.decode('utf-8'))
-        # date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
+        # start_date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
         # end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
+        portfolio_holding_calc(portfolio_code=body_data['portfolio_code'], calc_date=body_data['calculation_date'])
+
+
         # portfolio = body_data['portfolio']
         # print("Parameters: ", "START DATE:", date, "END DATE:", end_date, "PORTFOLIO:", portfolio)
         # if portfolio == "ALL":
