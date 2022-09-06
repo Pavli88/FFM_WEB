@@ -38,14 +38,6 @@ from trade_app.consumers import *
 # CRUD -----------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def new_robot(request):
-
-    """
-    New robot creator function. It saves down an empty record to the robot balance table and robot risk table.
-    The robot is also saved down to the instruments table.
-    :param request:
-    :return:
-    """
-
     print("==================")
     print("NEW ROBOT CREATION")
     print("==================")
