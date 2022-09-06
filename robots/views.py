@@ -197,9 +197,10 @@ def robot_balance_calc(request):
         print("START DATE:", date)
         print("END DATE:", end_date)
         if robot == "ALL":
-            robot_list = Robots.objects.filter().values_list('name', flat=True)
+            robot_list = Robots.objects.filter(status='active').values_list('name', flat=True)
         else:
             robot_list = [robot]
+        print(robot_list)
         print("ROBOTS:", robot_list)
         for active_robot in robot_list:
             print(">>> ROBOT:", active_robot)
