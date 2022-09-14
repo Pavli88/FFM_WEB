@@ -7,7 +7,7 @@ class Portfolio(models.Model):
     portfolio_type = models.CharField(max_length=30, default="")
     status = models.CharField(max_length=30, default="")
     currency = models.CharField(max_length=30, default="")
-    inception_date = models.DateField(auto_now=True)
+    inception_date = models.DateField()
 
 
 class CashFlow(models.Model):
@@ -76,4 +76,3 @@ class PortfolioHoldings(models.Model):
     opening_mv = models.FloatField(default=0.0)
     closing_mv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
-

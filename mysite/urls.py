@@ -22,6 +22,7 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('', include('trade_app.urls')),
     path('', include('instrument.urls')),
+    path('', include('calculations.urls')),
     path('home/load_robot_stats/<str:env>/', views.load_robot_stats),
     path('home/get_robot_risk/', get_robot_risk),
     path('home/update/risk_per_trade/', update_risk_per_trade),

@@ -7,8 +7,8 @@ from mysite.my_functions.general_functions import *
 from django.db import connection
 
 
-def cash_holding(portfolio_code, start_date):
-    date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d')
+def cash_holding(portfolio_code, calc_date):
+    date = datetime.datetime.strptime(str(calc_date), '%Y-%m-%d')
     curent_date = get_today()
     cursor = connection.cursor()
     query = """select pt.portfolio_code, pt.mv, pt.date, pt.transaction_type, inst.inst_code, inst.currency

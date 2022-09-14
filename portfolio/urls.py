@@ -12,7 +12,7 @@ urlpatterns = [
     path('portfolios/get_cash_holdings/', get_cash_holdings),
     path('portfolios/port_group/add/', add_port_to_group),
     path('portfolios/positions/', pos_calc),
-    path('portfolios/cash_holding/', cash_calc),
+    path('portfolios/calculate/cash_holding/', cash_calc),
     path('portfolios/holdings_calc/', holdings_calc),
     path('portfolios/get_positions/', get_positions),
     path('portfolios/nav/<str:portfolio_code>', get_portfolio_nav),

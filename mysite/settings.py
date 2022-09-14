@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accounts',
     'trade_app',
     'instrument',
+    'calculations',
     'corsheaders',
     'django_q',
     'django.contrib.admin',

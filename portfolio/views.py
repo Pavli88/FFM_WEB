@@ -39,8 +39,12 @@ def create_portfolio(request):
                       portfolio_code=port_code,
                       portfolio_type=port_type,
                       currency=port_currency,
-                      status="Not Funded",
+                      status="active",
                       inception_date=inception_date).save()
+            CashHolding(portfolio_code=port_code,
+                        amount=0.0,
+                        currency=port_currency,
+                        date=inception_date).save()
             response = "New Portfolio is created!"
         except:
             response = "Portfolio exists in database!"
@@ -200,29 +204,40 @@ def cash_calc(request):
     print("")
     print("CASH HOLDING CALCULATION")
     body_data = json.loads(request.body.decode('utf-8'))
-    date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
+    start_date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
     end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
-    portfolio = body_data['portfolio']
-    if portfolio == "ALL":
-        portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
-    else:
-        portfolio_list = [portfolio]
-    response_list = []
+    portfolio_list = body_data['portfolio_list']
+    print(start_date)
+    print(end_date)
+    print(portfolio_list)
+    #
+
+    # if portfolio == "ALL":
+    #     portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
+    # else:
+    #     portfolio_list = [portfolio]
+    # response_list = []
     for port in portfolio_list:
-        port_data = Portfolio.objects.filter(portfolio_code=port).values()
-        inception_date = port_data[0]['inception_date']
-        start_date = date
-        responses = []
-        if inception_date > start_date:
-            print("    DATE:", start_date, )
-            responses.append({'date': start_date.strftime('%Y-%m-%d'),
-                              'msg': 'Calculation date is less than inception date.'})
-        else:
-            print("    DATE:", start_date)
-            cash_holding(portfolio_code=port, start_date=start_date)
+        print(port)
+        while start_date <= end_date:
+            print(start_date)
+            cash_holding(portfolio_code=port, calc_date=start_date)
+            start_date = start_date + timedelta(days=1)
+        #
+    #     port_data = Portfolio.objects.filter(portfolio_code=port).values()
+    #     inception_date = port_data[0]['inception_date']
+    #     start_date = date
+    #     responses = []
+    #     if inception_date > start_date:
+    #         print("    DATE:", start_date, )
+    #         responses.append({'date': start_date.strftime('%Y-%m-%d'),
+    #                           'msg': 'Calculation date is less than inception date.'})
+    #     else:
+    #         print("    DATE:", start_date)
+    #         cash_holding(portfolio_code=port, start_date=start_date)
             # responses.append({'date': start_date.strftime('%Y-%m-%d'),
             #                   'msg': })
-    return JsonResponse(response_list, safe=False)
+    return JsonResponse(list({}), safe=False)
 
 
 @csrf_exempt
