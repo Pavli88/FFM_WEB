@@ -10,9 +10,16 @@ from mysite.my_functions.general_functions import *
 from django.db import connection
 
 
-def cash_holding_calculation(portfolio_code, calc_date):
-    date = datetime.datetime.strptime(str(calc_date), '%Y-%m-%d')
-    curent_date = get_today()
+def cash_holding_calculation(portfolio_code, start_date, end_date):
+    port_data = Portfolio.objects.filter(portfolio_code=portfolio_code).values()
+    print(port_data)
+    inception_date = port_data[0]['inception_date']
+    print('INCEPTION DATE', inception_date)
+    print('START DATE', start_date)
+
+    if start_date < inception_date:
+        start_date = inception_date
+    print('UPDATED INCEP DATE', start_date)
     cursor = connection.cursor()
     query = """select pt.portfolio_code, pt.mv, pt.date, pt.transaction_type, inst.inst_code, inst.currency
 from portfolio_trade as pt, instrument_instruments as inst
@@ -26,113 +33,54 @@ and (pt.transaction_type = 'fee'
     or pt.transaction_type = 'sale settlement'
     or pt.transaction_type = 'purchase settlement')
 and pt.portfolio_code='{portfolio_code}'
-and pt.date = '{start_date}';""".format(portfolio_code=portfolio_code, start_date=date)
-
+and pt.date >= '{start_date}';""".format(portfolio_code=portfolio_code, start_date=start_date)
     cursor.execute(query)
-    df = pd.DataFrame(cursor.fetchall()).rename(columns={0: 'portfolio_code',
+    transactions_df = pd.DataFrame(cursor.fetchall()).rename(columns={0: 'portfolio_code',
                                                          1: 'market_value',
                                                          2: 'date',
                                                          3: 'transaction_type',
                                                          4: 'security_code',
                                                          5: 'currency'})
 
-    # Previous day cash holdings
-    t_min_one_cash_holdings = pd.DataFrame(CashHolding.objects.filter(date=previous_business_day(str(calc_date))).filter(portfolio_code=portfolio_code).values())
-
-    # print(df)
-    # print(t_min_one_cash_holdings)
-
-    if df.empty and t_min_one_cash_holdings.empty:
-        print('empty df')
-        try:
-            existing_exception = Exceptions.objects.get(entity_code=portfolio_code,
-                                                        exception_type='No Previous Day Calculation',
-                                                        calculation_date=calc_date)
-            existing_exception.status = 'Error'
-            existing_exception.save()
-        except Exceptions.DoesNotExist:
-            Exceptions(exception_level='Portfolio',
-                       entity_code=portfolio_code,
-                       exception_type='No Previous Day Calculation',
-                       process='Cash Holding',
-                       status='Error',
-                       creation_date=datetime.datetime.now(),
-                       calculation_date=calc_date).save()
-        try:
-            portfolio_process_status = PortfolioProcessStatus.objects.get(date=calc_date,
-                                                                          portfolio_code=portfolio_code)
-            portfolio_process_status.cash_holding = 'Error'
-            portfolio_process_status.save()
-        except PortfolioProcessStatus.DoesNotExist:
-            PortfolioProcessStatus(date=calc_date,
-                                   portfolio_code=portfolio_code,
-                                   cash_holding='Error').save()
+    initial_cash_holdins = pd.DataFrame(CashHolding.objects.filter(date=start_date, portfolio_code=portfolio_code).values())
+    starting_df = initial_cash_holdins.pivot(columns='currency', values=['amount'], index='date').reset_index()
+    starting_df.columns = ['date'] + initial_cash_holdins['currency'].values.tolist()
+    print('initial cash holding df')
+    print(initial_cash_holdins)
+    print('starting df')
+    print(starting_df)
+    print('TRANSACTIONS FOR THE PERIOD')
+    print(transactions_df)
+    if transactions_df.empty:
+        currencies = list(dict.fromkeys(list(initial_cash_holdins['currency'])))
+        tf = starting_df
     else:
-        print(t_min_one_cash_holdings)
-    # currencies = list(dict.fromkeys(list(df['currency'])))
-    # print(currencies)
+        currencies = list(dict.fromkeys(list(transactions_df['currency']) + list(initial_cash_holdins['currency'])))
+        tf = transactions_df.groupby(['date', 'currency']).sum().reset_index().pivot(columns='currency', values=['market_value'], index='date').fillna(0).reset_index()
+    print('FORMATED AGGREGATED DF')
+    print(tf)
+    column_values = ['date'] + [col[1] for col in tf.columns[1:]]
+    # tf.columns = column_values
+    dates_list = tf['date'].values.tolist()
+    zero_list = [0 for i in currencies]
+    data = []
 
-    # for currency in currencies:
-    #     beginning_date = start_date
-    #     currency_df = df[df['currency'] == currency]
-    #     while beginning_date <= curent_date:
-    #
-    #         # Current days values
-    #         try:
-    #             filtered_df = currency_df[currency_df['date'] == beginning_date].groupby(['date']).sum()
-    #             current_cash_value = filtered_df['market_value'][0]
-    #         except:
-    #             current_cash_value = 0.0
-    #             try:
-    #                 existing_exception = Exceptions.objects.get(entity_code=portfolio_code,
-    #                                                             exception_type='Zero Cash Movement',
-    #                                                             security_id=currency,
-    #                                                             calculation_date=beginning_date)
-    #                 existing_exception.status = 'Alert'
-    #                 existing_exception.save()
-    #             except Exceptions.DoesNotExist:
-    #                 Exceptions(exception_level='Security',
-    #                            entity_code=portfolio_code,
-    #                            exception_type='Zero Cash Movement',
-    #                            process='Cash Holding',
-    #                            status='Alert',
-    #                            security_id=currency,
-    #                            creation_date=datetime.datetime.now(),
-    #                            calculation_date=beginning_date).save()
-    #
-    #         # Previous days values
-    #         t_min_one_cash_holding = CashHolding.objects.filter(date=previous_business_day(str(beginning_date))).filter(
-    #             currency=currency).filter(portfolio_code=portfolio_code).values()
-    #         if len(t_min_one_cash_holding) == 0:
-    #             previous_cash_value = 0.0
-    #         else:
-    #             previous_cash_value = t_min_one_cash_holding[0]['amount']
-    #
-    #         # Calculating total cash values based on current day and previous day s values
-    #         total_cash_value = current_cash_value + previous_cash_value
-    #
-    #         # Writing cash record to database
-    #         try:
-    #             existing_cash_record = CashHolding.objects.get(portfolio_code=portfolio_code,
-    #                                                            currency=currency,
-    #                                                            date=beginning_date)
-    #             existing_cash_record.amount = total_cash_value
-    #             existing_cash_record.save()
-    #             print(existing_cash_record)
-    #         except CashHolding.DoesNotExist:
-    #             print('record doesnot exist')
-    #             CashHolding(portfolio_code=portfolio_code,
-    #                         currency=currency,
-    #                         amount=total_cash_value,
-    #                         date=beginning_date).save()
-    #         beginning_date = beginning_date + timedelta(days=1)
-    try:
-        portfolio_process_status = PortfolioProcessStatus.objects.get(date=calc_date,
-                                                                      portfolio_code=portfolio_code)
-        portfolio_process_status.cash_holding = 'Completed'
-        portfolio_process_status.save()
-    except PortfolioProcessStatus.DoesNotExist:
-        PortfolioProcessStatus(date=calc_date,
-                               portfolio_code=portfolio_code,
-                               cash_holding='Completed').save()
-    return 'test'
+    while start_date <= end_date:
+        if start_date in dates_list:
+            pass
+        else:
+            data.append([start_date] + zero_list)
+        start_date = start_date + timedelta(days=1)
+    final_df = pd.DataFrame(data + tf.values.tolist(), columns=column_values).sort_values(by=['date']).fillna(0)
+    print(final_df)
+    for currency in currencies:
+        final_df[currency] = final_df[currency].cumsum()
+    # print(currencies)
+    # print(transactions_df)
+    # print(transactions_df.groupby(['date', 'currency']).sum())
+    # print(tf['date'])
+    # print(tf)
+    # print(final_df)
+    # print(zero_list)
+
+    return final_df

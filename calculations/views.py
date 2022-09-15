@@ -13,6 +13,7 @@ from calculations.processes.portfolio.cash_holding_calculation import cash_holdi
 
 # Model imports
 from .models import PortfolioProcessStatus
+from portfolio.models import Portfolio
 
 
 def get_portfolio_process_statuses(request):
@@ -27,13 +28,12 @@ def portfolio_cash_holding_calc(request):
     print("")
     print("CASH HOLDING CALCULATION")
     body_data = json.loads(request.body.decode('utf-8'))
-    start_date = datetime.datetime.strptime(body_data['start_date'], '%Y-%m-%d').date()
-    end_date = datetime.datetime.strptime(body_data['end_date'], '%Y-%m-%d').date()
+    start_date = datetime.datetime.strptime('2022-07-30', '%Y-%m-%d').date()
+    end_date = datetime.datetime.strptime('2022-09-15', '%Y-%m-%d').date()
     portfolio_list = body_data['portfolio_list']
     print(start_date)
     print(end_date)
     print(portfolio_list)
-    #
 
     # if portfolio == "ALL":
     #     portfolio_list = Portfolio.objects.filter().values_list('portfolio_code', flat=True)
@@ -42,12 +42,18 @@ def portfolio_cash_holding_calc(request):
     # response_list = []
     for port in portfolio_list:
         print(port)
-        while start_date <= end_date:
-            cash_holding_calculation(portfolio_code=port, calc_date=start_date)
-            start_date = start_date + timedelta(days=1)
+        port_data = Portfolio.objects.filter(portfolio_code=port).values()
+        # inception_date = port_data[0]['inception_date']
+        # if inception_date > start_date:
+        #     return JsonResponse({'response': 'Portfolio inception date is greater than the calculation start date.'}, safe=False)
+
+        cash_holding_calculation(portfolio_code='MAP_TEST', start_date=start_date, end_date=end_date)
+        # while start_date <= end_date:
+        #     cash_holding_calculation(portfolio_code=port, start_date=start_date)
+        #     start_date = start_date + timedelta(days=1)
         #
-    #     port_data = Portfolio.objects.filter(portfolio_code=port).values()
-    #     inception_date = port_data[0]['inception_date']
+
+
     #     start_date = date
     #     responses = []
     #     if inception_date > start_date:
@@ -59,4 +65,13 @@ def portfolio_cash_holding_calc(request):
     #         cash_holding(portfolio_code=port, start_date=start_date)
             # responses.append({'date': start_date.strftime('%Y-%m-%d'),
             #                   'msg': })
-    return JsonResponse(list({}), safe=False)
+    return JsonResponse({'response': 'Process finished.'}, safe=False)
+
+
+def get_cash_holding_history(request):
+    if request.method == 'GET':
+        start_date = datetime.datetime.strptime(request.GET.get('start_date'), '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(request.GET.get('end_date'), '%Y-%m-%d').date()
+        portfolio_code = request.GET.get('portfolio_code')
+        cash_history = cash_holding_calculation(portfolio_code=portfolio_code, start_date=start_date, end_date=end_date)
+        return JsonResponse(list(cash_history.to_dict(orient='records')), safe=False)
