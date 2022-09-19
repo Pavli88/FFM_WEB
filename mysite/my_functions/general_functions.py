@@ -17,9 +17,7 @@ def beginning_of_month():
 
 
 def previous_business_day(currenct_day):
-
     date = datetime.datetime.strptime(currenct_day, '%Y-%m-%d')
-
     if date.date().weekday() == 0:
         result = date + timedelta(-3)
     elif date.date().weekday() == 6:
@@ -27,3 +25,7 @@ def previous_business_day(currenct_day):
     else:
         result = date + timedelta(-1)
     return result.date()
+
+
+def previous_month_end(current_day):
+    return current_day.replace(day=1) - datetime.timedelta(days=1)
