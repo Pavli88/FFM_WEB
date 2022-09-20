@@ -283,16 +283,17 @@ def get_last_price(request):
 
 
 def get_robot_cf(request, robot):
+    print('ROBOT CASH FLOW')
     if request.method == "GET":
         if robot == 'all':
             robot_cash_flow = RobotCashFlow.objects.filter().values()
         else:
             robot_cash_flow = RobotCashFlow.objects.filter(robot_name=robot).values()
+        print(robot_cash_flow)
         return JsonResponse(list(robot_cash_flow), safe=False)
 
 
 def robot_drawdown(request):
-    print("Drawdown calculation")
     if request.method == "GET":
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
@@ -384,6 +385,7 @@ def get_trades(request):
             trades = RobotTrades.objects.filter().values()
         else:
             trades = RobotTrades.objects.filter(robot=robot).filter(close_time__gte=start_date).filter(close_time__lte=end_date).values()
+        print(trades)
         return JsonResponse(list(trades), safe=False)
 
 

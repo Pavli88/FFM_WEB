@@ -19,7 +19,7 @@ urlpatterns = [
     path('robots/get_prices/', views.get_prices),
     path('robots/get_last_price/', views.get_last_price),
     path('robots/trades/', views.get_trades),
-    path('robots/robot_cash_flow/<str:robot>/', views.get_robot_cf),
+    path('robots/get/cash_flow/<str:robot>/', views.get_robot_cf),
     path('robots/update_strategy_params/', views.update_strategy_params),
     path('robots/update_status/', views.update_status),
     path('robots/monthly_returns_calc/', views.monthly_returns_calculation),
