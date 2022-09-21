@@ -65,16 +65,16 @@ def delete_robot_execution_schedule(sender, **kwargs):
         Schedule.objects.filter(name=instance.name).delete()
 
 
-@receiver(post_save, sender=Balance)
-def calculate_robot_price(sender, **kwargs):
-    print("------------------------------")
-    print("SIGNAL -> Balance Calculation")
-    balance_data = kwargs.get('instance')
-    instrument = Instruments.objects.filter(instrument_name=balance_data.robot_name).values()[0]
-    print("ROBOT: ", balance_data.robot_name)
-    print(instrument['id'])
-    pricing_response = pricing_robot(robot=balance_data.robot_name, calc_date=balance_data.date, instrument_id=instrument['id'])
-    print(pricing_response)
+# @receiver(post_save, sender=Balance)
+# def calculate_robot_price(sender, **kwargs):
+#     print("------------------------------")
+#     print("SIGNAL -> Balance Calculation")
+#     balance_data = kwargs.get('instance')
+#     instrument = Instruments.objects.filter(instrument_name=balance_data.robot_name).values()[0]
+#     print("ROBOT: ", balance_data.robot_name)
+#     print(instrument['id'])
+#     pricing_response = pricing_robot(robot=balance_data.robot_name, calc_date=balance_data.date, instrument_id=instrument['id'])
+#     print(pricing_response)
 
 
 # Portfolio related signals

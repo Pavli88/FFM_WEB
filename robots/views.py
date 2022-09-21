@@ -38,78 +38,34 @@ from trade_app.consumers import *
 # CRUD -----------------------------------------------------------------------------------------------------------------
 @csrf_exempt
 def new_robot(request):
-    print("==================")
-    print("NEW ROBOT CREATION")
-    print("==================")
-
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        robot_name = request_data["robot_name"]
-        strategy = request_data["strategy"]
-        broker = request_data["broker"]
-        env = request_data["env"]
-        security = request_data["security"]
-        account_number = request_data["account"]
-
-        print("ROBOT NAME:", robot_name)
-        print("STRATEGY:", strategy)
-        print("BROKER:", broker)
-        print("ENVIRONMENT:", env)
-        print("SECURITY:", security)
-        print("ACCOUNT:", account_number)
-
         try:
-            Robots(name=robot_name,
-                   strategy=strategy,
-                   security=security,
-                   broker=broker,
-                   status="active",
-                   env=env,
-                   account_number=account_number
-                   ).save()
-
-            print("Inserting new robot to database")
-
-            Balance(robot_name=robot_name).save()
-
-            print("Setting up initial balance to 0")
-
-            Instruments(instrument_name=robot_name,
-                        instrument_type="Robot",
-                        source="ffm_system").save()
-
-            print("Saving new robot to instruments table")
-
-            print("Creating new record in robot risk table")
-
-            RobotRisk(robot=robot_name).save()
-
-            print("Saving down robot to instruments table")
-
-            response = {"securities": []}
-
+            Robots(name=request_data["robot_name"],
+                   robot_code=request_data["robot_code"],
+                   status="inactive",
+                   env=request_data["env"]).save()
         except:
-            print("Robot exists in database")
-            response = {"message": "alert"}
-
-    SystemMessages(msg_type="NEW ROBOT",
-                   msg=robot_name + ": New robot was created.").save()
-
-    print("Sending response to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
+            response = 'Robot exists in database'
+            return JsonResponse(response, safe=False)
+        Balance(robot_name=request_data["robot_code"]).save()
+        Instruments(instrument_name=request_data["robot_name"],
+                    inst_code=request_data["robot_code"],
+                    instrument_type="Robot",
+                    source="ffm_system").save()
+        RobotRisk(robot=request_data["robot_code"]).save()
+        return JsonResponse('New robot created in database', safe=False)
 
 
 @csrf_exempt
 def update_robot(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        robot = Robots.objects.get(name=request_data['name'])
+        robot = Robots.objects.get(robot_code=request_data['robot_code'])
         for key, value in request_data.items():
             setattr(robot, key, value)
         robot.save()
-        return JsonResponse(list({}), safe=False)
+        return JsonResponse('Robot details are updated', safe=False)
 
 
 def delete_robot(request):
