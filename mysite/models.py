@@ -59,3 +59,4 @@ class Exceptions(models.Model):
     calculation_date = models.DateField(default=datetime.date.today)
     creation_date = models.DateTimeField()
     security_id = models.CharField(max_length=100, default="")
+

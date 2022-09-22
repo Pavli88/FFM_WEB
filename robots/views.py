@@ -18,7 +18,6 @@ from robots.processes.robot_balance_calc import *
 from mysite.processes.risk_calculations import *
 from mysite.processes.return_calculation import *
 from robots.processes.robot_pricing import pricing_robot
-from robots.processes.monthly_returns_calc import monthly_returns_calc
 
 # Date imports
 import datetime
