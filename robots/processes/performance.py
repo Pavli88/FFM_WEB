@@ -15,7 +15,7 @@ def monthly_return_calc(robot_code, start_date, end_date):
     pnls = balances['realized_pnl'].sum()
     total_cash_flow = balances['cash_flow'].sum()
     opening_balance = list(balances['opening_balance'])[0]
-    closing_balance = list(balances['close_balance'])[0]
+    closing_balance = list(balances['close_balance'])[-1]
     performance = round((closing_balance + pnls - total_cash_flow) / opening_balance, 5)
     try:
         monthly_return = MonthlyReturns.objects.get(robot_code=robot_code, date=end_date)
