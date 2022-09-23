@@ -40,31 +40,22 @@ def new_robot(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         try:
-            Robots(name=request_data["robot_name"],
-                   robot_code=request_data["robot_code"],
-                   status="inactive",
-                   env=request_data["env"]).save()
+            new_robot = Robots(name=request_data["robot_name"],
+                               status="inactive",
+                               env=request_data["env"],
+                               inception_date=request_data["inception_date"])
+            new_robot.save()
+            print(new_robot.id)
         except:
-            response = 'Robot exists in database'
+            response = 'Robot name exists in database'
             return JsonResponse(response, safe=False)
-        Balance(robot_name=request_data["robot_code"]).save()
-        Instruments(instrument_name=request_data["robot_name"],
-                    inst_code=request_data["robot_code"],
-                    instrument_type="Robot",
-                    source="ffm_system").save()
-        RobotRisk(robot=request_data["robot_code"]).save()
+        Balance(robot_id=new_robot.id).save()
+        # Instruments(instrument_name=request_data["robot_name"],
+        #             inst_code=request_data["robot_code"],
+        #             instrument_type="Robot",
+        #             source="ffm_system").save()
+        RobotRisk(robot=new_robot.id).save()
         return JsonResponse('New robot created in database', safe=False)
-
-
-@csrf_exempt
-def update_robot(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        robot = Robots.objects.get(robot_code=request_data['robot_code'])
-        for key, value in request_data.items():
-            setattr(robot, key, value)
-        robot.save()
-        return JsonResponse('Robot details are updated', safe=False)
 
 
 def delete_robot(request):
@@ -82,17 +73,7 @@ def delete_robot(request):
     return JsonResponse(response, safe=False)
 
 
-def get_robots(request, env):
-    print("Request from front end to load all robot data")
-    if request.method == "GET":
-        if env == "all":
-            robots = Robots.objects.filter().values()
-        else:
-            robots = Robots.objects.filter(env=env).values()
-        response = list(robots)
-        print("Sending data to front end")
-        print("")
-        return JsonResponse(response, safe=False)
+
 
 
 def get_robot_data(request):
@@ -194,20 +175,6 @@ def get_robot_balances(request, env):
     return JsonResponse(response, safe=False)
 
 
-def get_robot_balance(request):
-    print("single robot balance")
-
-    if request.method == "GET":
-        start_date = request.GET.get("start_date")
-        end_date = request.GET.get("end_date")
-        robot = request.GET.get("robot")
-        print("ROBOT:", robot)
-        print("START DATE:", start_date)
-        print("END DATE:", end_date)
-        balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).values()
-        return JsonResponse(list(balance), safe=False)
-
-
 def get_prices(request):
     if request.method == "GET":
         start_date = request.GET.get("start_date")
@@ -274,26 +241,8 @@ def cumulative_return(request):
         return JsonResponse(list(cum_rets), safe=False)
 
 
-def monthly_returns_calculation(request):
-    if request.method == "GET":
-        robot = request.GET.get("robot")
-        year = request.GET.get("year")
-        start_date = year + '-01-01'
-        end_date = year + '-12-31'
-        print(start_date)
-        balance_data = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values()
-        monthly_returns = monthly_returns_calc(data=balance_data)
-        return JsonResponse(list(monthly_returns), safe=False)
-
-
 @csrf_exempt
 def robot_pricing(request):
-    """
-        This function calculates robot balance based on front end request.
-        :param request:
-        :return:
-        """
-
     print("=========================")
     print("ROBOT PRICING CALCULATION")
     print("=========================")
@@ -346,9 +295,7 @@ def get_trades(request):
 
 def get_robot(request, robot):
     if request.method == "GET":
-        print(robot)
         robot = Robots.objects.filter(name=robot).values()
-        print(robot)
         return JsonResponse(list(robot), safe=False)
 
 

@@ -26,7 +26,7 @@ class RobotCashFlow(models.Model):
 
 
 class Balance(models.Model):
-    robot_name = models.CharField(max_length=20)
+    robot_id = models.IntegerField(default=0)
     opening_balance = models.FloatField(default=0.0)
     realized_pnl = models.FloatField(default=0.0)
     unrealized_pnl = models.FloatField(default=0.0)

@@ -37,7 +37,7 @@ def monthly_return(request):
 def robot_balance(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        robot = request_data["robot"]
+        robot = request_data["robot_id"]
         date = datetime.datetime.strptime(request_data["start_date"], '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
         if robot == "ALL":
@@ -50,7 +50,8 @@ def robot_balance(request):
             start_date = date
             while start_date <= end_date:
                 print("    DATE:", start_date)
-                balance_calc(robot=active_robot, calc_date=start_date)
+                a = balance_calc(robot_id=active_robot, calc_date=start_date)
+                l.append(a)
                 start_date = start_date + timedelta(days=1)
     response = "Completed"
     return JsonResponse(response, safe=False)

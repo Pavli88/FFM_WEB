@@ -76,7 +76,6 @@ def get_accounts_data(request):
 def get_brokers(request):
     if request.method == "GET":
         brokers = Brokers.objects.all().values()
-        print(brokers)
         return JsonResponse(list(brokers), safe=False)
 
 
