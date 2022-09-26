@@ -50,8 +50,7 @@ def robot_balance(request):
             start_date = date
             while start_date <= end_date:
                 print("    DATE:", start_date)
-                a = balance_calc(robot_id=active_robot, calc_date=start_date)
-                l.append(a)
+                balance_calc(robot_id=active_robot, calc_date=start_date)
                 start_date = start_date + timedelta(days=1)
     response = "Completed"
     return JsonResponse(response, safe=False)

@@ -54,7 +54,7 @@ def aggregated_robot_pnl_by_date(request):
         cursor = connection.cursor()
         cursor.execute("""select rb.date, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as diff
                             from robots_balance as rb, robots_robots as r
-                            where rb.robot_name=r.name
+                            where rb.robot_id=r.id
                             and rb.date>='{date}'
                             and r.status='active'
                             and r.env='{env}' group by date;""".format(env=env, date=str(date.today().year)+'-01-01'))
@@ -70,12 +70,12 @@ def aggregated_robot_pnl(request):
         start_date = request.GET.get("start_date")
         env = request.GET.get("env")
         cursor = connection.cursor()
-        cursor.execute("""select rb.robot_name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
+        cursor.execute("""select rb.robot_id, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
                             from robots_balance as rb, robots_robots as r
-                            where rb.robot_name=r.name
+                            where rb.robot_id=r.id
                             and rb.date>='{date}'
                             and status='active'
-                            and r.env='{env}' group by rb.robot_name order by pnl desc;""".format(date=start_date, env=env))
+                            and r.env='{env}' group by rb.robot_id order by pnl desc;""".format(date=start_date, env=env))
         row = cursor.fetchall()
         response_list = []
         for item in row:
@@ -90,7 +90,7 @@ def total_robot_pnl(request):
         cursor = connection.cursor()
         cursor.execute("""select sum(rb.realized_pnl) as total_pnl
                         from robots_balance rb, robots_robots as r
-                        where rb.robot_name=r.name
+                        where rb.robot_id=r.id
                         and r.status='active'
                         and r.env='{env}' and rb.date >='{date}';""".format(date=start_date, env=env))
         row = cursor.fetchall()
@@ -105,9 +105,9 @@ def total_robot_balances_by_date(request):
     if request.method == "GET":
         env = request.GET.get("env")
         cursor = connection.cursor()
-        cursor.execute("""select rb.robot_name , rb.close_balance as total_pnl
+        cursor.execute("""select rb.robot_id , rb.close_balance as total_pnl
                             from robots_balance rb, robots_robots as r
-                            where rb.robot_name=r.name
+                            where rb.robot_id=r.id
                             and r.env='{env}'
                             and r.status='active' 
                             and rb.date ='{date}';""".format(date=get_today(), env=env))
@@ -136,7 +136,7 @@ def load_robot_stats(request, env):
         total_mtd_pnl = 0.0
         total_ytd_pnl = 0.0
         for robot in robots:
-            robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_name=robot["name"]).values()))
+            robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_id=robot["id"]).values()))
             yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
             monthly_trades = robot_trades_all[robot_trades_all["date"] >= month_beg]
             mtd_series = cumulative_return_calc(data_series=monthly_trades["ret"].tolist())
