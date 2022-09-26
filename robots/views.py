@@ -54,6 +54,9 @@ def new_robot(request):
         #             inst_code=request_data["robot_code"],
         #             instrument_type="Robot",
         #             source="ffm_system").save()
+        RobotCashFlow(robot_name=new_robot.id,
+                      cash_flow=0.0,
+                      date=request_data["inception_date"]).save()
         RobotRisk(robot=new_robot.id).save()
         return JsonResponse('New robot created in database', safe=False)
 
@@ -71,9 +74,6 @@ def delete_robot(request):
     response = {"message": "Robot was deleted"}
     print("Sending data to front end")
     return JsonResponse(response, safe=False)
-
-
-
 
 
 def get_robot_data(request):
@@ -217,15 +217,10 @@ def get_robot_cf(request, robot):
 
 def robot_drawdown(request):
     if request.method == "GET":
-        start_date = request.GET.get("start_date")
-        end_date = request.GET.get("end_date")
-        robot = request.GET.get("robot")
-        if robot == 'all':
-            balance = Balance.objects.filter().values()
-        else:
-            balance = Balance.objects.filter(robot_name=robot).filter(date__gte=start_date).filter(date__lte=end_date).values_list('ret', flat=True)
-        drawdown = drawdown_calc(list(balance))
-        return JsonResponse(list(drawdown), safe=False)
+        return JsonResponse(list(drawdown_calc(list(Balance.objects.filter(robot_id=request.GET.get("robot_id")).filter(
+            date__gte=request.GET.get("start_date")).filter(date__lte=request.GET.get("end_date")).values_list('ret',
+                                                                                                               flat=True)))),
+                            safe=False)
 
 
 def cumulative_return(request):
@@ -278,19 +273,6 @@ def robot_pricing(request):
                 start_date = start_date + timedelta(days=1)
             response_list.append({'robot': active_robot, 'response': responses})
     return JsonResponse(response_list, safe=False)
-
-
-def get_trades(request):
-    if request.method == "GET":
-        start_date = request.GET.get("start_date")
-        end_date = request.GET.get("end_date")
-        robot = request.GET.get("robot")
-        if robot == 'all':
-            trades = RobotTrades.objects.filter().values()
-        else:
-            trades = RobotTrades.objects.filter(robot=robot).filter(close_time__gte=start_date).filter(close_time__lte=end_date).values()
-        print(trades)
-        return JsonResponse(list(trades), safe=False)
 
 
 def get_robot(request, robot):

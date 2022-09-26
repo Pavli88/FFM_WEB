@@ -53,7 +53,7 @@ class RobotTrades(models.Model):
 
 
 class MonthlyReturns(models.Model):
-    robot_code = models.CharField(max_length=30, default='')
+    robot_id = models.IntegerField(default=0)
     ret = models.FloatField(default=0.0)
     date = models.DateField(default=datetime.date.today)
 

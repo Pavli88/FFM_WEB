@@ -60,47 +60,21 @@ def update_risk_per_trade(request):
 
 @csrf_exempt
 def update_robot_risk(request):
-    print("===================")
-    print("UPDATING ROBOT RISK")
-    print("===================")
-
     if request.method == "POST":
         body_unicode = request.body.decode('utf-8')
         body_data = json.loads(body_unicode)
-        robot = body_data["robot"]
-        daily_risk = body_data["daily_risk"]
-        nbm_trades = body_data["nbm_trades"]
-        risk_per_trade = body_data["risk_per_trade"]
-        pyramiding_level = body_data["pyramiding_level"]
-        quantity_type = body_data["quantity_type"]
-        quantity = body_data["quantity"]
-        sl = body_data["sl"]
-        win_exp = body_data["win_exp"]
-
-    print("ROBOT:", robot)
-    print("DAILY RISK LIMIT:", daily_risk)
-    print("DAILY MAX NUMBER OF TRADES:", nbm_trades)
-    print("RISK PER TRADE:", risk_per_trade)
-    print("PYRAMIDING LEVEL:", pyramiding_level)
-    print("QUANTITY TYPE:", quantity_type)
-    print("QUANTITY:", quantity)
-
-    robot_risk_data = RobotRisk.objects.get(robot=robot)
-    robot_risk_data.daily_risk_perc = daily_risk
-    robot_risk_data.daily_trade_limit = nbm_trades
-    robot_risk_data.risk_per_trade = risk_per_trade
-    robot_risk_data.pyramiding_level = pyramiding_level
-    robot_risk_data.quantity_type = quantity_type
-    robot_risk_data.quantity = quantity
-    robot_risk_data.sl = sl
-    robot_risk_data.win_exp = win_exp
-    robot_risk_data.save()
-
-    response = {"message": "success"}
-
-    print("Sending message to front end")
-
-    return JsonResponse(response, safe=False)
+        robot_risk_data = RobotRisk.objects.get(robot=body_data["robot_id"])
+        robot_risk_data.daily_risk_perc = body_data["daily_risk"]
+        robot_risk_data.daily_trade_limit = body_data["nbm_trades"]
+        robot_risk_data.risk_per_trade = body_data["risk_per_trade"]
+        robot_risk_data.pyramiding_level = body_data["pyramiding_level"]
+        robot_risk_data.quantity_type = body_data["quantity_type"]
+        robot_risk_data.quantity = body_data["quantity"]
+        robot_risk_data.sl = body_data["sl"]
+        robot_risk_data.win_exp = body_data["win_exp"]
+        robot_risk_data.save()
+        response = {"message": "success"}
+        return JsonResponse(response, safe=False)
 
 
 def get_robot_risk(request, env):
@@ -137,7 +111,6 @@ def get_robot_risk(request, env):
     return JsonResponse(response, safe=False)
 
 
-def get_risk(request, robot):
+def robot_risk(request):
     if request.method == "GET":
-        robot_risk = RobotRisk.objects.filter(robot=robot).values()[0]
-        return JsonResponse(robot_risk, safe=False)
+        return JsonResponse(list(RobotRisk.objects.filter(robot=request.GET.get('robot_id')).values()), safe=False)

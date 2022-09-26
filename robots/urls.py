@@ -8,6 +8,8 @@ get_patterns = [
     path('robots/get/robots/<str:env>/', get_views.get_robots),
     path('robots/get/robot/<str:id>/', get_views.get_robot),
     path('robots/get/balance/', get_views.get_robot_balance),
+    path('robots/get/transactions/', get_views.transactions),
+    path('robots/get/drawdown/', views.robot_drawdown),
 ]
 
 new_patterns = [
@@ -35,12 +37,10 @@ other_patterns = [
     path('robots/new_robot/', views.new_robot),
     path('robots/calculate_robot_balance/', views.robot_balance_calc),
     path('robots/get_robot_balance/<str:env>/', views.get_robot_balances),
-    path('robots/drawdown/', views.robot_drawdown),
     path('robots/cumulative_ret/', views.cumulative_return),
     path('robots/pricing/', views.robot_pricing),
     path('robots/get_prices/', views.get_prices),
     path('robots/get_last_price/', views.get_last_price),
-    path('robots/trades/', views.get_trades),
     path('robots/get/cash_flow/<str:robot>/', views.get_robot_cf),
     path('robots/update_strategy_params/', views.update_strategy_params),
 ]

@@ -28,7 +28,7 @@ def monthly_return(request):
         response = []
         for robot in request_data['robot']:
             print(robot)
-            msg = monthly_return_calc(robot_code=robot, start_date=start_date, end_date=month_end_date)
+            msg = monthly_return_calc(robot_id=robot, start_date=start_date, end_date=month_end_date)
             response.append(month_end_date + ': ' + msg)
         return JsonResponse(response, safe=False)
 
