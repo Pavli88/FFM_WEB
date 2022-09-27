@@ -19,55 +19,42 @@ from trade_app.processes.trade_execution import TradeExecution
 def get_open_trades_robot(request, robot):
     if request.method == "GET":
         open_trades = RobotTrades.objects.filter(robot=robot).filter(status='OPEN').values()
-
     return JsonResponse(list(open_trades), safe=False)
 
 
 def get_open_trades(request, env):
-
-    print("Loading open trades to open trade table")
-
     if request.method == "GET":
-        robots = Robots.objects.filter(env=env).values_list('name', flat=True)
+        robots = Robots.objects.filter(env=env).values_list('id', flat=True)
         trades = RobotTrades.objects.filter(status="OPEN").filter(robot__in=robots).values()
-
+        print(trades)
         response = list(trades)
-
-        print("Sending data to front end")
-
         return JsonResponse(response, safe=False)
 
 
+@csrf_exempt
 def new_trade(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        robot = request.POST.get("robot")
-        side = request.POST.get("side")
-        trade = TradeExecution(robot=robot)
-        trade.open_trade(side=side)
-
-        response = 'Trade is opened successfully!'
-
+        trade = TradeExecution(robot_id=request_data['robot_id'], side=request_data['side'])
+        if trade.connection_status is True:
+            quantity = trade.quantity_calculation(stop_level=float(request_data['stop_level']))
+            trade.open_trade(quantity=quantity)
+            response = 'Trade is opened successfully!'
+        else:
+            response = 'Missing Balance'
         return JsonResponse(response, safe=False)
 
 
 @csrf_exempt
 def close_trade(request):
-    print("================")
-    print("MANUAL TRADE CLOSE")
-    print("================")
-
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         broker_id = request_data["broker_id"]
         ffm_id = request_data["trd_id"]
         robot = request_data["robot"]
-
-        trade = TradeExecution(robot=robot)
+        trade = TradeExecution(robot_id=robot)
         trade.close_trade(ffm_id=ffm_id, broker_id=broker_id)
-
         response = 'Trade was closed successfully!'
-
         return JsonResponse(response, safe=False)
 
 
@@ -77,16 +64,21 @@ def trade_execution(request):
         message = request.body
         message = str(message.decode("utf-8"))
         signal = message.split()
-        trade = TradeExecution(robot=signal[0], side=signal[1])
+        print(signal)
+        trade = TradeExecution(robot_id=signal[0], side=signal[1])
+        print(trade.connection_status)
         if len(signal) == 2:
             stop_level = None
         else:
             stop_level = float(signal[2])
-        if signal[1] == 'Close':
-            trade.close_all_trades()
-        else:
-            quantity = trade.quantity_calculation(stop_level=stop_level)
-            trade.open_trade(quantity=quantity)
+
+        if trade.connection_status is True:
+            print('Execution')
+            if signal[1] == 'Close':
+                trade.close_all_trades()
+            else:
+                quantity = trade.quantity_calculation(stop_level=stop_level)
+                trade.open_trade(quantity=quantity)
 
         return HttpResponse(None)
 

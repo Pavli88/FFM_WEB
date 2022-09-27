@@ -42,7 +42,7 @@ def trade_closed(sender, **kwargs):
         #     print(close_time)
         #
         #     close_time=close_time+timedelta(days=1)
-        balance_msg = balance_calc(robot=robot_data.robot, calc_date=get_today())
+        balance_msg = balance_calc(robot_id=robot_data.robot, calc_date=get_today())
         SystemMessages(msg_type="Trade",
                        msg_sub_type='Close',
                        msg=str(' ').join([robot_data.robot,

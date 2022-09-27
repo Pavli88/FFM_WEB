@@ -12,18 +12,22 @@ from mysite.processes.oanda import OandaV20
 
 
 class TradeExecution:
-    def __init__(self, robot, side=None):
-        self.robot = robot
+    def __init__(self, robot_id, side=None):
+        self.robot = robot_id
         self.side = side
-        self.robot_data = Robots.objects.get(name=self.robot)
+        self.robot_data = Robots.objects.get(id=self.robot)
         self.instrument = self.robot_data.security
-        self.balance = Balance.objects.get(robot_name=robot, date=get_today())
-        self.account_data = BrokerAccounts.objects.get(account_number=self.robot_data.account_number)
-        self.risk_data = RobotRisk.objects.get(robot=self.robot)
-        self.quantity = self.risk_data.quantity
-        self.connection = OandaV20(access_token=self.account_data.access_token,
-                                   account_id=self.account_data.account_number,
-                                   environment=self.account_data.env)
+        try:
+            self.balance = Balance.objects.get(robot_id=self.robot, date=get_today())
+            self.account_data = BrokerAccounts.objects.get(account_number=self.robot_data.account_number)
+            self.risk_data = RobotRisk.objects.get(robot=self.robot)
+            self.quantity = self.risk_data.quantity
+            self.connection = OandaV20(access_token=self.account_data.access_token,
+                                       account_id=self.account_data.account_number,
+                                       environment=self.account_data.env)
+            self.connection_status = True
+        except Balance.DoesNotExist:
+            self.connection_status = False
 
     def save_trade_to_db(self, open_price, broker_id, quantity):
         RobotTrades(security=self.instrument,
@@ -80,6 +84,7 @@ class TradeExecution:
         else:
             trade = self.connection.submit_market_order(security=self.instrument,
                                                         quantity=quantity)
+            print(trade)
             if trade['status'] == 'accepted':
                 self.save_trade_to_db(open_price=trade['response']["price"],
                                       broker_id=trade['response']['id'],
