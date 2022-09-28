@@ -41,7 +41,7 @@ def robot_balance(request):
         date = datetime.datetime.strptime(request_data["start_date"], '%Y-%m-%d').date()
         end_date = datetime.datetime.strptime(request_data["end_date"], '%Y-%m-%d').date()
         if robot == "ALL":
-            robot_list = Robots.objects.filter(status='active').values_list('name', flat=True)
+            robot_list = Robots.objects.filter(status='active').values_list('id', flat=True)
         else:
             robot_list = [robot]
         print("ROBOTS:", robot_list)
