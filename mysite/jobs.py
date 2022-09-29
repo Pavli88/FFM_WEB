@@ -3,7 +3,7 @@ from datetime import date
 
 print("ROBOT DAILY BALANCE CALCULATION JOB")
 print("DATE:", date.today())
-# r = requests.post("http://pavliati.pythonanywhere.com/robots/calculate/balance/", json={'robot_id': 'ALL', 'start_date': str(date.today()), 'end_date': str(date.today())})
+r = requests.post("http://pavliati.pythonanywhere.com/robots/calculate/balance/", json={'robot_id': 'ALL', 'start_date': str(date.today()), 'end_date': str(date.today())})
 print("Robot balance calculation finished!")
 
 # print("PORTFOLIO POSITIONS")
