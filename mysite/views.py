@@ -70,7 +70,7 @@ def aggregated_robot_pnl(request):
         start_date = request.GET.get("start_date")
         env = request.GET.get("env")
         cursor = connection.cursor()
-        cursor.execute("""select rb.robot_id, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
+        cursor.execute("""select r.name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
                             from robots_balance as rb, robots_robots as r
                             where rb.robot_id=r.id
                             and rb.date>='{date}'
@@ -105,12 +105,12 @@ def total_robot_balances_by_date(request):
     if request.method == "GET":
         env = request.GET.get("env")
         cursor = connection.cursor()
-        cursor.execute("""select rb.robot_id , rb.close_balance as total_pnl
+        cursor.execute("""select r.name , rb.close_balance as total_pnl
                             from robots_balance rb, robots_robots as r
                             where rb.robot_id=r.id
                             and r.env='{env}'
                             and r.status='active' 
-                            and rb.date ='{date}';""".format(date=get_today(), env=env))
+                            and rb.date ='{date}' order by total_pnl desc;""".format(date=get_today(), env=env))
         row = cursor.fetchall()
         response_list = []
         for item in row:
