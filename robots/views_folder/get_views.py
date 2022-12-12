@@ -18,6 +18,10 @@ def get_robots(request, env):
         return JsonResponse(list(Robots.objects.filter(env=env).values()), safe=False)
 
 
+def get_active_robots(request, env):
+    if request.method == "GET":
+        return JsonResponse(list(Robots.objects.filter(env=env, status='active').values()), safe=False)
+
 def get_robot_balance(request):
     if request.method == "GET":
         return JsonResponse(
@@ -57,7 +61,8 @@ and env=%s;
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
         data = []
+        df['Total'] = df.iloc[:, 1:].sum(axis=1)
         for column in df.set_index('date'):
-            # print(df[column].cumsum())
             data.append({'name': column, 'data': list(df[column].cumsum())})
+
         return JsonResponse({'dates': list(df['date']), 'data': data}, safe=False)
