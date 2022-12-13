@@ -12,6 +12,7 @@ get_patterns = [
     path('robots/get/drawdown/', views.robot_drawdown),
     path('robots/get/pnls/', get_views.all_pnl_series),
     path('robots/get/active/<str:env>/', get_views.get_active_robots),
+    path('robots/get/all/drawdown/', get_views.all_robots_drawdown),
 ]
 
 new_patterns = [

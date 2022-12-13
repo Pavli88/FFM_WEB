@@ -7,6 +7,9 @@ import pandas as pd
 from robots.models import Balance, MonthlyReturns, Robots, RobotTrades
 
 
+# Process imports
+from mysite.processes.risk_calculations import drawdown_calc
+
 def get_robot(request, id):
     if request.method == "GET":
         print(id)
@@ -66,3 +69,18 @@ and env=%s;
             data.append({'name': column, 'data': list(df[column].cumsum())})
 
         return JsonResponse({'dates': list(df['date']), 'data': data}, safe=False)
+
+def all_robots_drawdown(request):
+    cursor = connection.cursor()
+    cursor.execute("""select date, round((sum(rb.realized_pnl)/sum(rb.opening_balance)), 2) as total_return
+    from robots_balance rb, robots_robots as r
+    where rb.robot_id=r.id
+    and r.env='{env}'
+    and r.status='active'
+    and rb.date >= '{date}'
+    group by rb.date;""".format(date=request.GET.get("date"), env=request.GET.get("env")))
+    row = cursor.fetchall()
+    df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+    drawdown = drawdown_calc(data_series=list(df['total_return']))
+    print(drawdown)
+    return JsonResponse({'dates': list(df['date']), 'drawdown': drawdown}, safe=False)
