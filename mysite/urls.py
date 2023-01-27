@@ -16,7 +16,7 @@ get_patterns = [
     path('home/load_robot_stats/<str:env>/', views.load_robot_stats),
     path('exceptions/get/', views.get_exceptions),
     path('home/total_robot_pnl/', views.total_robot_pnl),
-    path('home/robot_balances_by_date/', views.robot_balances_by_date),
+    path('home/robot_balances_by_date/', get_views.robot_balances_by_date),
     path('home/get/robot/all/daily_returns/', get_views.all_daily_returns),
 ]
 

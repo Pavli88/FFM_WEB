@@ -10,6 +10,7 @@ from robots.models import Balance, MonthlyReturns, Robots, RobotTrades
 # Process imports
 from mysite.processes.risk_calculations import drawdown_calc
 
+
 def get_robot(request, id):
     if request.method == "GET":
         print(id)
@@ -24,6 +25,7 @@ def get_robots(request, env):
 def get_active_robots(request, env):
     if request.method == "GET":
         return JsonResponse(list(Robots.objects.filter(env=env, status='active').values()), safe=False)
+
 
 def get_robot_balance(request):
     if request.method == "GET":
@@ -44,8 +46,10 @@ def transactions(request):
             close_time__gte=request.GET.get("start_date")).filter(
             close_time__lte=request.GET.get("end_date")).values()), safe=False)
 
+
 def all_pnl_series(request):
     if request.method == "GET":
+        print(request.GET.get("date"))
         cursor = connection.cursor()
         cursor.execute("set @sql = null;")
         cursor.execute("""
@@ -57,10 +61,9 @@ from robots_robots
 where status = %s
 and env=%s;
         """, ['active', 'live'])
-        cursor.execute("""set @sql = concat('select date, ', @sql, 'from robots_balance where date > "2022-01-01" group by date');""")
+        cursor.execute("""set @sql = concat('select date, ', @sql, 'from robots_balance where date > "{reporting_date}" group by date');""".format(reporting_date=request.GET.get("date")))
         cursor.execute("prepare stmt from @sql;")
         cursor.execute("execute stmt;")
-        # cursor.execute("""deallocate prepare stmt;""")
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
         data = []
@@ -69,6 +72,7 @@ and env=%s;
             data.append({'name': column, 'data': list(df[column].cumsum())})
 
         return JsonResponse({'dates': list(df['date']), 'data': data}, safe=False)
+
 
 def all_robots_drawdown(request):
     cursor = connection.cursor()

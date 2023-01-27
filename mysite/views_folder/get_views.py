@@ -22,3 +22,25 @@ group by rb.date;""".format(date=request.GET.get("date"), env=request.GET.get("e
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
 
         return JsonResponse({'dates': list(df['date']), 'total_returns': list(df['total_return']), 'pnls': list(df['total_pnl'])}, safe=False)
+
+
+def robot_balances_by_date(request):
+    if request.method == "GET":
+        env = request.GET.get("env")
+        cursor = connection.cursor()
+        cursor.execute("""select r.name , rb.opening_balance as opening_balance,
+       rb.close_balance as closing_balance,
+       opening_balance*0.9 as treshold
+from robots_balance rb, robots_robots as r
+where rb.robot_id=r.id
+and r.env='{env}'
+and r.status='active'
+and rb.date ='{date}'
+order by closing_balance desc;""".format(date=get_today(), env=env))
+        row = cursor.fetchall()
+        print(row)
+        response_list = []
+        for item in row:
+            print(item)
+            response_list.append({'x': item[0], 'y': item[2]})
+        return JsonResponse(response_list, safe=False)

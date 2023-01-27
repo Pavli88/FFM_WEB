@@ -101,27 +101,6 @@ def total_robot_pnl(request):
         return JsonResponse(response_list, safe=False)
 
 
-def robot_balances_by_date(request):
-    if request.method == "GET":
-        env = request.GET.get("env")
-        cursor = connection.cursor()
-        cursor.execute("""select r.name , rb.opening_balance as opening_balance,
-       rb.close_balance as closing_balance,
-       opening_balance*0.9 as treshold
-from robots_balance rb, robots_robots as r
-where rb.robot_id=r.id
-and r.env='{env}'
-and r.status='active'
-and rb.date ='{date}'
-order by opening_balance desc;""".format(date=get_today(), env=env))
-        row = cursor.fetchall()
-        response_list = []
-        for item in row:
-            print(item)
-            response_list.append({'x': item[0], 'y': item[1]})
-        return JsonResponse(response_list, safe=False)
-
-
 def load_robot_stats(request, env):
     if request.method == "GET":
         year_beg = beginning_of_year()

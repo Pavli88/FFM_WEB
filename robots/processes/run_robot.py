@@ -6,7 +6,7 @@ import pandas as pd
 import logging
 import json
 import requests
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import importlib
 
 from mysite.my_functions.general_functions import *
