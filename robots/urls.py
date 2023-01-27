@@ -1,11 +1,17 @@
 from django.urls import path
 from . import views
-from .views_folder import calculation_views, get_views, delete_views, update_views
+from .views_folder import calculation_views, get_views, delete_views, update_views, create_views
 from signals.views import *
+
+create_views = [
+    path('robots/create/strategy/', create_views.create_robot_strategy),
+]
 
 get_patterns = [
     path('robots/get/monthly_returns/', get_views.monthly_returns),
     path('robots/get/robots/<str:env>/', get_views.get_robots),
+    path('robots/get/strategy_id/', get_views.get_robots_by_strategy_id),
+    path('robots/get/strategies/', get_views.get_strategies),
     path('robots/get/robot/<str:id>/', get_views.get_robot),
     path('robots/get/balance/', get_views.get_robot_balance),
     path('robots/get/transactions/', get_views.transactions),
@@ -21,6 +27,7 @@ new_patterns = [
 
 update_patterns = [
     path('robots/update/robot/', update_views.update_robot),
+    path('robots/update/strategy/', update_views.update_robot_strategy),
 ]
 
 delete_patterns = [
@@ -48,4 +55,5 @@ other_patterns = [
     path('robots/update_strategy_params/', views.update_strategy_params),
 ]
 
-urlpatterns = get_patterns + new_patterns + update_patterns + delete_patterns + calculate_patterns + other_patterns
+urlpatterns = get_patterns + new_patterns + update_patterns + delete_patterns + \
+              calculate_patterns + create_views + other_patterns

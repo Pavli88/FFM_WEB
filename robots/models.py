@@ -21,7 +21,7 @@ class Robots(models.Model):
 
 class Strategy(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    type = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=1000, default='')
 
 
 class RobotCashFlow(models.Model):

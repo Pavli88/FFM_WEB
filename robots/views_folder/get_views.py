@@ -4,11 +4,27 @@ from django.db import connection
 import pandas as pd
 
 # Model Imports
-from robots.models import Balance, MonthlyReturns, Robots, RobotTrades
+from robots.models import Balance, MonthlyReturns, Robots, RobotTrades, Strategy
 
 
 # Process imports
 from mysite.processes.risk_calculations import drawdown_calc
+
+
+def get_robots_by_strategy_id(request):
+    print('strategy id')
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("select*from robots_robots where strategy_id in ('ICA', 'Position');")
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        print(df)
+        return JsonResponse(list(), safe=False)
+
+
+def get_strategies(request):
+    if request.method == "GET":
+        return JsonResponse(list(Strategy.objects.filter().values()), safe=False)
 
 
 def get_robot(request, id):
