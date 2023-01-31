@@ -8,7 +8,7 @@ import datetime
 class Robots(models.Model):
     name = models.CharField(max_length=30, unique=True)
     color = models.CharField(max_length=20, default='#828282')
-    strategy_id = models.CharField(max_length=50, default='')
+    strategy = models.CharField(max_length=50, default='')
     security = models.CharField(max_length=50, default='')
     broker = models.CharField(max_length=50, default='')
     status = models.CharField(max_length=50, default='')

@@ -5,6 +5,7 @@ from signals.views import *
 
 create_views = [
     path('robots/create/strategy/', create_views.create_robot_strategy),
+    path('robots/create/robot/', create_views.create_robot),
 ]
 
 get_patterns = [
@@ -19,10 +20,6 @@ get_patterns = [
     path('robots/get/pnls/', get_views.all_pnl_series),
     path('robots/get/active/<str:env>/', get_views.get_active_robots),
     path('robots/get/all/drawdown/', get_views.all_robots_drawdown),
-]
-
-new_patterns = [
-    path('robots/new/robot/', views.new_robot),
 ]
 
 update_patterns = [
@@ -44,7 +41,6 @@ other_patterns = [
     path('robots/get_robots_with_instrument/', views.get_robots_with_instrument_data),
     path('robots/get_robot/<str:robot>/', views.get_robot),
     path('robots/delete_robot/', views.delete_robot),
-    path('robots/new_robot/', views.new_robot),
     path('robots/calculate_robot_balance/', views.robot_balance_calc),
     path('robots/get_robot_balance/<str:env>/', views.get_robot_balances),
     path('robots/cumulative_ret/', views.cumulative_return),
@@ -55,5 +51,5 @@ other_patterns = [
     path('robots/update_strategy_params/', views.update_strategy_params),
 ]
 
-urlpatterns = get_patterns + new_patterns + update_patterns + delete_patterns + \
+urlpatterns = get_patterns + update_patterns + delete_patterns + \
               calculate_patterns + create_views + other_patterns
