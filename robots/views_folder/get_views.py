@@ -1,14 +1,16 @@
 from django.http import JsonResponse
 from django.db import connection
+from django.db.models import Sum
 
 import pandas as pd
 
 # Model Imports
 from robots.models import Balance, MonthlyReturns, Robots, RobotTrades, Strategy
-
+from accounts.models import BrokerAccounts
 
 # Process imports
 from mysite.processes.risk_calculations import drawdown_calc
+from mysite.processes.oanda import OandaV20
 
 
 def get_robots_by_strategy_id(request):
@@ -104,3 +106,77 @@ def all_robots_drawdown(request):
     drawdown = drawdown_calc(data_series=list(df['total_return']))
     print(drawdown)
     return JsonResponse({'dates': list(df['date']), 'drawdown': drawdown}, safe=False)
+
+
+def get_robot_exposures(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+        select robots_robottrades.robot,
+       robots_robottrades.quantity,
+       robots_robottrades.open_price,
+       robots_robots.name,
+       robots_robots.strategy,
+       robots_robots.security,
+       risk_robotrisk.quantity_type,
+       risk_robotrisk.risk_per_trade,
+       abs(robots_robottrades.quantity*robots_robottrades.open_price) as mv,
+       rb.close_balance
+from robots_robottrades
+    join robots_robots on robots_robottrades.robot = robots_robots.id
+    join risk_robotrisk on risk_robotrisk.robot = robots_robots.id
+join (select*from robots_balance where date='{date}') as rb on robots_robottrades.robot = rb.robot_id
+       where robots_robottrades.status = 'OPEN'
+and robots_robots.status='active'
+and robots_robots.env='{env}';
+        """.format(date=request.GET.get("date"), env='live'))
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        securities = list(df['security'].drop_duplicates())
+        print(securities)
+        total_balance = Balance.objects.filter(date=request.GET.get("date")).aggregate(Sum('close_balance'))
+
+
+        # This part needs to be updated with a working soluton
+        broker = BrokerAccounts.objects.values()
+        api_connection = OandaV20(access_token=broker[0]['access_token'],
+                                  account_id=broker[0]['account_number'],
+                                  environment=broker[0]['env'])
+        prices = api_connection.get_prices_2(instruments=','.join(securities))
+        price_dict = {}
+        for price in prices:
+            # print(price)
+            print(price['bids'][0]['price'], price['asks'][0]['price'], price['instrument'])
+            price_dict[price['instrument']] = (float(price['bids'][0]['price']) + float(price['asks'][0]['price']))/2
+        print(price_dict)
+
+        ###################################################################
+
+        df['current_price'] = df['security'].map(price_dict)
+        df['current_mv'] = abs(df['quantity']*df['current_price'])
+        pnl = df['current_mv']-df['mv']
+        df['pnl'] = round(pnl.where(df['quantity'] > 0, other=pnl*-1), 2)
+        df['ret'] = round((df['pnl']/df['close_balance'])*100, 2)
+        df['ret_to_total'] = round((df['pnl']/total_balance['close_balance__sum'])*100, 2)
+        aggregated_df = df.groupby('name').sum().reset_index()
+        aggregated_df['avg_price'] = round(abs(aggregated_df['mv']/aggregated_df['quantity']), 2)
+        # counter = grouper.count()
+        # counter['pnl'] = grouper.pnl.sum()
+        # counter['current_mv'] = grouper.current_mv.sum()
+        # counter['mv'] = grouper.mv.sum()
+        # counter['close_balance'] = grouper.close_balance.sum()
+        # counter = counter.reset_index()
+        # counter['avg_price'] = counter['close_balance']/counter['robot']
+        print(df)
+        print(aggregated_df[['name', 'quantity', 'pnl', 'ret', 'ret_to_total', 'avg_price']])
+        # print(df.groupby('name')['pnl', 'current_mv'].agg(['sum', 'count']))
+        # print(df.groupby(['name']).count())
+        response = {'name': aggregated_df['name'].tolist(),
+                    'quanity': aggregated_df['quantity'].tolist(),
+                    'pnl': aggregated_df['pnl'].tolist(),
+                    'ret': aggregated_df['ret'].tolist(),
+                    'ret_to_total': aggregated_df['ret_to_total'].tolist(),
+                    'avg_price': aggregated_df['avg_price'].tolist()
+                    }
+        print(response)
+        return JsonResponse(response, safe=False)

@@ -288,6 +288,19 @@ class OandaV20:
 
         return response['prices'][0]
 
+    def get_prices_2(self, instruments):
+
+        params = {
+            "instruments": instruments
+        }
+
+        r = pricing.PricingInfo(accountID=self.account_id, params=params)
+        self.api.request(r)
+
+        response = r.response
+
+        return response['prices']
+
     def candle_data(self, instrument, count, time_frame):
 
         params = {

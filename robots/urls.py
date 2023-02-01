@@ -20,6 +20,7 @@ get_patterns = [
     path('robots/get/pnls/', get_views.all_pnl_series),
     path('robots/get/active/<str:env>/', get_views.get_active_robots),
     path('robots/get/all/drawdown/', get_views.all_robots_drawdown),
+    path('robots/get/exposures/', get_views.get_robot_exposures),
 ]
 
 update_patterns = [
