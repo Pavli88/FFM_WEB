@@ -66,7 +66,6 @@ def trade_execution(request):
         signal = message.split()
         print(signal)
         trade = TradeExecution(robot_id=signal[0], side=signal[1])
-        print(trade.connection_status)
         if len(signal) == 2:
             stop_level = None
         else:
