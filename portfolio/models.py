@@ -64,6 +64,7 @@ class PortGroup(models.Model):
     parent_id = models.IntegerField()
     children_id = models.IntegerField()
     connection_id = models.CharField(max_length=30, default="", unique=True)
+    type = models.CharField(max_length=30, default="")
 
 
 class PortfolioHoldings(models.Model):
