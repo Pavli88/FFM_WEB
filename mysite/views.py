@@ -27,7 +27,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
-from django.contrib.auth import logout
+from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django_q.tasks import async_task, result, fetch
 from django_q.models import Schedule
@@ -184,59 +184,47 @@ def logout_user(request):
     print("Redirecting to logout page")
 
     logout(request)
-    return redirect('main_page')
+    return JsonResponse({'response': 'User logged out!'}, safe=False)
 
 
-def login(request):
-    print("==========")
-    print("USER LOGIN")
-    print("===========")
-
+@csrf_exempt
+def login_user(request):
     if request.method == "POST":
-        user_name = request.POST["user"]
-        password = request.POST["password"]
-
-        user = auth.authenticate(username=user_name, password=password)
-
+        request_data = json.loads(request.body.decode('utf-8'))
+        username = request_data["username"]
+        password = request_data["password"]
+        print(username, password)
+        user = authenticate(request, username=username, password=password)
+        print(user, type(user))
         if user is not None:
-            auth.login(request, user)
-            return redirect('home_page')
+            login(request, user)
+            return JsonResponse({'userAllowedToLogin': True, 'userName': username}, safe=False)
         elif user is None:
-            print("User is not registered in the database!")
-            return redirect('main_page')
+            return JsonResponse({'response': 'User is not registered in the database!'}, safe=False)
 
 
+@csrf_exempt
 def register(request):
-    print("============")
-    print("REGISTRATION")
-    print("============")
-
     if request.method == "POST":
-        first_name = request.POST["first_name"]
-        last_name = request.POST["last_name"]
-        user_name = request.POST["user_name"]
-        email = request.POST["new_email"]
-        password = request.POST["new_password"]
+        request_data = json.loads(request.body.decode('utf-8'))
+        user_name = request_data["user_name"]
+        email = request_data["email"]
+        password = request_data["password"]
 
-        print("FIRST NAME:", first_name)
-        print("LAST NAME:", last_name)
         print("USER NAME:", user_name)
         print("EMAIL:", email)
 
         if User.objects.filter(username=user_name).exists():
-            print("User exists in database")
+            return JsonResponse({'response': 'User already exists'}, safe=False)
         elif User.objects.filter(email=email).exists():
-            print("Email exists in database")
+            return JsonResponse({'response': 'Email already exists'}, safe=False)
         else:
             user = User.objects.create_user(username=user_name,
                                            password=password,
-                                           email=email,
-                                           first_name=first_name,
-                                           last_name=last_name)
+                                           email=email)
             user.save()
             print("New user created!")
-
-        return render(request, 'login.html')
+            return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
 
 # **********************************************************************************************************************
