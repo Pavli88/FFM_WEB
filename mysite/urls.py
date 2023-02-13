@@ -22,9 +22,9 @@ get_patterns = [
 
 general_patterns = [
     path('', views.main_page_react),
-    path('login/', views.login_user),
-    path('logout/', views.logout_user),
-    path('register/', views.register),
+    path('user_login/', views.login_user),
+    path('user_logout/', views.logout_user),
+    path('user_register/', views.register),
     path('admin/', admin.site.urls),
     path('', include('reports.urls')),
     path('', include('robots.urls')),
