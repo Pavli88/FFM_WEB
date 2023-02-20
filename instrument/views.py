@@ -7,20 +7,6 @@ import json
 
 
 @csrf_exempt
-def new_instrument(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        try:
-            Instruments(instrument_name=request_data['inst_name'],
-                        currency=request_data['currency'],
-                        instrument_type=request_data['instrument_type']).save()
-            response = 'Instrument is Saved!'
-        except:
-            response = 'Instrument Internal Code Exists in Database!'
-        return JsonResponse(response, safe=False)
-
-
-@csrf_exempt
 def update_instrument(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
@@ -51,17 +37,5 @@ def delete_instrument(request):
         return JsonResponse(response, safe=False)
 
 
-def get_instruments(request):
-    if request.method == "GET":
-        if request.GET.get('instrument_name') is None:
-            instrument_name = ''
-        else:
-            instrument_name = request.GET.get('instrument_name')
-        filters = {}
-        for key, value in request.GET.items():
-            if key in ['id', 'instrument_type', 'currency']:
-                filters[key] = value
-        instruments = Instruments.objects.filter(instrument_name__contains=instrument_name).filter(**filters).values()
-        response = list(instruments)
-        return JsonResponse(response, safe=False)
+
 
