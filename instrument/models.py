@@ -3,6 +3,7 @@ from django.db import models
 
 class Instruments(models.Model):
     name = models.CharField(max_length=30, default="")
+    ticker = models.CharField(max_length=30, default="")
     code = models.CharField(max_length=30, unique=True)
     group = models.CharField(max_length=30, default="")
     type = models.CharField(max_length=30, default="")
