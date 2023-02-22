@@ -11,9 +11,7 @@ from instrument.models import *
 def new_instrument(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        print(request_data)
         column_names = [field.name for field in Instruments._meta.fields]
-        print(column_names)
         try:
             Instruments(name=request_data['name'],
                         code=request_data['code'],
@@ -29,4 +27,24 @@ def new_instrument(request):
 
         # except:
         #     response = 'Instrument Internal Code Exists in Database!'
+        return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def new_broker_ticker(request):
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        ticker_assigned = Tickers.objects.filter(inst_code=request_data['inst_code'], source=request_data['source']).exists()
+        if ticker_assigned:
+            return JsonResponse('Ticker has already been assigned to this security at this broker!', safe=False)
+        try:
+            Tickers(
+                inst_code=request_data['inst_code'],
+                source=request_data['source'],
+                source_ticker=request_data['source_ticker']
+            ).save()
+            response = 'Broker ticker is saved!'
+        except:
+            response = 'Broker ticker already exists!'
+
         return JsonResponse(response, safe=False)

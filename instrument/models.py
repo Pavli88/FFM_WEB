@@ -20,6 +20,5 @@ class Prices(models.Model):
 
 class Tickers(models.Model):
     inst_code = models.CharField(max_length=30, default="")
-    internal_ticker = models.CharField(max_length=30, default="", unique=True)
     source_ticker = models.CharField(max_length=30, default="")
     source = models.CharField(max_length=30, default="")
