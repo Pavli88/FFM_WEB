@@ -1,23 +1,27 @@
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 # Model import
 from instrument.models import Instruments, Tickers
 
 
+@csrf_exempt
 def get_instruments(request):
-    if request.method == "GET":
-        column_names = [field.name for field in Instruments._meta.fields]
-        if request.GET.get('name') is None:
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        if request_data['name'] == '':
             instrument_name = ''
         else:
-            instrument_name = request.GET.get('name')
+            instrument_name = request_data['name']
         filters = {}
-        for key, value in request.GET.items():
-            if key in column_names:
+        for key, value in request_data.items():
+            if isinstance(value, list) and len(value) > 0:
+                filters[key + '__in'] = value
+            elif key == 'group':
                 filters[key] = value
-        instruments = Instruments.objects.filter(name__contains=instrument_name).filter(**filters).values()
-        response = list(instruments)
-        return JsonResponse(response, safe=False)
+        return JsonResponse(list(Instruments.objects.filter(name__contains=instrument_name).filter(**filters).values()),
+                            safe=False)
 
 
 def get_broker_tickers(request):
