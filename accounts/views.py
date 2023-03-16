@@ -11,37 +11,19 @@ import json
 def create_broker(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        broker_name = request_data['broker_name']
-        account_number = request_data['account_number']
-        environment = request_data['env']
-        token = request_data['token']
-        currency = request_data['currency']
 
-    print("BROKER", broker_name)
-    print("ACCOUNT NUMBER", account_number)
-    print("ENVIRONMENT", environment)
-    print("TOKEN", token)
-
-    try:
-        BrokerAccounts(broker_name=broker_name,
-                       account_number=account_number,
-                       access_token=token,
-                       env=environment,
-                       currency=currency).save()
-
-        print("Inserting new account to database")
-
-        print("Setting up initial balance to zero")
-
-        response = "Account is created successfully!"
-    except:
-        print("Account exists in database")
-        response = "Account already exists in the database!"
-
-    print("Sending response to front end")
-    print("")
-
-    return JsonResponse(response, safe=False)
+        try:
+            BrokerAccounts(broker_name=request_data['broker_name'],
+                           account_number=request_data['account_number'],
+                           account_name=request_data['account_name'],
+                           env=request_data['env'],
+                           access_token=request_data['token'],
+                           currency=request_data['currency'],
+                           owner=request_data['owner']).save()
+            response = "Account is created successfully!"
+        except:
+            response = "Account already exists in the database!"
+        return JsonResponse(response, safe=False)
 
 
 def get_account_data(request, account):
@@ -72,10 +54,21 @@ def get_brokers(request):
         return JsonResponse(list(brokers), safe=False)
 
 
+def get_accounts(request):
+    if request.method == "GET":
+        print('Get accounts by user')
+        filters = {}
+        for key, value in request.GET.items():
+            if key in ['broker_name', 'account_number', 'env', 'owner']:
+                filters[key] = value
+        accounts = BrokerAccounts.objects.filter(**filters).values()
+        response = list(accounts)
+        return JsonResponse(response, safe=False)
+
+
 @csrf_exempt
 def new_broker(request):
     if request.method == "POST":
-        print('New broker')
         request_data = json.loads(request.body.decode('utf-8'))
         try:
             Brokers(broker=request_data['broker'],
