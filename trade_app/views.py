@@ -65,6 +65,13 @@ def trade_execution(request):
         message = str(message.decode("utf-8"))
         signal = message.split()
         print(signal)
+        s = {
+            'robot': 'Silver ICA',
+            'type': 'BUY',
+            'sl': 12.23,
+
+        }
+
         trade = TradeExecution(robot_id=signal[0], side=signal[1])
         if len(signal) == 2:
             stop_level = None

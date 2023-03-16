@@ -5,9 +5,20 @@ class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     portfolio_code = models.CharField(max_length=30, unique=True)
     portfolio_type = models.CharField(max_length=30, default="")
-    status = models.CharField(max_length=30, default="")
+    status = models.CharField(max_length=30, default="active")
     currency = models.CharField(max_length=30, default="")
     inception_date = models.DateField()
+    owner = models.CharField(max_length=30, default="")
+    manager = models.CharField(max_length=30, default="")
+    public = models.BooleanField(default=False)
+    is_automated = models.BooleanField(default=False)
+
+
+class Robots(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    inst_id = models.IntegerField()
+    ticker_id = models.IntegerField()
+    broker_account_id = models.IntegerField()
 
 
 class CashFlow(models.Model):

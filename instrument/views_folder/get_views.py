@@ -25,6 +25,5 @@ def get_instruments(request):
 
 
 def get_broker_tickers(request):
-    print("BROKER TICKERS")
     if request.method == "GET":
         return JsonResponse(list(Tickers.objects.filter(inst_code=request.GET.get('id')).values()), safe=False)

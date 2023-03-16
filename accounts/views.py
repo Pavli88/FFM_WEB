@@ -45,16 +45,6 @@ def create_broker(request):
 
 
 def get_account_data(request, account):
-
-    """
-    Get data for a single account.
-    :param request:
-    :param account:
-    :return:
-    """
-
-    print("Get data for a single account.")
-
     if request.method == "GET":
         account = BrokerAccounts.objects.filter(broker_name=account).values()
         response = list(account)
@@ -66,9 +56,12 @@ def get_account_data(request, account):
 
 def get_accounts_data(request):
     if request.method == "GET":
-        broker = request.GET.get("broker")
-        env = request.GET.get("env")
-        accounts = BrokerAccounts.objects.filter(broker_name=broker).filter(env=env).values()
+        print(request.GET.items())
+        filters = {}
+        for key, value in request.GET.items():
+            if key in ['broker_name', 'account_number', 'env']:
+                filters[key] = value
+        accounts = BrokerAccounts.objects.filter(**filters).values()
         response = list(accounts)
         return JsonResponse(response, safe=False)
 

@@ -5,6 +5,7 @@ import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.pricing as pricing
 import oandapyV20.endpoints.orders as orders
 import oandapyV20.endpoints.instruments as instruments
+import oandapyV20.endpoints.positions as positions
 import json
 
 pd.set_option('display.max_rows', None)
@@ -313,31 +314,36 @@ class OandaV20:
 
         return r.response
 
+    def position_list(self):
+        r = positions.PositionList(accountID=self.account_id)
+        self.api.request(r)
+        return r.response
+
 if __name__ == "__main__":
     o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
                  account_id="001-004-2840244-004",
-                 environment="live").candle_data(instrument="EUR_USD", count=205, time_frame="M5")
+                 environment="live").position_list()
 
-    time_list = []
-    open_list = []
-    close_list = []
-    low_list = []
-    high_list = []
+    # time_list = []
+    # open_list = []
+    # close_list = []
+    # low_list = []
+    # high_list = []
+    #
+    # for record in o['candles']:
+    #     time_list.append(record['time'])
+    #     open_list.append(record['mid']['o'])
+    #     close_list.append(record['mid']['c'])
+    #     low_list.append(record['mid']['l'])
+    #     high_list.append(record['mid']['h'])
+    #
+    # df = pd.DataFrame({'time': time_list,
+    #                    'open': open_list,
+    #                    'high': high_list,
+    #                    'low': low_list,
+    #                    'close': close_list})
 
-    for record in o['candles']:
-        time_list.append(record['time'])
-        open_list.append(record['mid']['o'])
-        close_list.append(record['mid']['c'])
-        low_list.append(record['mid']['l'])
-        high_list.append(record['mid']['h'])
-
-    df = pd.DataFrame({'time': time_list,
-                       'open': open_list,
-                       'high': high_list,
-                       'low': low_list,
-                       'close': close_list})
-
-    print(df)
+    print(pd.DataFrame(o['positions']))
 
 
 
