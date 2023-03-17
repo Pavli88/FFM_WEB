@@ -8,4 +8,5 @@ urlpatterns = [
     path('accounts/get_account_data/', get_account_data),
     path('accounts/new_broker/', new_broker),
     path('accounts/get/accounts/', get_accounts),
+    path('accounts/delete/', delete_account),
 ]

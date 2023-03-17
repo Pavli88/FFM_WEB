@@ -11,7 +11,9 @@ import json
 def create_broker(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-
+        if BrokerAccounts.objects.filter(broker_name=request_data['broker_name'], account_number=request_data['account_number']).exists():
+            response = "Account already exists in the database!"
+            return JsonResponse(response, safe=False)
         try:
             BrokerAccounts(broker_name=request_data['broker_name'],
                            account_number=request_data['account_number'],
@@ -30,15 +32,11 @@ def get_account_data(request, account):
     if request.method == "GET":
         account = BrokerAccounts.objects.filter(broker_name=account).values()
         response = list(account)
-        print(account)
-        print("Sending response to front end")
-
         return JsonResponse(response, safe=False)
 
 
 def get_accounts_data(request):
     if request.method == "GET":
-        print(request.GET.items())
         filters = {}
         for key, value in request.GET.items():
             if key in ['broker_name', 'account_number', 'env']:
@@ -56,7 +54,6 @@ def get_brokers(request):
 
 def get_accounts(request):
     if request.method == "GET":
-        print('Get accounts by user')
         filters = {}
         for key, value in request.GET.items():
             if key in ['broker_name', 'account_number', 'env', 'owner']:
@@ -76,4 +73,14 @@ def new_broker(request):
             response = 'New broker saved to database!'
         except:
             response = 'Broker code exists in database!'
+        return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def delete_account(request):
+    # Add verification before deleting where the account is held
+    if request.method == "POST":
+        request_data = json.loads(request.body.decode('utf-8'))
+        BrokerAccounts.objects.get(id=request_data['id']).delete()
+        response = 'Account is deleted'
         return JsonResponse(response, safe=False)
