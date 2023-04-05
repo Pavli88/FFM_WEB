@@ -25,31 +25,6 @@ from portfolio.processes.portfolio_holding import portfolio_holding_calc
 
 
 # CRUD------------------------------------------------------------------------------------------------------------------
-@csrf_exempt
-def create_portfolio(request):
-    if request.method == "POST":
-        body_data = json.loads(request.body.decode('utf-8'))
-        port_name = body_data["port_name"]
-        port_type = body_data["port_type"]
-        port_currency = body_data["port_currency"]
-        port_code = body_data["port_code"]
-        inception_date = body_data["inception_date"]
-        try:
-            Portfolio(portfolio_name=port_name,
-                      portfolio_code=port_code,
-                      portfolio_type=port_type,
-                      currency=port_currency,
-                      status="active",
-                      inception_date=inception_date).save()
-            CashHolding(portfolio_code=port_code,
-                        amount=0.0,
-                        currency=port_currency,
-                        date=inception_date).save()
-            response = "New Portfolio is created!"
-        except:
-            response = "Portfolio exists in database!"
-    return JsonResponse(response, safe=False)
-
 
 # READ
 def get_portfolio_data(request, portfolio):

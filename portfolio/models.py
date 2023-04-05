@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 
 class Portfolio(models.Model):
@@ -7,7 +8,10 @@ class Portfolio(models.Model):
     portfolio_type = models.CharField(max_length=30, default="")
     status = models.CharField(max_length=30, default="active")
     currency = models.CharField(max_length=30, default="")
-    inception_date = models.DateField()
+    creation_date = models.DateField(default=datetime.now, blank=True)
+    inception_date = models.DateField(null=True)
+    termination_date = models.DateField(null=True)
+    is_terminated = models.CharField(max_length=30, default=False)
     owner = models.CharField(max_length=30, default="")
     manager = models.CharField(max_length=30, default="")
     public = models.BooleanField(default=False)
