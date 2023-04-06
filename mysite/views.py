@@ -42,7 +42,7 @@ from django.db import connection
 from mysite.models import *
 from robots.models import *
 from accounts.models import *
-
+from portfolio.models import Portfolio
 
 from robots.processes.run_robot import run_robot
 
@@ -157,7 +157,6 @@ def load_robot_stats(request, env):
 
 # MAIN PAGE ************************************************************************************************************
 def main_page_react(request):
-    print("react page")
     return render(request, 'index.html')
 
 
@@ -208,22 +207,21 @@ def register(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         user_name = request_data["user_name"]
-        email = request_data["email"]
-        password = request_data["password"]
-
-        print("USER NAME:", user_name)
-        print("EMAIL:", email)
-
         if User.objects.filter(username=user_name).exists():
             return JsonResponse({'response': 'User already exists'}, safe=False)
-        elif User.objects.filter(email=email).exists():
+        elif User.objects.filter(email=request_data["email"]).exists():
             return JsonResponse({'response': 'Email already exists'}, safe=False)
         else:
             user = User.objects.create_user(username=user_name,
-                                           password=password,
-                                           email=email)
+                                           password=request_data["password"],
+                                           email=request_data["email"])
             user.save()
-            print("New user created!")
+            Portfolio(portfolio_name='Main Portfolio',
+                      portfolio_code='MAIN_' + user_name.upper(),
+                      portfolio_type='Main',
+                      status="active",
+                      inception_date=date.today(),
+                      owner=user_name).save()
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
 

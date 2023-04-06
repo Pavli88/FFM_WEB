@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 # Model Imports
-from portfolio.models import Robots, Portfolio
+from portfolio.models import Robots, Portfolio, CashFlow
 import json
 
 
@@ -37,3 +37,21 @@ def create_portfolio(request):
             return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
         except:
             return JsonResponse({'msg': "Portfolio exists in database!", 'port': 0}, safe=False)
+
+
+@csrf_exempt
+def create_cashflow(request):
+    if request.method == "POST":
+        body_data = json.loads(request.body.decode('utf-8'))
+        try:
+            CashFlow(
+                portfolio_code=body_data['portfolio_code'],
+                amount=body_data['amount'],
+                type=body_data['type'],
+                date=body_data['date'],
+                user=body_data['user'],
+                currency=body_data['currency']
+            ).save()
+        except:
+            print('Error in cash insert')
+        return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)

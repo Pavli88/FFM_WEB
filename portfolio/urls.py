@@ -7,10 +7,12 @@ from portfolio.views_folder import create_views, get_views
 create_views = [
     path('portfolios/create/robot/', create_views.create_robot),
     path('portfolios/new/portfolio/', create_views.create_portfolio),
+    path('portfolios/new/cashflow/', create_views.create_cashflow),
 ]
 
 get_views = [
-    path('portfolios/get/portfolio/', get_views.get_portfolio),
+    path('portfolios/get/portfolios/', get_views.get_portfolios),
+    path('portfolios/get/main_portfolio_cashflow/', get_views.get_main_portfolio_cashflows),
 ]
 
 other_patterns = [
