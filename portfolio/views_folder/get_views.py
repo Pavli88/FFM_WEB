@@ -19,5 +19,5 @@ def get_main_portfolio_cashflows(request):
     if request.method == "GET":
         records = CashFlow.objects.filter(portfolio_code=request.GET.get("portfolio_code")).values()
         df = pd.DataFrame(records).pivot_table(index='currency', columns='type', values='amount', aggfunc='sum').fillna(0).reset_index()
-        # print(df.to_dict('records'))
+        print(df.to_dict('records'))
         return JsonResponse(df.to_dict('records'), safe=False)
