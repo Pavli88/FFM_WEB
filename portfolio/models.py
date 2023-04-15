@@ -68,6 +68,48 @@ class Trade(models.Model):
     transaction_link_code = models.CharField(max_length=50, default="")
 
 
+class Transaction(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    security = models.CharField(max_length=30, default="")
+    quantity = models.FloatField(default=0.0)
+    price = models.FloatField(default=0.0)
+    mv = models.FloatField(default=0.0)
+    trade_date = models.DateTimeField(null=True)
+    is_active = models.BooleanField(default=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    currency = models.CharField(max_length=30, default="")
+    trading_cost = models.FloatField(default=0.0)
+    transaction_type = models.CharField(max_length=30, default="")
+    transaction_link_code = models.CharField(max_length=50, default="")
+
+    def save(self, *args, **kwargs):
+        multiplier = 1
+        if self.transaction_type == 'Dividend':
+            self.price = 1
+        if self.transaction_type == 'Sale' or self.transaction_type == 'Redemption':
+            self.quantity = self.quantity * -1
+
+        self.mv = self.quantity * self.price
+        super().save(*args, **kwargs)
+
+
+def create_transaction_related_cashflow(instance, **kwargs):
+    print("TRANSACTION RELATED")
+    print(instance)
+    print(instance.transaction_type)
+    if instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale':
+        Transaction(portfolio_code=instance.portfolio_code,
+                    security='CASH',
+                    quantity=instance.mv * -1,
+                    price=1,
+                    currency=instance.currency,
+                    transaction_type=instance.transaction_type + ' Settlement',
+                    transaction_link_code=instance.id).save()
+
+
+models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
+
+
 class Positions(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)

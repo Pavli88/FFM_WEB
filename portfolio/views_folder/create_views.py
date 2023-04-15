@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 # Model Imports
-from portfolio.models import Robots, Portfolio, CashFlow
+from portfolio.models import Robots, Portfolio, CashFlow, Transaction
 import json
 
 
@@ -54,4 +54,17 @@ def create_cashflow(request):
             ).save()
         except:
             print('Error in cash insert')
+        return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)
+
+
+@csrf_exempt
+def create_transaction(request):
+    if request.method == "POST":
+        Transaction(portfolio_code='TEST',
+                    security='CASH',
+                    quantity=300,
+                    price=1,
+                    currency='USD',
+                    trading_cost=0.0,
+                    transaction_type='Redemption').save()
         return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)

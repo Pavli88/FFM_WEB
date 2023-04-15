@@ -8,6 +8,7 @@ create_views = [
     path('portfolios/create/robot/', create_views.create_robot),
     path('portfolios/new/portfolio/', create_views.create_portfolio),
     path('portfolios/new/cashflow/', create_views.create_cashflow),
+    path('portfolios/new/transaction/', create_views.create_transaction),
 ]
 
 get_views = [
