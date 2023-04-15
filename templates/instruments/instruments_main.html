@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block head %}
+
+
+
+{% endblock %}
+
+{% block main_block%}
+
+<p>Site for Instruments</p>
+<div class="card h-md-100 shadow bg-white rounded" style="width: 50%">
+    <div class="card-body">
+        <h5 class="card-title">New Instrument</h5>
+        <form action="{% url 'new instrument' %}" method="POST">
+        {% csrf_token %}
+        {{ instrument_form.as_p }}
+        <button class="btn btn-primary" style="width: 100px; height: 30px;">Enter</button>
+    </form>
+    </div>
+</div>
+
+{% endblock %}

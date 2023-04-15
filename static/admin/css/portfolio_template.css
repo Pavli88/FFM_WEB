@@ -1,0 +1,12 @@
+label {
+    font-weight: bold;
+    color: #19393D;
+}
+
+.card_container{
+    padding-top: 15px;
+}
+
+input{
+    width: 150px;
+}

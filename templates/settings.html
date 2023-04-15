@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+    {% block main_block%}
+    <div class="row" style="width:100%; margin-left: 1px;">
+        <div class="col">
+            <form action="{% url 'save settings' %}" method="POST">
+                {% csrf_token %}
+                <div class="row" style="padding:5px;">
+                    <div>
+                        <label class="checkbox-inline" style="text-align: center; vertical-align: middle;">Overnight Trading</label>
+                        <input type="checkbox" checked data-toggle="toggle" data-onstyle="danger" style="padding-left:20px;" name="switch">
+                    </div>
+
+                    <div style="display:flex;">
+                        <label class="my-1 mr-2" style="width:100px; padding-left: 10px; text-align: center; vertical-align: middle;">Start Time</label>
+                        <input class="form-control" type="time" value="{{st_time}}" style="width:100px;" name="st_time">
+                    </div>
+
+                    <div style="display:flex;">
+                        <label class="my-1 mr-2" style="width:100px; padding-left: 10px; text-align: center; vertical-align: middle; margin:auto;">End Time</label>
+                        <input class="form-control" type="time" value="{{en_time}}" style="width:100px;" name="en_time">
+                    </div>
+                    <div style="padding-left: 20px;">
+                        <button type="submit" class="btn btn-primary" >Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endblock %}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block entry_form %}
+<br>
+<div class="card" style="width: 100%; height: 400px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Trade Panel</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item">Show Robots</label>
+                        <label class="dropdown-item" data-toggle="modal"
+                               data-target="#newRobot">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%;">
+        <div style="width: 100%; height: 100%; background: burlywood">
+            <form class="form-inline" style="padding:5px;" action="{% url 'submit trade' %}" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="trd_qty">Quantity</label>
+                    <input class="form-control form-control-sm" type="number" id="trd_qty" name="quantity" min="0"
+                           value="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="trd_qty">SL</label>
+                    <input class="form-control form-control-sm" type="number" id="sl" name="sl" step="0.0001"
+                           required>
+                </div>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                    <label for="trd_qty">Robot</label>
+                    <select class="form-control" style="height:30px;" name="robot" id="robots">
+                        {% for robot in robots %}
+                        <option>{{robot.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                    <select class="form-control" style="height:30px;" name="side">
+                        <option>BUY</option>
+                        <option>SELL</option>
+                        <option selected>ALL</option>
+                    </select>
+                </div>
+                <div class="col-auto" style="padding-left:15px; padding-right:15px;">
+                    <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="submit_trade">Submit
+                    </button>
+                </div>
+                <!--            <div class="col-auto" style="padding-left:15px; padding-right:15px;">-->
+                <!--                <button type="submit" class="btn btn-primary btn-sm" style="height:30px;" id="closeAllButton">Close All</button>-->
+                <!--            </div>-->
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block main_block%}
+<br>
+<div class="card" style="width: 100%; height: 800px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Open Trades</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        Options
+                    </a>
+                    <div class="dropdown-menu"
+                         style="position: absolute; left: 0px">
+                        <label class="dropdown-item" id="load_robots">Show Robots</label>
+                        <label class="dropdown-item" id="newRobotBtn" data-toggle="modal"
+                               data-target="#newRobot">New</label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+        <table class="table-striped" style="width: 100%" id="openTradeTable">
+            <thead style="width: 100%">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Robot</th>
+                <th scope="col">Security</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Side</th>
+                <th scope="col">Broker ID</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody id="openTradeTableBody"></tbody>
+        </table>
+    </div>
+</div>
+{% load static %}
+<script src="{% static 'admin/js/trade_main.js' %}"></script>
+{% endblock %}

@@ -1,66 +1,350 @@
 <!DOCTYPE html>
 {% extends "base.html" %}
 
-    {% block entry_form %}
-    <form class="entry_form" action="{% url 'create broker account' %}" method="POST">
-        {% csrf_token %}
-        <h4>New Account</h4>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="broker_name" placeholder="Broker Name" required>
+{% block head %}
+{% load static %}
+<link href="{% static 'admin/css/home_template.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block my_scripts %}
+
+{% endblock %}
+{% block entry_form %}
+<br>
+<div class="card" style="width: 100%; height: 50px; margin: 5px">
+    <h5 class="card-header" style="color: #19393D"><strong>Dashboard</strong></h5>
+    <div style="position: absolute; right: 40px">
+        <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Environment
+                </a>
+                <div class="dropdown-menu"
+                     style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="liveRobots">Live</label>
+                    <label class="dropdown-item" id="demoRobots">Demo</label>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>DTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="dtdPerfChart"></div>
         </div>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="account_number" placeholder="Account Number" required>
+    </div>
+
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>MTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="mtdPerfChart"></div>
         </div>
-        <div class="form-group">
-            <input class="form-control form-control-sm" type="text" name="token" placeholder="Account Token" required>
+    </div>
+
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>YTD Performance (%)</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="ytdPerfChart"></div>
         </div>
-        <div class="form-group">
-            <label>Environment</label>
-            <div class="radio_button_container">
-                <label for="live_env">Live</label>
-                <input type="radio" id="live_env" name="env" value="live" required>
-                <label for="demo_env">Demo</label>
-                <input type="radio" id="demo_env" name="env" value="demo"><br>
+    </div>
+</div>
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>DTD</strong></h6>
+        <label id="dtdTotalPnl"></label>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+       <h6 style="color: #19393D;"><strong>MTD</strong></h6>
+        <p id="mtdTotalPnl">sdfgsdf</p>
+    </div>
+
+    <div class="card" style="width:100%; height: 50px; margin: 5px; text-align: center">
+        <h6 style="color: #19393D;"><strong>YTD</strong></h6>
+        <p id="ytdTotalPnl">sdfgsdf</p>
+    </div>
+</div>
+
+<div style="display: flex">
+    <div class="card" style="width:100%; height: 250px; display: flex; margin: 5px">
+        <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Balances</strong></h6>
+        <div style="width: 100%; height: 100%">
+            <div id="robotBalChart"></div>
+        </div>
+    </div>
+
+</div>
+<div style="margin: 5px">
+    <div class="card" style="width:100%; height: 250px; display: flex">
+    <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Risk / Trade</strong></h6>
+    <div style="width: 100%; height: 100%; overflow-y:scroll">
+        <table class="table-striped" style="width: 100%;">
+            <thead style="width: 100%">
+            <tr>
+                <th scope="col">Robot</th>
+                <th scope="col">Risk (%)</th>
+            </tr>
+            </thead>
+            <tbody id="riskTableBody"></tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+{% load static %}
+<script src="{% static 'admin/js/home_page_right_panel.js' %}"></script>
+{% endblock %}
+
+{% block main_block%}
+<br>
+<div style="height: 500px; width: 100%; overflow-y:scroll">
+    <!--Portfolios-->
+    <div class="card" style="width: 100%; height: 500px; display: flex">
+            <h6 class="card-header" style="color: #19393D; margin: 0px"><strong>Robots</strong></h6>
+            <div style="padding: 5px;">
+                <select class="form-control form-control-sm" name="robot_name" id="robotSelector">
+                    {% for robot in robots %}
+                    <option>{{robot.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="position: absolute; right: 40px; display: flex; padding: 5px;">
+                <label>Start Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm startDay" type="date" id="startDate" name="start_date"
+                           min="2020-01-01" style="width: 150px">
+                </div>
+                <label>End Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm endDay" type="date" id="endDate" name="end_date"
+                           min="2020-01-01" style="width: 150px">
+                </div>
+            </div>
+
+        <div style="width: 100%; height: 100%; display: flex; padding: 10px;">
+
+            <!--General info performance and risk numbers-->
+            <div class="card" style="width: 30%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px">
+                        <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="infoTab">
+                            <li class="nav-item">
+                                <a href="#riskInfo" class="nav-link" data-toggle="tab">Risk</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#returnInfo" class="nav-link" data-toggle="tab">Return</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 100%;">
+
+                </div>
+            </div>
+
+            <!--Charts-->
+            <div class="card" style="width: 70%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px;">
+                        <label style="color: #19393D; margin: 0px;"><strong>Charts</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="chartTab">
+                            <li class="nav-item">
+                                <a href="#dailyRet" class="nav-link" data-toggle="tab">Daily Returns</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#cumRet" class="nav-link" data-toggle="tab">Cumulative Return</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#robotBalance" class="nav-link" data-toggle="tab">Balance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#robotCf" class="nav-link" data-toggle="tab">Cash Flow</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#robotTrades" class="nav-link" data-toggle="tab">Trades</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#drawdown" class="nav-link" data-toggle="tab">Drawdown</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bs-example" style="width: 100%; height: 100%">
+                    <div class="tab-content">
+                        <div class="tab-pane fade" id="dailyRet">
+                            <canvas id="dailyReturnChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="cumRet">
+                            <canvas id="cumReturnChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="robotBalance">
+                            <canvas id="balanceChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="robotCf">
+                            <canvas id="cashFlowChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="robotTrades">
+                            <canvas id="tradesChart" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="drawdown">
+                            <canvas id="drawdownChart" width="400" height="170"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <script>if ("{{ exist_robots }}" == "exists") {
-                                alert("Record already exists in database!");
-                            }else if ("{{ exist_robots }}" == "created") { alert("New record was created!")}
-        </script>
-        <input class="btn btn-primary btn-sm submit_button" type="submit" name="button" value="Add New Account">
-    </form>
-    {% endblock %}
+    <!--Account-->
+    <br>
+    <div class="card" style="width: 100%; height: 500px; display: flex">
+        <div class="card-header card_header">
+            <div style="padding: 5px; margin: 0px">
+                <h5 style="color: #19393D"><strong>Account</strong></h5>
+            </div>
+            <div style="padding: 5px">
+                <select class="form-control form-control-sm" name="account" id="accountSelector">
+                    {% for account in accounts %}
+                    <option>{{account.account_number}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="position: absolute; right: 40px; display: flex; padding: 5px;">
+                <label>Start Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm startDay" type="date" id="startDateAcc" name="startDateAcc"
+                           min="2020-01-01" style="width: 150px">
+                </div>
+                <label>End Date</label>
+                <div class="form-group" style="padding-right: 5px;">
+                    <input class="form-control form-control-sm endDay" type="date" id="endDateAcc" name="endDateAcc"
+                           min="2020-01-01" style="width: 150px">
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%; height: 100%; display: flex; padding: 10px;">
+            <!--General info performance and risk numbers-->
+            <div class="card" style="width: 30%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px">
+                        <label style="color: #19393D; margin: 0px"><strong>Info</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="infoTabAcc">
+                            <li class="nav-item">
+                                <a href="#riskInfoAcc" class="nav-link" data-toggle="tab">Risk</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#returnInfoAcc" class="nav-link" data-toggle="tab">Return</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 100%;">
 
-    {% block main_block%}
-    <form action="{% url 'test_execution' %}" method="POST">
-        <input class="submit_button" type="submit", name="button" value="Test Open Trade Execution"><br>
-    </form>
-    <form action="{% url 'test_close_execution' %}" method="POST">
-        <input class="submit_button" type="submit", name="button" value="Test Close Trade Execution"><br>
-    </form>
-    <canvas id="line_chart" width="100" height="50">
-        <script>
-            var ctx = document.getElementById('line_chart').getContext('2d');
-            var chart = new Chart(ctx, {
-            // The type of chart we want to create
-            type: 'line',
+                </div>
+            </div>
 
-            // The data for our dataset
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                datasets: [{
-                    label: 'My First dataset',
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: [0, 10, 5, 2, 20, 30, 45]
-                }]
-            },
+            <!--Charts-->
+            <div class="card" style="width: 70%; height: 100%; display: flex">
+                <div class="card-header" style="display: flex; height: 50px; padding-top: 0px;padding-bottom: 0px">
+                    <div style="padding: 5px;">
+                        <label style="color: #19393D; margin: 0px;"><strong>Charts</strong></label>
+                    </div>
+                    <div>
+                        <ul class="nav nav-tabs" id="chartTabAcc">
+                            <li class="nav-item">
+                                <a href="#dailyRetAcc" class="nav-link" data-toggle="tab">Daily Returns</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#cumRetAcc" class="nav-link" data-toggle="tab">Cumulative Return</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#balanceAcc" class="nav-link" data-toggle="tab">Balance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#accountCf" class="nav-link" data-toggle="tab">Cash Flow</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#drawdownAcc" class="nav-link" data-toggle="tab">Drawdown</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bs-example" style="width: 100%; height: 100%">
+                    <div class="tab-content">
+                        <div class="tab-pane fade" id="dailyRetAcc">
+                            <canvas id="dailyReturnChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="cumRetAcc">
+                            <canvas id="cumReturnChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="balanceAcc">
+                            <canvas id="balanceChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="accountCf">
+                            <canvas id="cashFlowChartAcc" width="400" height="170"></canvas>
+                        </div>
+                        <div class="tab-pane fade" id="drawdownAcc">
+                            <canvas id="drawdownChartAcc" width="400" height="170"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            // Configuration options go here
-            options: {}
-            });
-        </script>
+<!--System Messages-->
+<br>
+<div style="width: 100%; height: 300px">
+    <div class="card" style="width: 100%; height: 100%; display: flex">
+        <div class="card-header" style="display: flex">
+            <div style="padding: 5px">
+                <label style="color: #19393D; margin: 0px"><strong>System Messages</strong></label>
+            </div>
+            <div style="position: absolute; right: 40px">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                           aria-haspopup="true" aria-expanded="false">
+                            Options
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink"
+                             style="position: absolute; left: 0px">
+                            <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="card_container" style="width: 100%; overflow-y:scroll;">
+            <table class="table-striped" style="width: 100%" id="msgTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody id="msgTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-    </canvas>
-    {% endblock %}
+{% load static %}
+<script src="{% static 'admin/js/home_page.js' %}"></script>
+{% endblock %}
+
+
+

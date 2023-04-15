@@ -16,7 +16,6 @@ from mysite.credentials import *
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -30,26 +29,34 @@ ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
                  '127.0.0.1',
                  ]
 
-# Application definition
+# MainApplication definition
 
 INSTALLED_APPS = [
     'robots',
     'risk',
     'reports',
     'signals',
-    'mysite',
-    'portfolio',
+    'mysite.apps.MySiteConfig',
+    'portfolio.apps.PortfolioConfig',
+    'accounts',
+    'trade_app',
+    'instrument',
+    'calculations',
+    'corsheaders',
+    'django_q',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -57,12 +64,39 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://pavliati.pythonanywhere.com'
+]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR + '/cache',
+    }
+}
+
+Q_CLUSTER = {
+    'name': 'ffm_web',
+    'workers': 20,
+    'recycle': 500,
+    'timeout': None,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 500,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'max_attempts' : 0,
+    'orm': 'default',
+    'retry': 2000000,
+}
+
 ROOT_URLCONF = 'mysite.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': ['templates', 'front_end/build'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,6 +111,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
+# ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -86,11 +121,17 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # it will updated ffm_system_test database
 # test
 credentials = Credentials().db_parameters
+
 DATABASES = credentials
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -107,13 +148,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Budapest'
 
 USE_I18N = True
 
@@ -127,13 +167,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Here you tell django to look for a folder named 'assets'
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'front_end/build/static'), # This is the path for the React fornt end static files
 ]
-
 
 # default static files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
 MEDIA_ROOT = '/home/pavliati/mysite/media'
 MEDIA_URL = '/media/'
 STATIC_ROOT = '/home/pavliati/mysite/static'
-STATIC_URL = '/static/'
+LOGIN_URL = "/home/"
+

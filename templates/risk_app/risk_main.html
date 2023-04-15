@@ -1,31 +1,227 @@
 <!DOCTYPE html>
 {% extends "base.html"%}
-    {% block main_block%}
-    <div>
-                    <p>RISK MAIN PAGE</p>
-                    <form action="{% url 'load account' %}" method="GET">
-                    {% csrf_token %}
-                    <label for="op_bal">Opening Balance:</label>
-                    <input type="text" name="op_bal" value="{{ open_bal }}"><br>
 
-                    <label for="live">Live</label>
-                    <input type="radio" name="env_1" value="live">
+{% block css_place %}
 
-                    <label for="practice">Practice</label>
-                    <input type="radio" name="env_2" value="practice"><br>
+{% endblock %}
 
-                    <input type="submit", name="run_account" value="RUN">
-                    </form>
-                    <form>
-                        <label>-----------------------------------</label><br>
-                        <label>          BALANCE SUMMARY          </label><br>
-                        <label>-----------------------------------</label><br>
-                        <label>Environment: {{ env }} </label><br>
-                        <label>Opening Balance: {{ op_bal }} </label><br>
-                        <label>Daily Risk Ammount: {{ nav }} </label><br>
-                        <label>Daily NAV Down Limit: {{ nav }} </label><br>
-                        <label>Current NAV: {{ nav }} </label><br>
-                        <label>Latest Balance: {{ lat_bal }} </label><br>
-                    </form>
+{% block entry_form %}
+
+<!--System Messages-->
+<br>
+<div style="width: 100%; height: 400px">
+    <div class="card" style="width: 100%; height: 800px; display: flex">
+        <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Messages</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item" id="loadMsgsBtn">Refresh</label>
                 </div>
-    {% endblock %}
+            </li>
+        </ul>
+        </div>
+    </div>
+        <div class="card_container" style="width: 100%; overflow-y:scroll;">
+            <table class="table-striped" style="width: 100%" id="msgTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody id="msgTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block main_block%}
+<!--Portfolios-->
+<br>
+<div class="card" style="width: 100%; height: 300px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Robot Risk</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="portfolioRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="portfolioRiskTableBody"></tbody>
+            </table>
+        </div>
+</div>
+
+<!--Robot-->
+<br>
+<div class="card " style="width: 100%; height: 300px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Portfolio Risk</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="robotRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Robot</th>
+                    <th scope="col">Daily Loss Limit (%)</th>
+                    <th scope="col">Daily Max Number of Trades</th>
+                    <th scope="col">Risk (%) per Trade</th>
+                    <th scope="col">Pyramiding Level</th>
+                    <th scope="col">Quantity Type</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="robotRiskTableBody"></tbody>
+            </table>
+        </div>
+</div>
+
+<!--Account-->
+<br>
+<div class="card " style="width: 100%; height: 300px; display: flex">
+    <div class="card-header" style="display: flex">
+        <div style="padding: 5px">
+            <label style="color: #19393D; margin: 0px"><strong>Account Risk</strong></label>
+        </div>
+        <div style="position: absolute; right: 40px">
+            <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    Options
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" style="position: absolute; left: 0px">
+                    <label class="dropdown-item">Refresh</label>
+                </div>
+            </li>
+        </ul>
+        </div>
+    </div>
+    <div style="width: 100%; height: 100%; overflow-y:scroll; overflow-x:scroll">
+            <table class="table-striped" style="width: 100%;" id="accountRiskTable">
+                <thead style="width: 100%">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Strategy</th>
+                    <th scope="col">Security</th>
+                    <th scope="col">Time Frame</th>
+                    <th scope="col">Broker</th>
+                    <th scope="col">Env</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Account Number</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody id="accountRiskTableBody"></tbody>
+            </table>
+        </div>
+</div>
+
+<!--Update Daily Robot Risk Modal-->
+<div class="modal fade" id="amendRobotRisk" data-backdrop="static" data-keyboard="false" tabindex="-1"
+     aria-labelledby="robotRiskLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width: 250px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="robotRiskLabel"><strong>Update Robot Risk</strong></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input id="robotNameRisk" type="hidden">
+                </div>
+                <div class="form-group">
+                    <label for="dailyRobotRisk">Daily Loss Limit %:</label>
+                    <input type="text" name="daily_risk" id="dailyRobotRisk" required="">
+                </div>
+                <div class="form-group">
+                    <label for="dailyNmbTrades">Daily Max Number of Trades:</label>
+                    <input type="text" name="daily_number_of_trades"  id="dailyNmbTrades" required="">
+                </div>
+                <div class="form-group">
+                    <label for="riskPerTrade">Risk per Trade %:</label>
+                    <input type="text" name="risk_per_trade" id="riskPerTrade" required="">
+                </div>
+                <div class="form-group">
+                    <label for="pyramidingLevel">Pyramiding Level:</label>
+                    <input type="text" name="pyramiding_level" id="pyramidingLevel" required="">
+                </div>
+                <div class="form-group">
+                    <label for="quantityType">Quantity Type:</label>
+                    <select name="quantity_type" id="quantityType">
+                        <option value="Stop Based">Stop Based</option>
+                        <option value="Fix">Fix</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="text" name="quantity" id="quantity" required="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="updateDailyRiskBtn" style="width: 100%">Update
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% load static %}
+<script src="{% static 'admin/js/risk_main.js' %}"></script>
+{% endblock %}
