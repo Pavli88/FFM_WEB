@@ -24,6 +24,7 @@ def create_robot(request):
 @csrf_exempt
 def create_portfolio(request):
     if request.method == "POST":
+        print('test')
         body_data = json.loads(request.body.decode('utf-8'))
         try:
             port = Portfolio(portfolio_name=body_data["port_name"],
