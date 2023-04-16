@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from portfolio.views import *
 from portfolio.portfolio_queries.portfolio_cash.portfolio_cash_get import *
-from portfolio.views_folder import create_views, get_views
+from portfolio.views_folder import create_views, get_views, update_view
 
 create_views = [
     path('portfolios/create/robot/', create_views.create_robot),
@@ -13,7 +13,12 @@ create_views = [
 
 get_views = [
     path('portfolios/get/portfolios/', get_views.get_portfolios),
+    path('portfolios/get/transactions/', get_views.get_portfolio_transactions),
     path('portfolios/get/main_portfolio_cashflow/', get_views.get_main_portfolio_cashflows),
+]
+
+update_views = [
+    path('portfolios/update/portfolio/', update_view.update_portfolio),
 ]
 
 other_patterns = [
@@ -28,10 +33,9 @@ other_patterns = [
     path('portfolios/holdings_calc/', holdings_calc),
     path('portfolios/get_positions/', get_positions),
     path('portfolios/nav/<str:portfolio_code>', get_portfolio_nav),
-    path('portfolios/get_portfolio_transactions/<str:portfolio>/', get_port_transactions),
     path('portfolios/import/<str:import_stream>', portfolio_import_stream),
     path('portfolios/cash/total/by_type/<str:portfolio_code>', get_port_total_cash_by_type),
     path('portfolios/cash/holding/<str:date>', get_cash_holding_by_date),
 ]
 
-urlpatterns = create_views + get_views + other_patterns
+urlpatterns = create_views + get_views + update_views + other_patterns
