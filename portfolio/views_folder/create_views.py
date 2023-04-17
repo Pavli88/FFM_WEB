@@ -60,11 +60,10 @@ def create_cashflow(request):
 @csrf_exempt
 def create_transaction(request):
     if request.method == "POST":
-        Transaction(portfolio_code='TEST',
-                    security='CASH',
-                    quantity=300,
-                    price=1,
-                    currency='USD',
-                    trading_cost=0.0,
-                    transaction_type='Redemption').save()
+        print('NEW TRANSACTION')
+        request_data = json.loads(request.body.decode('utf-8'))
+        transaction = Transaction()
+        for key, value in request_data.items():
+            setattr(transaction, key, value)
+        transaction.save()
         return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)

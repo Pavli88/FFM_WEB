@@ -8,6 +8,7 @@ from portfolio.models import Portfolio, CashFlow, Transaction
 
 def get_portfolios(request):
     if request.method == "GET":
+        print('PORT')
         filters = {}
         for key, value in request.GET.items():
             if key in ['portfolio_name', 'portfolio_type', 'currency', 'status', 'portfolio_code', 'owner', '']:

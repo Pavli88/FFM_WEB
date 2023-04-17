@@ -80,16 +80,17 @@ class Transaction(models.Model):
     currency = models.CharField(max_length=30, default="")
     trading_cost = models.FloatField(default=0.0)
     transaction_type = models.CharField(max_length=30, default="")
+    sub_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.CharField(max_length=50, default="")
 
     def save(self, *args, **kwargs):
-        multiplier = 1
-        if self.transaction_type == 'Dividend':
-            self.price = 1
-        if self.transaction_type == 'Sale' or self.transaction_type == 'Redemption':
-            self.quantity = self.quantity * -1
-
-        self.mv = self.quantity * self.price
+        # if self.transaction_type == 'Dividend':
+        #     self.price = 1
+        if self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
+                or self.transaction_type == 'Interest Paid' \
+                or self.transaction_type == 'Commission':
+            self.quantity = float(self.quantity) * -1
+        self.mv = float(self.quantity) * float(self.price)
         super().save(*args, **kwargs)
 
 
@@ -99,7 +100,7 @@ def create_transaction_related_cashflow(instance, **kwargs):
     print(instance.transaction_type)
     if instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale':
         Transaction(portfolio_code=instance.portfolio_code,
-                    security='CASH',
+                    security='Cash',
                     quantity=instance.mv * -1,
                     price=1,
                     currency=instance.currency,
