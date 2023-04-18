@@ -8,7 +8,6 @@ from portfolio.models import Portfolio, CashFlow, Transaction
 
 def get_portfolios(request):
     if request.method == "GET":
-        print('PORT')
         filters = {}
         for key, value in request.GET.items():
             if key in ['portfolio_name', 'portfolio_type', 'currency', 'status', 'portfolio_code', 'owner', '']:
@@ -29,6 +28,10 @@ def get_portfolio_transactions(request):
     if request.method == "GET":
         filters = {}
         for key, value in request.GET.items():
-            if key in ['id', 'portfolio_code', 'currency', 'transaction_type', 'trade_date', 'is_active', 'security', '']:
-                filters[key] = value
+            print(key, value)
+            if value == '':
+                pass
+            else:
+                if key in ['id', 'portfolio_code', 'currency', 'transaction_type', 'trade_date', 'is_active', 'security', '']:
+                    filters[key] = value
         return JsonResponse(list(Transaction.objects.filter(**filters).values()), safe=False)

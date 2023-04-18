@@ -10,6 +10,7 @@ create_patterns = [
 
 get_patterns = [
     path('instruments/get/instruments/', get_views.get_instruments),
+    path('instruments/get/instrument/', get_views.get_instrument),
     path('instruments/get/broker/tickers/', get_views.get_broker_tickers),
 ]
 

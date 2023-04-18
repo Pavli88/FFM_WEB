@@ -24,6 +24,11 @@ def get_instruments(request):
                             safe=False)
 
 
+def get_instrument(request):
+    if request.method == "GET":
+        return JsonResponse(list(Instruments.objects.filter(id=request.GET.get('id')).values()), safe=False)
+
+
 def get_broker_tickers(request):
     if request.method == "GET":
         return JsonResponse(list(Tickers.objects.filter(inst_code=request.GET.get('id')).values()), safe=False)
