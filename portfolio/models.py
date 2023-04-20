@@ -81,12 +81,10 @@ class Transaction(models.Model):
     currency = models.CharField(max_length=30, default="")
     trading_cost = models.FloatField(default=0.0)
     transaction_type = models.CharField(max_length=30, default="")
-    sub_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.CharField(max_length=50, default="")
+    open_status = models.CharField(max_length=50, default="")
 
     def save(self, *args, **kwargs):
-        # if self.transaction_type == 'Dividend':
-        #     self.price = 1
         if self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
                 or self.transaction_type == 'Interest Paid' \
                 or self.transaction_type == 'Commission':
