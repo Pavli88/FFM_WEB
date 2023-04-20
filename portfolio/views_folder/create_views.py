@@ -60,7 +60,6 @@ def create_cashflow(request):
 @csrf_exempt
 def create_transaction(request):
     if request.method == "POST":
-        print('NEW TRANSACTION')
         request_data = json.loads(request.body.decode('utf-8'))
         transaction = Transaction()
         for key, value in request_data.items():

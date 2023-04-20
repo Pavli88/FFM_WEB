@@ -71,10 +71,11 @@ class Trade(models.Model):
 class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     security = models.CharField(max_length=30, default="")
+    sec_group = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
-    trade_date = models.DateTimeField(null=True)
+    trade_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now_add=True)
     currency = models.CharField(max_length=30, default="")
@@ -101,11 +102,13 @@ def create_transaction_related_cashflow(instance, **kwargs):
     if instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale':
         Transaction(portfolio_code=instance.portfolio_code,
                     security='Cash',
+                    sec_group='Cash',
                     quantity=instance.mv * -1,
                     price=1,
                     currency=instance.currency,
                     transaction_type=instance.transaction_type + ' Settlement',
-                    transaction_link_code=instance.id).save()
+                    transaction_link_code=instance.id,
+                    trade_date=instance.trade_date).save()
 
 
 models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
