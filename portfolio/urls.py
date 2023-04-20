@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 from portfolio.views import *
 from portfolio.portfolio_queries.portfolio_cash.portfolio_cash_get import *
-from portfolio.views_folder import create_views, get_views, update_view
+from portfolio.views_folder import create_views, get_views, update_view, delete_views
 
 create_views = [
     path('portfolios/create/robot/', create_views.create_robot),
@@ -19,6 +19,10 @@ get_views = [
 
 update_views = [
     path('portfolios/update/portfolio/', update_view.update_portfolio),
+]
+
+delete_views = [
+    path('portfolios/delete/transaction/', delete_views.delete_transaction),
 ]
 
 other_patterns = [
@@ -38,4 +42,4 @@ other_patterns = [
     path('portfolios/cash/holding/<str:date>', get_cash_holding_by_date),
 ]
 
-urlpatterns = create_views + get_views + update_views + other_patterns
+urlpatterns = create_views + get_views + update_views + delete_views + other_patterns

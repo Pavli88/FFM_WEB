@@ -65,4 +65,4 @@ def create_transaction(request):
         for key, value in request_data.items():
             setattr(transaction, key, value)
         transaction.save()
-        return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)
+        return JsonResponse({"response": "Transaction is created!"}, safe=False)
