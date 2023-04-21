@@ -20,6 +20,7 @@ get_views = [
 
 update_views = [
     path('portfolios/update/portfolio/', update_view.update_portfolio),
+    path('portfolios/update/transaction/', update_view.update_transaction),
 ]
 
 delete_views = [

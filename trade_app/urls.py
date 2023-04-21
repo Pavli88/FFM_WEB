@@ -1,9 +1,13 @@
 from django.urls import path
 from trade_app.views import *
-from .views_folder import get_views
+from .views_folder import get_views, update_views
 
 get_patterns = [
     path('trade_page/get/open_trades/<str:environment>/', get_views.get_open_trades),
+]
+
+update_views = [
+    path('trade_page/portfolio/close_transaction/', update_views.close_transaction),
 ]
 
 other_patterns = [
@@ -15,4 +19,4 @@ other_patterns = [
     path('trade_page/edit_transaction/', edit_transaction),
 ]
 
-urlpatterns = get_patterns + other_patterns
+urlpatterns = get_patterns + update_views + other_patterns

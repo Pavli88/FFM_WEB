@@ -116,7 +116,8 @@ def create_transaction_related_cashflow(instance, **kwargs):
     print("TRANSACTION RELATED")
     print(instance)
     print(instance.transaction_type)
-    if instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale':
+    if (
+            instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale') and instance.open_status != 'Closed':
         Transaction(portfolio_code=instance.portfolio_code,
                     security='Cash',
                     sec_group='Cash',

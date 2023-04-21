@@ -1,18 +1,25 @@
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-
-# Model Imports
 from portfolio.models import Portfolio, CashFlow, Transaction
+from app_functions.request_functions import *
 
 
 def get_portfolios(request):
     if request.method == "GET":
-        filters = {}
-        for key, value in request.GET.items():
-            if key in ['portfolio_name', 'portfolio_type', 'currency', 'status', 'portfolio_code', 'owner', '']:
-                filters[key] = value
-        return JsonResponse(list(Portfolio.objects.filter(**filters).values()), safe=False)
+        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
+                                             column_list=['portfolio_name', 'portfolio_type', 'currency', 'status',
+                                                          'portfolio_code', 'owner', ''],
+                                             table=Portfolio), safe=False)
+
+
+def get_portfolio_transactions(request):
+    if request.method == "GET":
+        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
+                                             column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
+                                                          'trade_date__gte', 'trade_date__lte', 'is_active',
+                                                          'security', ''],
+                                             table=Transaction), safe=False)
 
 
 def get_main_portfolio_cashflows(request):
@@ -20,18 +27,6 @@ def get_main_portfolio_cashflows(request):
         records = CashFlow.objects.filter(portfolio_code=request.GET.get("portfolio_code")).values()
         df = pd.DataFrame(records).pivot_table(index='currency', columns='type', values='amount', aggfunc='sum').fillna(0).reset_index()
         return JsonResponse(df.to_dict('records'), safe=False)
-
-
-def get_portfolio_transactions(request):
-    if request.method == "GET":
-        filters = {}
-        for key, value in request.GET.items():
-            if value == '':
-                pass
-            else:
-                if key in ['id', 'portfolio_code', 'currency', 'transaction_type', 'trade_date__gte', 'trade_date__lte', 'is_active', 'security', '']:
-                    filters[key] = value
-        return JsonResponse(list(Transaction.objects.filter(**filters).values()), safe=False)
 
 
 def get_open_transactions(request):

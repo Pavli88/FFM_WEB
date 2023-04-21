@@ -1,9 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-# Model Imports
 from portfolio.models import Robots, Portfolio, CashFlow, Transaction
 import json
+from app_functions.request_functions import *
 
 
 @csrf_exempt
@@ -27,12 +26,12 @@ def create_portfolio(request):
         body_data = json.loads(request.body.decode('utf-8'))
         try:
             port = Portfolio(portfolio_name=body_data["port_name"],
-                          portfolio_code=body_data["port_code"],
-                          portfolio_type=body_data["port_type"],
-                          currency=body_data["port_currency"],
-                          status="active",
-                          inception_date=body_data["inception_date"],
-                          owner=body_data["owner"])
+                             portfolio_code=body_data["port_code"],
+                             portfolio_type=body_data["port_type"],
+                             currency=body_data["port_currency"],
+                             status="active",
+                             inception_date=body_data["inception_date"],
+                             owner=body_data["owner"])
             port.save()
             return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
         except:
@@ -60,9 +59,6 @@ def create_cashflow(request):
 @csrf_exempt
 def create_transaction(request):
     if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        transaction = Transaction()
-        for key, value in request_data.items():
-            setattr(transaction, key, value)
-        transaction.save()
+        dynamic_model_create(table_object=Transaction(),
+                             request_object=json.loads(request.body.decode('utf-8')))
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
