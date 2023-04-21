@@ -1,5 +1,7 @@
 from django.db import models
 from datetime import datetime
+import pandas as pd
+from django.db.models import Sum
 
 
 class Portfolio(models.Model):
@@ -39,6 +41,23 @@ class CashHolding(models.Model):
     amount = models.FloatField(default=0.0)
     currency = models.CharField(max_length=30, default="")
     date = models.DateField()
+
+
+def calculate_cash_holding(instance, **kwargs):
+    print('CALCULATING CASH HOLDING')
+    if instance.sec_group == 'Cash':
+        print(instance.sec_group, instance.portfolio_code, instance.mv)
+
+        try:
+            cash_holding = CashHolding.objects.get(portfolio_code=instance.portfolio_code,
+                                                   currency=instance.currency)
+            cash_holding.amount = cash_holding.amount + instance.mv
+            cash_holding.save()
+        except CashHolding.DoesNotExist:
+            CashHolding(portfolio_code=instance.portfolio_code,
+                        amount=instance.mv,
+                        date=instance.trade_date,
+                        currency=instance.currency).save()
 
 
 class Nav(models.Model):
@@ -109,9 +128,6 @@ def create_transaction_related_cashflow(instance, **kwargs):
                     trade_date=instance.trade_date).save()
 
 
-models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
-
-
 class Positions(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)
@@ -136,3 +152,7 @@ class PortfolioHoldings(models.Model):
     opening_mv = models.FloatField(default=0.0)
     closing_mv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
+
+
+models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
+models.signals.post_save.connect(calculate_cash_holding, sender=Transaction)

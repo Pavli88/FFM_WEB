@@ -1,5 +1,5 @@
 import pandas as pd
-
+from django.db import connection
 from django.http import JsonResponse
 
 # Model Imports
@@ -32,3 +32,33 @@ def get_portfolio_transactions(request):
                 if key in ['id', 'portfolio_code', 'currency', 'transaction_type', 'trade_date__gte', 'trade_date__lte', 'is_active', 'security', '']:
                     filters[key] = value
         return JsonResponse(list(Transaction.objects.filter(**filters).values()), safe=False)
+
+
+def get_open_transactions(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute(
+            """select *, if(transaction_link_code='', id, transaction_link_code) as updated_id
+from portfolio_transaction
+where security != 'Cash'
+and transaction_link_code in (select id from portfolio_transaction where open_status = 'Open')
+or open_status = 'Open';"""
+        )
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        transaction_codes = list(dict.fromkeys(df['updated_id'].tolist()))
+        new_data_set = []
+        for transaction_code in transaction_codes:
+            df_transaction = df[df['updated_id'] == transaction_code]
+            new_data_set.append({
+                'id': df_transaction['updated_id'].tolist()[0],
+                'portfolio_code': df_transaction['portfolio_code'].tolist()[0],
+                'security': df_transaction['security'].tolist()[0],
+                'sec_group': df_transaction['sec_group'].tolist()[0],
+                'currency': df_transaction['currency'].tolist()[0],
+                'transaction_type': df_transaction['transaction_type'].tolist()[0],
+                'quantity': df_transaction['quantity'].sum(),
+                'price': df_transaction['price'].tolist()[0],
+                'mv': round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
+            })
+        return JsonResponse(new_data_set, safe=False)
