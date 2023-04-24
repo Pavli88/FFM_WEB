@@ -14,6 +14,7 @@ def dynamic_model_create(table_object, request_object):
     for key, value in request_object.items():
         setattr(object_data, key, value)
     object_data.save()
+    return object_data
 
 
 def dynamic_model_update(table_object, request_object):
@@ -21,3 +22,4 @@ def dynamic_model_update(table_object, request_object):
     for key, value in request_object.items():
         setattr(object_data, key, value)
     object_data.save()
+    return object_data

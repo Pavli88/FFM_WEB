@@ -31,13 +31,14 @@ def get_main_portfolio_cashflows(request):
 
 def get_open_transactions(request):
     if request.method == "GET":
+        print('test')
         cursor = connection.cursor()
         cursor.execute(
-            """select *, if(transaction_link_code='', id, transaction_link_code) as updated_id
-from portfolio_transaction
-where security != 'Cash'
-and transaction_link_code in (select id from portfolio_transaction where open_status = 'Open')
-or open_status = 'Open';"""
+            """select *, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
+from portfolio_transaction as pt
+where pt.security != 'Cash'
+and pt.transaction_link_code in (select id from portfolio_transaction where open_status = 'Open')
+or pt.open_status = 'Open';"""
         )
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
@@ -45,6 +46,7 @@ or open_status = 'Open';"""
         new_data_set = []
         for transaction_code in transaction_codes:
             df_transaction = df[df['updated_id'] == transaction_code]
+            print(df_transaction)
             new_data_set.append({
                 'id': df_transaction['updated_id'].tolist()[0],
                 'portfolio_code': df_transaction['portfolio_code'].tolist()[0],
@@ -55,5 +57,7 @@ or open_status = 'Open';"""
                 'quantity': df_transaction['quantity'].sum(),
                 'price': df_transaction['price'].tolist()[0],
                 'mv': round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
+                'broker': df_transaction['broker'].tolist()[0],
+                'broker_id': df_transaction['broker_id'].tolist()[0],
             })
         return JsonResponse(new_data_set, safe=False)

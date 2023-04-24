@@ -102,6 +102,8 @@ class Transaction(models.Model):
     transaction_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.CharField(max_length=50, default="")
     open_status = models.CharField(max_length=50, default="")
+    broker = models.CharField(max_length=50, default="")
+    broker_id = models.IntegerField(null=True)
 
     def save(self, *args, **kwargs):
         if self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
