@@ -102,7 +102,7 @@ class Transaction(models.Model):
     transaction_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.CharField(max_length=50, default="")
     open_status = models.CharField(max_length=50, default="")
-    broker = models.CharField(max_length=50, default="")
+    account_id = models.IntegerField(null=True)
     broker_id = models.IntegerField(null=True)
 
     def save(self, *args, **kwargs):

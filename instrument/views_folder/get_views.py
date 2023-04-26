@@ -1,9 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-# Model import
 from instrument.models import Instruments, Tickers
+from app_functions.request_functions import *
 
 
 @csrf_exempt
@@ -31,4 +30,6 @@ def get_instrument(request):
 
 def get_broker_tickers(request):
     if request.method == "GET":
-        return JsonResponse(list(Tickers.objects.filter(inst_code=request.GET.get('id')).values()), safe=False)
+        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
+                                             column_list=['inst_code', 'source', ''],
+                                             table=Tickers), safe=False)

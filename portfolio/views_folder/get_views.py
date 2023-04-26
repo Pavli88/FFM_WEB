@@ -57,7 +57,7 @@ or pt.open_status = 'Open';"""
                 'quantity': df_transaction['quantity'].sum(),
                 'price': df_transaction['price'].tolist()[0],
                 'mv': round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
-                'broker': df_transaction['broker'].tolist()[0],
+                'account_id': df_transaction['account_id'].tolist()[0],
                 'broker_id': df_transaction['broker_id'].tolist()[0],
             })
         return JsonResponse(new_data_set, safe=False)

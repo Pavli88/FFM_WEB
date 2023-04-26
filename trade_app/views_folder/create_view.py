@@ -1,12 +1,15 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from accounts.models import BrokerAccounts
+from instrument.models import Instruments
 from portfolio.models import Portfolio, Transaction, Robots
 from instrument.models import Tickers
 from app_functions.request_functions import *
 from django.db import connection
 import pandas as pd
 from broker_apis.oanda import OandaV20
+from datetime import date
 
 
 @csrf_exempt
@@ -16,33 +19,35 @@ def new_transaction(request):
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
 
-        # Instrument mapping query on portfolio
-        cursor = connection.cursor()
-        cursor.execute(
-            """select pr.portfolio_code, it.source_ticker, it.source, ba.account_number, ba.account_name, ba.access_token, ba.env from portfolio_robots as pr, instrument_tickers as it, accounts_brokeraccounts as ba
-where pr.ticker_id = it.id and ba.id = pr.broker_account_id
-and pr.portfolio_code='{portfolio_code}'
-and it.inst_code={instrument_code};""".format(portfolio_code=request_body['portfolio_code'],
-                                               instrument_code=request_body['security'])
-        )
-        row = cursor.fetchall()
-        print(row[0])
-        print(row[0][3])
+        # {'portfolio_code': 'TST',
+        #  'account_id': 6,
+        #  'security_id': 74,
+        #  'transaction_type': 'Purchase',
+        #  'quantity': 1}
 
-        broker_connection = OandaV20(access_token=row[0][5],
-                                     account_id=row[0][3],
-                                     environment=row[0][6])
+        account = BrokerAccounts.objects.get(id=request_body['account_id'])
+        instrument = Instruments.objects.get(id=request_body['security'])
 
-        trade = broker_connection.submit_market_order(security=row[0][1],
+        broker_connection = OandaV20(access_token=account.access_token,
+                                     account_id=account.account_number,
+                                     environment=account.env)
+        trade = broker_connection.submit_market_order(security=request_body['ticker'],
                                                       quantity=request_body['quantity'])
         print(trade)
 
         request_body['price'] = trade['response']["price"]
-        request_body['broker'] = row[0][2]
+        request_body['account_id'] = account.id
         request_body['broker_id'] = trade['response']['id']
+        request_body['open_status'] = 'Open'
+        request_body['currency'] = instrument.currency
+        request_body['sec_group'] = instrument.group
+        request_body['trade_date'] = date.today()
+
+        print(request_body)
         # Selecting broker routing and execute trade at broker
 
         # This part saves the transaction to db
+
         transaction = dynamic_model_create(table_object=Transaction(),
                                            request_object=request_body)
 
