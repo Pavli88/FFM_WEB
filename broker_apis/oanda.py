@@ -83,6 +83,12 @@ class OandaV20:
         response = r.response
         return response['orderFillTransaction']
 
+    def close_out(self , trd_id, units):
+        r = trades.TradeClose(accountID=self.account_id, tradeID=trd_id, data={"units": units})
+        self.api.request(r)
+        response = r.response
+        return response['orderFillTransaction']
+
     def get_prices(self, instruments):
 
         params = {
