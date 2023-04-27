@@ -9,6 +9,8 @@ class BrokerAccounts(models.Model):
     env = models.CharField(max_length=100, default="")
     currency = models.CharField(max_length=100, default="")
     owner = models.CharField(max_length=30, default="")
+    margin_account = models.BooleanField(default=False)
+    margin_percentage = models.FloatField(default=0.0)
 
 
 class AccountBalance(models.Model):

@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from portfolio.models import Portfolio, Transaction
+from instrument.models import Instruments
 from accounts.models import BrokerAccounts
 from app_functions.request_functions import *
 from django.db import connection
@@ -15,6 +16,8 @@ def close_transaction(request):
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
         account = BrokerAccounts.objects.get(id=request_body['account_id'])
+        instrument = Instruments.objects.get(id=request_body['security'])
+
         broker_connection = OandaV20(access_token=account.access_token,
                                      account_id=account.account_number,
                                      environment=account.env)
@@ -25,14 +28,24 @@ def close_transaction(request):
                                                  'open_status': 'Closed'})
         else:
             trade = broker_connection.close_out(trd_id=request_body['broker_id'], units=request_body['quantity'])
+
         request_body['price'] = trade['price']
         request_body['account_id'] = account.id
         request_body['trade_date'] = date.today()
         request_body['broker_id'] = trade['id']
+
+        if instrument.group == "CFD":
+            request_body['margin'] = account.margin_percentage
+
         if request_body['transaction_type'] == 'Purchase':
             request_body['transaction_type'] = 'Sale'
-        else:
+        elif request_body['transaction_type'] == 'Sale':
             request_body['transaction_type'] = 'Purchase'
+        elif request_body['transaction_type'] == 'Asset In':
+            request_body['transaction_type'] = 'Asset Out'
+        else:
+            request_body['transaction_type'] = 'Asset In'
+
         request_body['transaction_link_code'] = request_body['id']
         request_body['open_status'] = 'Close Out'
         del request_body['id']

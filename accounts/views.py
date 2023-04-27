@@ -21,7 +21,9 @@ def create_broker(request):
                            env=request_data['env'],
                            access_token=request_data['token'],
                            currency=request_data['currency'],
-                           owner=request_data['owner']).save()
+                           owner=request_data['owner'],
+                           margin_account=request_data['margin_account'],
+                           margin_percentage=request_data['margin_percentage']).save()
             response = "Account is created successfully!"
         except:
             response = "Account already exists in the database!"

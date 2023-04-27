@@ -36,7 +36,7 @@ def get_open_transactions(request):
         cursor.execute(
             """select *, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
 from portfolio_transaction as pt
-where pt.security != 'Cash'
+where pt.security != 'Cash' and pt.security != 'Margin'
 and pt.transaction_link_code in (select id from portfolio_transaction where open_status = 'Open')
 or pt.open_status = 'Open';"""
         )
