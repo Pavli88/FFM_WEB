@@ -36,6 +36,7 @@ def new_transaction(request):
             multiplier = 1
         else:
             multiplier = -1
+
         trade = broker_connection.submit_market_order(security=request_body['ticker'],
                                                       quantity=float(request_body['quantity'])*multiplier)
         print(trade)
@@ -49,16 +50,9 @@ def new_transaction(request):
         request_body['trade_date'] = date.today()
 
         print(request_body)
-        # Selecting broker routing and execute trade at broker
-
-        # This part saves the transaction to db
 
         if instrument.group == "CFD":
             request_body['margin'] = account.margin_percentage
-            if request_body['transaction_type'] == "Purchase":
-                request_body['transaction_type'] = "Asset In"
-            else:
-                request_body['transaction_type'] = "Asset Out"
 
         transaction = dynamic_model_create(table_object=Transaction(),
                                            request_object=request_body)

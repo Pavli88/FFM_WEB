@@ -110,8 +110,10 @@ class Transaction(models.Model):
         if (self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
                 or self.transaction_type == 'Interest Paid' \
                 or self.transaction_type == 'Commission'\
-                or self.transaction_type == 'Asset Out') and self.sec_group != 'Margin':
-            self.quantity = float(self.quantity) * -1
+                or self.transaction_type == 'Asset Out' or self.transaction_type == 'Purchase Settlement'):
+            self.quantity = abs(float(self.quantity)) * -1
+        else:
+            self.quantity = abs(float(self.quantity))
         self.mv = float(self.quantity) * float(self.price)
         super().save(*args, **kwargs)
 
@@ -120,18 +122,24 @@ def create_transaction_related_cashflow(instance, **kwargs):
     print("TRANSACTION RELATED")
     print(instance)
     print(instance.transaction_type)
-    if (instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale') and instance.open_status != 'Closed' and instance.sec_group != 'Margin':
-        # if instance.margin == 0.0:
-        #     quantity = instance.mv * -1
-        # else:
-        #     quantity = ((instance.mv / instance.margin) - instance.mv) * -1
+    if (instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale' or instance.transaction_type == 'Asset In' or instance.transaction_type == 'Asset Out') and instance.open_status != 'Closed' and instance.security != 'Margin':
+        if instance.transaction_type == 'Asset In':
+            transaction_type = 'Purchase'
+        elif instance.transaction_type == 'Asset Out':
+            transaction_type = 'Sale'
+        else:
+            transaction_type = instance.transaction_type
+        if instance.margin == 0.0:
+            margin = 1
+        else:
+            margin = instance.margin
         Transaction(portfolio_code=instance.portfolio_code,
                     security='Cash',
                     sec_group='Cash',
-                    quantity=instance.quantity,
+                    quantity=float(instance.quantity) * float(instance.price) * float(margin),
                     price=1,
                     currency=instance.currency,
-                    transaction_type=instance.transaction_type + ' Settlement',
+                    transaction_type=transaction_type + ' Settlement',
                     transaction_link_code=instance.id,
                     trade_date=instance.trade_date).save()
 
@@ -143,23 +151,13 @@ def create_transaction_related_cashflow(instance, **kwargs):
         Transaction(portfolio_code=instance.portfolio_code,
                     security='Margin',
                     sec_group='Margin',
-                    quantity=float(instance.quantity) * (1 - float(instance.margin)),
-                    price=instance.price,
+                    quantity=float(instance.quantity) * float(instance.price) * (1 - float(instance.margin)),
+                    price=1,
                     currency=instance.currency,
                     transaction_type=transaction_type,
                     transaction_link_code=instance.id,
                     trade_date=instance.trade_date,
                     margin=1-float(instance.margin)).save()
-
-        Transaction(portfolio_code=instance.portfolio_code,
-                    security='Cash',
-                    sec_group='Cash',
-                    quantity=float(instance.quantity) * float(instance.margin),
-                    price=instance.price,
-                    currency=instance.currency,
-                    transaction_type=transaction_type + ' Settlement',
-                    transaction_link_code=instance.id,
-                    trade_date=instance.trade_date).save()
 
 
 class Positions(models.Model):
