@@ -187,4 +187,4 @@ class PortfolioHoldings(models.Model):
 
 
 models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
-models.signals.post_save.connect(calculate_cash_holding, sender=Transaction)
+# models.signals.post_save.connect(calculate_cash_holding, sender=Transaction)

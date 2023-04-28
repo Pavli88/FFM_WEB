@@ -8,6 +8,7 @@ get_patterns = [
 
 create_view = [
     path('trade_page/new/transaction/', create_view.new_transaction),
+    path('trade_page/new/signal/', create_view.new_transaction_signal),
 ]
 
 update_views = [

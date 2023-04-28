@@ -44,7 +44,6 @@ def close_transaction(request):
             request_body['transaction_type'] = 'Asset Out'
         else:
             request_body['transaction_type'] = 'Asset In'
-
         request_body['transaction_link_code'] = request_body['id']
         request_body['open_status'] = 'Close Out'
         del request_body['id']
