@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from portfolio.models import Portfolio, Transaction
-from instrument.models import Instruments
+from instrument.models import Instruments, Tickers
 from accounts.models import BrokerAccounts
 from app_functions.request_functions import *
 from django.db import connection
@@ -17,7 +17,8 @@ def close_transaction(request):
         print(request_body)
         account = BrokerAccounts.objects.get(id=request_body['account_id'])
         instrument = Instruments.objects.get(id=request_body['security'])
-
+        ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                     source=account.broker_name)
         broker_connection = OandaV20(access_token=account.access_token,
                                      account_id=account.account_number,
                                      environment=account.env)
@@ -33,9 +34,7 @@ def close_transaction(request):
         request_body['account_id'] = account.id
         request_body['trade_date'] = date.today()
         request_body['broker_id'] = trade['id']
-
-        if instrument.group == "CFD":
-            request_body['margin'] = account.margin_percentage
+        request_body['margin'] = ticker.margin
 
         if request_body['transaction_type'] == 'Purchase':
             request_body['transaction_type'] = 'Sale'

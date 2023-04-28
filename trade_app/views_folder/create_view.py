@@ -2,9 +2,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from accounts.models import BrokerAccounts
-from instrument.models import Instruments
+from instrument.models import Instruments, Tickers
 from portfolio.models import Portfolio, Transaction, Robots
-from instrument.models import Tickers
 from app_functions.request_functions import *
 from django.db import connection
 import pandas as pd
@@ -27,6 +26,9 @@ def new_transaction(request):
 
         account = BrokerAccounts.objects.get(id=request_body['account_id'])
         instrument = Instruments.objects.get(id=request_body['security'])
+        ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                        source=account.broker_name)
+        print(ticker.source_ticker)
         broker_connection = OandaV20(access_token=account.access_token,
                                      account_id=account.account_number,
                                      environment=account.env)
@@ -34,7 +36,7 @@ def new_transaction(request):
             multiplier = 1
         else:
             multiplier = -1
-        trade = broker_connection.submit_market_order(security=request_body['ticker'],
+        trade = broker_connection.submit_market_order(security=ticker.source_ticker,
                                                       quantity=float(request_body['quantity'])*multiplier)
         if trade['status'] == 'rejected':
             return JsonResponse({'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}, safe=False)
@@ -45,6 +47,7 @@ def new_transaction(request):
         request_body['currency'] = instrument.currency
         request_body['sec_group'] = instrument.group
         request_body['trade_date'] = date.today()
+        request_body['margin'] = ticker.margin
         transaction = dynamic_model_create(table_object=Transaction(),
                                            request_object=request_body)
 
