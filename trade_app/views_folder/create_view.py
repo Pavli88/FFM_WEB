@@ -27,20 +27,17 @@ def new_transaction(request):
 
         account = BrokerAccounts.objects.get(id=request_body['account_id'])
         instrument = Instruments.objects.get(id=request_body['security'])
-
         broker_connection = OandaV20(access_token=account.access_token,
                                      account_id=account.account_number,
                                      environment=account.env)
-
-        if request_body['transaction_type'] == "Purchase":
+        if request_body['transaction_type'] == "Purchase" or request_body['transaction_type'] == "Asset In":
             multiplier = 1
         else:
             multiplier = -1
-
         trade = broker_connection.submit_market_order(security=request_body['ticker'],
                                                       quantity=float(request_body['quantity'])*multiplier)
-        print(trade)
-
+        if trade['status'] == 'rejected':
+            return JsonResponse({'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}, safe=False)
         request_body['price'] = trade['response']["price"]
         request_body['account_id'] = account.id
         request_body['broker_id'] = trade['response']['id']
@@ -48,12 +45,6 @@ def new_transaction(request):
         request_body['currency'] = instrument.currency
         request_body['sec_group'] = instrument.group
         request_body['trade_date'] = date.today()
-
-        print(request_body)
-
-        if instrument.group == "CFD":
-            request_body['margin'] = account.margin_percentage
-
         transaction = dynamic_model_create(table_object=Transaction(),
                                            request_object=request_body)
 

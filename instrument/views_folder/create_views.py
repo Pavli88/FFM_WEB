@@ -41,7 +41,8 @@ def new_broker_ticker(request):
             Tickers(
                 inst_code=request_data['inst_code'],
                 source=request_data['source'],
-                source_ticker=request_data['source_ticker']
+                source_ticker=request_data['source_ticker'],
+                margin=request_data['margin']
             ).save()
             response = 'Broker ticker is saved!'
         except:

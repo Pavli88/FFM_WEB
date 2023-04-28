@@ -31,5 +31,5 @@ def get_instrument(request):
 def get_broker_tickers(request):
     if request.method == "GET":
         return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
-                                             column_list=['inst_code', 'source', ''],
+                                             column_list=['inst_code', 'source'],
                                              table=Tickers), safe=False)

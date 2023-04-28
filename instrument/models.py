@@ -22,3 +22,4 @@ class Tickers(models.Model):
     inst_code = models.CharField(max_length=30, default="")
     source_ticker = models.CharField(max_length=30, default="")
     source = models.CharField(max_length=30, default="")
+    margin = models.FloatField(default=0.0)
