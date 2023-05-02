@@ -4,6 +4,7 @@ import json
 from accounts.models import BrokerAccounts
 from instrument.models import Instruments, Tickers
 from portfolio.models import Portfolio, Transaction, Robots
+from trade_app.models import Notifications
 from app_functions.request_functions import *
 from django.db import connection
 import pandas as pd
@@ -13,6 +14,7 @@ from datetime import date
 
 def close_transaction(request_body):
     account = BrokerAccounts.objects.get(id=request_body['account_id'])
+    instrument = Instruments.objects.get(id=request_body['security'])
     ticker = Tickers.objects.get(inst_code=request_body['security'],
                                  source=account.broker_name)
     broker_connection = OandaV20(access_token=account.access_token,
@@ -40,6 +42,10 @@ def close_transaction(request_body):
     del request_body['id']
     transaction = dynamic_model_create(table_object=Transaction(),
                                        request_object=request_body)
+    Notifications(portfolio_code=request_body['portfolio_code'],
+                  message='Close ' + instrument.name + ' @ ' + request_body['price'] + ' Broker ID ' + request_body['broker_id'],
+                  sub_message='Close',
+                  broker_name=account.broker_name).save()
     return {'response': 'Transaction is closed',
                          'transaction_id': transaction.id}
 
@@ -49,8 +55,6 @@ def new_port_transaction(request_body):
     instrument = Instruments.objects.get(id=request_body['security'])
     ticker = Tickers.objects.get(inst_code=request_body['security'],
                                  source=account.broker_name)  #
-    print(ticker.source_ticker)
-    print(instrument.group)
     broker_connection = OandaV20(access_token=account.access_token,
                                  account_id=account.account_number,
                                  environment=account.env)
@@ -67,6 +71,11 @@ def new_port_transaction(request_body):
     trade = broker_connection.submit_market_order(security=ticker.source_ticker,
                                                   quantity=float(request_body['quantity']) * multiplier)
     if trade['status'] == 'rejected':
+        Notifications(portfolio_code=request_body['portfolio_code'],
+                      message=request_body['transaction_type'] + ' ' + instrument.name + ' ' + request_body[
+                          'quantity'],
+                      sub_message='Rejected - ' + trade['response']['reason'],
+                      broker_name=account.broker_name).save()
         return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
 
     request_body['price'] = trade['response']["price"]
@@ -79,7 +88,10 @@ def new_port_transaction(request_body):
     request_body['margin'] = ticker.margin  #
     transaction = dynamic_model_create(table_object=Transaction(),
                                        request_object=request_body)
-
+    Notifications(portfolio_code=request_body['portfolio_code'],
+                  message=request_body['transaction_type'] + ' ' + instrument.name + ' ' + request_body['quantity'] + ' @ ' + request_body['price'],
+                  sub_message='Executed',
+                  broker_name=account.broker_name).save()
     return {'response': 'Transaction is created',
                          'transaction_id': transaction.id}
 

@@ -1,9 +1,8 @@
 from django.http import JsonResponse
-
-# Model imports
 from robots.models import Robots, RobotTrades
-
+from trade_app.models import Notifications
 import pandas as pd
+from broker_apis.oanda import OandaV20
 
 
 def get_open_trades(request, environment):
@@ -24,3 +23,8 @@ def get_open_trades(request, environment):
             if len(filtered_trades_df['id']) > 0:
                 response_list.append(record)
         return JsonResponse(response_list, safe=False)
+
+
+def trade_signals(request):
+    print("Get Trade Signal notifications")
+    return JsonResponse(list(Notifications.objects.filter().values()), safe=False)
