@@ -57,13 +57,15 @@ def calculate_cash_holding(portfolio_code, start_date, currency):
                                                                 portfolio_code=portfolio_code,
                                                                 currency=currency,
                                                                 sec_group='Cash').values())
-    starting_cash_balance = CashHolding.objects.filter(date__lt=start_date,
-                                                       currency=currency,
-                                                       portfolio_code=portfolio_code).order_by('date').latest('date')
-    if starting_cash_balance.amount == 0:
+    try:
+        cumulative_cash_value = CashHolding.objects.filter(date__lt=start_date,
+                                                           currency=currency,
+                                                           portfolio_code=portfolio_code).order_by('date').latest('date').amount
+    except:
         cumulative_cash_value = 0.0
-    else:
-        cumulative_cash_value = starting_cash_balance.amount
+
+    print(cumulative_cash_value)
+
     calculation_date = start_date
     while calculation_date <= date.today():
         try:

@@ -1,7 +1,7 @@
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, CashFlow, Transaction
+from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding
 from app_functions.request_functions import *
 
 
@@ -65,6 +65,7 @@ or pt.open_status = 'Open';"""
 
 def daily_cashflow_by_type(request):
     if request.method == "GET":
+        print(request.GET.get("portfolio_code"))
         cursor = connection.cursor()
         cursor.execute("""
         select trade_date,
@@ -72,8 +73,8 @@ def daily_cashflow_by_type(request):
        sum(case when transaction_type = 'Sale Settlement' then mv else 0 end) as 'Sale Settlement',
        sum(case when transaction_type = 'Subscription' then mv else 0 end) as 'Subscription',
        sum(case when transaction_type = 'Redemption' then mv else 0 end) as 'Redemption'
-from portfolio_transaction where sec_group='Cash' group by trade_date order by trade_date;
-        """)
+from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfolio_code}' group by trade_date order by trade_date;
+        """.format(portfolio_code=request.GET.get("portfolio_code")))
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
@@ -90,3 +91,11 @@ from portfolio_transaction where sec_group='Cash' group by trade_date order by t
             'dates': df['trade_date'].tolist(),
             'series': series
         }, safe=False)
+
+
+def available_cash(request):
+    if request.method == "GET":
+        cash_holding = CashHolding.objects.filter(portfolio_code=request.GET.get("portfolio_code")).order_by('date').latest('date')
+        return JsonResponse({'currency': cash_holding.currency,
+                             'amount': cash_holding.amount,
+                             'date': cash_holding.date}, safe=False)
