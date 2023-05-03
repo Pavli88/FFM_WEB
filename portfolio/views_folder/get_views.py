@@ -95,7 +95,14 @@ from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfol
 
 def available_cash(request):
     if request.method == "GET":
-        cash_holding = CashHolding.objects.filter(portfolio_code=request.GET.get("portfolio_code")).order_by('date').latest('date')
-        return JsonResponse({'currency': cash_holding.currency,
-                             'amount': cash_holding.amount,
-                             'date': cash_holding.date}, safe=False)
+        try:
+            cash_holding = CashHolding.objects.filter(portfolio_code=request.GET.get("portfolio_code")).order_by(
+                'date').latest('date')
+            response = {'currency': cash_holding.currency,
+                        'amount': round(cash_holding.amount, 2),
+                        'date': cash_holding.date}
+        except:
+            response = {'currency': '',
+                        'amount': 0.0,
+                        'date': ''}
+        return JsonResponse(response, safe=False)
