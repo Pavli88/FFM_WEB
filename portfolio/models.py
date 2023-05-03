@@ -71,7 +71,7 @@ def calculate_cash_holding(portfolio_code, start_date, currency):
     while calculation_date <= date.today():
         print(calculation_date)
         # try:
-        current_cash_value = cash_transactions[cash_transactions['trade_date'] == calculation_date] #.groupby(['trade_date']).sum('mv')['mv'][0]
+        current_cash_value = cash_transactions[cash_transactions['trade_date'] == calculation_date]['mv'].sum() #.groupby(['trade_date']).sum('mv')['mv'][0]
         print(current_cash_value)
         # except:
         #     current_cash_value = 0.0
