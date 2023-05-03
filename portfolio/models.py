@@ -57,6 +57,7 @@ def calculate_cash_holding(portfolio_code, start_date, currency):
                                                                 portfolio_code=portfolio_code,
                                                                 currency=currency,
                                                                 sec_group='Cash').values())
+    print(cash_transactions)
     try:
         cumulative_cash_value = CashHolding.objects.filter(date__lt=start_date,
                                                            currency=currency,
