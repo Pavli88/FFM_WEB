@@ -2,6 +2,8 @@ from django.db import models
 from datetime import datetime
 import pandas as pd
 from django.db.models import Sum
+from datetime import timedelta
+from datetime import date
 
 
 class Portfolio(models.Model):
@@ -43,21 +45,45 @@ class CashHolding(models.Model):
     date = models.DateField()
 
 
-def calculate_cash_holding(instance, **kwargs):
-    print('CALCULATING CASH HOLDING')
-    if instance.sec_group == 'Cash':
-        print(instance.sec_group, instance.portfolio_code, instance.mv)
+def calculate_cash_holding_after_delete(instance, **kwargs):
+    calculate_cash_holding(portfolio_code=instance.portfolio_code,
+                           currency=instance.currency,
+                           start_date=instance.trade_date)
 
+
+def calculate_cash_holding(portfolio_code, start_date, currency):
+    start_date = datetime.strptime(str(start_date), '%Y-%m-%d').date()
+    cash_transactions = pd.DataFrame(Transaction.objects.filter(trade_date__gte=start_date,
+                                                                portfolio_code=portfolio_code,
+                                                                currency=currency,
+                                                                sec_group='Cash').values())
+    starting_cash_balance = CashHolding.objects.filter(date__lt=start_date,
+                                                       currency=currency,
+                                                       portfolio_code=portfolio_code).order_by('date').latest('date')
+    if starting_cash_balance.amount == 0:
+        cumulative_cash_value = 0.0
+    else:
+        cumulative_cash_value = starting_cash_balance.amount
+    calculation_date = start_date
+    while calculation_date <= date.today():
         try:
-            cash_holding = CashHolding.objects.get(portfolio_code=instance.portfolio_code,
-                                                   currency=instance.currency)
-            cash_holding.amount = cash_holding.amount + instance.mv
-            cash_holding.save()
+            current_cash_value = cash_transactions[cash_transactions['trade_date'] == calculation_date].groupby(['trade_date']).sum('mv')[
+                'mv'][0]
+        except:
+            current_cash_value = 0.0
+        cumulative_cash_value = current_cash_value + cumulative_cash_value
+        try:
+            existing_cash_record = CashHolding.objects.get(portfolio_code=portfolio_code,
+                                                           currency=currency,
+                                                           date=calculation_date)
+            existing_cash_record.amount = cumulative_cash_value
+            existing_cash_record.save()
         except CashHolding.DoesNotExist:
-            CashHolding(portfolio_code=instance.portfolio_code,
-                        amount=instance.mv,
-                        date=instance.trade_date,
-                        currency=instance.currency).save()
+            CashHolding(portfolio_code=portfolio_code,
+                        currency=currency,
+                        amount=cumulative_cash_value,
+                        date=calculation_date).save()
+        calculation_date = calculation_date + timedelta(days=1)
 
 
 class Nav(models.Model):
@@ -119,9 +145,6 @@ class Transaction(models.Model):
 
 
 def create_transaction_related_cashflow(instance, **kwargs):
-    print("TRANSACTION RELATED")
-    print(instance)
-    print(instance.transaction_type)
     if (instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale' or instance.transaction_type == 'Asset In' or instance.transaction_type == 'Asset Out') and instance.open_status != 'Closed' and instance.security != 'Margin':
         if instance.transaction_type == 'Asset In':
             transaction_type = 'Purchase'
@@ -158,6 +181,9 @@ def create_transaction_related_cashflow(instance, **kwargs):
                     transaction_link_code=instance.id,
                     trade_date=instance.trade_date,
                     margin=1-float(instance.margin)).save()
+    calculate_cash_holding(portfolio_code=instance.portfolio_code,
+                           start_date=instance.trade_date,
+                           currency=instance.currency)
 
 
 class Positions(models.Model):
@@ -187,4 +213,4 @@ class PortfolioHoldings(models.Model):
 
 
 models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
-# models.signals.post_save.connect(calculate_cash_holding, sender=Transaction)
+models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)

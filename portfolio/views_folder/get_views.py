@@ -61,3 +61,32 @@ or pt.open_status = 'Open';"""
                 'broker_id': df_transaction['broker_id'].tolist()[0],
             })
         return JsonResponse(new_data_set, safe=False)
+
+
+def daily_cashflow_by_type(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+        select trade_date,
+       sum(case when transaction_type = 'Purchase Settlement' then mv else 0 end) as 'Purchase Settlement',
+       sum(case when transaction_type = 'Sale Settlement' then mv else 0 end) as 'Sale Settlement',
+       sum(case when transaction_type = 'Subscription' then mv else 0 end) as 'Subscription',
+       sum(case when transaction_type = 'Redemption' then mv else 0 end) as 'Redemption'
+from portfolio_transaction where sec_group='Cash' group by trade_date order by trade_date;
+        """)
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+
+        series = []
+        for column in df:
+            print(column)
+            if column == 'trade_date':
+                pass
+            else:
+                series.append({'name': column, 'data': df[column].tolist()})
+
+        return JsonResponse({
+            'dates': df['trade_date'].tolist(),
+            'series': series
+        }, safe=False)
