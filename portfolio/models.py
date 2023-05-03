@@ -75,6 +75,7 @@ def calculate_cash_holding(portfolio_code, start_date, currency):
         except:
             current_cash_value = 0.0
         cumulative_cash_value = current_cash_value + cumulative_cash_value
+        print(cumulative_cash_value)
         try:
             existing_cash_record = CashHolding.objects.get(portfolio_code=portfolio_code,
                                                            currency=currency,
