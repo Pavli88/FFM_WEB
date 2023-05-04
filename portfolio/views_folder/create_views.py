@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from portfolio.models import Robots, Portfolio, CashFlow, Transaction
+from instrument.models import Instruments, Tickers
+from accounts.models import BrokerAccounts
 import json
 from app_functions.request_functions import *
 
@@ -59,6 +61,26 @@ def create_cashflow(request):
 @csrf_exempt
 def create_transaction(request):
     if request.method == "POST":
-        dynamic_model_create(table_object=Transaction(),
-                             request_object=json.loads(request.body.decode('utf-8')))
+        request_body = json.loads(request.body.decode('utf-8'))
+        account = BrokerAccounts.objects.get(id=6)
+        instrument = Instruments.objects.get(id=request_body['security'])
+        ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                     source=account.broker_name)
+
+        if instrument.group == "CFD":
+            if request_body['transaction_type'] == "Purchase":
+                request_body['transaction_type'] = "Asset In"
+            elif request_body['transaction_type'] == "Sale":
+                request_body['transaction_type'] = "Asset Out"
+
+
+        request_body['open_status'] = 'Open'
+        request_body['currency'] = instrument.currency
+        request_body['sec_group'] = instrument.group
+        request_body['margin'] = ticker.margin  #
+        transaction = dynamic_model_create(table_object=Transaction(),
+                                           request_object=request_body)
+
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
+
+

@@ -4,6 +4,7 @@ import pandas as pd
 from django.db.models import Sum
 from datetime import timedelta
 from datetime import date
+from django.db import connection
 
 
 class Portfolio(models.Model):
@@ -182,13 +183,52 @@ def create_transaction_related_cashflow(instance, **kwargs):
     calculate_cash_holding(portfolio_code=instance.portfolio_code,
                            start_date=instance.trade_date,
                            currency=instance.currency)
+    if instance.open_status == 'Closed':
+        calculate_transaction_pnl(transaction_id=instance.id)
+
+
+def calculate_transaction_pnl(transaction_id):
+    print("TRANSACTION PROFIT CALC")
+    print(transaction_id)
+    cursor = connection.cursor()
+    cursor.execute(
+        """select*from portfolio_transaction
+       where transaction_link_code in (select id from portfolio_transaction where transaction_link_code={id})
+          or transaction_link_code={id}
+          or id={id};""".format(id=transaction_id)
+    )
+    row = cursor.fetchall()
+    df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+    pnl = df[df['sec_group'] == 'Cash']['mv'].sum()
+    main_transaction = df[df['id'] == transaction_id]
+
+    try:
+        transaction_pnl = TransactionPnl.objects.get(transaction_id=transaction_id,
+                                                     portfolio_code=main_transaction['portfolio_code'][0])
+        transaction_pnl.pnl = pnl
+        transaction_pnl.save()
+    except:
+        TransactionPnl(
+            transaction_id=transaction_id,
+            portfolio_code=main_transaction['portfolio_code'][0],
+            security=main_transaction['security'][0],
+            pnl=pnl
+        ).save()
+
+
+class TransactionPnl(models.Model):
+    transaction_id = models.IntegerField(default=0)
+    portfolio_code = models.CharField(max_length=30, default="")
+    security = models.IntegerField(default=0)
+    pnl = models.FloatField(default=0.0)
+    closing_date = models.DateTimeField(auto_now_add=True)
 
 
 class Positions(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)
     quantity = models.FloatField(default=0.0)
-    date = models.DateField()
+    date = models.DateTimeField(auto_now_add=True)
 
 
 class PortGroup(models.Model):
