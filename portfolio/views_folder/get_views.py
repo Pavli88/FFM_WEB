@@ -7,6 +7,8 @@ from app_functions.request_functions import *
 
 def get_portfolios(request):
     if request.method == "GET":
+        for i in request.GET.items():
+            print(i)
         return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
                                              column_list=['portfolio_name', 'portfolio_type', 'currency', 'status',
                                                           'portfolio_code', 'owner', ''],
