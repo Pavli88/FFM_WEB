@@ -199,7 +199,9 @@ def calculate_transaction_pnl(transaction_id):
     )
     row = cursor.fetchall()
     df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+    print(df)
     main_transaction = df[df['id'] == transaction_id]
+    print(main_transaction)
     if main_transaction['sec_group'][0] == 'CFD':
         margin_sum = df[df['sec_group'] == 'Margin']['mv'].sum()
         cash_sum = df[df['sec_group'] == 'Cash']['mv'].sum()
