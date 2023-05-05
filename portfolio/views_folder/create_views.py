@@ -62,24 +62,27 @@ def create_cashflow(request):
 def create_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        account = BrokerAccounts.objects.get(id=6)
-        instrument = Instruments.objects.get(id=request_body['security'])
-        ticker = Tickers.objects.get(inst_code=request_body['security'],
-                                     source=account.broker_name)
+        if request_body['security'] == 'Cash':
+            dynamic_model_create(table_object=Transaction(),
+                                 request_object=request_body)
+        else:
+            account = BrokerAccounts.objects.get(id=6)
+            instrument = Instruments.objects.get(id=request_body['security'])
+            ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                         source=account.broker_name)
 
-        if instrument.group == "CFD":
-            if request_body['transaction_type'] == "Purchase":
-                request_body['transaction_type'] = "Asset In"
-            elif request_body['transaction_type'] == "Sale":
-                request_body['transaction_type'] = "Asset Out"
+            if instrument.group == "CFD":
+                if request_body['transaction_type'] == "Purchase":
+                    request_body['transaction_type'] = "Asset In"
+                elif request_body['transaction_type'] == "Sale":
+                    request_body['transaction_type'] = "Asset Out"
 
-
-        request_body['open_status'] = 'Open'
-        request_body['currency'] = instrument.currency
-        request_body['sec_group'] = instrument.group
-        request_body['margin'] = ticker.margin  #
-        transaction = dynamic_model_create(table_object=Transaction(),
-                                           request_object=request_body)
+            request_body['open_status'] = 'Open'
+            request_body['currency'] = instrument.currency
+            request_body['sec_group'] = instrument.group
+            request_body['margin'] = ticker.margin  #
+            dynamic_model_create(table_object=Transaction(),
+                                 request_object=request_body)
 
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
