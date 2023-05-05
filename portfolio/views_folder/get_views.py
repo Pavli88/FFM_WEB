@@ -67,7 +67,6 @@ or pt.open_status = 'Open';"""
 
 def daily_cashflow_by_type(request):
     if request.method == "GET":
-        print(request.GET.get("portfolio_code"))
         cursor = connection.cursor()
         cursor.execute("""
         select trade_date,
@@ -108,3 +107,18 @@ def available_cash(request):
                         'amount': 0.0,
                         'date': ''}
         return JsonResponse(response, safe=False)
+
+
+def transactions_pnls(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                select inst.name, inst.group, inst.type, pt.transaction_type, pt.currency, pt.mv, pt.portfolio_code, tp.pnl
+from portfolio_transactionpnl as tp, portfolio_transaction as pt, instrument_instruments as inst
+where tp.transaction_id=pt.id and inst.id = tp.security and pt.portfolio_code='{portfolio_code}'
+                """.format(portfolio_code=request.GET.get("portfolio_code")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        print(df.to_dict('records'))
+        return JsonResponse(df.to_dict('records'), safe=False)

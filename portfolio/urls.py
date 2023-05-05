@@ -13,6 +13,7 @@ create_views = [
 
 get_views = [
     path('portfolios/get/portfolios/', get_views.get_portfolios),
+    path('portfolios/get/transactions/pnl/', get_views.transactions_pnls),
     path('portfolios/daily_cashflow/', get_views.daily_cashflow_by_type),
     path('portfolios/available_cash/', get_views.available_cash),
     path('portfolios/get/open_transactions/', get_views.get_open_transactions),
