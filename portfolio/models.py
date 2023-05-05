@@ -199,9 +199,14 @@ def calculate_transaction_pnl(transaction_id):
     )
     row = cursor.fetchall()
     df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-    pnl = df[df['sec_group'] == 'Cash']['mv'].sum()
     main_transaction = df[df['id'] == transaction_id]
+    if main_transaction['sec_group'][0] == 'CFD':
+        margin_sum = df[df['sec_group'] == 'Margin']['mv'].sum()
+        cash_sum = df[df['sec_group'] == 'Cash']['mv'].sum()
+        pnl = (margin_sum + cash_sum) * -1
 
+    else:
+        pnl = df[df['sec_group'] == 'Cash']['mv'].sum()
     try:
         transaction_pnl = TransactionPnl.objects.get(transaction_id=transaction_id,
                                                      portfolio_code=main_transaction['portfolio_code'][0])
@@ -212,8 +217,7 @@ def calculate_transaction_pnl(transaction_id):
             transaction_id=transaction_id,
             portfolio_code=main_transaction['portfolio_code'][0],
             security=main_transaction['security'][0],
-            pnl=pnl
-        ).save()
+            pnl=pnl).save()
 
 
 class TransactionPnl(models.Model):
