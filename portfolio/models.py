@@ -204,8 +204,11 @@ def calculate_transaction_pnl(transaction_id):
     print(main_transaction)
     if main_transaction['sec_group'][0] == 'CFD':
         margin_sum = df[df['sec_group'] == 'Margin']['mv'].sum()
+        print(margin_sum)
         cash_sum = df[df['sec_group'] == 'Cash']['mv'].sum()
+        print(cash_sum)
         pnl = (margin_sum + cash_sum) * -1
+        print(pnl)
 
     else:
         pnl = df[df['sec_group'] == 'Cash']['mv'].sum()
