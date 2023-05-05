@@ -207,7 +207,7 @@ def calculate_transaction_pnl(transaction_id):
         print(margin_sum)
         cash_sum = df[df['sec_group'] == 'Cash']['mv'].sum()
         print(cash_sum)
-        pnl = (margin_sum + cash_sum) * -1
+        pnl = margin_sum * -1 + cash_sum
         print(pnl)
 
     else:
