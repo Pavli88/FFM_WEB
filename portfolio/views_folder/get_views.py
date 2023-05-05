@@ -3,6 +3,7 @@ from django.db import connection
 from django.http import JsonResponse
 from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding
 from app_functions.request_functions import *
+from app_functions.calculations import calculate_transaction_pnl
 
 
 def get_portfolios(request):
@@ -111,6 +112,9 @@ def available_cash(request):
 
 def transactions_pnls(request):
     if request.method == "GET":
+        closed_transactions = Transaction.objects.filter(open_status='Closed', portfolio_code=request.GET.get("portfolio_code")).values_list('id', flat=True)
+        for transaction in closed_transactions:
+            calculate_transaction_pnl(transaction_id=transaction)
         cursor = connection.cursor()
         cursor.execute("""
                 select inst.name, inst.group, inst.type, pt.transaction_type, pt.currency, pt.mv, pt.portfolio_code, tp.pnl
@@ -120,5 +124,4 @@ where tp.transaction_id=pt.id and inst.id = tp.security and pt.portfolio_code='{
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        print(df.to_dict('records'))
         return JsonResponse(df.to_dict('records'), safe=False)

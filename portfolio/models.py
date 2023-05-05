@@ -183,46 +183,8 @@ def create_transaction_related_cashflow(instance, **kwargs):
     calculate_cash_holding(portfolio_code=instance.portfolio_code,
                            start_date=instance.trade_date,
                            currency=instance.currency)
-    if instance.open_status == 'Closed':
-        calculate_transaction_pnl(transaction_id=instance.id)
-
-
-def calculate_transaction_pnl(transaction_id):
-    print("TRANSACTION PROFIT CALC")
-    print(transaction_id)
-    cursor = connection.cursor()
-    cursor.execute(
-        """select*from portfolio_transaction
-       where transaction_link_code in (select id from portfolio_transaction where transaction_link_code={id})
-          or transaction_link_code={id}
-          or id={id};""".format(id=transaction_id)
-    )
-    row = cursor.fetchall()
-    df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-    print(df)
-    main_transaction = df[df['id'] == transaction_id]
-    print(main_transaction)
-    if main_transaction['sec_group'][0] == 'CFD':
-        margin_sum = df[df['sec_group'] == 'Margin']['mv'].sum()
-        print(margin_sum)
-        cash_sum = df[df['sec_group'] == 'Cash']['mv'].sum()
-        print(cash_sum)
-        pnl = margin_sum * -1 + cash_sum
-        print(pnl)
-
-    else:
-        pnl = df[df['sec_group'] == 'Cash']['mv'].sum()
-    try:
-        transaction_pnl = TransactionPnl.objects.get(transaction_id=transaction_id,
-                                                     portfolio_code=main_transaction['portfolio_code'][0])
-        transaction_pnl.pnl = pnl
-        transaction_pnl.save()
-    except:
-        TransactionPnl(
-            transaction_id=transaction_id,
-            portfolio_code=main_transaction['portfolio_code'][0],
-            security=main_transaction['security'][0],
-            pnl=pnl).save()
+    # if instance.open_status == 'Closed':
+    #     calculate_transaction_pnl(transaction_id=instance.id)
 
 
 class TransactionPnl(models.Model):

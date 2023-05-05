@@ -21,9 +21,7 @@ def close_transaction(request_body):
                                  account_id=account.account_number,
                                  environment=account.env)
     trade = broker_connection.close_trade(trd_id=request_body['broker_id'])
-    dynamic_model_update(table_object=Transaction,
-                             request_object={'id': request_body['id'],
-                                             'open_status': 'Closed'})
+
     request_body['price'] = trade['price']
     request_body['account_id'] = account.id
     request_body['trade_date'] = date.today()
@@ -40,8 +38,14 @@ def close_transaction(request_body):
     request_body['transaction_link_code'] = request_body['id']
     request_body['open_status'] = 'Close Out'
     del request_body['id']
+    # Cash flow generation
     transaction = dynamic_model_create(table_object=Transaction(),
                                        request_object=request_body)
+    # Closing main transaction
+    dynamic_model_update(table_object=Transaction,
+                         request_object={'id': request_body['id'],
+                                         'open_status': 'Closed'})
+
     Notifications(portfolio_code=request_body['portfolio_code'],
                   message='Close ' + instrument.name + ' @ ' + request_body['price'] + ' Broker ID ' + request_body['broker_id'],
                   sub_message='Close',
