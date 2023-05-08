@@ -5,6 +5,7 @@ from instrument.models import Instruments, Tickers
 from accounts.models import BrokerAccounts
 import json
 from app_functions.request_functions import *
+from app_functions.calculations import *
 
 
 @csrf_exempt
@@ -62,6 +63,7 @@ def create_cashflow(request):
 def create_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
         if request_body['security'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
@@ -70,19 +72,46 @@ def create_transaction(request):
             instrument = Instruments.objects.get(id=request_body['security'])
             ticker = Tickers.objects.get(inst_code=request_body['security'],
                                          source=account.broker_name)
-
-            if instrument.group == "CFD":
-                if request_body['transaction_type'] == "Purchase":
-                    request_body['transaction_type'] = "Asset In"
-                elif request_body['transaction_type'] == "Sale":
-                    request_body['transaction_type'] = "Asset Out"
-
-            request_body['open_status'] = 'Open'
             request_body['currency'] = instrument.currency
             request_body['sec_group'] = instrument.group
-            request_body['margin'] = ticker.margin  #
-            dynamic_model_create(table_object=Transaction(),
+            request_body['margin'] = ticker.margin
+            transaction = dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
+
+            if request_body['transaction_link_code'] == '':
+                link_id = transaction.id
+            else:
+                link_id = request_body['transaction_link_code']
+
+            # Cashflow transaction
+            Transaction(portfolio_code=request_body['portfolio_code'],
+                        security='Cash',
+                        sec_group='Cash',
+                        quantity=float(request_body['quantity']) * float(request_body['price']) * float(
+                            request_body['margin']),
+                        price=1,
+                        currency=request_body['currency'],
+                        transaction_type=request_body['transaction_type'] + ' Settlement',
+                        transaction_link_code=link_id,
+                        trade_date=request_body['trade_date']).save()
+
+            # Margin trade if the security is CFD
+            if instrument.group == 'CFD':
+                Transaction(portfolio_code=request_body['portfolio_code'],
+                            security='Margin',
+                            sec_group='Margin',
+                            quantity=float(request_body['quantity']) * float(request_body['price']) * (
+                                    1 - float(request_body['margin'])),
+                            price=1,
+                            currency=request_body['currency'],
+                            transaction_type=request_body['transaction_type'],
+                            transaction_link_code=link_id,
+                            trade_date=request_body['trade_date'],
+                            margin=1 - float(request_body['margin'])).save()
+
+        calculate_cash_holding(portfolio_code=request_body['portfolio_code'],
+                               start_date=request_body['trade_date'],
+                               currency=request_body['currency'])
 
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 

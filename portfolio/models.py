@@ -142,47 +142,6 @@ class Transaction(models.Model):
         self.mv = float(self.quantity) * float(self.price)
         super().save(*args, **kwargs)
 
-
-def create_transaction_related_cashflow(instance, **kwargs):
-    if (instance.transaction_type == 'Purchase' or instance.transaction_type == 'Sale' or instance.transaction_type == 'Asset In' or instance.transaction_type == 'Asset Out') and instance.open_status != 'Closed' and instance.security != 'Margin':
-        if instance.transaction_type == 'Asset In':
-            transaction_type = 'Purchase'
-        elif instance.transaction_type == 'Asset Out':
-            transaction_type = 'Sale'
-        else:
-            transaction_type = instance.transaction_type
-        if instance.margin == 0.0:
-            margin = 1
-        else:
-            margin = instance.margin
-        Transaction(portfolio_code=instance.portfolio_code,
-                    security='Cash',
-                    sec_group='Cash',
-                    quantity=float(instance.quantity) * float(instance.price) * float(margin),
-                    price=1,
-                    currency=instance.currency,
-                    transaction_type=transaction_type + ' Settlement',
-                    transaction_link_code=instance.id,
-                    trade_date=instance.trade_date).save()
-
-    if (instance.transaction_type == 'Asset In' or instance.transaction_type == 'Asset Out') and instance.open_status != 'Closed':
-        if instance.transaction_type == 'Asset In':
-            transaction_type = 'Purchase'
-        else:
-            transaction_type = 'Sale'
-        Transaction(portfolio_code=instance.portfolio_code,
-                    security='Margin',
-                    sec_group='Margin',
-                    quantity=float(instance.quantity) * float(instance.price) * (1 - float(instance.margin)),
-                    price=1,
-                    currency=instance.currency,
-                    transaction_type=transaction_type,
-                    transaction_link_code=instance.id,
-                    trade_date=instance.trade_date,
-                    margin=1-float(instance.margin)).save()
-    calculate_cash_holding(portfolio_code=instance.portfolio_code,
-                           start_date=instance.trade_date,
-                           currency=instance.currency)
     # if instance.open_status == 'Closed':
     #     calculate_transaction_pnl(transaction_id=instance.id)
 
@@ -221,5 +180,5 @@ class PortfolioHoldings(models.Model):
     weight = models.FloatField(default=0.0)
 
 
-models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
+# models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
 models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)
