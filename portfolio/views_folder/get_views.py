@@ -24,11 +24,11 @@ def get_portfolio_transactions(request):
                                                           'security', ''],
                                              table=Transaction)
         df = pd.DataFrame(transactions)
-        df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
-
-        response = []
-        for i in df.to_dict('records'):
-            print(type(i))
+        # df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
+        #
+        # response = []
+        # for i in df.to_dict('records'):
+        #     print(type(i))
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
