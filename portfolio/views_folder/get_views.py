@@ -25,9 +25,11 @@ def get_portfolio_transactions(request):
                                              table=Transaction)
         df = pd.DataFrame(transactions)
         df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
-        print(df.to_dict('records'))
-        print(type(df.to_dict('records')))
-        return JsonResponse(df.to_dict('records'), safe=False)
+
+        response = []
+        for i in df.to_dict('records'):
+            response.append(i)
+        return JsonResponse(response, safe=False)
 
 
 def get_main_portfolio_cashflows(request):
