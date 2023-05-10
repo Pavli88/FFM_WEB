@@ -28,8 +28,8 @@ def get_portfolio_transactions(request):
 
         response = []
         for i in df.to_dict('records'):
-            response.append(i)
-        return JsonResponse(response, safe=False)
+            print(type(i))
+        return JsonResponse(df.to_dict('records'), safe=False)
 
 
 def get_main_portfolio_cashflows(request):
