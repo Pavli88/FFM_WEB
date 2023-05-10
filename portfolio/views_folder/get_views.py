@@ -18,11 +18,14 @@ def get_portfolios(request):
 
 def get_portfolio_transactions(request):
     if request.method == "GET":
-        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
+        transactions = dynamic_mode_get(request_object=request.GET.items(),
                                              column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
                                                           'trade_date__gte', 'trade_date__lte', 'is_active',
                                                           'security', ''],
-                                             table=Transaction), safe=False)
+                                             table=Transaction)
+        df = pd.DataFrame(transactions)
+        df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
+        return JsonResponse(df.to_dict('records'), safe=False)
 
 
 def get_main_portfolio_cashflows(request):
