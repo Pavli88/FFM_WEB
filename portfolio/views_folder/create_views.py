@@ -78,10 +78,10 @@ def create_transaction(request):
             transaction = dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
 
-            if request_body['transaction_link_code'] == '':
-                link_id = transaction.id
-            else:
-                link_id = request_body['transaction_link_code']
+            # if request_body['transaction_link_code'] == '':
+            #     link_id = transaction.id
+            # else:
+            #     link_id = request_body['transaction_link_code']
 
             # Margin trade if the security is CFD
             if instrument.group == 'CFD':
@@ -95,7 +95,7 @@ def create_transaction(request):
                             price=1,
                             currency=request_body['currency'],
                             transaction_type=request_body['transaction_type'],
-                            transaction_link_code=link_id,
+                            transaction_link_code=transaction.id,
                             trade_date=request_body['trade_date'],
                             margin=1 - float(request_body['margin'])).save()
             else:
@@ -109,7 +109,7 @@ def create_transaction(request):
                         price=1,
                         currency=request_body['currency'],
                         transaction_type=request_body['transaction_type'] + ' Settlement',
-                        transaction_link_code=link_id,
+                        transaction_link_code=transaction.id,
                         trade_date=request_body['trade_date'],
                         margin=request_body['margin']).save()
 

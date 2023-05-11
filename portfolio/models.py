@@ -46,45 +46,6 @@ class CashHolding(models.Model):
     date = models.DateField()
 
 
-def calculate_cash_holding_after_delete(instance, **kwargs):
-    calculate_cash_holding(portfolio_code=instance.portfolio_code,
-                           currency=instance.currency,
-                           start_date=instance.trade_date)
-
-
-def calculate_cash_holding(portfolio_code, start_date, currency):
-    start_date = datetime.strptime(str(start_date), '%Y-%m-%d').date()
-    cash_transactions = pd.DataFrame(Transaction.objects.filter(trade_date__gte=start_date,
-                                                                portfolio_code=portfolio_code,
-                                                                currency=currency,
-                                                                sec_group='Cash').values())
-    try:
-        cumulative_cash_value = CashHolding.objects.filter(date__lt=start_date,
-                                                           currency=currency,
-                                                           portfolio_code=portfolio_code).order_by('date').latest('date').amount
-    except:
-        cumulative_cash_value = 0.0
-    calculation_date = start_date
-    while calculation_date <= date.today():
-        try:
-            current_cash_value = cash_transactions[cash_transactions['trade_date'] == calculation_date]['mv'].sum()
-        except:
-            current_cash_value = 0.0
-        cumulative_cash_value = current_cash_value + cumulative_cash_value
-        try:
-            existing_cash_record = CashHolding.objects.get(portfolio_code=portfolio_code,
-                                                           currency=currency,
-                                                           date=calculation_date)
-            existing_cash_record.amount = cumulative_cash_value
-            existing_cash_record.save()
-        except CashHolding.DoesNotExist:
-            CashHolding(portfolio_code=portfolio_code,
-                        currency=currency,
-                        amount=cumulative_cash_value,
-                        date=calculation_date).save()
-        calculation_date = calculation_date + timedelta(days=1)
-
-
 class Nav(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
     portfolio_code = models.CharField(max_length=30, default="")
@@ -142,9 +103,6 @@ class Transaction(models.Model):
         self.mv = float(self.quantity) * float(self.price)
         super().save(*args, **kwargs)
 
-    # if instance.open_status == 'Closed':
-    #     calculate_transaction_pnl(transaction_id=instance.id)
-
 
 class TransactionPnl(models.Model):
     transaction_id = models.IntegerField(default=0)
@@ -181,4 +139,4 @@ class PortfolioHoldings(models.Model):
 
 
 # models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
-models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)
+# models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)

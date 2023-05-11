@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from portfolio.models import Transaction
 import json
 import pandas as pd
+from app_functions.calculations import calculate_cash_holding
 
 
 @csrf_exempt
@@ -11,10 +12,12 @@ def delete_transaction(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         transactions = Transaction.objects.filter(
-            Q(id=request_data['id']) | Q(transaction_link_code__in=Transaction.objects.filter(
-                Q(id=request_data['id']) | Q(transaction_link_code=request_data['id'])).values_list('id', flat=True)))
-
-        # Update total cash values as well because these cash items had already had impact on cash calc
-        # print(pd.DataFrame(transactions.values()))
+            Q(id=request_data['id']) | Q(transaction_link_code=request_data['id']))
+        portfolio_code = transactions.values()[0]['portfolio_code']
+        trade_date = transactions.values()[0]['trade_date']
+        currency = transactions.values()[0]['currency']
         transactions.delete()
+        calculate_cash_holding(portfolio_code=portfolio_code,
+                               start_date=trade_date,
+                               currency=currency)
         return JsonResponse({'response': 'Transaction is deleted!'}, safe=False)
