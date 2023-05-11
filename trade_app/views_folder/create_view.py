@@ -68,36 +68,42 @@ class TradeExecution:
 
         self.parameters['price'] = trade["price"]
         self.parameters['broker_id'] = trade['id']
+        self.parameters['quantity'] = transaction['quantity']
         self.parameters['open_status'] = 'Close Out'
+        self.parameters['transaction_link_code'] = transaction['id']
         if transaction['transaction_type'] == 'Purchase':
             self.parameters['transaction_type'] = 'Sale'
         else:
             self.parameters['transaction_type'] = 'Purchase'
-        self.parameters['id'] = transaction['id']
+        # self.parameters['id'] = transaction['id']
         dynamic_model_update(table_object=Transaction,
-                             request_object={'id': self.parameters['id'],
+                             request_object={'id': transaction['id'],
                                              'open_status': 'Closed'})
         self.save_transaction(parameters=self.parameters, linked_transaction=True)
         calculate_cash_holding(portfolio_code=self.parameters['portfolio_code'],
                                start_date=self.parameters['trade_date'],
                                currency=self.parameters['currency'])
         Notifications(portfolio_code=self.parameters['portfolio_code'],
-                      message='Close' + self.instrument.name + ' @ ' + self.parameters['price'] + ' Broker ID ' +
+                      message='Close ' + self.instrument.name + ' @ ' + self.parameters['price'] + ' Broker ID ' +
                               str(transaction['broker_id']),
                       sub_message='Close',
                       broker_name=self.account.broker_name).save()
 
     def save_transaction(self, parameters, linked_transaction=False):
         # Main transaction
-        if linked_transaction is True:
-            transaction_id = parameters['id']
-            parameters.pop('id')
-            self.parameters['transaction_link_code'] = transaction_id
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=self.parameters)
-        else:
-            transaction_id = dynamic_model_create(table_object=Transaction(),
-                                                  request_object=self.parameters).id
+        # if linked_transaction is True:
+        #     transaction_id = parameters['id']
+        #     parameters.pop('id')
+        #     self.parameters['transaction_link_code'] = transaction_id
+        #     dynamic_model_create(table_object=Transaction(),
+        #                          request_object=self.parameters)
+        # else:
+        #     transaction_id = dynamic_model_create(table_object=Transaction(),
+        #                                           request_object=self.parameters).id
+
+        transaction_id = dynamic_model_create(table_object=Transaction(),
+                                              request_object=self.parameters).id
+
         # Cashflow transaction
         Transaction(portfolio_code=parameters['portfolio_code'],
                     security='Cash',
@@ -107,7 +113,8 @@ class TradeExecution:
                     currency=parameters['currency'],
                     transaction_type=parameters['transaction_type'] + ' Settlement',
                     transaction_link_code=transaction_id,
-                    trade_date=parameters['trade_date']).save()
+                    trade_date=parameters['trade_date'],
+                    margin=parameters['margin']).save()
 
         # Margin trade if the security is CFD
         if self.instrument.group == 'CFD':

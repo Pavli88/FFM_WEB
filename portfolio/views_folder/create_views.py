@@ -83,20 +83,10 @@ def create_transaction(request):
             else:
                 link_id = request_body['transaction_link_code']
 
-            # Cashflow transaction
-            Transaction(portfolio_code=request_body['portfolio_code'],
-                        security='Cash',
-                        sec_group='Cash',
-                        quantity=float(request_body['quantity']) * float(request_body['price']) * float(
-                            request_body['margin']),
-                        price=1,
-                        currency=request_body['currency'],
-                        transaction_type=request_body['transaction_type'] + ' Settlement',
-                        transaction_link_code=link_id,
-                        trade_date=request_body['trade_date']).save()
-
             # Margin trade if the security is CFD
             if instrument.group == 'CFD':
+                cash_quantity = float(request_body['quantity']) * float(request_body['price']) * float(
+                            request_body['margin'])
                 Transaction(portfolio_code=request_body['portfolio_code'],
                             security='Margin',
                             sec_group='Margin',
@@ -108,6 +98,20 @@ def create_transaction(request):
                             transaction_link_code=link_id,
                             trade_date=request_body['trade_date'],
                             margin=1 - float(request_body['margin'])).save()
+            else:
+                cash_quantity = float(request_body['quantity']) * float(request_body['price'])
+
+            # Cashflow transaction
+            Transaction(portfolio_code=request_body['portfolio_code'],
+                        security='Cash',
+                        sec_group='Cash',
+                        quantity=cash_quantity,
+                        price=1,
+                        currency=request_body['currency'],
+                        transaction_type=request_body['transaction_type'] + ' Settlement',
+                        transaction_link_code=link_id,
+                        trade_date=request_body['trade_date'],
+                        margin=request_body['margin']).save()
 
         calculate_cash_holding(portfolio_code=request_body['portfolio_code'],
                                start_date=request_body['trade_date'],
