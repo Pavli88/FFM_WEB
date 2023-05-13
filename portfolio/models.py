@@ -144,12 +144,7 @@ class PortGroup(models.Model):
 class Holding(models.Model):
     date = models.DateField()
     portfolio_code = models.CharField(max_length=30)
-    security = models.IntegerField(default=0)
-    beginning_mv = models.FloatField(default=0.0)
-    units = models.FloatField(default=0.0)
-    price = models.FloatField(default=0.0)
-    ending_mv = models.FloatField(default=0.0)
-    weight = models.FloatField(default=0.0)
+    data = models.JSONField(null=True)
 
 
 # models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)

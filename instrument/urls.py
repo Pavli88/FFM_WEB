@@ -11,11 +11,13 @@ create_patterns = [
 get_patterns = [
     path('instruments/get/instruments/', get_views.get_instruments),
     path('instruments/get/instrument/', get_views.get_instrument),
+    path('instruments/get/price/', get_views.get_prices),
     path('instruments/get/broker/tickers/', get_views.get_broker_tickers),
 ]
 
 delete_patterns = [
     path('instruments/delete/broker/ticker/', delete_views.delete_broker_ticker),
+    path('instruments/delete/price/', delete_views.delete_broker_ticker),
 ]
 
 other_patterns = [

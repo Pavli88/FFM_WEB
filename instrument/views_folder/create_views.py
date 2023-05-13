@@ -1,5 +1,6 @@
 import json
-
+from instrument.models import Prices
+from app_functions.request_functions import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -43,3 +44,12 @@ def new_broker_ticker(request):
             response = 'Broker ticker already exists!'
 
         return JsonResponse(response, safe=False)
+
+
+@csrf_exempt
+def new_price(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        dynamic_model_create(table_object=Prices(),
+                             request_object=request_body)
+        return JsonResponse({'response': 'Price inserted to db'}, safe=False)

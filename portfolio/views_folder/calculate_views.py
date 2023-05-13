@@ -9,8 +9,6 @@ from app_functions.calculations import *
 def portfolio_holding(request):
     if request.method == "POST":
         print('Portfolio Holding Calc')
-        calculate_holdings(portfolio_code='TST', calc_date='2023-05-01')
-
-        # Query latest holdings data
+        calculate_holdings(portfolio_code='TST', calc_date='2023-05-02')
 
         return JsonResponse({'response': 'Portfolio Holding'}, safe=False)
