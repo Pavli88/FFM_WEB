@@ -65,7 +65,7 @@ def create_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
-        if request_body['security'] == 'Cash':
+        if request_body['sec_group'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
             return JsonResponse({"response": "Cash transaction is created!"}, safe=False)

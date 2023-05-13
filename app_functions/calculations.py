@@ -129,3 +129,7 @@ where transaction_link_code in (select id
 
 def calculate_nav(portfolio_code, calc_date):
     print(portfolio_code, calc_date)
+
+
+def calculate_holdings(portfolio_code, calc_date):
+    print(portfolio_code, calc_date)

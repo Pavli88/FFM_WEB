@@ -11,11 +11,8 @@ from instrument.models import *
 def new_instrument(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        column_names = [field.name for field in Instruments._meta.fields]
         try:
             Instruments(name=request_data['name'],
-                        code=request_data['code'],
-                        ticker=request_data['ticker'],
                         country=request_data['country'],
                         group=request_data['group'],
                         type=request_data['type'],
@@ -23,10 +20,7 @@ def new_instrument(request):
                         ).save()
             response = 'Instrument is Saved!'
         except:
-            response = 'Instrument code already exists!'
-
-        # except:
-        #     response = 'Instrument Internal Code Exists in Database!'
+            response = 'Error occured during saving the instrument!'
         return JsonResponse(response, safe=False)
 
 

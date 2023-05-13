@@ -75,7 +75,7 @@ class Trade(models.Model):
 
 class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
-    security = models.CharField(max_length=30, default="")
+    security = models.IntegerField(default=0)
     sec_group = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
@@ -118,6 +118,7 @@ class Transaction(models.Model):
             self.net_cashflow = self.mv
         super().save(*args, **kwargs)
 
+
 class TransactionPnl(models.Model):
     transaction_id = models.IntegerField(default=0)
     portfolio_code = models.CharField(max_length=30, default="")
@@ -140,15 +141,14 @@ class PortGroup(models.Model):
     type = models.CharField(max_length=30, default="")
 
 
-class PortfolioHoldings(models.Model):
-    portfolio_code = models.CharField(max_length=30, unique=True)
-    portfolio_name = models.CharField(max_length=30, default="")
+class Holding(models.Model):
     date = models.DateField()
+    portfolio_code = models.CharField(max_length=30)
     security = models.IntegerField(default=0)
-    quantity = models.FloatField(default=0.0)
+    beginning_mv = models.FloatField(default=0.0)
+    units = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
-    opening_mv = models.FloatField(default=0.0)
-    closing_mv = models.FloatField(default=0.0)
+    ending_mv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
 
 
