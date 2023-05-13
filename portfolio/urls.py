@@ -9,6 +9,8 @@ create_views = [
     path('portfolios/new/portfolio/', create_views.create_portfolio),
     path('portfolios/new/cashflow/', create_views.create_cashflow),
     path('portfolios/new/transaction/', create_views.create_transaction),
+    path('portfolios/calculate/cash_holding/', create_views.cash_holding_calculation),
+    path('portfolios/calculate/nav/', create_views.cash_holding_calculation),
 ]
 
 get_views = [

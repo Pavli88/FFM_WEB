@@ -90,6 +90,9 @@ class Transaction(models.Model):
     open_status = models.CharField(max_length=50, default="")
     account_id = models.IntegerField(null=True)
     broker_id = models.IntegerField(null=True)
+    net_cashflow = models.FloatField(default=0.0)
+    margin_balance = models.FloatField(default=0.0)
+    realized_pnl = models.FloatField(default=0.0)
     margin = models.FloatField(default=0.0)
 
     def save(self, *args, **kwargs):
@@ -101,8 +104,19 @@ class Transaction(models.Model):
         else:
             self.quantity = abs(float(self.quantity))
         self.mv = float(self.quantity) * float(self.price)
-        super().save(*args, **kwargs)
 
+        if self.sec_group == 'CFD':
+            if self.transaction_type == 'Purchase':
+                self.net_cashflow = self.mv * self.margin * -1
+                self.margin_balance = self.mv * (1 - float(self.margin))
+            else:
+                self.net_cashflow = self.mv * self.margin * -1
+                self.margin_balance = self.mv * (1 - float(self.margin))
+        elif self.transaction_type == 'Purchase':
+            self.net_cashflow = self.mv * -1
+        else:
+            self.net_cashflow = self.mv
+        super().save(*args, **kwargs)
 
 class TransactionPnl(models.Model):
     transaction_id = models.IntegerField(default=0)

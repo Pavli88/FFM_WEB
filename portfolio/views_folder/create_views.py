@@ -1,3 +1,4 @@
+import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from portfolio.models import Robots, Portfolio, CashFlow, Transaction
@@ -67,56 +68,50 @@ def create_transaction(request):
         if request_body['security'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
-        else:
-            account = BrokerAccounts.objects.get(id=6)
-            instrument = Instruments.objects.get(id=request_body['security'])
-            ticker = Tickers.objects.get(inst_code=request_body['security'],
-                                         source=account.broker_name)
-            request_body['currency'] = instrument.currency
-            request_body['sec_group'] = instrument.group
-            request_body['margin'] = ticker.margin
-            transaction = dynamic_model_create(table_object=Transaction(),
+            return JsonResponse({"response": "Cash transaction is created!"}, safe=False)
+        account = BrokerAccounts.objects.get(id=6)
+        ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                     source=account.broker_name)
+        request_body['margin'] = ticker.margin
+        if request_body['transaction_link_code'] == '':
+            dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
+        else:
+            main_transaction = Transaction.objects.get(id=request_body['transaction_link_code'])
+            linked_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=request_body['transaction_link_code']).values())
+            request_body['realized_pnl'] = float(request_body['quantity']) * (
+                    float(request_body['price']) - float(main_transaction.price))
+            print(main_transaction.quantity)
+            print(linked_transactions['quantity'].sum())
+            print(linked_transactions['quantity'].sum())
 
-            # if request_body['transaction_link_code'] == '':
-            #     link_id = transaction.id
-            # else:
-            #     link_id = request_body['transaction_link_code']
+            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) == 0.0:
+                return JsonResponse({"response": "Transactions are offsetted. New linked transaction can not be added."}, safe=False)
 
-            # Margin trade if the security is CFD
-            if instrument.group == 'CFD':
-                cash_quantity = float(request_body['quantity']) * float(request_body['price']) * float(
-                            request_body['margin'])
-                Transaction(portfolio_code=request_body['portfolio_code'],
-                            security='Margin',
-                            sec_group='Margin',
-                            quantity=float(request_body['quantity']) * float(request_body['price']) * (
-                                    1 - float(request_body['margin'])),
-                            price=1,
-                            currency=request_body['currency'],
-                            transaction_type=request_body['transaction_type'],
-                            transaction_link_code=transaction.id,
-                            trade_date=request_body['trade_date'],
-                            margin=1 - float(request_body['margin'])).save()
+            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
+                    float(request_body['quantity'])) < 0.0:
+                return JsonResponse({"response": "Total offsetting ammount is greater than original trade quantity. New linked transaction can not be added."},
+                                    safe=False)
+
+            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
+                    float(request_body['quantity'])) == 0.0:
+                print('Last TRANSACTION')
+                dynamic_model_create(table_object=Transaction(),
+                                     request_object=request_body)
             else:
-                cash_quantity = float(request_body['quantity']) * float(request_body['price'])
+                dynamic_model_create(table_object=Transaction(),
+                                     request_object=request_body)
+        return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
-            # Cashflow transaction
-            Transaction(portfolio_code=request_body['portfolio_code'],
-                        security='Cash',
-                        sec_group='Cash',
-                        quantity=cash_quantity,
-                        price=1,
-                        currency=request_body['currency'],
-                        transaction_type=request_body['transaction_type'] + ' Settlement',
-                        transaction_link_code=transaction.id,
-                        trade_date=request_body['trade_date'],
-                        margin=request_body['margin']).save()
 
+@csrf_exempt
+def cash_holding_calculation(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
         calculate_cash_holding(portfolio_code=request_body['portfolio_code'],
                                start_date=request_body['trade_date'],
                                currency=request_body['currency'])
-
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
 

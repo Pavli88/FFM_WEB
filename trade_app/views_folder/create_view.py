@@ -121,9 +121,9 @@ class TradeExecution:
             Transaction(portfolio_code=parameters['portfolio_code'],
                         security='Margin',
                         sec_group='Margin',
-                        quantity=float(parameters['quantity']) * float(parameters['price']) * (
+                        quantity=float(parameters['quantity']) * (
                                     1 - float(parameters['margin'])),
-                        price=1,
+                        price=float(parameters['price']),
                         currency=parameters['currency'],
                         transaction_type=parameters['transaction_type'],
                         transaction_link_code=transaction_id,
