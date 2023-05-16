@@ -1,7 +1,7 @@
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding
+from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding, Holding
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl
 
@@ -132,3 +132,10 @@ where tp.transaction_id=pt.id and inst.id = tp.security and pt.portfolio_code='{
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
         return JsonResponse(df.to_dict('records'), safe=False)
+
+
+def get_holding(request):
+    if request.method == "GET":
+        holding_df = pd.read_json(Holding.objects.get(date='2023-05-02', portfolio_code='TST').data)
+        print(holding_df)
+        return JsonResponse(holding_df.to_dict('records'), safe=False)

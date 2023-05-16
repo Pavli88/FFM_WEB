@@ -65,6 +65,8 @@ def create_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
+
+        # Cash Transaction
         if request_body['sec_group'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
@@ -73,36 +75,82 @@ def create_transaction(request):
         ticker = Tickers.objects.get(inst_code=request_body['security'],
                                      source=account.broker_name)
         request_body['margin'] = ticker.margin
+
+        # New transaction
         if request_body['transaction_link_code'] == '':
-            # New transaction
+            # With margin
+            if request_body['sec_group'] == 'CFD':
+                if request_body['transaction_type'] == 'Purchase':
+                    request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1
+                    request_body['margin_balance'] = float(request_body['quantity']) * float(
+                        request_body['price']) * (1 - ticker.margin)
+            # Without margin
+            else:
+                if request_body['transaction_type'] == 'Purchase':
+                    request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price']) * -1
+                else:
+                    request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price'])
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
         else:
             # Linked transaction
             main_transaction = Transaction.objects.get(id=request_body['transaction_link_code'])
             linked_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=request_body['transaction_link_code']).values())
-            request_body['realized_pnl'] = float(request_body['quantity']) * (
-                    float(request_body['price']) - float(main_transaction.price))
-            print(main_transaction.quantity)
-            print(linked_transactions['quantity'].sum())
-            print(linked_transactions['quantity'].sum())
+            transaction_weight = abs(float(request_body['quantity']) / float(main_transaction.quantity))
 
-            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) == 0.0:
-                return JsonResponse({"response": "Transactions are offsetted. New linked transaction can not be added."}, safe=False)
-
-            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
-                    float(request_body['quantity'])) < 0.0:
-                return JsonResponse({"response": "Total offsetting ammount is greater than original trade quantity. New linked transaction can not be added."},
-                                    safe=False)
-
-            if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
-                    float(request_body['quantity'])) == 0.0:
-                print('Last TRANSACTION')
-                dynamic_model_create(table_object=Transaction(),
-                                     request_object=request_body)
+            if main_transaction.transaction_type == 'Purchase':
+                pnl = float(request_body['quantity']) * (
+                        float(request_body['price']) - float(main_transaction.price))
+                net_cf = (transaction_weight * main_transaction.net_cashflow * -1) + pnl
+                margin_balance = transaction_weight * main_transaction.margin_balance * -1
             else:
-                dynamic_model_create(table_object=Transaction(),
-                                     request_object=request_body)
+                pnl = float(request_body['quantity']) * (float(main_transaction.price) - float(request_body['price']))
+                net_cf = (transaction_weight * main_transaction.net_cashflow * -1) + pnl
+                margin_balance = transaction_weight * main_transaction.margin_balance
+
+            print('WEIGHT', transaction_weight)
+            print('PNL', pnl)
+            print('NET CF', (transaction_weight * main_transaction.net_cashflow) + pnl)
+
+            request_body['realized_pnl'] = pnl
+            request_body['net_cashflow'] = net_cf
+            request_body['margin_balance'] = margin_balance
+
+            dynamic_model_create(table_object=Transaction(),
+                                 request_object=request_body)
+
+            # if main_transaction.sec_group == 'CFD':
+            #     if main_transaction.transaction_type == 'Purchase':
+
+            #         # self.margin_balance = self.mv * (1 - float(self.margin))
+            #     else:
+            #         self.net_cashflow = self.mv * self.margin * -1
+            #         self.margin_balance = self.mv * (1 - float(self.margin))
+            # elif self.transaction_type == 'Purchase':
+            #     self.net_cashflow = self.mv * -1
+            # else:
+            #     self.net_cashflow = self.mv
+
+            # print(main_transaction.quantity)
+            # print(linked_transactions['quantity'].sum())
+            #
+            #
+            # if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) == 0.0:
+            #     return JsonResponse({"response": "Transactions are offsetted. New linked transaction can not be added."}, safe=False)
+            #
+            # if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
+            #         float(request_body['quantity'])) < 0.0:
+            #     return JsonResponse({"response": "Total offsetting ammount is greater than original trade quantity. New linked transaction can not be added."},
+            #                         safe=False)
+            #
+            # if abs(float(main_transaction.quantity)) - abs(float(linked_transactions['quantity'].sum())) - abs(
+            #         float(request_body['quantity'])) == 0.0:
+            #     print('Last TRANSACTION')
+            #     dynamic_model_create(table_object=Transaction(),
+            #                          request_object=request_body)
+            # else:
+            #     dynamic_model_create(table_object=Transaction(),
+            #                          request_object=request_body)
 
         try:
             price = Prices.objects.get(date=request_body['trade_date'], inst_code=request_body['security'])

@@ -105,16 +105,7 @@ class Transaction(models.Model):
             self.quantity = abs(float(self.quantity))
         self.mv = float(self.quantity) * float(self.price)
 
-        if self.sec_group == 'CFD':
-            if self.transaction_type == 'Purchase':
-                self.net_cashflow = self.mv * self.margin * -1
-                self.margin_balance = self.mv * (1 - float(self.margin))
-            else:
-                self.net_cashflow = self.mv * self.margin * -1
-                self.margin_balance = self.mv * (1 - float(self.margin))
-        elif self.transaction_type == 'Purchase':
-            self.net_cashflow = self.mv * -1
-        else:
+        if self.sec_group == 'Cash':
             self.net_cashflow = self.mv
         super().save(*args, **kwargs)
 
