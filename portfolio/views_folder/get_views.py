@@ -136,6 +136,8 @@ where tp.transaction_id=pt.id and inst.id = tp.security and pt.portfolio_code='{
 
 def get_holding(request):
     if request.method == "GET":
-        holding_df = pd.read_json(Holding.objects.get(date='2023-05-02', portfolio_code='TST').data)
-        print(holding_df)
-        return JsonResponse(holding_df.to_dict('records'), safe=False)
+        try:
+            holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
+            return JsonResponse(holding_df.to_dict('records'), safe=False)
+        except Holding.DoesNotExist:
+            return JsonResponse([{}], safe=False)

@@ -1,4 +1,4 @@
-from portfolio.models import Transaction, TransactionPnl, CashHolding, Holding
+from portfolio.models import Transaction, TransactionPnl, CashHolding, Holding, Nav
 from instrument.models import Instruments, Prices
 import pandas as pd
 from datetime import datetime
@@ -133,27 +133,16 @@ def calculate_nav(portfolio_code, calc_date):
     print(portfolio_code, calc_date)
 
 
+def date_wrapper():
+    while calculation_date <= date.today():
+        calculation_date = calculation_date + timedelta(days=1)
+
+
 def calculate_holdings(portfolio_code, calc_date):
-    portfolio_code = 'TST'
-    calc_date = '2023-05-05'
     calc_date = datetime.strptime(str(calc_date), '%Y-%m-%d').date()
     previous_date = calc_date - timedelta(days=1)
 
     print(portfolio_code, calc_date, previous_date)
-
-    t_dict = {
-        'date': [],
-        'portfolio_code': [],
-        'security': [],
-        'beginning_pos': [],
-        'ending_pos': [],
-        'pos_movement': [],
-        'price': [],
-        'beginning_mv': [],
-        'ending_mv': [],
-    }
-
-    holding_df = pd.DataFrame({})
 
     # Previous holding data
     try:
@@ -161,7 +150,7 @@ def calculate_holdings(portfolio_code, calc_date):
         previous_assets_list = previous_holding[previous_holding['ending_pos'] != 0.0]['id'].tolist()
     except Holding.DoesNotExist:
         print("Previous holding does not exists")
-        previous_holding = holding_df
+        previous_holding = pd.DataFrame({})
         previous_assets_list = []
     print('PREVIOUS HOLDING')
     print(previous_holding)
@@ -178,10 +167,24 @@ def calculate_holdings(portfolio_code, calc_date):
     print('Previous Assets List', previous_assets_list)
     if len(current_transactions) == 0:
         current_assets_list = []
+        leverages = []
     else:
         current_assets_list = current_transactions['security'].tolist()
+        leverages = current_transactions[current_transactions['sec_group'] == 'CFD'].groupby('currency')['margin_balance'].sum().reset_index()
+
+    if len(leverages) > 0:
+        leverage_assets_list = list(Instruments.objects.filter(type='Leverage', currency__in=list(leverages['currency'])).values_list('id', flat=True))
+    else:
+        leverage_assets_list = []
+
+    print('')
+    print('LEVERAGES')
+    print(leverages)
+    print(leverage_assets_list)
+    print('')
+
     print('Current Assets', current_assets_list)
-    all_assests_list = list(dict.fromkeys(previous_assets_list + current_assets_list))
+    all_assests_list = list(dict.fromkeys(previous_assets_list + current_assets_list + leverage_assets_list))
     print('ALL ASSETS LIST', all_assests_list)
 
     # Fetching prices
@@ -233,6 +236,9 @@ def calculate_holdings(portfolio_code, calc_date):
                     print('TRADE CF')
                     print(trade_cf)
                     print('')
+                elif row['type'] == 'Leverage':
+                    leverage = list(leverages[leverages['currency'] == row['currency']]['margin_balance'])[0]
+                    ending_position = ending_position + leverage
 
             print('CURRENT POS')
             print(ending_position)
@@ -241,7 +247,7 @@ def calculate_holdings(portfolio_code, calc_date):
             ending_position = 0.0
 
         try:
-            if row['type'] == 'Cash':
+            if row['type'] == 'Cash' or row['type'] == 'Leverage':
                 price = 1
             else:
                 price = float(list(prices_df[prices_df['inst_code'] == str(row['id'])]['price'])[0])
@@ -260,65 +266,7 @@ def calculate_holdings(portfolio_code, calc_date):
     all_assets_df['beginning_mv'] = beginning_mvs
     all_assets_df['ending_mv'] = ending_mvs
     print(all_assets_df)
-    # # Leverage valuations
-    # current_leverages = current_transactions.groupby('currency')['margin_balance'].sum().reset_index()
-    # print('LEVERAGES')
-    # print(current_leverages)
-    # print('')
-    # for index, row in current_leverages.iterrows():
-    #     leverage_id = list(currencies_and_leverages[(currencies_and_leverages['currency'] == row['currency']) & (currencies_and_leverages['type'] == 'Leverage')]['id'])[0]
-    #     try:
-    #         previous_cash_balance = list(previous_holding[previous_holding['security'] == leverage_id]['ending_mv'])[0]
-    #     except:
-    #         previous_cash_balance = 0.0
-    #
-    #     print(row['currency'], 'Currency ID', leverage_id, 'PCB', previous_cash_balance, 'CCB', row['margin_balance'], 'TOTAL', row['margin_balance'] + previous_cash_balance)
-    #     holding_df.loc[len(holding_df.index)] = [calc_date,
-    #                                              portfolio_code,
-    #                                              leverage_id,
-    #                                              previous_cash_balance,
-    #                                              row['margin_balance'],
-    #                                              1,
-    #                                              row['margin_balance'] + previous_cash_balance,
-    #                                              row['margin_balance'] + previous_cash_balance,
-    #                                              row['margin_balance'] + previous_cash_balance
-    #                                              ]
-    #
-    # # CASH FLOW CALCULATIONS
-    # current_cashflow = current_transactions.groupby('currency')['net_cashflow'].sum().reset_index()
-    # print('CASHFLOW')
-    # print(current_cashflow)
-    # print('')
-    #
-    # for index, row in current_cashflow.iterrows():
-    #     currency_id = list(currencies_and_leverages[(currencies_and_leverages['currency'] == row['currency']) & (currencies_and_leverages['type'] == 'Cash')]['id'])[0]
-    #     try:
-    #         previous_cash_balance = list(previous_holding[previous_holding['security'] == currency_id]['ending_mv'])[0]
-    #     except:
-    #         previous_cash_balance = 0.0
-    #     print(row['currency'], 'Currency ID', currency_id, 'PCB', previous_cash_balance, 'CCB', row['net_cashflow'], 'TOTAL', row['net_cashflow'] + previous_cash_balance)
-    #     holding_df.loc[len(holding_df.index)] = [calc_date,
-    #                                              portfolio_code,
-    #                                              currency_id,
-    #                                              previous_cash_balance,
-    #                                              row['net_cashflow'],
-    #                                              1,
-    #                                              row['net_cashflow'] + previous_cash_balance,
-    #                                              row['net_cashflow'] + previous_cash_balance,
-    #                                              row['net_cashflow'] + previous_cash_balance
-    #                                              ]
-    #
-    # # Asset Valuations
-    # previous_assets_list = previous_holding['security'].to_list
-    # print('Previous Assets List',previous_assets_list)
-    # current_assets_list = current_transactions['security'].to_list
-    # print('Current Assets', current_assets_list)
-    #
-    # print('')
-    # print('FINAL HOLDING')
-    # print(holding_df)
-    # print('')
-    #
+
     try:
         holding = Holding.objects.get(date=calc_date, portfolio_code=portfolio_code)
         holding.data = all_assets_df.to_json()
@@ -329,3 +277,23 @@ def calculate_holdings(portfolio_code, calc_date):
         Holding(date=calc_date,
                 portfolio_code=portfolio_code,
                 data=all_assets_df.to_json()).save()
+
+
+    asset_val = all_assets_df[(all_assets_df['type'] != 'Cash') & (all_assets_df['type'] != 'Leverage')]['ending_mv'].sum()
+    total_cash = all_assets_df[all_assets_df['type'] == 'Cash']['ending_mv'].sum()
+    short_liab = all_assets_df[all_assets_df['type'] == 'Leverage']['ending_mv'].sum()
+    total = asset_val + total_cash - short_liab
+    try:
+        nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
+        nav.cash_val = total_cash
+        nav.pos_val = asset_val
+        nav.short_liab = short_liab
+        nav.total = total
+        nav.save()
+    except:
+        Nav(date=calc_date,
+            portfolio_code=portfolio_code,
+            pos_val=asset_val,
+            cash_val=total_cash,
+            short_liab=short_liab,
+            total=total).save()
