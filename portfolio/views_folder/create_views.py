@@ -70,6 +70,7 @@ def create_transaction(request):
         if request_body['sec_group'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
+            calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
             return JsonResponse({"response": "Cash transaction is created!"}, safe=False)
         account = BrokerAccounts.objects.get(id=6)
         ticker = Tickers.objects.get(inst_code=request_body['security'],
