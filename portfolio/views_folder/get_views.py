@@ -1,7 +1,7 @@
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding, Holding
+from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding, Holding, Nav
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl
 
@@ -115,6 +115,13 @@ def available_cash(request):
                         'amount': 0.0,
                         'date': ''}
         return JsonResponse(response, safe=False)
+
+
+def get_nav(request):
+    navs = dynamic_mode_get(request_object=request.GET.items(),
+                            column_list=['date', 'date__gte', 'portfolio_code'],
+                            table=Nav)
+    return JsonResponse(navs, safe=False)
 
 
 def transactions_pnls(request):

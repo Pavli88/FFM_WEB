@@ -19,6 +19,7 @@ create_views = [
 ]
 
 get_views = [
+    path('portfolios/get/nav/', get_views.get_nav),
     path('portfolios/get/portfolios/', get_views.get_portfolios),
     path('portfolios/get/holding/', get_views.get_holding),
     path('portfolios/get/transactions/pnl/', get_views.transactions_pnls),
