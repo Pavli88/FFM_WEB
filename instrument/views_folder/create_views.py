@@ -50,6 +50,12 @@ def new_broker_ticker(request):
 def new_price(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        dynamic_model_create(table_object=Prices(),
-                             request_object=request_body)
+        try:
+            price = Prices.objects.get(date=request_body['date'], inst_code=request_body['inst_code'])
+            price.price = request_body['price']
+            price.save()
+        except:
+            Prices(date=request_body['date'],
+                   inst_code=request_body['inst_code'],
+                   price=request_body['price']).save()
         return JsonResponse({'response': 'Price inserted to db'}, safe=False)

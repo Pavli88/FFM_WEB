@@ -6,6 +6,7 @@ from .views_folder import get_views, create_views, delete_views
 create_patterns = [
     path('instruments/new/', create_views.new_instrument),
     path('instruments/new/ticker/', create_views.new_broker_ticker),
+    path('instruments/new/price/', create_views.new_price),
 ]
 
 get_patterns = [
@@ -17,7 +18,7 @@ get_patterns = [
 
 delete_patterns = [
     path('instruments/delete/broker/ticker/', delete_views.delete_broker_ticker),
-    path('instruments/delete/price/', delete_views.delete_broker_ticker),
+    path('instruments/delete/price/', delete_views.delete_price),
 ]
 
 other_patterns = [
