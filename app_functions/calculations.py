@@ -265,6 +265,9 @@ def calculate_holdings(portfolio_code, calc_date):
     all_assets_df['price'] = prices
     all_assets_df['beginning_mv'] = beginning_mvs
     all_assets_df['ending_mv'] = ending_mvs
+    total_mv = all_assets_df['ending_mv'].sum()
+    all_assets_df['weights'] = all_assets_df['ending_mv'] / total_mv
+    print(total_mv)
     print(all_assets_df)
 
     try:

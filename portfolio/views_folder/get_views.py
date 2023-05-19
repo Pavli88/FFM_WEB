@@ -118,10 +118,11 @@ def available_cash(request):
 
 
 def get_nav(request):
-    navs = dynamic_mode_get(request_object=request.GET.items(),
-                            column_list=['date', 'date__gte', 'portfolio_code'],
-                            table=Nav)
-    return JsonResponse(navs, safe=False)
+    if request.method == "GET":
+        navs = dynamic_mode_get(request_object=request.GET.items(),
+                                column_list=['date', 'date__gte', 'portfolio_code'],
+                                table=Nav)
+        return JsonResponse(pd.DataFrame(navs).sort_values(by=['date']).to_dict('records'), safe=False)
 
 
 def transactions_pnls(request):
