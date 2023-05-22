@@ -14,156 +14,172 @@ from app_functions.calculations import calculate_holdings
 
 
 class TradeExecution:
-    def __init__(self, parameters):
-        self.parameters = parameters
-        self.account = BrokerAccounts.objects.get(id=parameters['account_id'])
-        self.instrument = Instruments.objects.get(id=parameters['security'])
-        self.ticker = Tickers.objects.get(inst_code=parameters['security'],
-                                          source=self.account.broker_name)
-        self.parameters['currency'] = self.instrument.currency
-        self.parameters['sec_group'] = self.instrument.group
-        self.parameters['trade_date'] = date.today()
-        if self.ticker.margin == 0.0:
-            self.parameters['margin'] = 1
-        else:
-            self.parameters['margin'] = self.ticker.margin
+    def __init__(self, portfolio_code, account_id, security, trade_date):
+        self.portfolio = Portfolio.objects.get(portfolio_code=portfolio_code)
+        self.account = BrokerAccounts.objects.get(id=account_id)
+        self.security = Instruments.objects.get(id=security)
+        self.trade_date = trade_date
+
         self.broker_connection = OandaV20(access_token=self.account.access_token,
                                           account_id=self.account.account_number,
                                           environment=self.account.env)
 
-    def new_trade_execution_at_broker(self):
-        if self.parameters['transaction_type'] == "Purchase":
+    def new_trade(self, transaction_type, quantity):
+        ticker = Tickers.objects.get(inst_code=self.security.id,
+                                     source=self.account.broker_name)
+        if ticker.margin == 0.0:
+            margin = 1
+        else:
+            margin = ticker.margin
+
+        if transaction_type == "Purchase":
             multiplier = 1
         else:
             multiplier = -1
-        # Trade execution at broker
-        trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
-                                                           quantity=float(self.parameters['quantity']) * multiplier)
+
+        # # Trade execution at broker
+        trade = self.broker_connection.submit_market_order(security=ticker.source_ticker,
+                                                           quantity=float(quantity * multiplier))
         if trade['status'] == 'rejected':
-            Notifications(portfolio_code=self.parameters['portfolio_code'],
-                          message=self.parameters['transaction_type'] + ' ' + self.instrument.name + ' ' + self.parameters[
-                              'quantity'],
+            Notifications(portfolio_code=self.portfolio.portfolio_code,
+                          message=transaction_type + ' ' + self.security.name + ' ' + quantity,
                           sub_message='Rejected - ' + trade['response']['reason'],
                           broker_name=self.account.broker_name).save()
             return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
 
-        self.parameters['price'] = trade['response']["price"]
-        self.parameters['broker_id'] = trade['response']['id']
-        self.parameters['transaction_link_code'] = ''
-        self.save_transaction(request_body=self.parameters)
+        trade_price = trade['response']["price"]
 
-        Notifications(portfolio_code=self.parameters['portfolio_code'],
-                      message=self.parameters['transaction_type'] + ' ' + self.instrument.name + ' ' + self.parameters[
-                          'quantity'] + ' @ ' + self.parameters['price'],
+        if self.security.group == 'CFD':
+            if transaction_type == 'Purchase':
+                net_cash_flow = float(quantity) * float(
+                    trade_price) * margin * -1
+                margin_balance = float(quantity) * float(
+                    trade_price) * (1 - margin)
+        # Without margin
+        else:
+            if transaction_type == 'Purchase':
+                net_cash_flow = float(quantity) * float(trade_price) * -1
+            else:
+                net_cash_flow = float(quantity) * float(trade_price)
+            margin_balance = 0.0
+
+        Transaction(
+            portfolio_code=self.portfolio.portfolio_code,
+            quantity=quantity,
+            price=trade_price,
+            currency=self.security.currency,
+            transaction_type=transaction_type,
+            trade_date=self.trade_date,
+            security=self.security.id,
+            sec_group=self.security.group,
+            broker_id=trade['response']['id'],
+            account_id=self.account.id,
+            margin=margin,
+            margin_balance=margin_balance,
+            net_cashflow=net_cash_flow,
+        ).save()
+
+        Notifications(portfolio_code=self.portfolio.portfolio_code,
+                      message=transaction_type + ' ' + self.security.name + ' ' + quantity + ' @ ' + trade_price,
                       sub_message='Executed',
                       broker_name=self.account.broker_name).save()
+        self.save_price(trade_price=trade_price)
 
-    def close(self, transaction):
+    def close(self, transaction, quantity):
+        print(transaction)
         broker_connection = OandaV20(access_token=self.account.access_token,
                                      account_id=self.account.account_number,
                                      environment=self.account.env)
         trade = broker_connection.close_trade(trd_id=transaction['broker_id'])
-        self.parameters['price'] = trade["price"]
-        self.parameters['broker_id'] = trade['id']
-        self.parameters['quantity'] = transaction['quantity']
-        self.parameters['transaction_link_code'] = transaction['id']
-        if transaction['transaction_type'] == 'Purchase':
-            self.parameters['transaction_type'] = 'Sale'
-        else:
-            self.parameters['transaction_type'] = 'Purchase'
+
+        # Main transaction update
         dynamic_model_update(table_object=Transaction,
                              request_object={'id': transaction['id'],
                                              'is_active': 0})
-        self.parameters['is_active'] = 0
-        self.save_transaction(request_body=self.parameters)
 
-        Notifications(portfolio_code=self.parameters['portfolio_code'],
-                      message='Close ' + self.instrument.name + ' @ ' + self.parameters['price'] + ' Broker ID ' +
-                              str(transaction['broker_id']),
+        # Linked transaction creation
+        trade_price = trade["price"]
+        broker_id = trade['id']
+        transaction_weight = abs(float(quantity) / float(transaction['quantity']))
+        if transaction['transaction_type'] == 'Purchase':
+            pnl = float(quantity) * (
+                    float(trade_price) - float(transaction['price']))
+            net_cash_flow = (transaction_weight * float(transaction['net_cashflow']) * -1) + pnl
+            margin_balance = transaction_weight * transaction['margin_balance'] * -1
+            transaction_type = 'Sale'
+        else:
+            pnl = float(quantity) * (float(transaction['price']) - float(trade_price))
+            net_cash_flow = (transaction_weight * transaction['net_cashflow'] * -1) + pnl
+            margin_balance = transaction_weight * transaction['margin_balance']
+            transaction_type = 'Purchase'
+        Transaction(
+            portfolio_code=self.portfolio.portfolio_code,
+            quantity=quantity,
+            price=trade_price,
+            currency=self.security.currency,
+            transaction_type=transaction_type,
+            trade_date=self.trade_date,
+            security=self.security.id,
+            sec_group=self.security.group,
+            broker_id=broker_id,
+            account_id=self.account.id,
+            is_active=0,
+            realized_pnl=pnl,
+            margin_balance=margin_balance,
+            net_cashflow=net_cash_flow,
+            transaction_link_code=transaction['id']
+        ).save()
+
+        Notifications(portfolio_code=self.portfolio.portfolio_code,
+                      message='Close ' + self.security.name + ' @ ' + trade_price + ' Broker ID ' +
+                              str(broker_id),
                       sub_message='Close',
                       broker_name=self.account.broker_name).save()
 
-    def save_transaction(self, request_body):
-        # New transaction
-        if request_body['transaction_link_code'] == '':
-            # With margin
-            if request_body['sec_group'] == 'CFD':
-                if request_body['transaction_type'] == 'Purchase':
-                    request_body['net_cashflow'] = float(request_body['quantity']) * float(
-                        request_body['price']) * request_body['margin'] * -1
-                    request_body['margin_balance'] = float(request_body['quantity']) * float(
-                        request_body['price']) * (1 - request_body['margin'])
-            # Without margin
-            else:
-                if request_body['transaction_type'] == 'Purchase':
-                    request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price']) * -1
-                else:
-                    request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price'])
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=request_body)
-        else:
-            # Linked transaction
-            main_transaction = Transaction.objects.get(id=request_body['transaction_link_code'])
-            transaction_weight = abs(float(request_body['quantity']) / float(main_transaction.quantity))
+        self.save_price(trade_price=trade_price)
 
-            if main_transaction.transaction_type == 'Purchase':
-                pnl = float(request_body['quantity']) * (
-                        float(request_body['price']) - float(main_transaction.price))
-                net_cf = (transaction_weight * main_transaction.net_cashflow * -1) + pnl
-                margin_balance = transaction_weight * main_transaction.margin_balance * -1
-            else:
-                pnl = float(request_body['quantity']) * (float(main_transaction.price) - float(request_body['price']))
-                net_cf = (transaction_weight * main_transaction.net_cashflow * -1) + pnl
-                margin_balance = transaction_weight * main_transaction.margin_balance
-
-            print('WEIGHT', transaction_weight)
-            print('PNL', pnl)
-            print('NET CF', (transaction_weight * main_transaction.net_cashflow) + pnl)
-            request_body['realized_pnl'] = pnl
-            request_body['net_cashflow'] = net_cf
-            request_body['margin_balance'] = margin_balance
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=request_body)
-
+    def save_price(self, trade_price):
         try:
-            price = Prices.objects.get(date=request_body['trade_date'], inst_code=request_body['security'])
-            price.price = request_body['price']
+            price = Prices.objects.get(date=self.trade_date, inst_code=self.security.id)
+            price.price = trade_price
             price.save()
         except Prices.DoesNotExist:
-            Prices(inst_code=request_body['security'],
-                   date=request_body['trade_date'],
-                   price=request_body['price']).save()
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+            Prices(inst_code=self.security.id,
+                   date=self.trade_date,
+                   price=trade_price).save()
 
 
 @csrf_exempt
 def new_transaction_signal(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        execution = TradeExecution(parameters=request_body)
+        trade_date = date.today()
+        # request_body = {'portfolio_code': 'TST',
+        #                 'account_id': 6,
+        #                 'security': 74,
+        #                 'transaction_type': 'Close',
+        #                 'quantity': 1,
+        #                 }
+        execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
+                                   account_id=request_body['account_id'],
+                                   security=request_body['security'],
+                                   trade_date=trade_date)
+
         if request_body['transaction_type'] == "Close All":
             open_transactions = Transaction.objects.filter(security=request_body['security'],
                                                            is_active=1,
                                                            portfolio_code=request_body['portfolio_code']).values()
+
             for transaction in open_transactions:
-                execution.close(transaction=transaction)
+                execution.close(transaction=transaction, quantity=transaction['quantity'])
+
         elif request_body['transaction_type'] == 'Close Out':
             execution.close(broker_id=request_body['broker_id'])
         elif request_body['transaction_type'] == 'Close':
-            # request_body = {'portfolio_code': 'TST',
-            #                 'account_id': 6,
-            #                 'security': 74,
-            #                 'transaction_type': 'Close',
-            #                 'quantity': 1,
-            #                 }
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
-            execution.close(transaction=transaction)
+            execution.close(transaction=transaction, quantity=transaction['quantity'])
         else:
-            # request_body = {'portfolio_code': 'TST',
-            #                 'account_id': 6,
-            #                 'security': 74,
-            #                 'transaction_type': 'Close',
-            #                 'quantity': 1,
-            #                 }
-            execution.new_trade_execution_at_broker()
+            execution.new_trade(transaction_type=request_body['transaction_type'],
+                                quantity=request_body['quantity'])
+        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
         return JsonResponse({}, safe=False)

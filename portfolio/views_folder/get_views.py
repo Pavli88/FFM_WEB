@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
@@ -46,31 +48,41 @@ def get_open_transactions(request):
         cursor.execute(
             """select *, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
 from portfolio_transaction as pt
-where pt.security != 'Cash' and pt.security != 'Margin'
-and pt.transaction_link_code in (select id from portfolio_transaction where open_status = 'Open')
-or pt.open_status = 'Open';"""
+where pt.transaction_link_code in (select id from portfolio_transaction where is_active = 1)
+or pt.is_active = 1
+and pt.sec_group != 'Cash';"""
         )
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
         transaction_codes = list(dict.fromkeys(df['updated_id'].tolist()))
-        new_data_set = []
+        new_df = pd.DataFrame({'id': [],
+                               'portfolio_code': [],
+                               'security': [],
+                               'sec_group': [],
+                               'currency': [],
+                               'transaction_type': [],
+                               'quantity': [],
+                               'price': [],
+                               'mv': [],
+                               'account_id': [],
+                               'broker_id': []})
         for transaction_code in transaction_codes:
             df_transaction = df[df['updated_id'] == transaction_code]
-            print(df_transaction)
-            new_data_set.append({
-                'id': df_transaction['updated_id'].tolist()[0],
-                'portfolio_code': df_transaction['portfolio_code'].tolist()[0],
-                'security': df_transaction['security'].tolist()[0],
-                'sec_group': df_transaction['sec_group'].tolist()[0],
-                'currency': df_transaction['currency'].tolist()[0],
-                'transaction_type': df_transaction['transaction_type'].tolist()[0],
-                'quantity': df_transaction['quantity'].sum(),
-                'price': df_transaction['price'].tolist()[0],
-                'mv': round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
-                'account_id': df_transaction['account_id'].tolist()[0],
-                'broker_id': df_transaction['broker_id'].tolist()[0],
-            })
-        return JsonResponse(new_data_set, safe=False)
+
+            new_df.loc[len(new_df.index)] = [
+                df_transaction['updated_id'].tolist()[0],
+                df_transaction['portfolio_code'].tolist()[0],
+                df_transaction['security'].tolist()[0],
+                df_transaction['sec_group'].tolist()[0],
+                df_transaction['currency'].tolist()[0],
+                df_transaction['transaction_type'].tolist()[0],
+                df_transaction['quantity'].sum(),
+                df_transaction['price'].tolist()[0],
+                round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
+                df_transaction['account_id'].tolist()[0],
+                df_transaction['broker_id'].tolist()[0],
+            ]
+        return JsonResponse(new_df.to_json(orient='records'), safe=False)
 
 
 def daily_cashflow_by_type(request):
