@@ -37,6 +37,7 @@ def create_portfolio(request):
                              inception_date=body_data["inception_date"],
                              owner=body_data["owner"])
             port.save()
+            Nav(date=body_data["inception_date"], portfolio_code=body_data["port_code"]).save()
             return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
         except:
             return JsonResponse({'msg': "Portfolio exists in database!", 'port': 0}, safe=False)
@@ -70,6 +71,12 @@ def create_transaction(request):
         if request_body['sec_group'] == 'Cash':
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
+
+            if request_body['status'] == 'Not Funded':
+                portfolio = Portfolio.objects.get(portfolio_code=request_body['portfolio_code'])
+                portfolio.status = 'Funded'
+                portfolio.save()
+
             calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
             return JsonResponse({"response": "Cash transaction is created!"}, safe=False)
         account = BrokerAccounts.objects.get(id=6)
@@ -78,7 +85,7 @@ def create_transaction(request):
         request_body['margin'] = ticker.margin
 
         # New transaction
-        if request_body['transaction_link_code'] == '':
+        if request_body['transaction_link_code'] == 0:
             # With margin
             if request_body['sec_group'] == 'CFD':
                 if request_body['transaction_type'] == 'Purchase':

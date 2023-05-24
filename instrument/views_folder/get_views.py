@@ -9,18 +9,24 @@ from app_functions.request_functions import *
 def get_instruments(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        if request_data['name'] == '':
-            instrument_name = ''
-        else:
-            instrument_name = request_data['name']
-        filters = {}
-        for key, value in request_data.items():
-            if isinstance(value, list) and len(value) > 0:
-                filters[key + '__in'] = value
-            elif key == 'group':
-                filters[key] = value
-        return JsonResponse(list(Instruments.objects.filter(name__contains=instrument_name).filter(**filters).values()),
-                            safe=False)
+        print(request_data)
+        # if request_data['name'] == '':
+        #     instrument_name = ''
+        # else:
+        #     instrument_name = request_data['name']
+        # filters = {}
+        # for key, value in request_data.items():
+        #     if isinstance(value, list) and len(value) > 0:
+        #         filters[key + '__in'] = value
+        #     elif key == 'group':
+        #         filters[key] = value
+
+        results = dynamic_mode_get(request_object=request_data.items(),
+                                   column_list=['name', 'group', 'group__in', 'type__in', 'country__in', 'cash', 'currency', 'currency__in'],
+                                   table=Instruments)
+        print(results)
+        # Instruments.objects.filter(name__contains=instrument_name).filter(**filters).values()
+        return JsonResponse(list(results), safe=False)
 
 
 def get_instrument(request):

@@ -90,8 +90,6 @@ def daily_cashflow_by_type(request):
         cursor = connection.cursor()
         cursor.execute("""
         select trade_date,
-       sum(case when transaction_type = 'Purchase Settlement' then mv else 0 end) as 'Purchase Settlement',
-       sum(case when transaction_type = 'Sale Settlement' then mv else 0 end) as 'Sale Settlement',
        sum(case when transaction_type = 'Subscription' then mv else 0 end) as 'Subscription',
        sum(case when transaction_type = 'Redemption' then mv else 0 end) as 'Redemption'
 from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfolio_code}' group by trade_date order by trade_date;
@@ -139,19 +137,13 @@ def get_nav(request):
 
 def transactions_pnls(request):
     if request.method == "GET":
-        closed_transactions = Transaction.objects.filter(open_status='Closed', portfolio_code=request.GET.get("portfolio_code")).values_list('id', flat=True)
-        for transaction in closed_transactions:
-            calculate_transaction_pnl(transaction_id=transaction)
-        cursor = connection.cursor()
-        cursor.execute("""
-                select inst.name, inst.group, inst.type, pt.transaction_type, pt.currency, pt.mv, pt.portfolio_code, tp.pnl
-from portfolio_transactionpnl as tp, portfolio_transaction as pt, instrument_instruments as inst
-where tp.transaction_id=pt.id and inst.id = tp.security and pt.portfolio_code='{portfolio_code}'
-                """.format(portfolio_code=request.GET.get("portfolio_code")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        return JsonResponse(df.to_dict('records'), safe=False)
+        print('TRANSACTIONS PNL')
+        print(request.GET.get("portfolio_code"))
+        transactions = Transaction.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
+                                                  transaction_link_code__gt=0,
+                                                  is_active=0).values()
+        print(transactions)
+        return JsonResponse(list(transactions), safe=False)
 
 
 def get_holding(request):
