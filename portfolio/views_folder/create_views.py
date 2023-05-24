@@ -33,7 +33,6 @@ def create_portfolio(request):
                              portfolio_code=body_data["port_code"],
                              portfolio_type=body_data["port_type"],
                              currency=body_data["port_currency"],
-                             status="active",
                              inception_date=body_data["inception_date"],
                              owner=body_data["owner"])
             port.save()
