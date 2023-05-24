@@ -10,9 +10,7 @@ from django.db.models import Q
 @csrf_exempt
 def update_portfolio(request):
     if request.method == "POST":
-        print('PORTFOLIO UPDATE')
         request_data = json.loads(request.body.decode('utf-8'))
-        print(request_data)
         try:
             portfolio = Portfolio.objects.get(id=request_data['id'])
             for key, value in request_data.items():

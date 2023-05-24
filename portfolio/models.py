@@ -21,6 +21,8 @@ class Portfolio(models.Model):
     manager = models.CharField(max_length=30, default="")
     public = models.BooleanField(default=False)
     is_automated = models.BooleanField(default=False)
+    weekend_valuation = models.BooleanField(default=False)
+    valuation_frequency = models.CharField(max_length=30, default="Daily")
 
 
 class Robots(models.Model):

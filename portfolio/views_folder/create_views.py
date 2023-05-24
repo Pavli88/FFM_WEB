@@ -80,14 +80,14 @@ def create_transaction(request):
             calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
             return JsonResponse({"response": "Cash transaction is created!"}, safe=False)
         account = BrokerAccounts.objects.get(id=6)
-        ticker = Tickers.objects.get(inst_code=request_body['security'],
-                                     source=account.broker_name)
-        request_body['margin'] = ticker.margin
 
         # New transaction
         if request_body['transaction_link_code'] == 0:
             # With margin
             if request_body['sec_group'] == 'CFD':
+                ticker = Tickers.objects.get(inst_code=request_body['security'],
+                                             source=account.broker_name)
+                request_body['margin'] = ticker.margin
                 if request_body['transaction_type'] == 'Purchase':
                     request_body['net_cashflow'] = float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1
                     request_body['margin_balance'] = float(request_body['quantity']) * float(

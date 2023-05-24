@@ -1,3 +1,4 @@
+import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -43,6 +44,12 @@ def get_broker_tickers(request):
 
 def get_prices(request):
     if request.method == "GET":
-        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
-                                             column_list=['inst_code', 'date', 'date__gte', 'date__lte'],
-                                             table=Prices), safe=False)
+        prices = dynamic_mode_get(request_object=request.GET.items(),
+                                  column_list=['inst_code', 'date', 'date__gte', 'date__lte'],
+                                  table=Prices)
+        print(len(prices))
+        if len(prices) == 0:
+            return JsonResponse(list({}), safe=False)
+        else:
+            print(pd.DataFrame(prices).sort_values('date').to_dict('records'))
+            return JsonResponse(pd.DataFrame(prices).sort_values('date').to_dict('records'), safe=False)
