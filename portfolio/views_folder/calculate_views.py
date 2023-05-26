@@ -11,5 +11,5 @@ from datetime import datetime
 def portfolio_holding(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['start_date'])
-        return JsonResponse({'response': 'Valuation calculation is completed'}, safe=False)
+        response = calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['start_date'])
+        return JsonResponse({'response': response}, safe=False)

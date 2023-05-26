@@ -97,13 +97,21 @@ class Transaction(models.Model):
     margin = models.FloatField(default=0.0)
 
     def save(self, *args, **kwargs):
-        if (self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
-                or self.transaction_type == 'Interest Paid' \
-                or self.transaction_type == 'Commission'\
-                or self.transaction_type == 'Asset Out' or self.transaction_type == 'Purchase Settlement'):
-            self.quantity = abs(float(self.quantity)) * -1
+        if self.sec_group == 'Cash':
+            if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
+                self.quantity = float(self.quantity) * -1
+        elif self.sec_group == 'CFD':
+            print('')
+            if self.transaction_link_code != 0:
+                self.quantity = float(self.quantity) * -1
+        # if (self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
+        #         or self.transaction_type == 'Interest Paid' \
+        #         or self.transaction_type == 'Commission'\
+        #         ) and (self.sec_group == 'CFD' and int(self.transaction_link_code) != 0):
+        #     self.quantity = abs(float(self.quantity)) * -1
         else:
             self.quantity = abs(float(self.quantity))
+
         self.mv = float(self.quantity) * float(self.price)
 
         if self.sec_group == 'Cash':
