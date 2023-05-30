@@ -39,7 +39,7 @@ class TradeExecution:
 
         # # Trade execution at broker
         trade = self.broker_connection.submit_market_order(security=ticker.source_ticker,
-                                                           quantity=float(quantity * multiplier))
+                                                           quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
                           message=transaction_type + ' ' + self.security.name + ' ' + quantity,
@@ -50,11 +50,10 @@ class TradeExecution:
         trade_price = trade['response']["price"]
 
         if self.security.group == 'CFD':
-            if transaction_type == 'Purchase':
-                net_cash_flow = float(quantity) * float(
-                    trade_price) * margin * -1
-                margin_balance = float(quantity) * float(
-                    trade_price) * (1 - margin)
+            net_cash_flow = float(quantity) * float(
+                trade_price) * margin * -1
+            margin_balance = float(quantity) * float(
+                trade_price) * (1 - margin)
         # Without margin
         else:
             if transaction_type == 'Purchase':
@@ -75,8 +74,8 @@ class TradeExecution:
             broker_id=trade['response']['id'],
             account_id=self.account.id,
             margin=margin,
-            margin_balance=margin_balance,
-            net_cashflow=net_cash_flow,
+            margin_balance=round(margin_balance, 5),
+            net_cashflow=round(net_cash_flow, 5),
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
@@ -101,9 +100,13 @@ class TradeExecution:
         trade_price = trade["price"]
         broker_id = trade['id']
         transaction_weight = abs(float(quantity) / float(transaction['quantity']))
-        if transaction['transaction_type'] == 'Purchase':
-            pnl = float(quantity) * (
-                    float(trade_price) - float(transaction['price']))
+        if transaction['transaction_type'] == 'Purchase' or transaction['sec_group'] == 'CFD':
+            if transaction['transaction_type'] == 'Purchase':
+                pnl = float(quantity) * (
+                        float(trade_price) - float(transaction['price']))
+            else:
+                pnl = float(quantity) * (
+                         float(transaction['price']) - float(trade_price))
             net_cash_flow = (transaction_weight * float(transaction['net_cashflow']) * -1) + pnl
             margin_balance = transaction_weight * transaction['margin_balance'] * -1
             transaction_type = 'Sale'
@@ -124,9 +127,9 @@ class TradeExecution:
             broker_id=broker_id,
             account_id=self.account.id,
             is_active=0,
-            realized_pnl=pnl,
-            margin_balance=margin_balance,
-            net_cashflow=net_cash_flow,
+            realized_pnl=round(pnl, 5),
+            margin_balance=round(margin_balance, 5),
+            net_cashflow=round(net_cash_flow, 5),
             transaction_link_code=transaction['id']
         ).save()
 
@@ -160,6 +163,7 @@ def new_transaction_signal(request):
         #                 'transaction_type': 'Close',
         #                 'quantity': 1,
         #                 }
+        print(request_body)
         execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
                                    account_id=request_body['account_id'],
                                    security=request_body['security'],

@@ -139,15 +139,12 @@ def date_wrapper():
 
 
 def calculate_holdings(portfolio_code, calc_date):
-    print(portfolio_code, calc_date)
     calc_date = datetime.strptime(str(calc_date), '%Y-%m-%d').date()
     portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
     portfolio_currency = Instruments.objects.get(currency=portfolio_data.currency,
                                                  group='Cash')
     leverage_instrument = Instruments.objects.get(currency=portfolio_data.currency,
                                                   type='Leverage')
-    print(portfolio_data.weekend_valuation)
-
     while calc_date <= date.today():
         holding_df = pd.DataFrame({'transaction_id': [],
                                    'instrument_name': [],
@@ -156,6 +153,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                    'type': [],
                                    'currency': [],
                                    'trade_date': [],
+                                   'transaction_type': [],
                                    'beginning_pos': [],
                                    'ending_pos': [],
                                    'change': [],
@@ -185,9 +183,6 @@ def calculate_holdings(portfolio_code, calc_date):
                 previous_holding = pd.DataFrame({})
                 # previous_assets_list = []
 
-            print('PREVIOUS HOLDING')
-            print(previous_holding)
-
             # Current transactions
             cursor = connection.cursor()
             cursor.execute(
@@ -213,12 +208,6 @@ and pt.trade_date = '{trade_date}'
             except:
                 linked_assets_df = []
 
-            print('CURRENT ASSETS')
-            print(current_assets_df)
-            print('')
-            print('LINKED ASSETS')
-            print(linked_assets_df)
-
             # ASSET VALUATION
             if len(previous_holding) > 0:
                 previous_assets_df = previous_holding[(previous_holding['type'] != 'Cash') & (previous_holding['type'] != 'Leverage')]
@@ -235,6 +224,7 @@ and pt.trade_date = '{trade_date}'
                             row['type'],
                             row['currency'],
                             str(row['trade_date']),
+                            row['transaction_type'],
                             row['ending_pos'],
                             row['ending_pos'] + linked_quantity,
                             (row['ending_pos'] + linked_quantity) - row['ending_pos'],
@@ -260,6 +250,7 @@ and pt.trade_date = '{trade_date}'
                         row['type'],
                         row['currency'][0],
                         str(calc_date),
+                        row['transaction_type'],
                         0,
                         row['quantity'] + linked_quantity,
                         0,
@@ -268,12 +259,9 @@ and pt.trade_date = '{trade_date}'
                         0,
                         0,
                     ]
-
             holding_df = holding_df.sort_values('instrument_name')
 
             # PRICING OF ASSETS
-            print('PRICING OF ASSETS')
-
             intrument_list = list(dict.fromkeys(holding_df['instrument_id']))
             prices_df = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=intrument_list).values())
 
@@ -316,6 +304,7 @@ and pt.trade_date = '{trade_date}'
                     leverage_instrument.type,
                     leverage_instrument.currency,
                     str(calc_date),
+                    '-',
                     previous_levereage,
                     total_leverage,
                     total_leverage-previous_levereage,
@@ -360,9 +349,10 @@ and pt.trade_date = '{trade_date}'
                 portfolio_currency.type,
                 portfolio_currency.currency,
                 str(calc_date),
-                previous_total_cash,
-                total_cash,
-                total_cash - previous_total_cash,
+                '-',
+                round(previous_total_cash, 5),
+                round(total_cash, 5),
+                round(total_cash - previous_total_cash, 5),
                 1,
                 1,
                 previous_total_cash,
@@ -370,6 +360,7 @@ and pt.trade_date = '{trade_date}'
             ]
 
             print('FINAl REPORT')
+            holding_df = holding_df[holding_df.ending_pos != 0]
             print(holding_df)
 
             try:
