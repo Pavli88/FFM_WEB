@@ -359,9 +359,14 @@ and pt.trade_date = '{trade_date}'
                 total_cash,
             ]
 
-            print('FINAl REPORT')
+            previous_assets_leverage = previous_holding[previous_holding['type'] == 'Leverage']['ending_mv'].sum()
+            previous_assets_value = previous_holding[previous_holding.type != 'Leverage']['ending_mv'].sum()
+            previous_total = previous_assets_value - previous_assets_leverage
+            # print('PREVIOUS TOTAL', previous_total)
+            # print('TOTAL CASH TR', total_cash_transactions)
+            # print('FINAl REPORT')
             holding_df = holding_df[holding_df.ending_pos != 0]
-            print(holding_df)
+            # print(holding_df)
 
             try:
                 holding = Holding.objects.get(date=calc_date, portfolio_code=portfolio_code)
@@ -375,12 +380,19 @@ and pt.trade_date = '{trade_date}'
             # # Saving NAV
             total_cash = total_cash
             total = asset_val + total_cash - short_liab
+
+            if previous_total != 0.0:
+                period_return = (total - previous_total - total_cash_transactions) / previous_total
+            else:
+                period_return = 0.0
+
             try:
                 nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
                 nav.cash_val = total_cash
                 nav.pos_val = asset_val
                 nav.short_liab = short_liab
                 nav.total = total
+                nav.period_return = round(period_return, 5)
                 nav.save()
             except:
                 Nav(date=calc_date,
@@ -388,7 +400,8 @@ and pt.trade_date = '{trade_date}'
                     pos_val=asset_val,
                     cash_val=total_cash,
                     short_liab=short_liab,
-                    total=total).save()
+                    total=total,
+                    period_return=round(period_return, 5)).save()
 
         calc_date = calc_date + timedelta(days=1)
     return 'Valuation is completed.'
