@@ -145,6 +145,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                                  group='Cash')
     leverage_instrument = Instruments.objects.get(currency=portfolio_data.currency,
                                                   type='Leverage')
+    print('INCEPTION_DATE', portfolio_data.inception_date)
     while calc_date <= date.today():
         holding_df = pd.DataFrame({'transaction_id': [],
                                    'instrument_name': [],
@@ -161,6 +162,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                    'valuation_price': [],
                                    'beginning_mv': [],
                                    'ending_mv': [],
+                                   'pnl': []
                                    })
 
         if portfolio_data.weekend_valuation is False and (calc_date.weekday() == 6 or calc_date.weekday() == 5):
@@ -227,10 +229,11 @@ and pt.trade_date = '{trade_date}'
                             row['transaction_type'],
                             row['ending_pos'],
                             row['ending_pos'] + linked_quantity,
-                            (row['ending_pos'] + linked_quantity) - row['ending_pos'],
+                            0,
                             row['trade_price'],
                             1,
                             row['ending_mv'],
+                            0,
                             0,
                         ]
 
@@ -258,9 +261,10 @@ and pt.trade_date = '{trade_date}'
                         1,
                         0,
                         0,
+                        0,
                     ]
             holding_df = holding_df.sort_values('instrument_name')
-
+            holding_df['change'] = holding_df['ending_pos'] - holding_df['beginning_pos']
             # PRICING OF ASSETS
             intrument_list = list(dict.fromkeys(holding_df['instrument_id']))
             prices_df = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=intrument_list).values())
@@ -269,7 +273,12 @@ and pt.trade_date = '{trade_date}'
                 try:
                     price = list(prices_df[prices_df['inst_code'] == row['instrument_id']]['price'])[0]
                     holding_df.loc[index, ['valuation_price']] = price
-                    holding_df.loc[index, ['ending_mv']] = price * row['ending_pos']
+                    if row['transaction_type'] == 'Sale' and row['group'] == 'CFD':
+                        pnl = (row['trade_price'] - price) * row['ending_pos']
+                    else:
+                        pnl = (price - row['trade_price']) * row['ending_pos']
+                    holding_df.loc[index, ['pnl']] = round(pnl, 3)
+                    holding_df.loc[index, ['ending_mv']] = (row['trade_price'] * row['ending_pos']) + pnl
                 except:
                     return 'Price is missing for ' + row['instrument_name'] + ' on ' + str(calc_date)
 
@@ -312,6 +321,7 @@ and pt.trade_date = '{trade_date}'
                     1,
                     previous_levereage,
                     total_leverage,
+                    0
                 ]
                 short_liab = total_leverage
             else:
@@ -357,10 +367,15 @@ and pt.trade_date = '{trade_date}'
                 1,
                 previous_total_cash,
                 total_cash,
+                0,
             ]
 
-            previous_assets_leverage = previous_holding[previous_holding['type'] == 'Leverage']['ending_mv'].sum()
-            previous_assets_value = previous_holding[previous_holding.type != 'Leverage']['ending_mv'].sum()
+            if calc_date == portfolio_data.inception_date or len(previous_holding) == 0:
+                previous_assets_leverage = 0.0
+                previous_assets_value = 0.0
+            else:
+                previous_assets_leverage = previous_holding[previous_holding['type'] == 'Leverage']['ending_mv'].sum()
+                previous_assets_value = previous_holding[previous_holding.type != 'Leverage']['ending_mv'].sum()
             previous_total = previous_assets_value - previous_assets_leverage
             # print('PREVIOUS TOTAL', previous_total)
             # print('TOTAL CASH TR', total_cash_transactions)
