@@ -51,11 +51,16 @@ def new_price(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         try:
-            price = Prices.objects.get(date=request_body['date'], inst_code=request_body['inst_code'])
-            price.price = request_body['price']
-            price.save()
+            price_list = request_body['data']
         except:
-            Prices(date=request_body['date'],
-                   inst_code=request_body['inst_code'],
-                   price=request_body['price']).save()
-        return JsonResponse({'response': 'Price inserted to db'}, safe=False)
+            price_list = [request_body]
+        for price_record in price_list:
+            try:
+                price = Prices.objects.get(date=price_record['date'], inst_code=int(price_record['inst_code']))
+                price.price = float(price_record['price'])
+                price.save()
+            except:
+                Prices(date=price_record['date'],
+                       inst_code=int(price_record['inst_code']),
+                       price=float(price_record['price'])).save()
+        return JsonResponse({'response': 'Price inserted into database'}, safe=False)
