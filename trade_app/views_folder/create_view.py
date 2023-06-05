@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from accounts.models import BrokerAccounts
 from instrument.models import Instruments, Tickers, Prices
-from portfolio.models import Portfolio, Transaction, Robots
+from portfolio.models import Portfolio, Transaction, Robots, Nav
 from trade_app.models import Notifications
 from app_functions.request_functions import *
 from django.db import connection
@@ -19,18 +19,18 @@ class TradeExecution:
         self.account = BrokerAccounts.objects.get(id=account_id)
         self.security = Instruments.objects.get(id=security)
         self.trade_date = trade_date
-
+        self.ticker = Tickers.objects.get(inst_code=self.security.id,
+                                          source=self.account.broker_name)
         self.broker_connection = OandaV20(access_token=self.account.access_token,
                                           account_id=self.account.account_number,
                                           environment=self.account.env)
 
     def new_trade(self, transaction_type, quantity):
-        ticker = Tickers.objects.get(inst_code=self.security.id,
-                                     source=self.account.broker_name)
-        if ticker.margin == 0.0:
+
+        if self.ticker.margin == 0.0:
             margin = 1
         else:
-            margin = ticker.margin
+            margin = self.ticker.margin
 
         if transaction_type == "Purchase":
             multiplier = 1
@@ -38,7 +38,7 @@ class TradeExecution:
             multiplier = -1
 
         # # Trade execution at broker
-        trade = self.broker_connection.submit_market_order(security=ticker.source_ticker,
+        trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
@@ -82,7 +82,17 @@ class TradeExecution:
                       message=transaction_type + ' ' + self.security.name + ' ' + quantity + ' @ ' + trade_price,
                       sub_message='Executed',
                       broker_name=self.account.broker_name).save()
+
         self.save_price(trade_price=trade_price)
+
+    def get_market_price(self):
+        broker_connection = OandaV20(access_token=self.account.access_token,
+                                     account_id=self.account.account_number,
+                                     environment=self.account.env)
+        prices = broker_connection.get_prices(instruments=self.ticker.source_ticker)
+        bid = prices['bids'][0]['price']
+        ask = prices['asks'][0]['price']
+        return (float(bid) + float(ask)) / 2
 
     def close(self, transaction, quantity):
         print(transaction)
@@ -183,6 +193,13 @@ def new_transaction_signal(request):
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
             execution.close(transaction=transaction, quantity=transaction['quantity'])
         else:
+            if 'sl' in request_body:
+                latest_nav = list(Nav.objects.filter(portfolio_code=request_body['portfolio_code']).order_by('date').values_list('total', flat=True))[-1]
+                risked_amount = latest_nav * float(request_body['risk_perc'])
+                current_price = execution.get_market_price()
+                price_diff = abs(current_price-float(request_body['sl']))
+                quantity = str(int(risked_amount / price_diff))
+                request_body['quantity'] = quantity
             execution.new_trade(transaction_type=request_body['transaction_type'],
                                 quantity=request_body['quantity'])
         calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
