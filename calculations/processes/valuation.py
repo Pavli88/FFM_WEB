@@ -12,11 +12,19 @@ def calculate_holdings(portfolio_code, calc_date):
     portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
     portfolio_currency = Instruments.objects.get(currency=portfolio_data.currency,
                                                  group='Cash')
-    leverage_instrument = Instruments.objects.get(currency=portfolio_data.currency,
-                                                  type='Leverage')
-    print('INCEPTION_DATE', portfolio_data.inception_date)
     response_list = []
     error_list = []
+    try:
+        leverage_instrument = Instruments.objects.get(currency=portfolio_data.currency,
+                                                      type='Leverage')
+    except:
+        error_list.append({'portfolio_code': portfolio_code,
+                           'date': calc_date,
+                           'process': 'Valuation',
+                           'exception': 'Missing Instrument',
+                           'status': 'Error',
+                           'comment': str(portfolio_data.currency) + ' leverage instrument is missing in the system'})
+        return response_list + error_list
 
     if portfolio_data.status == 'Not Funded':
         error_list.append({'portfolio_code': portfolio_code,
@@ -69,10 +77,14 @@ def calculate_holdings(portfolio_code, calc_date):
                 try:
                     previous_holding = pd.read_json(
                         Holding.objects.get(date=previous_date, portfolio_code=portfolio_code).data)
-                    # previous_assets_list = previous_holding[previous_holding['ending_pos'] != 0.0]['id'].tolist()
                 except Holding.DoesNotExist:
                     previous_holding = pd.DataFrame({})
-                    # previous_assets_list = []
+                    response_list.append({'portfolio_code': portfolio_code,
+                                          'date': calc_date,
+                                          'process': 'Valuation',
+                                          'exception': 'Missing Previous Holding',
+                                          'status': 'Alert',
+                                          'comment': '0 previous holding'})
 
                 # Current transactions
                 cursor = connection.cursor()
@@ -154,6 +166,7 @@ def calculate_holdings(portfolio_code, calc_date):
                         ]
                 holding_df = holding_df.sort_values('instrument_name')
                 holding_df['change'] = holding_df['ending_pos'] - holding_df['beginning_pos']
+
                 # PRICING OF ASSETS
                 intrument_list = list(dict.fromkeys(holding_df['instrument_id']))
                 prices_df = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=intrument_list).values())
