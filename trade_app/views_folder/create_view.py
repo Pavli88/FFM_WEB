@@ -94,17 +94,22 @@ class TradeExecution:
         ask = prices['asks'][0]['price']
         return (float(bid) + float(ask)) / 2
 
-    def close(self, transaction, quantity):
+    def close(self, transaction, quantity, close_out=False):
         print(transaction)
+        # BROKER SECTION -----------------------------------------------------------------------------------------------
         broker_connection = OandaV20(access_token=self.account.access_token,
                                      account_id=self.account.account_number,
                                      environment=self.account.env)
-        trade = broker_connection.close_trade(trd_id=transaction['broker_id'])
+        if close_out is True:
+            trade = broker_connection.close_out(trd_id=transaction['broker_id'], units=quantity)
+        else:
+            trade = broker_connection.close_trade(trd_id=transaction['broker_id'])
 
-        # Main transaction update
-        dynamic_model_update(table_object=Transaction,
-                             request_object={'id': transaction['id'],
-                                             'is_active': 0})
+        # --------------------------------------------------------------------------------------------------------------
+            # Main transaction update
+            dynamic_model_update(table_object=Transaction,
+                                 request_object={'id': transaction['id'],
+                                                 'is_active': 0})
 
         # Linked transaction creation
         trade_price = trade["price"]
@@ -183,15 +188,27 @@ def new_transaction_signal(request):
             open_transactions = Transaction.objects.filter(security=request_body['security'],
                                                            is_active=1,
                                                            portfolio_code=request_body['portfolio_code']).values()
-
             for transaction in open_transactions:
-                execution.close(transaction=transaction, quantity=transaction['quantity'])
-
+                closed_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=transaction['id']).values())
+                if len(closed_transactions) == 0:
+                    closed_out_units = 0
+                else:
+                    closed_out_units = closed_transactions['quantity'].sum()
+                quantity = transaction['quantity'] + closed_out_units
+                execution.close(transaction=transaction, quantity=quantity)
         elif request_body['transaction_type'] == 'Close Out':
-            execution.close(broker_id=request_body['broker_id'])
+            transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
+            execution.close(transaction=transaction, quantity=request_body['quantity'], close_out=True)
         elif request_body['transaction_type'] == 'Close':
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
-            execution.close(transaction=transaction, quantity=transaction['quantity'])
+            closed_transactions = pd.DataFrame(
+                Transaction.objects.filter(transaction_link_code=transaction['id']).values())
+            if len(closed_transactions) == 0:
+                closed_out_units = 0
+            else:
+                closed_out_units = closed_transactions['quantity'].sum()
+            quantity = transaction['quantity'] + closed_out_units
+            execution.close(transaction=transaction, quantity=quantity)
         else:
             if 'sl' in request_body:
                 latest_nav = list(Nav.objects.filter(portfolio_code=request_body['portfolio_code']).order_by('date').values_list('total', flat=True))[-1]
