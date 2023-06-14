@@ -24,6 +24,7 @@ get_views = [
     path('portfolios/get/portfolios/', get_views.get_portfolios),
     path('portfolios/get/holding/', get_views.get_holding),
     path('portfolios/get/transactions/pnl/', get_views.transactions_pnls),
+    path('portfolios/aggregated_pnl/', get_views.aggregated_security_pnl),
     path('portfolios/daily_cashflow/', get_views.daily_cashflow_by_type),
     path('portfolios/available_cash/', get_views.available_cash),
     path('portfolios/get/open_transactions/', get_views.get_open_transactions),

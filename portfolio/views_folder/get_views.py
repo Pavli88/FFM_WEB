@@ -137,12 +137,9 @@ def get_nav(request):
 
 def transactions_pnls(request):
     if request.method == "GET":
-        print('TRANSACTIONS PNL')
-        print(request.GET.get("portfolio_code"))
         transactions = Transaction.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
                                                   transaction_link_code__gt=0,
                                                   is_active=0).values()
-        print(transactions)
         return JsonResponse(list(transactions), safe=False)
 
 
@@ -153,3 +150,29 @@ def get_holding(request):
             return JsonResponse(holding_df.to_dict('records'), safe=False)
         except Holding.DoesNotExist:
             return JsonResponse([{}], safe=False)
+
+
+def aggregated_security_pnl(request):
+    if request.method == "GET":
+        print("AGG PNL")
+        cursor = connection.cursor()
+        cursor.execute("""
+                select inst.name, inst.group, inst.type, pt.realized_pnl 
+from portfolio_transaction as pt, instrument_instruments as inst
+       where pt.security=inst.id
+         and pt.trade_date >= '{start_date}'
+and pt.portfolio_code='{portfolio_code}'
+and inst.group != 'Cash';
+                """.format(portfolio_code=request.GET.get("portfolio_code"),
+                           start_date=request.GET.get("start_date")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+
+        pnl_by_name = df.groupby(['name']).sum().reset_index()[['name', 'realized_pnl']].sort_values(by='realized_pnl', ascending=False)
+        pnl_by_group = df.groupby(['group']).sum().reset_index()[['group', 'realized_pnl']]
+        pnl_by_type = df.groupby(['type']).sum().reset_index()[['type', 'realized_pnl']]
+        return JsonResponse({'by_name': pnl_by_name.to_dict('records'),
+                              'by_group': pnl_by_group.to_dict('records'),
+                              'by_type': pnl_by_type.to_dict('records')
+                              }, safe=False)
