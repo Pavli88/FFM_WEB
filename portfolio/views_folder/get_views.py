@@ -1,5 +1,5 @@
 import json
-
+import numpy as np
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
@@ -154,7 +154,7 @@ def get_holding(request):
 
 def aggregated_security_pnl(request):
     if request.method == "GET":
-        print("AGG PNL")
+
         cursor = connection.cursor()
         cursor.execute("""
                 select inst.name, inst.group, inst.type, pt.realized_pnl 
@@ -176,3 +176,29 @@ and inst.group != 'Cash';
                               'by_group': pnl_by_group.to_dict('records'),
                               'by_type': pnl_by_type.to_dict('records')
                               }, safe=False)
+
+
+def get_exposures(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                        select inst.name, pt.quantity, pt.mv, pt.trade_date 
+from portfolio_transaction as pt, instrument_instruments inst
+where pt.security = inst.id
+and inst.type != 'Cash'
+and pt.portfolio_code='{portfolio_code}'
+and pt.trade_date >= '{start_date}';""".format(portfolio_code=request.GET.get("portfolio_code"),
+                                   start_date=request.GET.get("start_date")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        pivot = pd.pivot_table(df, values='mv', index=['trade_date'], columns=['name'], aggfunc=np.sum).fillna(0).cumsum().reset_index()
+
+        series_list = []
+        for column in pivot.columns.values:
+            print(column)
+            if column != 'trade_date':
+                series_list.append({'name': column,
+                                    'data': pivot[column].tolist()})
+
+        return JsonResponse({'dates': pivot['trade_date'].tolist(), 'series': series_list}, safe=False)
