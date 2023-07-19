@@ -11,6 +11,7 @@ from django.db.models import Q
 def update_portfolio(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
+
         try:
             portfolio = Portfolio.objects.get(id=request_data['id'])
             for key, value in request_data.items():
