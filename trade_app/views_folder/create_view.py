@@ -196,6 +196,18 @@ def new_transaction_signal(request):
                     closed_out_units = closed_transactions['quantity'].sum()
                 quantity = transaction['quantity'] + closed_out_units
                 execution.close(transaction=transaction, quantity=quantity)
+        elif request_body['transaction_type'] == 'Liquidate':
+            open_transactions = Transaction.objects.filter(is_active=1,
+                                                           portfolio_code=request_body['portfolio_code']).values()
+            for transaction in open_transactions:
+                closed_transactions = pd.DataFrame(
+                    Transaction.objects.filter(transaction_link_code=transaction['id']).values())
+                if len(closed_transactions) == 0:
+                    closed_out_units = 0
+                else:
+                    closed_out_units = closed_transactions['quantity'].sum()
+                quantity = transaction['quantity'] + closed_out_units
+                execution.close(transaction=transaction, quantity=quantity)
         elif request_body['transaction_type'] == 'Close Out':
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
             execution.close(transaction=transaction, quantity=request_body['quantity'], close_out=True)

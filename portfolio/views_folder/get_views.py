@@ -46,17 +46,22 @@ def get_open_transactions(request):
         print('test')
         cursor = connection.cursor()
         cursor.execute(
-            """select *, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
-from portfolio_transaction as pt
+            """select pt.id, pt.portfolio_code,
+       inst.name, pt.sec_group, pt.security,
+       pt.currency, pt.transaction_type,
+       pt.quantity, pt.price, pt.account_id, pt.broker_id, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
+from portfolio_transaction as pt, instrument_instruments as inst
 where pt.transaction_link_code in (select id from portfolio_transaction where is_active = 1)
 or pt.is_active = 1
-and pt.sec_group != 'Cash';"""
+and pt.sec_group != 'Cash'
+and pt.security = inst.id;"""
         )
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
         transaction_codes = list(dict.fromkeys(df['updated_id'].tolist()))
         new_df = pd.DataFrame({'id': [],
                                'portfolio_code': [],
+                               'name': [],
                                'security': [],
                                'sec_group': [],
                                'currency': [],
@@ -72,6 +77,7 @@ and pt.sec_group != 'Cash';"""
             new_df.loc[len(new_df.index)] = [
                 df_transaction['updated_id'].tolist()[0],
                 df_transaction['portfolio_code'].tolist()[0],
+                df_transaction['name'].tolist()[0],
                 df_transaction['security'].tolist()[0],
                 df_transaction['sec_group'].tolist()[0],
                 df_transaction['currency'].tolist()[0],
