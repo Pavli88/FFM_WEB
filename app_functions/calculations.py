@@ -379,6 +379,7 @@ and pt.trade_date = '{trade_date}'
             else:
                 previous_assets_leverage = previous_holding[previous_holding['type'] == 'Leverage']['ending_mv'].sum()
                 previous_assets_value = previous_holding[previous_holding.type != 'Leverage']['ending_mv'].sum()
+
             previous_total = previous_assets_value - previous_assets_leverage
             # print('PREVIOUS TOTAL', previous_total)
             # print('TOTAL CASH TR', total_cash_transactions)
@@ -399,20 +400,27 @@ and pt.trade_date = '{trade_date}'
             net_external_flow = current_transactions_df[
                 (current_transactions_df['transaction_type'] == 'Subscription') | (
                             current_transactions_df['transaction_type'] == 'Redemption')]['mv'].sum()
+            costs = current_transactions_df[current_transactions_df['transaction_type'] == 'Commission']['mv'].sum()
+
             total_cash = total_cash
-            total = previous_total + net_external_flow + total_pnl  # asset_val + total_cash - short_liab
+            previous_nav = Nav.objects.filter(portfolio_code=portfolio_code,
+                                              date=previous_date).values()
+            if len(previous_nav) == 0:
+                previous_nav = 0
+            else:
+                previous_nav = previous_nav[0]['total']
+
+            total = previous_nav + net_external_flow + total_pnl + costs # asset_val + total_cash - short_liab
 
             if net_external_flow != 0:
-                print('QUERY FLOW FROM DB')
                 total_flow = pd.DataFrame(Transaction.objects.filter(trade_date__lte=calc_date,
                                                   portfolio_code=portfolio_code).filter(Q(transaction_type='Subscription') | Q(transaction_type='Redemption')).values())['mv'].sum()
 
             if previous_total != 0.0:
                 if net_external_flow != 0:
-                    print(total, total_flow)
                     period_return = (total/total_flow)-1
                 else:
-                    period_return = (total - previous_total - net_external_flow) / previous_total
+                    period_return = (total - previous_nav - net_external_flow) / previous_nav
             else:
                 period_return = 0.0
 
