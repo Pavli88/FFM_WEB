@@ -210,6 +210,9 @@ and pt.trade_date = '{trade_date}'
             except:
                 linked_assets_df = []
 
+            total_pnl = linked_assets_df['realized_pnl'].sum()
+            print(total_pnl)
+
             # ASSET VALUATION
             if len(previous_holding) > 0:
                 previous_assets_df = previous_holding[(previous_holding['type'] != 'Cash') & (previous_holding['type'] != 'Leverage')]
@@ -393,11 +396,23 @@ and pt.trade_date = '{trade_date}'
                         data=holding_df.to_json()).save()
 
             # # Saving NAV
+            net_external_flow = current_transactions_df[
+                (current_transactions_df['transaction_type'] == 'Subscription') | (
+                            current_transactions_df['transaction_type'] == 'Redemption')]['mv'].sum()
             total_cash = total_cash
-            total = asset_val + total_cash - short_liab
+            total = previous_total + net_external_flow + total_pnl  # asset_val + total_cash - short_liab
+
+            if net_external_flow != 0:
+                print('QUERY FLOW FROM DB')
+                total_flow = pd.DataFrame(Transaction.objects.filter(trade_date__lte=calc_date,
+                                                  portfolio_code=portfolio_code).filter(Q(transaction_type='Subscription') | Q(transaction_type='Redemption')).values())['mv'].sum()
 
             if previous_total != 0.0:
-                period_return = (total - previous_total - total_cash_transactions) / previous_total
+                if net_external_flow != 0:
+                    print(total, total_flow)
+                    period_return = (total/total_flow)-1
+                else:
+                    period_return = (total - previous_total - net_external_flow) / previous_total
             else:
                 period_return = 0.0
 
