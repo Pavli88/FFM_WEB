@@ -5,7 +5,7 @@ from django.db import connection
 from django.http import JsonResponse
 from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding, Holding, Nav
 from app_functions.request_functions import *
-from app_functions.calculations import calculate_transaction_pnl
+from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 
 
 def get_portfolios(request):
@@ -208,3 +208,14 @@ and pt.trade_date >= '{start_date}';""".format(portfolio_code=request.GET.get("p
                                     'data': pivot[column].tolist()})
 
         return JsonResponse({'dates': pivot['trade_date'].tolist(), 'series': series_list}, safe=False)
+
+
+def get_drawdown(request):
+    if request.method == "GET":
+        portfolio_daily_returns = pd.DataFrame(Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
+                                                     date__gte=request.GET.get("start_date")).values())
+        drawdown_list = drawdown_calc(data_series=portfolio_daily_returns['period_return'])
+        return JsonResponse({
+            'dates': list(portfolio_daily_returns['date']),
+            'data': drawdown_list
+        }, safe=False)
