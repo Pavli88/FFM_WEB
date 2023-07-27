@@ -33,6 +33,12 @@ class Robots(models.Model):
     broker_account_id = models.IntegerField()
 
 
+class Performance(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    one_month = models.FloatField(default=0.0)
+    date = models.DateField(auto_now=True)
+
+
 class CashFlow(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     amount = models.FloatField(default=0.0)
