@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Instruments(models.Model):
-    name = models.CharField(max_length=30, default="")
+    name = models.CharField(max_length=100, default="")
     group = models.CharField(max_length=30, default="")
     type = models.CharField(max_length=30, default="")
     currency = models.CharField(max_length=30, default="")
