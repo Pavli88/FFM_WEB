@@ -388,7 +388,7 @@ and pt.trade_date = '{trade_date}'
                 # print('TOTAL CASH TR', total_cash_transactions)
                 # print('FINAl REPORT')
                 holding_df = holding_df[holding_df.ending_pos != 0]
-                # print(holding_df)
+                holding_nav = holding_df[holding_df['type'] != 'Leverage']['ending_mv'].sum() - holding_df[holding_df['type'] == 'Leverage']['ending_mv'].sum()
 
                 try:
                     holding = Holding.objects.get(date=calc_date, portfolio_code=portfolio_code)
@@ -425,21 +425,34 @@ and pt.trade_date = '{trade_date}'
             else:
                 period_return = 0.0
 
+            if portfolio_data.calc_holding == True:
+                asset_value = asset_val
+                cash_value = total_cash
+                liability = short_liab
+                h_nav = holding_nav
+            else:
+                asset_value = 0.0
+                cash_value = 0.0
+                liability = 0.0
+                h_nav = 0.0
+
             try:
                 nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
-                # nav.cash_val = total_cash
-                # nav.pos_val = asset_val
-                # nav.short_liab = short_liab
+                nav.cash_val = cash_value
+                nav.pos_val = asset_value
+                nav.short_liab = liability
                 nav.total = total
+                nav.holding_nav = h_nav
                 nav.period_return = round(period_return, 5)
                 nav.save()
             except:
                 Nav(date=calc_date,
                     portfolio_code=portfolio_code,
-                    pos_val=asset_val,
-                    cash_val=total_cash,
-                    short_liab=short_liab,
+                    pos_val=asset_value,
+                    cash_val=cash_value,
+                    short_liab=liability,
                     total=total,
+                    holding_nav=h_nav,
                     period_return=round(period_return, 5)).save()
 
         calc_date = calc_date + timedelta(days=1)
