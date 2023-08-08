@@ -283,7 +283,8 @@ and pt.trade_date = '{trade_date}'
                     holding_df.loc[index, ['pnl']] = round(pnl, 3)
                     holding_df.loc[index, ['ending_mv']] = (row['trade_price'] * row['ending_pos']) + pnl
                 except:
-                    return 'Price is missing for ' + row['instrument_name'] + ' on ' + str(calc_date)
+                    print('test')
+                    # return 'Price is missing for ' + row['instrument_name'] + ' on ' + str(calc_date)
 
             if len(holding_df) > 0:
                 asset_val = holding_df['ending_mv'].sum()
