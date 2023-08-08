@@ -202,7 +202,7 @@ and pt.trade_date = '{trade_date}'
             except:
                 linked_assets_df = []
 
-            total_pnl = linked_assets_df['realized_pnl'].sum()
+            total_pnl = current_transactions_df['realized_pnl'].sum()
 
             # HOLDING CALCULATION---------------------------------------------------------------------------------------
             if portfolio_data.calc_holding == True:
