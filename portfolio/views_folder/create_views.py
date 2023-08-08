@@ -68,6 +68,8 @@ def create_transaction(request):
 
         # Cash Transaction
         if request_body['sec_group'] == 'Cash':
+            if request_body['transaction_type'] == 'Dividend' or request_body['Interest Received']:
+                request_body['realized_pnl'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
 
