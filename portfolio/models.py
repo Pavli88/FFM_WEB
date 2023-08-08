@@ -23,6 +23,7 @@ class Portfolio(models.Model):
     is_automated = models.BooleanField(default=False)
     weekend_valuation = models.BooleanField(default=False)
     valuation_frequency = models.CharField(max_length=30, default="Daily")
+    calc_holding = models.BooleanField(default=False)
     description = models.CharField(max_length=2000, default="")
 
 
