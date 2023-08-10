@@ -145,8 +145,20 @@ def calculate_holdings(portfolio_code, calc_date):
                                                  group='Cash')
     leverage_instrument = Instruments.objects.get(currency=portfolio_data.currency,
                                                   type='Leverage')
+    response_list = []
+    error_list = []
     print(portfolio_data.calc_holding)
     print('INCEPTION_DATE', portfolio_data.inception_date)
+
+    if portfolio_data.status == 'Not Funded':
+        error_list.append({'portfolio_code': portfolio_code,
+                           'date': calc_date,
+                           'process': 'Valuation',
+                           'exception': 'Not Funded',
+                           'status': 'Error',
+                           'comment': 'Portfolio is not funded. Valuation is not possible'})
+        return response_list + error_list
+
     while calc_date <= date.today():
         holding_df = pd.DataFrame({'transaction_id': [],
                                    'instrument_name': [],
@@ -275,6 +287,17 @@ and pt.trade_date = '{trade_date}'
                 intrument_list = list(dict.fromkeys(holding_df['instrument_id']))
                 prices_df = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=intrument_list).values())
 
+                for inst in intrument_list:
+                    try:
+                        prices_df[prices_df['inst_code'] == inst]
+                    except:
+                        error_list.append({'portfolio_code': portfolio_code,
+                                              'date': calc_date,
+                                              'process': 'Holding Valuation',
+                                              'exception': 'Missing Price',
+                                              'status': 'Error',
+                                              'comment': 'Security Code: ' + str(inst)})
+
                 for index, row in holding_df.iterrows():
                     try:
                         price = list(prices_df[prices_df['inst_code'] == row['instrument_id']]['price'])[0]
@@ -286,7 +309,7 @@ and pt.trade_date = '{trade_date}'
                         holding_df.loc[index, ['pnl']] = round(pnl, 3)
                         holding_df.loc[index, ['ending_mv']] = (row['trade_price'] * row['ending_pos']) + pnl
                     except:
-                        return 'Price is missing for ' + row['instrument_name'] + ' on ' + str(calc_date)
+                        pass
 
                 if len(holding_df) > 0:
                     asset_val = holding_df['ending_mv'].sum()
@@ -410,13 +433,10 @@ and pt.trade_date = '{trade_date}'
                 previous_nav = 0
             else:
                 previous_nav = previous_nav[0]['total']
-
-            total = previous_nav + net_external_flow + total_pnl + costs # asset_val + total_cash - short_liab
-
+            total = previous_nav + net_external_flow + total_pnl + costs
             if net_external_flow != 0:
                 total_flow = pd.DataFrame(Transaction.objects.filter(trade_date__lte=calc_date,
                                                   portfolio_code=portfolio_code).filter(Q(transaction_type='Subscription') | Q(transaction_type='Redemption')).values())['mv'].sum()
-
             if previous_nav != 0.0:
                 if net_external_flow != 0:
                     period_return = (total/total_flow)-1
@@ -455,8 +475,16 @@ and pt.trade_date = '{trade_date}'
                     holding_nav=h_nav,
                     period_return=round(period_return, 5)).save()
 
+            response_list.append({'portfolio_code': portfolio_code,
+                                  'date': calc_date,
+                                  'process': 'Realized NAV Valuation',
+                                  'exception': '-',
+                                  'status': 'Completed',
+                                  'comment': 'NAV ' + str(round(total, 2)) + ' ' + str(portfolio_data.currency)})
+
         calc_date = calc_date + timedelta(days=1)
-    return 'Valuation is completed.'
+
+    return response_list + error_list
 
 
 def cumulative_return_calc(data_series):
