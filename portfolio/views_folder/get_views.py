@@ -141,6 +141,38 @@ def get_nav(request):
         return JsonResponse(pd.DataFrame(navs).sort_values(by=['date']).to_dict('records'), safe=False)
 
 
+def get_portfolio_nav(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                        select pn.total, pp.portfolio_code, pp.currency 
+                        from portfolio_nav as pn, portfolio_portfolio as pp
+                        where pn.portfolio_code = pp.portfolio_code and pn.date = '{date}'
+                        order by pn.total desc;
+                        """.format(date=request.GET.get("date")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        return JsonResponse(df.to_dict('records'), safe=False)
+
+
+def get_portfolio_nav_grouped(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                        select sum(pn.total) as total, pp.portfolio_type
+from portfolio_nav as pn, portfolio_portfolio as pp
+where pn.portfolio_code = pp.portfolio_code
+and pn.date = '{date}'
+group by pp.portfolio_type
+order by total desc;
+                        """.format(date=request.GET.get("date")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        return JsonResponse(df.to_dict('records'), safe=False)
+
+
 def transactions_pnls(request):
     if request.method == "GET":
         transactions = Transaction.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
