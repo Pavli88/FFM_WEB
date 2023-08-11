@@ -173,6 +173,21 @@ order by total desc;
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
+def get_total_pnl(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                          select sum(realized_pnl) as total, currency
+from portfolio_transaction
+where realized_pnl > 0
+group by currency;
+""")
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        return JsonResponse(df.to_dict('records'), safe=False)
+
+
 def transactions_pnls(request):
     if request.method == "GET":
         transactions = Transaction.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
