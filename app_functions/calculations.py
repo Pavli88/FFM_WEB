@@ -283,6 +283,7 @@ and pt.trade_date = '{trade_date}'
                         ]
                 holding_df = holding_df.sort_values('instrument_name')
                 holding_df['change'] = holding_df['ending_pos'] - holding_df['beginning_pos']
+
                 # PRICING OF ASSETS
                 intrument_list = list(dict.fromkeys(holding_df['instrument_id']))
                 prices_df = pd.DataFrame(Prices.objects.filter(date=calc_date, inst_code__in=intrument_list).values())
@@ -309,6 +310,7 @@ and pt.trade_date = '{trade_date}'
                         holding_df.loc[index, ['pnl']] = round(pnl, 3)
                         holding_df.loc[index, ['ending_mv']] = (row['trade_price'] * row['ending_pos']) + pnl
                     except:
+                        print('Missing price')
                         pass
 
                 if len(holding_df) > 0:

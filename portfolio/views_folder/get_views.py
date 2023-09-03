@@ -177,10 +177,9 @@ def get_total_pnl(request):
     if request.method == "GET":
         cursor = connection.cursor()
         cursor.execute("""
-                          select sum(realized_pnl) as total, currency
+                          select sum(realized_pnl) as total, portfolio_code
 from portfolio_transaction
-where realized_pnl > 0
-group by currency;
+group by portfolio_code;
 """)
 
         row = cursor.fetchall()
