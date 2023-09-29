@@ -89,6 +89,7 @@ class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)
     sec_group = models.CharField(max_length=30, default="")
+    option = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
