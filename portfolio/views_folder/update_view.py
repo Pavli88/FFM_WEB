@@ -26,19 +26,14 @@ def update_portfolio(request):
 def update_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
 
-        if request_body['transaction_link_code'] != '':
+        if request_body['transaction_link_code'] != 0:
             main_transaction = Transaction.objects.get(id=request_body['transaction_link_code'])
-            # request_body['outstanding_units'] = main_transaction.quantity - request_body['quantity']
             request_body['realized_pnl'] = float(request_body['quantity']) * (
                     float(request_body['price']) - float(main_transaction.price))
 
         dynamic_model_update(table_object=Transaction,
                              request_object=request_body)
-        # calculate_cash_holding(portfolio_code=request_body['portfolio_code'],
-        #                        start_date=request_body['trade_date'],
-        #                        currency=request_body['currency'])
 
         return JsonResponse({'response': 'Transaction is updated'}, safe=False)
 
