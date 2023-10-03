@@ -5,6 +5,7 @@ from django.db.models import Sum
 from datetime import timedelta
 from datetime import date
 from django.db import connection
+from instrument.models import Instruments
 
 
 class Portfolio(models.Model):
@@ -93,19 +94,23 @@ class Transaction(models.Model):
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
+    local_mv = models.FloatField(default=0.0)
     trade_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now_add=True)
     currency = models.CharField(max_length=30, default="")
     trading_cost = models.FloatField(default=0.0)
+    financing_cost = models.FloatField(default=0.0)
     transaction_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.IntegerField(default=0)
     open_status = models.CharField(max_length=50, default="")
     account_id = models.IntegerField(null=True)
     broker_id = models.IntegerField(null=True)
     net_cashflow = models.FloatField(default=0.0)
+    local_cashflow = models.FloatField(default=0.0)
     margin_balance = models.FloatField(default=0.0)
     realized_pnl = models.FloatField(default=0.0)
+    local_pnl = models.FloatField(default=0.0)
     margin = models.FloatField(default=0.0)
 
     def save(self, *args, **kwargs):

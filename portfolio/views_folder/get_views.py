@@ -20,12 +20,29 @@ def get_portfolios(request):
 
 def get_portfolio_transactions(request):
     if request.method == "GET":
+
+        # filters = {}
+        # for key, value in request.GET.items():
+        #     if value == '':
+        #         pass
+        #     else:
+        #         if key in ['id', 'portfolio_code', 'currency', 'transaction_type',
+        #                                              'trade_date__gte', 'trade_date__lte', 'is_active',
+        #                                              'security', '']:
+        #             filters[key] = value
+        # results = Transaction.objects.filter(**filters).select_related('security').values()
+        # print(results)
+        # df = pd.DataFrame(results)
+        # print(df)
         transactions = dynamic_mode_get(request_object=request.GET.items(),
-                                             column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
-                                                          'trade_date__gte', 'trade_date__lte', 'is_active',
-                                                          'security', ''],
-                                             table=Transaction)
-        df = pd.DataFrame(transactions)
+                                        column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
+                                                     'trade_date__gte', 'trade_date__lte', 'is_active',
+                                                     'security', ''],
+                                        table=Transaction)
+
+
+        # security_codes = list(dict.fromkeys(df['security']))
+
         # df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
         #
         # response = []

@@ -62,6 +62,9 @@ class TradeExecution:
                 net_cash_flow = float(quantity) * float(trade_price)
             margin_balance = 0.0
 
+        # FX Conversion to Base Currency
+        conversion_factor = (float(trade['response']['gainQuoteHomeConversionFactor']) + float(trade['response']['lossQuoteHomeConversionFactor'])) / 2
+
         Transaction(
             portfolio_code=self.portfolio.portfolio_code,
             quantity=quantity,
@@ -75,7 +78,8 @@ class TradeExecution:
             account_id=self.account.id,
             margin=margin,
             margin_balance=round(margin_balance, 5),
-            net_cashflow=round(net_cash_flow, 5),
+            net_cashflow=round(net_cash_flow * conversion_factor, 5),
+            local_cashflow=round(net_cash_flow, 5),
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
@@ -95,7 +99,6 @@ class TradeExecution:
         return (float(bid) + float(ask)) / 2
 
     def close(self, transaction, quantity, close_out=False):
-        print(transaction)
         # BROKER SECTION -----------------------------------------------------------------------------------------------
         broker_connection = OandaV20(access_token=self.account.access_token,
                                      account_id=self.account.account_number,
@@ -130,6 +133,10 @@ class TradeExecution:
             net_cash_flow = (transaction_weight * transaction['net_cashflow'] * -1) + pnl
             margin_balance = transaction_weight * transaction['margin_balance']
             transaction_type = 'Purchase'
+
+        # FX Conversion to Base Currency
+        conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
+
         Transaction(
             portfolio_code=self.portfolio.portfolio_code,
             quantity=quantity,
@@ -142,9 +149,11 @@ class TradeExecution:
             broker_id=broker_id,
             account_id=self.account.id,
             is_active=0,
-            realized_pnl=round(pnl, 5),
+            realized_pnl=round(pnl * conversion_factor, 5),
+            local_pnl=round(pnl, 5),
             margin_balance=round(margin_balance, 5),
-            net_cashflow=round(net_cash_flow, 5),
+            net_cashflow=round(net_cash_flow * conversion_factor, 5),
+            local_cashflow=round(net_cash_flow, 5),
             transaction_link_code=transaction['id']
         ).save()
 
