@@ -77,9 +77,12 @@ class TradeExecution:
             broker_id=trade['response']['id'],
             account_id=self.account.id,
             margin=margin,
-            margin_balance=round(margin_balance, 5),
-            net_cashflow=round(net_cash_flow * conversion_factor, 5),
-            local_cashflow=round(net_cash_flow, 5),
+            open_status="Open",
+            margin_balance=round(margin_balance, 4),
+            mv=round(float(quantity) * float(trade_price) * conversion_factor, 4),
+            local_mv=round(float(quantity) * float(trade_price), 4),
+            net_cashflow=round(net_cash_flow * conversion_factor, 4),
+            local_cashflow=round(net_cash_flow, 4),
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
@@ -149,11 +152,15 @@ class TradeExecution:
             broker_id=broker_id,
             account_id=self.account.id,
             is_active=0,
+            open_status='Closed',
             realized_pnl=round(pnl * conversion_factor, 5),
             local_pnl=round(pnl, 5),
-            margin_balance=round(margin_balance, 5),
-            net_cashflow=round(net_cash_flow * conversion_factor, 5),
-            local_cashflow=round(net_cash_flow, 5),
+            margin_balance=round(margin_balance, 4),
+            mv=round(float(quantity) * float(trade_price) * conversion_factor, 4),
+            local_mv=round(float(quantity) * float(trade_price), 4),
+            net_cashflow=round(net_cash_flow * conversion_factor, 4),
+            local_cashflow=round(net_cash_flow, 4),
+
             transaction_link_code=transaction['id']
         ).save()
 

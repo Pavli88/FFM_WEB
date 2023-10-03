@@ -121,18 +121,15 @@ class Transaction(models.Model):
             print('')
             if self.transaction_link_code != 0:
                 self.quantity = float(self.quantity) * -1
-        # if (self.transaction_type == 'Sale' or self.transaction_type == 'Redemption' \
-        #         or self.transaction_type == 'Interest Paid' \
-        #         or self.transaction_type == 'Commission'\
-        #         ) and (self.sec_group == 'CFD' and int(self.transaction_link_code) != 0):
-        #     self.quantity = abs(float(self.quantity)) * -1
         else:
             self.quantity = abs(float(self.quantity))
 
-        self.mv = float(self.quantity) * float(self.price)
+        # self.mv = float(self.quantity) * float(self.price)
 
         if self.sec_group == 'Cash':
             self.net_cashflow = self.mv
+            self.local_cashflow = self.mv
+            self.local_mv = self.mv
         super().save(*args, **kwargs)
 
 
