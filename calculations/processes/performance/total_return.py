@@ -15,7 +15,6 @@ def first_day_calculator(day):
         return 1
 
 
-
 def total_return_calc(portfolio_code, period, end_date):
     print('TOTAL RETURN CALC')
     print('PORTFOLIO CODE:', portfolio_code, 'PERIOD:', period, 'END DATE:', end_date)
@@ -24,19 +23,39 @@ def total_return_calc(portfolio_code, period, end_date):
     error_list = []
 
     portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
+    print(portfolio_data.perf_start_date)
+
+    # Check if performance start date is assigned to the fund
+    if portfolio_data.perf_start_date is None:
+        error_list.append({'portfolio_code': portfolio_code,
+                           'date': end_date,
+                           'process': 'Total Return',
+                           'exception': 'Missing Performance Start Date',
+                           'status': 'Error',
+                           'comment': 'Performance start date is not assigned to the portfolio'})
+        return response_list + error_list
+
     print('Inception Date:', portfolio_data.inception_date, type(portfolio_data.inception_date))
     end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
     mtd_date = end_date.replace(day=1)
     ytd_date = end_date.replace(month=1).replace(day=1)
 
-    first_day_calculator(day=mtd_date)
+    if end_date.month == 1 or end_date.month == 2 or end_date.month == 3:
+        qtd_date = end_date.replace(month=1).replace(day=1)
+    elif end_date.month == 4 or end_date.month == 5 or end_date.month == 6:
+        qtd_date = end_date.replace(month=4).replace(day=1)
+    elif end_date.month == 7 or end_date.month == 8 or end_date.month == 9:
+        qtd_date = end_date.replace(month=7).replace(day=1)
+    else:
+        qtd_date = end_date.replace(month=10).replace(day=1)
 
     print(end_date.replace(day=1).weekday())
     print(end_date.replace(month=1).replace(day=1))
     period_mapping = {
         '1m': 4,
         '3m': 12,
-        '6m': 24
+        '6m': 24,
+        '1y': 52,
     }
 
     period_text_mapping = {
@@ -50,34 +69,47 @@ def total_return_calc(portfolio_code, period, end_date):
     }
 
     if period == 'si':
-        start_date = portfolio_data.inception_date
-    elif period == 'mtd':
-        start_date = end_date.replace(day=first_day_calculator(day=mtd_date))
-    elif period == 'ytd':
-        start_date = end_date.replace(day=first_day_calculator(day=ytd_date))
+        start_date = portfolio_data.perf_start_date
     else:
-        start_date = end_date - dt.timedelta(weeks=period_mapping[period])
+        if portfolio_data.weekend_valuation is False:
+            print('WEEKEND VALUATION NOT ALLOWED')
+            if period == 'mtd':
+                start_date = mtd_date.replace(day=first_day_calculator(day=mtd_date))
+            elif period == 'ytd':
+                start_date = ytd_date.replace(day=first_day_calculator(day=ytd_date))
+            elif period == 'qtd':
+                start_date = qtd_date.replace(day=first_day_calculator(day=qtd_date))
+            else:
+                start_date = end_date - dt.timedelta(weeks=period_mapping[period])
+        else:
+            if period == 'mtd':
+                start_date = mtd_date
+            elif period == 'ytd':
+                start_date = ytd_date
+            else:
+                start_date = end_date - dt.timedelta(weeks=period_mapping[period])
 
     print('END DATE:', end_date, type(end_date))
     print('START DATE:', start_date, type(start_date))
+    print('CURRENT MONTH', end_date.month)
 
-    if end_date < portfolio_data.inception_date:
+    if end_date < portfolio_data.perf_start_date:
         error_list.append({'portfolio_code': portfolio_code,
                            'date': end_date,
                            'process': 'Total Return',
                            'exception': 'Incorrect End Date',
                            'status': 'Alert',
-                           'comment': period_text_mapping[period] + ' end date (' + str(end_date) + ') is less than inception date (' + str(portfolio_data.inception_date) + ')'})
+                           'comment': period_text_mapping[period] + ' end date (' + str(end_date) + ') is less than inception date (' + str(portfolio_data.perf_start_date) + ')'})
         return response_list + error_list
 
     # Check if start date is less than inception date
-    if start_date < portfolio_data.inception_date:
+    if start_date < portfolio_data.perf_start_date:
         error_list.append({'portfolio_code': portfolio_code,
                            'date': end_date,
                            'process': 'Total Return',
                            'exception': 'Incorrect Start Date',
                            'status': 'Alert',
-                           'comment': period_text_mapping[period] + ' start date (' + str(start_date) + ') is less than inception date (' + str(portfolio_data.inception_date) + ')'})
+                           'comment': period_text_mapping[period] + ' start date (' + str(start_date) + ') is less than inception date (' + str(portfolio_data.perf_start_date) + ')'})
         return response_list + error_list
 
     number_of_days = (end_date - start_date).days
@@ -85,11 +117,40 @@ def total_return_calc(portfolio_code, period, end_date):
     print('NUMBER OF DAYS:', number_of_days)
     print('')
 
+    # Quering out start and end NAV
+    try:
+        start_nav = Nav.objects.filter(date=start_date, portfolio_code=portfolio_code).values()[0]['total']
+    except:
+        error_list.append({'portfolio_code': portfolio_code,
+                           'date': end_date,
+                           'process': 'Total Return',
+                           'exception': 'Missing Starting Valuation',
+                           'status': 'Error',
+                           'comment': 'Missing Valuation as of ' + str(start_date)})
+        return response_list + error_list
+
+    try:
+        end_nav = Nav.objects.filter(date=end_date, portfolio_code=portfolio_code).values()[0]['total']
+    except:
+        error_list.append({'portfolio_code': portfolio_code,
+                           'date': end_date,
+                           'process': 'Total Return',
+                           'exception': 'Missing Ending Valuation',
+                           'status': 'Error',
+                           'comment': 'Missing Valuation as of ' + str(end_date)})
+        return response_list + error_list
+
+    print('')
+    print('START NAV')
+    print(start_nav)
+    print('')
+    print('END NAV')
+    print(end_nav)
+    print('')
+
     # Quering out transactions for the period
     transactions = pd.DataFrame(
         Transaction.objects.filter(portfolio_code=portfolio_code, trade_date__gte=start_date, trade_date__lte=end_date).values())
-
-    print(transactions)
 
     # Weighted Cash Flow table calculation------------------------------------------------------------------------------
     cash_flow_table = transactions[
@@ -103,24 +164,13 @@ def total_return_calc(portfolio_code, period, end_date):
     print(cash_flow_table)
     print('TOTAL CF', total_cf)
     print('TOTAL WEIGHTED CF', total_weighted_cf)
-
-    # Quering out start NAV
-    if period == 'si':
-        start_nav = 100.0
-    else:
-        start_nav = Nav.objects.filter(date=start_date, portfolio_code=portfolio_code).values()[0]['total']
-    end_nav = Nav.objects.filter(date=end_date, portfolio_code=portfolio_code).values()
-
     print('')
-    print('START NAV')
-    print(start_nav)
-    print('')
-    print('END NAV')
-    print(end_nav)
 
-    total_return = round((end_nav[0]['total'] - start_nav - total_cf) / (start_nav + total_weighted_cf), 4)
+    # Total Return Calculation
+    total_return = round((end_nav - start_nav - total_cf) / (start_nav + total_weighted_cf), 4)
     print('RET 1', total_return)
 
+    # Saving record to database
     try:
         existing_return = TotalReturn.objects.get(portfolio_code=portfolio_code,
                                                   end_date=end_date,
@@ -138,6 +188,6 @@ def total_return_calc(portfolio_code, period, end_date):
                           'process': 'Total Return',
                           'exception': '-',
                           'status': 'Completed',
-                          'comment': period_text_mapping[period] + ' Return: ' + str(total_return * 100) + ' %'})
+                          'comment': period_text_mapping[period] + ' Return: ' + str(round(total_return * 100, 2)) + ' %'})
 
     return response_list + error_list
