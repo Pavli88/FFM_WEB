@@ -112,6 +112,8 @@ class Transaction(models.Model):
     realized_pnl = models.FloatField(default=0.0)
     local_pnl = models.FloatField(default=0.0)
     margin = models.FloatField(default=0.0)
+    fx_rate = models.FloatField(default=0.0)
+    fx_pnl = models.FloatField(default=0.0)
 
     def save(self, *args, **kwargs):
         if self.sec_group == 'Cash':

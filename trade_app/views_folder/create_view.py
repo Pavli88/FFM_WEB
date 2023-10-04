@@ -83,6 +83,7 @@ class TradeExecution:
             local_mv=round(float(quantity) * float(trade_price), 4),
             net_cashflow=round(net_cash_flow * conversion_factor, 4),
             local_cashflow=round(net_cash_flow, 4),
+            fx_rate=round(float(conversion_factor), 4)
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
@@ -117,6 +118,9 @@ class TradeExecution:
                                  request_object={'id': transaction['id'],
                                                  'is_active': 0})
 
+        # FX Conversion to Base Currency
+        conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
+
         # Linked transaction creation
         trade_price = trade["price"]
         broker_id = trade['id']
@@ -136,9 +140,6 @@ class TradeExecution:
             net_cash_flow = (transaction_weight * transaction['net_cashflow'] * -1) + pnl
             margin_balance = transaction_weight * transaction['margin_balance']
             transaction_type = 'Purchase'
-
-        # FX Conversion to Base Currency
-        conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
 
         Transaction(
             portfolio_code=self.portfolio.portfolio_code,
@@ -160,8 +161,9 @@ class TradeExecution:
             local_mv=round(float(quantity) * float(trade_price), 4),
             net_cashflow=round(net_cash_flow * conversion_factor, 4),
             local_cashflow=round(net_cash_flow, 4),
-
-            transaction_link_code=transaction['id']
+            transaction_link_code=transaction['id'],
+            fx_rate=round(float(conversion_factor), 4),
+            fx_pnl=round((float(conversion_factor) - float(transaction['fx_rate']) * quantity),4)
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
