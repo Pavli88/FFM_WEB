@@ -282,3 +282,19 @@ def get_drawdown(request):
             'dates': list(portfolio_daily_returns['date']),
             'data': drawdown_list
         }, safe=False)
+
+
+def get_perf_dashboard(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""select p.portfolio_name, p.currency, pt.period, pt.total_return from portfolio_totalreturn as pt, portfolio_portfolio as p
+where pt.portfolio_code = p.portfolio_code
+and pt.end_date='{date}';""".format(date=request.GET.get("date")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        df['total_return'] = df['total_return'] * 100
+        df = df.pivot_table('total_return',
+                            ['portfolio_name'],
+                            'period').reset_index().fillna(0.0)
+        return JsonResponse(df.to_dict('records'), safe=False)
