@@ -16,6 +16,7 @@ class Portfolio(models.Model):
     currency = models.CharField(max_length=30, default="")
     creation_date = models.DateField(default=datetime.now, blank=True)
     inception_date = models.DateField(null=True)
+    perf_start_date = models.DateField(null=True)
     termination_date = models.DateField(null=True)
     is_terminated = models.CharField(max_length=30, default=False)
     owner = models.CharField(max_length=30, default="")
@@ -129,9 +130,10 @@ class Transaction(models.Model):
         # self.mv = float(self.quantity) * float(self.price)
 
         if self.sec_group == 'Cash':
-            self.net_cashflow = self.mv
-            self.local_cashflow = self.mv
-            self.local_mv = self.mv
+            self.mv = self.quantity
+            self.net_cashflow = self.quantity
+            self.local_cashflow = self.quantity
+            self.local_mv = self.quantity
         super().save(*args, **kwargs)
 
 
@@ -162,6 +164,12 @@ class Holding(models.Model):
     portfolio_code = models.CharField(max_length=30)
     data = models.JSONField(null=True)
 
+
+class TotalReturn(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    total_return = models.FloatField(default=0.0)
+    end_date = models.DateField(null=True)
+    period = models.CharField(max_length=30, default="")
 
 # models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
 # models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)

@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from portfolio.models import Transaction
 import json
 import pandas as pd
-from app_functions.calculations import calculate_holdings
+from calculations.processes.valuation.valuation import calculate_holdings
 
 
 @csrf_exempt

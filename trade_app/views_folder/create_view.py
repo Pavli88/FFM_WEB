@@ -10,7 +10,7 @@ from django.db import connection
 import pandas as pd
 from broker_apis.oanda import OandaV20
 from datetime import date
-from app_functions.calculations import calculate_holdings
+from calculations.processes.valuation.valuation import calculate_holdings
 
 
 class TradeExecution:

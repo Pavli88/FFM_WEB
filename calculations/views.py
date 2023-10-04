@@ -5,8 +5,9 @@ import json
 import datetime
 from datetime import datetime
 from mysite.my_functions.general_functions import *
-from app_functions.calculations import *
-from portfolio.models import Portfolio
+from calculations.processes.performance.total_return import total_return_calc
+from calculations.processes.valuation.valuation import calculate_holdings
+from portfolio.models import Portfolio, TotalReturn
 import pandas as pd
 
 
@@ -23,3 +24,18 @@ def valuation(request):
         return JsonResponse(response_list, safe=False)
 
 
+@csrf_exempt
+def total_return(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
+        response_list = []
+        for portfolio_code in request_body['portfolios']:
+            for period in request_body['periods']:
+                responses = total_return_calc(portfolio_code=portfolio_code, period=period, end_date=request_body['date'])
+                for resp in responses:
+                    response_list.append(resp)
+        return JsonResponse(response_list, safe=False)
+
+
+0

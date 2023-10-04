@@ -7,6 +7,7 @@ from accounts.models import BrokerAccounts
 import json
 from app_functions.request_functions import *
 from app_functions.calculations import *
+from calculations.processes.valuation.valuation import calculate_holdings
 
 
 @csrf_exempt
