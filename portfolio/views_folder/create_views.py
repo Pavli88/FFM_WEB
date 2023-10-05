@@ -91,15 +91,22 @@ def create_transaction(request):
                 ticker = Tickers.objects.get(inst_code=request_body['security'],
                                              source=account.broker_name)
                 request_body['margin'] = ticker.margin
-                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1, 5)
+                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1 * float(request_body['fx_rate']), 5)
+                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1, 5)
                 request_body['margin_balance'] = round(float(request_body['quantity']) * float(
                     request_body['price']) * (1 - ticker.margin), 5)
             # Without margin
             else:
                 if request_body['transaction_type'] == 'Purchase':
-                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * -1, 5)
+                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * -1 * float(request_body['fx_rate']), 5)
+                    request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * -1, 5)
                 else:
-                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
+                    request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+
+            request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
+            request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
         else:
@@ -125,9 +132,14 @@ def create_transaction(request):
             print('PNL', pnl)
             print('NET CF', (transaction_weight * main_transaction.net_cashflow) + pnl)
 
-            request_body['realized_pnl'] = round(pnl, 5)
-            request_body['net_cashflow'] = round(net_cf, 5)
+            request_body['realized_pnl'] = round(pnl * float(request_body['fx_rate']), 5)
+            request_body['local_pnl'] = round(pnl, 5)
+            request_body['net_cashflow'] = round(net_cf * float(request_body['fx_rate']), 5)
+            request_body['local_cashflow'] = round(net_cf, 5)
             request_body['margin_balance'] = round(margin_balance, 5)
+            request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
+            request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+            request_body['fx_pnl'] = round((float(request_body['fx_rate']) - main_transaction.fx_rate) * main_transaction.quantity, 5)
 
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)

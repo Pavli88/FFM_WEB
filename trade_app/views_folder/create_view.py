@@ -62,6 +62,8 @@ class TradeExecution:
                 net_cash_flow = float(quantity) * float(trade_price)
             margin_balance = 0.0
 
+        print(trade)
+
         # FX Conversion to Base Currency
         conversion_factor = (float(trade['response']['gainQuoteHomeConversionFactor']) + float(trade['response']['lossQuoteHomeConversionFactor'])) / 2
 
@@ -163,7 +165,7 @@ class TradeExecution:
             local_cashflow=round(net_cash_flow, 4),
             transaction_link_code=transaction['id'],
             fx_rate=round(float(conversion_factor), 4),
-            fx_pnl=round((float(conversion_factor) - float(transaction['fx_rate']) * quantity),4)
+            fx_pnl=round((float(conversion_factor) - float(transaction['fx_rate']) * float(quantity)),4)
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
