@@ -115,16 +115,9 @@ class OandaV20:
 
         return response['prices']
 
-    def candle_data(self, instrument, count, time_frame):
-
-        params = {
-            "count": count,
-            "granularity": time_frame
-        }
-
+    def candle_data(self, instrument, params):
         r = instruments.InstrumentsCandles(instrument=instrument, params = params)
         self.api.request(r)
-
         return r.response
 
     def position_list(self):
@@ -135,4 +128,13 @@ class OandaV20:
 if __name__ == "__main__":
     o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
                  account_id="001-004-2840244-004",
-                 environment="live").position_list()
+                 environment="live")
+
+    params = {
+        "granularity": 'D',
+        "from": "2023-01-01",
+        "to": "2023-10-04"
+    }
+
+    data = o.candle_data(instrument='XAG_USD',
+                         params=params)

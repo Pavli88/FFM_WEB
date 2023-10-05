@@ -3,8 +3,7 @@ from instrument.models import Prices
 from app_functions.request_functions import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-# Model Imports
+from instrument.instrument_pricing.oanda_pricing import oanda_pricing
 from instrument.models import *
 
 
@@ -64,3 +63,14 @@ def new_price(request):
                        inst_code=int(price_record['inst_code']),
                        price=float(price_record['price'])).save()
         return JsonResponse({'response': 'Price inserted into database'}, safe=False)
+
+
+@csrf_exempt
+def instrument_pricing(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+
+        if request_body['broker'] == 'oanda':
+            oanda_pricing(start_date=request_body['start_date'], end_date=request_body['end_date'])
+
+        return JsonResponse('Pricing job has run', safe=False)

@@ -7,6 +7,7 @@ create_patterns = [
     path('instruments/new/', create_views.new_instrument),
     path('instruments/new/ticker/', create_views.new_broker_ticker),
     path('instruments/new/price/', create_views.new_price),
+    path('instruments/pricing/', create_views.instrument_pricing),
 ]
 
 get_patterns = [
