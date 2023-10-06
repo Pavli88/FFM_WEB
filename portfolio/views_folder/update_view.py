@@ -32,6 +32,8 @@ def update_transaction(request):
             request_body['realized_pnl'] = float(request_body['quantity']) * (
                     float(request_body['price']) - float(main_transaction.price))
 
+        request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
+        request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
         dynamic_model_update(table_object=Transaction,
                              request_object=request_body)
 
