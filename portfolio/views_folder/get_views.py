@@ -113,17 +113,17 @@ def daily_cashflow_by_type(request):
         cursor = connection.cursor()
         cursor.execute("""
         select trade_date,
-       sum(case when transaction_type = 'Subscription' then mv else 0 end) as 'Subscription',
-       sum(case when transaction_type = 'Redemption' then mv else 0 end) as 'Redemption'
+       sum(case when transaction_type = 'Subscription' then net_cashflow else 0 end) as 'Subscription',
+       sum(case when transaction_type = 'Redemption' then net_cashflow else 0 end) as 'Redemption',
+       sum(case when transaction_type = 'Commission' then net_cashflow else 0 end) as 'Commission',
 from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfolio_code}' group by trade_date order by trade_date;
         """.format(portfolio_code=request.GET.get("portfolio_code")))
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-
+        print(df)
         series = []
         for column in df:
-            print(column)
             if column == 'trade_date':
                 pass
             else:

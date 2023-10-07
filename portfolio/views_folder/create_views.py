@@ -46,18 +46,16 @@ def create_portfolio(request):
 @csrf_exempt
 def create_cashflow(request):
     if request.method == "POST":
-        body_data = json.loads(request.body.decode('utf-8'))
-        try:
-            CashFlow(
-                portfolio_code=body_data['portfolio_code'],
-                amount=body_data['amount'],
-                type=body_data['type'],
-                date=body_data['date'],
-                user=body_data['user'],
-                currency=body_data['currency']
-            ).save()
-        except:
-            print('Error in cash insert')
+        request_body = json.loads(request.body.decode('utf-8'))
+        Transaction(
+            portfolio_code=request_body['portfolio_code'],
+            security=request_body['security'],
+            transaction_type=request_body['transaction_type'],
+            trade_date=request_body['trade_date'],
+            quantity=float(request_body['quantity']),
+            currency=request_body['currency']
+        ).save_cashflow()
+        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
         return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)
 
 
@@ -71,7 +69,7 @@ def create_transaction(request):
         if request_body['sec_group'] == 'Cash':
             if request_body['transaction_type'] == 'Dividend' or request_body['transaction_type'] == 'Interest Received':
                 request_body['realized_pnl'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
-            request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+
             dynamic_model_create(table_object=Transaction(),
                                  request_object=request_body)
 
@@ -87,22 +85,21 @@ def create_transaction(request):
         # New transaction
         if request_body['transaction_link_code'] == 0:
             # With margin
+            multiplier = 1
+
+            if request_body['transaction_type'] == 'Purchase' or request_body['sec_group'] == 'CFD':
+                multiplier = -1
+
             if request_body['sec_group'] == 'CFD':
-                ticker = Tickers.objects.get(inst_code=request_body['security'],
-                                             source=account.broker_name)
+                ticker = Tickers.objects.get(inst_code=request_body['security'], source=account.broker_name)
                 request_body['margin'] = ticker.margin
-                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1 * float(request_body['fx_rate']), 5)
-                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * -1, 5)
-                request_body['margin_balance'] = round(float(request_body['quantity']) * float(
-                    request_body['price']) * (1 - ticker.margin), 5)
+                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * float(request_body['fx_rate']), 5) * multiplier
+                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin, 5) * multiplier
+                request_body['margin_balance'] = round(float(request_body['quantity']) * float(request_body['price']) * (1 - ticker.margin), 5)
             # Without margin
             else:
-                if request_body['transaction_type'] == 'Purchase':
-                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * -1 * float(request_body['fx_rate']), 5)
-                    request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * -1, 5)
-                else:
-                    request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
-                    request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
+                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5) * multiplier
+                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']), 5) * multiplier
 
             request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
             request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)

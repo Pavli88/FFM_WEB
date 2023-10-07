@@ -113,27 +113,52 @@ class Transaction(models.Model):
     realized_pnl = models.FloatField(default=0.0)
     local_pnl = models.FloatField(default=0.0)
     margin = models.FloatField(default=0.0)
-    fx_rate = models.FloatField(default=0.0)
+    fx_rate = models.FloatField(default=1.0)
     fx_pnl = models.FloatField(default=0.0)
 
+    def save_cashflow(self, *args, **kwargs):
+        multiplier = 1.0
+        if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
+            multiplier = -1.0
+        self.price = 1
+        self.mv = self.quantity
+        self.local_mv = self.quantity
+        self.net_cashflow = self.quantity * multiplier
+        self.local_cashflow = self.quantity * multiplier
+        self.open_status = 'Closed'
+        self.sec_group = 'Cash'
+        self.is_active = False
+        super().save(*args, **kwargs)
+
+    def save_new_transaction(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+    def save_linked_transaction(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
     def save(self, *args, **kwargs):
-        if self.sec_group == 'Cash':
-            if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
-                self.quantity = float(self.quantity) * -1
-        elif self.sec_group == 'CFD':
-            print('')
-            if self.transaction_link_code != 0:
-                self.quantity = float(self.quantity) * -1
-        else:
-            self.quantity = abs(float(self.quantity))
+        # if self.sec_group == 'Cash':
+        #     if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
+        #         self.quantity = float(self.quantity) * -1
+        # elif self.sec_group == 'CFD':
+        #     if self.transaction_link_code != 0:
+        #         self.quantity = float(self.quantity) * -1
+        # else:
+        #     self.quantity = abs(float(self.quantity))
 
         # self.mv = float(self.quantity) * float(self.price)
 
+        multiplier = 1
+        if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
+            multiplier = -1
+
         if self.sec_group == 'Cash':
-            self.mv = self.quantity
-            self.net_cashflow = self.quantity
-            self.local_cashflow = self.quantity
-            self.local_mv = self.quantity
+            self.price = 1
+            self.mv = self.quantity * multiplier
+            self.net_cashflow = self.quantity * multiplier
+            self.local_cashflow = self.quantity * multiplier
+            self.local_mv = self.quantity * multiplier
+            self.open_status = 'Closed'
         super().save(*args, **kwargs)
 
 
