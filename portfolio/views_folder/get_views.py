@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, CashFlow, Transaction, CashHolding, Holding, Nav
+from portfolio.models import Portfolio, Transaction, Holding, Nav
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 
@@ -115,13 +115,12 @@ def daily_cashflow_by_type(request):
         select trade_date,
        sum(case when transaction_type = 'Subscription' then net_cashflow else 0 end) as 'Subscription',
        sum(case when transaction_type = 'Redemption' then net_cashflow else 0 end) as 'Redemption',
-       sum(case when transaction_type = 'Commission' then net_cashflow else 0 end) as 'Commission',
+       sum(case when transaction_type = 'Commission' then net_cashflow else 0 end) as 'Commission'
 from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfolio_code}' group by trade_date order by trade_date;
         """.format(portfolio_code=request.GET.get("portfolio_code")))
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        print(df)
         series = []
         for column in df:
             if column == 'trade_date':

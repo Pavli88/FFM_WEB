@@ -1,10 +1,4 @@
-# Models
-from robots.models import Robots, RobotTrades, Balance
-from risk.models import RobotRisk
-from portfolio.models import Positions, CashFlow, CashHolding, Trade
-from instrument.models import Instruments
 from django_q.models import Schedule
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.cache import cache
@@ -12,8 +6,6 @@ from mysite.my_functions.general_functions import *
 
 # Processes
 from robots.processes.robot_balance_calc import *
-from robots.processes.robot_pricing import pricing_robot
-from portfolio.processes.cash_holding import cash_holding
 from portfolio.processes.port_pos import portfolio_positions
 from datetime import datetime, timedelta
 

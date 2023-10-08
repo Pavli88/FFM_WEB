@@ -5,7 +5,7 @@ from django.db.models import Sum
 from datetime import timedelta
 from datetime import date
 from django.db import connection
-from instrument.models import Instruments
+from instrument.models import Instruments, Tickers
 
 
 class Portfolio(models.Model):
@@ -36,28 +36,6 @@ class Robots(models.Model):
     broker_account_id = models.IntegerField()
 
 
-class Performance(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    one_month = models.FloatField(default=0.0)
-    date = models.DateField(auto_now=True)
-
-
-class CashFlow(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    amount = models.FloatField(default=0.0)
-    type = models.CharField(max_length=30, default="")
-    user = models.CharField(max_length=30, default="")
-    currency = models.CharField(max_length=30, default="")
-    date = models.DateField(auto_now=True)
-
-
-class CashHolding(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    amount = models.FloatField(default=0.0)
-    currency = models.CharField(max_length=30, default="")
-    date = models.DateField()
-
-
 class Nav(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     pos_val = models.FloatField(default=0.0)
@@ -73,18 +51,6 @@ class Nav(models.Model):
     pnl = models.FloatField(default=0.0)
     date = models.DateField()
     holding_nav = models.FloatField(default=0.0)
-
-
-class Trade(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    security = models.IntegerField(default=0)
-    quantity = models.FloatField(default=0.0)
-    price = models.FloatField(default=0.0)
-    mv = models.FloatField(default=0.0)
-    date = models.DateField()
-    trading_cost = models.FloatField(default=0.0)
-    transaction_type = models.CharField(max_length=30, default="")
-    transaction_link_code = models.CharField(max_length=50, default="")
 
 
 class Transaction(models.Model):
@@ -130,36 +96,55 @@ class Transaction(models.Model):
         self.is_active = False
         super().save(*args, **kwargs)
 
-    def save_new_transaction(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    def save_transaction(self, **kwargs):
+        if kwargs['transaction'] == 'new':
+            multiplier = 1
+            if self.transaction_type == 'Purchase' or self.sec_group == 'CFD':
+                multiplier = -1
+            if self.sec_group == 'CFD':
+                ticker = Tickers.objects.get(inst_code=self.security, source=kwargs['broker_name'])
+                self.margin = ticker.margin
+                self.net_cashflow = round(float(self.quantity) * float(self.price) * ticker.margin * float(self.fx_rate), 5) * multiplier
+                self.local_cashflow = round(float(self.quantity) * float(self.price) * ticker.margin, 5) * multiplier
+                self.margin_balance = round(float(self.quantity) * float(self.price) * (1 - ticker.margin), 5)
+            else:
+                self.net_cashflow = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5) * multiplier
+                self.local_cashflow = round(float(self.quantity) * float(self.price), 5) * multiplier
+            self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
+            self.local_mv = round(float(self.quantity) * float(self.price), 5)
 
-    def save_linked_transaction(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+        if kwargs['transaction'] == 'linked':
+            print('NEW LINKED TRANSACTION')
+            main_transaction = Transaction.objects.get(id=self.transaction_link_code)
+            transaction_weight = abs(float(self.quantity) / float(main_transaction.quantity))
 
-    def save(self, *args, **kwargs):
-        # if self.sec_group == 'Cash':
-        #     if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
-        #         self.quantity = float(self.quantity) * -1
-        # elif self.sec_group == 'CFD':
-        #     if self.transaction_link_code != 0:
-        #         self.quantity = float(self.quantity) * -1
-        # else:
-        #     self.quantity = abs(float(self.quantity))
+            if main_transaction.transaction_type == 'Purchase' or main_transaction.sec_group == 'CFD':
+                if main_transaction.transaction_type == 'Purchase':
+                    pnl = round(float(self.quantity) * (float(self.price) - float(main_transaction.price)), 5)
+                else:
+                    pnl = round(float(self.quantity) * (float(main_transaction.price) - float(self.price)), 5)
+                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
+                margin_balance = round(transaction_weight * main_transaction.margin_balance * -1, 5)
+            else:
+                pnl = round(float(self.quantity) * (float(main_transaction.price) - float(self.price)), 5)
+                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
+                margin_balance = round(transaction_weight * main_transaction.margin_balance, 5)
 
-        # self.mv = float(self.quantity) * float(self.price)
+            self.realized_pnl = round(pnl * float(self.fx_rate), 5)
+            self.local_pnl = round(pnl, 5)
+            self.net_cashflow = round(net_cf * float(self.fx_rate), 5)
+            self.local_cashflow = round(net_cf, 5)
+            self.margin_balance = round(margin_balance, 5)
+            self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
+            self.local_mv = round(float(self.quantity) * float(self.price), 5)
+            self.fx_pnl = round((float(self.fx_rate) - main_transaction.fx_rate) * main_transaction.quantity, 5)
 
-        multiplier = 1
-        if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
-            multiplier = -1
-
-        if self.sec_group == 'Cash':
-            self.price = 1
-            self.mv = self.quantity * multiplier
-            self.net_cashflow = self.quantity * multiplier
-            self.local_cashflow = self.quantity * multiplier
-            self.local_mv = self.quantity * multiplier
-            self.open_status = 'Closed'
-        super().save(*args, **kwargs)
+        # Updating Main Transaction
+        if 'main_id' in kwargs:
+            print('ID has to be updated:', kwargs['main_id'])
+            self.id = kwargs['main_id']
+            self.created_on = datetime.now()
+        super().save()
 
 
 class TransactionPnl(models.Model):

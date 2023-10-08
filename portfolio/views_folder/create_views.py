@@ -1,7 +1,7 @@
 import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from portfolio.models import Robots, Portfolio, CashFlow, Transaction
+from portfolio.models import Robots, Portfolio, Transaction
 from instrument.models import Instruments, Tickers, Prices
 from accounts.models import BrokerAccounts
 import json
@@ -60,107 +60,45 @@ def create_cashflow(request):
 
 
 @csrf_exempt
-def create_transaction(request):
+def save_transaction(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
-
-        # Cash Transaction
-        if request_body['sec_group'] == 'Cash':
-            if request_body['transaction_type'] == 'Dividend' or request_body['transaction_type'] == 'Interest Received':
-                request_body['realized_pnl'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
-
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=request_body)
-
-            if request_body['status'] == 'Not Funded':
-                portfolio = Portfolio.objects.get(portfolio_code=request_body['portfolio_code'])
-                portfolio.status = 'Funded'
-                portfolio.save()
-
-            calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
-            return JsonResponse({"response": "Cash transaction is created!"}, safe=False)
         account = BrokerAccounts.objects.get(id=6)
 
-        # New transaction
-        if request_body['transaction_link_code'] == 0:
-            # With margin
-            multiplier = 1
-
-            if request_body['transaction_type'] == 'Purchase' or request_body['sec_group'] == 'CFD':
-                multiplier = -1
-
-            if request_body['sec_group'] == 'CFD':
-                ticker = Tickers.objects.get(inst_code=request_body['security'], source=account.broker_name)
-                request_body['margin'] = ticker.margin
-                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin * float(request_body['fx_rate']), 5) * multiplier
-                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * ticker.margin, 5) * multiplier
-                request_body['margin_balance'] = round(float(request_body['quantity']) * float(request_body['price']) * (1 - ticker.margin), 5)
-            # Without margin
-            else:
-                request_body['net_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5) * multiplier
-                request_body['local_cashflow'] = round(float(request_body['quantity']) * float(request_body['price']), 5) * multiplier
-
-            request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
-            request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
-
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=request_body)
+        transaction = Transaction(
+            portfolio_code=request_body['portfolio_code'],
+            security=request_body['security'],
+            sec_group=request_body['sec_group'],
+            transaction_type=request_body['transaction_type'],
+            trade_date=request_body['trade_date'],
+            quantity=request_body['quantity'],
+            price=request_body['price'],
+            currency=request_body['currency'],
+            is_active=request_body['is_active'],
+            open_status=request_body['open_status'],
+            transaction_link_code=request_body['transaction_link_code'],
+            option=request_body['option'],
+            fx_rate=request_body['fx_rate'],
+            broker_id=request_body['broker_id']
+        )
+        print(request_body['transaction_link_code'], type(request_body['transaction_link_code']))
+        if 'id' in request_body:
+            transaction.save_transaction(broker_name=account.broker_name, main_id=request_body['id'])
+        elif request_body['transaction_link_code'] != 0:
+            transaction.save_transaction(broker_name=account.broker_name, transaction='linked')
         else:
-            # Linked transaction
-            main_transaction = Transaction.objects.get(id=request_body['transaction_link_code'])
-            transaction_weight = abs(float(request_body['quantity']) / float(main_transaction.quantity))
-
-            if main_transaction.transaction_type == 'Purchase' or main_transaction.sec_group == 'CFD':
-                if main_transaction.transaction_type == 'Purchase':
-                    pnl = round(float(request_body['quantity']) * (
-                            float(request_body['price']) - float(main_transaction.price)), 5)
-                else:
-                    pnl = round(float(request_body['quantity']) * (
-                             float(main_transaction.price) - float(request_body['price'])), 5)
-                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
-                margin_balance = round(transaction_weight * main_transaction.margin_balance * -1, 5)
-            else:
-                pnl = round(float(request_body['quantity']) * (float(main_transaction.price) - float(request_body['price'])), 5)
-                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
-                margin_balance = round(transaction_weight * main_transaction.margin_balance, 5)
-
-            print('WEIGHT', transaction_weight)
-            print('PNL', pnl)
-            print('NET CF', (transaction_weight * main_transaction.net_cashflow) + pnl)
-
-            request_body['realized_pnl'] = round(pnl * float(request_body['fx_rate']), 5)
-            request_body['local_pnl'] = round(pnl, 5)
-            request_body['net_cashflow'] = round(net_cf * float(request_body['fx_rate']), 5)
-            request_body['local_cashflow'] = round(net_cf, 5)
-            request_body['margin_balance'] = round(margin_balance, 5)
-            request_body['mv'] = round(float(request_body['quantity']) * float(request_body['price']) * float(request_body['fx_rate']), 5)
-            request_body['local_mv'] = round(float(request_body['quantity']) * float(request_body['price']), 5)
-            request_body['fx_pnl'] = round((float(request_body['fx_rate']) - main_transaction.fx_rate) * main_transaction.quantity, 5)
-
-            dynamic_model_create(table_object=Transaction(),
-                                 request_object=request_body)
-        try:
-            price = Prices.objects.get(date=request_body['trade_date'],
-                                       inst_code=request_body['security'])
-            price.price = request_body['price']
-            price.save()
-        except Prices.DoesNotExist:
-            Prices(inst_code=request_body['security'],
-                   date=request_body['trade_date'],
-                   price=request_body['price']).save()
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+            transaction.save_transaction(broker_name=account.broker_name, transaction='new')
+        #     try:
+        #         price = Prices.objects.get(date=request_body['trade_date'], inst_code=request_body['security'])
+        #         price.price = request_body['price']
+        #         price.save()
+        #     except Prices.DoesNotExist:
+        #         Prices(inst_code=request_body['security'],
+        #                date=request_body['trade_date'],
+        #                price=request_body['price']).save()
+        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
-
-@csrf_exempt
-def cash_holding_calculation(request):
-    if request.method == "POST":
-        request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
-        calculate_cash_holding(portfolio_code=request_body['portfolio_code'],
-                               start_date=request_body['trade_date'],
-                               currency=request_body['currency'])
-        return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
 

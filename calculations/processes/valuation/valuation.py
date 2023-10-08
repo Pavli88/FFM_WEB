@@ -1,4 +1,4 @@
-from portfolio.models import Transaction, TransactionPnl, CashHolding, Holding, Nav, Portfolio
+from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio
 from instrument.models import Instruments, Prices
 import pandas as pd
 from datetime import datetime
@@ -232,7 +232,7 @@ and pt.trade_date = '{trade_date}'
                 # CASH CALCULATION
                 # CASH TRANSACTIONS + CURRENT TRADE CF + PREVIOUS TOTAL CF
                 if len(current_transactions_df) > 0:
-                    total_cash_transactions = current_transactions_df[current_transactions_df['sec_group'] == 'Cash']['mv'].sum()
+                    total_cash_transactions = current_transactions_df[current_transactions_df['sec_group'] == 'Cash']['net_cashflow'].sum()
                 else:
                     total_cash_transactions = 0.0
 
@@ -297,23 +297,32 @@ and pt.trade_date = '{trade_date}'
             # NAV CALC -------------------------------------------------------------------------------------------------
             net_external_flow = current_transactions_df[
                 (current_transactions_df['transaction_type'] == 'Subscription') | (
-                            current_transactions_df['transaction_type'] == 'Redemption')]['mv'].sum()
-            costs = current_transactions_df[current_transactions_df['transaction_type'] == 'Commission']['mv'].sum()
+                        current_transactions_df['transaction_type'] == 'Redemption')]['net_cashflow'].sum()
+
+            costs = current_transactions_df[current_transactions_df['transaction_type'] == 'Commission'][
+                'net_cashflow'].sum()
+
+            # Previous NAV
             previous_nav = Nav.objects.filter(portfolio_code=portfolio_code,
                                               date=previous_date).values()
             if len(previous_nav) == 0:
                 previous_nav = 0
             else:
                 previous_nav = previous_nav[0]['total']
+
+            # Total NAV
             total = previous_nav + net_external_flow + total_pnl + costs
+
             if net_external_flow != 0:
                 total_flow = pd.DataFrame(Transaction.objects.filter(trade_date__lte=calc_date,
-                                                  portfolio_code=portfolio_code).filter(Q(transaction_type='Subscription') | Q(transaction_type='Redemption')).values())['mv'].sum()
+                                                                     portfolio_code=portfolio_code).filter(
+                    Q(transaction_type='Subscription') | Q(transaction_type='Redemption')).values())['net_cashflow'].sum()
             if previous_nav != 0.0:
-                if net_external_flow != 0:
-                    period_return = (total/total_flow)-1
-                else:
-                    period_return = (total - previous_nav - net_external_flow) / previous_nav
+                period_return = (total - previous_nav - net_external_flow) / previous_nav
+                # if net_external_flow != 0:
+                #
+                # else:
+                #     period_return = (total / total_flow) - 1
             else:
                 period_return = 0.0
 
