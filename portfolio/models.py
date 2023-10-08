@@ -97,7 +97,7 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
     def save_transaction(self, **kwargs):
-        if kwargs['transaction'] == 'new':
+        if kwargs['transaction'] == 'new' or kwargs['transaction'] == 'update':
             multiplier = 1
             if self.transaction_type == 'Purchase' or self.sec_group == 'CFD':
                 multiplier = -1
@@ -113,8 +113,12 @@ class Transaction(models.Model):
             self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
             self.local_mv = round(float(self.quantity) * float(self.price), 5)
 
+            # Updating Main Transaction
+            if 'id' in kwargs:
+                self.id = kwargs['id']
+                self.created_on = datetime.now()
+
         if kwargs['transaction'] == 'linked':
-            print('NEW LINKED TRANSACTION')
             main_transaction = Transaction.objects.get(id=self.transaction_link_code)
             transaction_weight = abs(float(self.quantity) / float(main_transaction.quantity))
 
@@ -138,12 +142,6 @@ class Transaction(models.Model):
             self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
             self.local_mv = round(float(self.quantity) * float(self.price), 5)
             self.fx_pnl = round((float(self.fx_rate) - main_transaction.fx_rate) * main_transaction.quantity, 5)
-
-        # Updating Main Transaction
-        if 'main_id' in kwargs:
-            print('ID has to be updated:', kwargs['main_id'])
-            self.id = kwargs['main_id']
-            self.created_on = datetime.now()
         super().save()
 
 

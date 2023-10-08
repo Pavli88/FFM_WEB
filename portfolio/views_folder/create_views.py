@@ -84,7 +84,7 @@ def save_transaction(request):
         )
         print(request_body['transaction_link_code'], type(request_body['transaction_link_code']))
         if 'id' in request_body:
-            transaction.save_transaction(broker_name=account.broker_name, main_id=request_body['id'])
+            transaction.save_transaction(broker_name=account.broker_name, transaction='update', id=request_body['id'])
         elif request_body['transaction_link_code'] != 0:
             transaction.save_transaction(broker_name=account.broker_name, transaction='linked')
         else:
