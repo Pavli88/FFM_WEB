@@ -97,7 +97,7 @@ def save_transaction(request):
         #         Prices(inst_code=request_body['security'],
         #                date=request_body['trade_date'],
         #                price=request_body['price']).save()
-        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
 
