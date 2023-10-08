@@ -29,11 +29,13 @@ class Portfolio(models.Model):
     description = models.CharField(max_length=2000, default="")
 
 
-class Robots(models.Model):
+class TradeRoutes(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     inst_id = models.IntegerField()
     ticker_id = models.IntegerField()
     broker_account_id = models.IntegerField()
+    is_active = models.BooleanField(default=False)
+    quantity = models.IntegerField(default=0)
 
 
 class Nav(models.Model):

@@ -1,7 +1,7 @@
 import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from portfolio.models import Robots, Portfolio, Transaction
+from portfolio.models import TradeRoutes, Portfolio, Transaction
 from instrument.models import Instruments, Tickers, Prices
 from accounts.models import BrokerAccounts
 import json
@@ -14,14 +14,14 @@ from calculations.processes.valuation.valuation import calculate_holdings
 def create_robot(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        if Robots.objects.filter(portfolio_code=request_data['portfolio_code'],
-                                 inst_id=request_data['inst_id']).exists():
+        if TradeRoutes.objects.filter(portfolio_code=request_data['portfolio_code'],
+                                      inst_id=request_data['inst_id']).exists():
             return JsonResponse({'response': 'Security is already mapped to this portfolio'}, safe=False)
         else:
-            Robots(portfolio_code=request_data['portfolio_code'],
-                   inst_id=request_data['inst_id'],
-                   ticker_id=request_data['ticker_id'],
-                   broker_account_id=request_data['broker_account_id']).save()
+            TradeRoutes(portfolio_code=request_data['portfolio_code'],
+                        inst_id=request_data['inst_id'],
+                        ticker_id=request_data['ticker_id'],
+                        broker_account_id=request_data['broker_account_id']).save()
             return JsonResponse({'response': 'Security mapping is completed'}, safe=False)
 
 

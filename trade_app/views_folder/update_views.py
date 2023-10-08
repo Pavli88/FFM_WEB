@@ -51,3 +51,4 @@ def close_transaction(request):
                                            request_object=request_body)
         return JsonResponse({'response': 'Transaction is closed',
                              'transaction_id': transaction.id}, safe=False)
+

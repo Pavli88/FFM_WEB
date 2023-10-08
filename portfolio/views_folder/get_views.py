@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, Transaction, Holding, Nav
+from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 
@@ -49,13 +49,6 @@ def get_portfolio_transactions(request):
         # for i in df.to_dict('records'):
         #     print(type(i))
         return JsonResponse(transactions, safe=False)
-
-
-def get_main_portfolio_cashflows(request):
-    if request.method == "GET":
-        records = CashFlow.objects.filter(portfolio_code=request.GET.get("portfolio_code")).values()
-        df = pd.DataFrame(records).pivot_table(index='currency', columns='type', values='amount', aggfunc='sum').fillna(0).reset_index()
-        return JsonResponse(df.to_dict('records'), safe=False)
 
 
 def get_open_transactions(request):
@@ -132,21 +125,6 @@ from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfol
             'dates': df['trade_date'].tolist(),
             'series': series
         }, safe=False)
-
-
-def available_cash(request):
-    if request.method == "GET":
-        try:
-            cash_holding = CashHolding.objects.filter(portfolio_code=request.GET.get("portfolio_code")).order_by(
-                'date').latest('date')
-            response = {'currency': cash_holding.currency,
-                        'amount': round(cash_holding.amount, 2),
-                        'date': cash_holding.date}
-        except:
-            response = {'currency': '',
-                        'amount': 0.0,
-                        'date': ''}
-        return JsonResponse(response, safe=False)
 
 
 def get_nav(request):
@@ -296,4 +274,29 @@ and pt.end_date='{date}';""".format(date=request.GET.get("date")))
         df = df.pivot_table('total_return',
                             ['portfolio_name'],
                             'period').reset_index().fillna(0.0)
+        return JsonResponse(df.to_dict('records'), safe=False)
+
+
+def get_trade_routes(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+        select pt.id,
+       pt.is_active,
+       pt.quantity,
+       pt.broker_account_id,
+       pt.inst_id,
+       instrument_instruments.name,
+       source_ticker, source,
+       broker_name,
+       account_number from portfolio_traderoutes as pt
+inner join instrument_instruments on pt.inst_id = instrument_instruments.id
+inner join instrument_tickers on pt.ticker_id = instrument_tickers.id
+inner join accounts_brokeraccounts on pt.broker_account_id = accounts_brokeraccounts.id
+where pt.portfolio_code = '{portfolio_code}';
+        """.format(portfolio_code=request.GET.get("portfolio_code")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+
         return JsonResponse(df.to_dict('records'), safe=False)

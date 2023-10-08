@@ -37,15 +37,15 @@ def get_account_data(request, account):
         return JsonResponse(response, safe=False)
 
 
-def get_accounts_data(request):
-    if request.method == "GET":
-        filters = {}
-        for key, value in request.GET.items():
-            if key in ['broker_name', 'account_number', 'env']:
-                filters[key] = value
-        accounts = BrokerAccounts.objects.filter(**filters).values()
-        response = list(accounts)
-        return JsonResponse(response, safe=False)
+# def get_accounts_data(request):
+#     if request.method == "GET":
+#         filters = {}
+#         for key, value in request.GET.items():
+#             if key in ['broker_name', 'account_number', 'env']:
+#                 filters[key] = value
+#         accounts = BrokerAccounts.objects.filter(**filters).values()
+#         response = list(accounts)
+#         return JsonResponse(response, safe=False)
 
 
 def get_brokers(request):

@@ -8,7 +8,7 @@ calculate_views = [
 ]
 
 create_views = [
-    path('portfolios/create/robot/', create_views.create_robot),
+    path('portfolios/new/trade_routing/', create_views.create_robot),
     path('portfolios/new/portfolio/', create_views.create_portfolio),
     path('portfolios/new/cashflow/', create_views.create_cashflow),
     path('portfolios/save/transaction/', create_views.save_transaction),
@@ -27,20 +27,21 @@ get_views = [
     path('portfolios/get/transactions/pnl/', get_views.transactions_pnls),
     path('portfolios/aggregated_pnl/', get_views.aggregated_security_pnl),
     path('portfolios/daily_cashflow/', get_views.daily_cashflow_by_type),
-    path('portfolios/available_cash/', get_views.available_cash),
     path('portfolios/get/open_transactions/', get_views.get_open_transactions),
     path('portfolios/get/transactions/', get_views.get_portfolio_transactions),
-    path('portfolios/get/main_portfolio_cashflow/', get_views.get_main_portfolio_cashflows),
     path('portfolios/get/perf_dashboard/', get_views.get_perf_dashboard),
+    path('portfolios/get/trade_routes/', get_views.get_trade_routes),
 ]
 
 update_views = [
     path('portfolios/update/portfolio/', update_view.update_portfolio),
     path('portfolios/update/transaction/', update_view.update_transaction),
+    path('portfolios/update/trade_routing/', update_view.update_trade_routing),
 ]
 
 delete_views = [
     path('portfolios/delete/transaction/', delete_views.delete_transaction),
+    path('portfolios/delete/trade_routing/', delete_views.delete_trade_routing),
 ]
 
 other_patterns = [

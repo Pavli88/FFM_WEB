@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from accounts.models import BrokerAccounts
 from instrument.models import Instruments, Tickers, Prices
-from portfolio.models import Portfolio, Transaction, Robots, Nav
+from portfolio.models import Portfolio, Transaction, Nav
 from trade_app.models import Notifications
 from app_functions.request_functions import *
 from django.db import connection
