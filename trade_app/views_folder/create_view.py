@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from accounts.models import BrokerAccounts
 from instrument.models import Instruments, Tickers, Prices
-from portfolio.models import Portfolio, Transaction, Nav
+from portfolio.models import Portfolio, Transaction, Nav, TradeRoutes
 from trade_app.models import Notifications
 from app_functions.request_functions import *
 from django.db import connection
@@ -191,14 +191,39 @@ class TradeExecution:
 def new_transaction_signal(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
         trade_date = date.today()
+
+        # OLD Signal
         # request_body = {'portfolio_code': 'TST',
         #                 'account_id': 6,
         #                 'security': 74,
         #                 'transaction_type': 'Close',
         #                 'quantity': 1,
         #                 }
-        print(request_body)
+        # NEW Signal
+        # request_body = {'portfolio_code': 'TST',
+        #                 'security': 74,
+        #                 'transaction_type': 'Close',
+        #                 'quantity': 1,
+        #                 }
+        try:
+            routing = TradeRoutes.objects.get(portfolio_code=request_body['portfolio_code'],
+                                              inst_id=request_body['security'])
+        except:
+            Notifications(portfolio_code=request_body['portfolio_code'],
+                          message='Missing trade routing. Security Code: ' + str(request_body['security']),
+                          sub_message='Error',
+                          broker_name='-').save()
+            return JsonResponse({}, safe=False)
+
+        if routing.is_active == 0:
+            Notifications(portfolio_code=request_body['portfolio_code'],
+                          message='Rejected Trade. Inactive Routing. Security: ' + str(request_body['security']),
+                          sub_message='Inactive trade routing',
+                          broker_name='-').save()
+            return JsonResponse({}, safe=False)
+
         execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
                                    account_id=request_body['account_id'],
                                    security=request_body['security'],
