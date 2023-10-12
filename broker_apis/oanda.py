@@ -136,5 +136,6 @@ if __name__ == "__main__":
         "to": "2023-10-04"
     }
 
-    data = o.candle_data(instrument='XAG_USD',
+    data = o.candle_data(instrument='HUF_USD',
                          params=params)
+    print(data)
