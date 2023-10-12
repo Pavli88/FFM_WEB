@@ -407,7 +407,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                      'comment': 'Portfolio is not funded. Valuation is not possible'})
         return valuation.send_responses()
 
-    while calc_date <= datetime(2023, 10, 9).date():#date.today():
+    while calc_date <= date.today():
         if valuation.portfolio_data.weekend_valuation is False and (calc_date.weekday() == 6 or calc_date.weekday() == 5):
             print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
         else:
