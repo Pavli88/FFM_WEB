@@ -197,8 +197,7 @@ and pt.trade_date = '{trade_date}'
         # POSITION VALUATION
         intrument_list = list(dict.fromkeys(self.holding_df['instrument_id']))
         prices_df = pd.DataFrame(Prices.objects.filter(date=self.calc_date, inst_code__in=intrument_list).values())
-        # print(self.calc_date)
-        # print(self.fx_rates)
+
         for index, trade in self.holding_df.iterrows():
             if trade['currency'] == self.portfolio_data.currency:
                 fx_rate = 1
@@ -209,7 +208,19 @@ and pt.trade_date = '{trade_date}'
                     fx_rate = self.fx_rates[self.fx_rates['reverse_pair'] == searched_pair]
                 fx_rate = fx_rate['fx_rate'].sum()
 
-            valuation_price = list(prices_df[prices_df['inst_code'] == trade['instrument_id']]['price'])[0]
+            try:
+                valuation_price = list(prices_df[prices_df['inst_code'] == trade['instrument_id']]['price'])[0]
+            except:
+                self.error_list.append(
+                    {'portfolio_code': self.portfolio_code,
+                     'date': self.calc_date,
+                     'process': 'Valuation',
+                     'exception': 'Missing Price',
+                     'status': 'Error',
+                     'comment': 'Missing Price for ID (' + str(trade['instrument_id']) + ')'}
+                )
+                valuation_price = 1
+
             self.holding_df.at[index, 'valuation_price'] = valuation_price
             self.holding_df.at[index, 'fx_rate'] = fx_rate
         self.holding_df['ending_mv'] = self.holding_df['ending_pos'] * self.holding_df['valuation_price'] * self.holding_df['fx_rate']
