@@ -76,14 +76,19 @@ and pt.trade_date = '{trade_date}'
             if trade['currency'] == self.portfolio_data.currency:
                 asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow']
             else:
-                fx_rate = self.fx_rates[self.fx_rates['name'] == trade['name']]['fx_rate'].sum()
+                # fx_rate = self.fx_rates[self.fx_rates['name'] == trade['name']]['fx_rate'].sum()
+
+                searched_pair = trade['currency'] + '/' + self.portfolio_data.currency
+                fx_rate = self.fx_rates[self.fx_rates['name'] == searched_pair]
+                if fx_rate.empty:
+                    fx_rate = self.fx_rates[self.fx_rates['reverse_pair'] == searched_pair]
+                fx_rate = fx_rate['fx_rate'].sum()
+
                 asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow'] * fx_rate
                 asset_flows.at[index, 'base_margin_balance'] = trade['margin_balance'] * fx_rate
-                print('ID', trade['id'], 'FX', fx_rate)
+                # print('ID', trade['id'], 'FX', fx_rate, 'Sec', trade['security'], 'name', trade['name'])
         self.asset_df = asset_flows
         self.transactions = df
-        print(self.fx_rates)
-        # print(self.asset_df)
 
     def fetch_previous_valuation(self, previous_date, portfolio_code):
         try:
@@ -143,7 +148,6 @@ and pt.trade_date = '{trade_date}'
 
     def asset_valuation(self):
         # PROCESSING EXISTING TRANSACTIONS AND NEW RELATED TRANSACTIONS
-
         try:
             previous_assets = self.previous_valuation[(self.previous_valuation['type'] != 'Cash') & (self.previous_valuation['type'] != 'Leverage')]
         except:
@@ -247,35 +251,6 @@ and pt.trade_date = '{trade_date}'
             self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
         self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
         self.total_leverage = self.holding_df['base_leverage'].sum()
-
-    def leverage_calculation(self):
-        print('')
-        # if self.previous_valuation.empty:
-        #     previous_leverage = 0.0
-        # else:
-        #     previous_leverage = float(self.previous_valuation[self.previous_valuation['type'] == 'Leverage']['ending_mv'].sum())
-        #
-        # leverage_df = pd.DataFrame({
-        #     'transaction_id': ['-'],
-        #     'instrument_name': ['Leverage'],
-        #     'instrument_id': [0],
-        #     'group': ['Leverage'],
-        #     'type': ['Leverage'],
-        #     'currency': [self.portfolio_data.currency],
-        #     'trade_date': [str(self.calc_date)],
-        #     'transaction_type': ['Leverage'],
-        #     'beginning_pos': [previous_leverage],
-        #     'ending_pos': [previous_leverage + float(self.asset_df['base_margin_balance'].sum())],
-        #     'change': [previous_leverage + float(self.asset_df['base_margin_balance'].sum()) - previous_leverage],
-        #     'trade_price': [1],
-        #     'valuation_price': [1],
-        #     'fx_rate': [0],
-        #     'beginning_mv': [previous_leverage],
-        #     'ending_mv': [previous_leverage + float(self.asset_df['base_margin_balance'].sum())],
-        #     'unrealized_pnl': [0]
-        # })
-        # self.holding_df = pd.concat([self.holding_df, leverage_df], ignore_index=True)
-        # self.total_leverage = previous_leverage + self.asset_df['base_margin_balance'].sum()
 
     def cash_calculation(self):
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
@@ -438,8 +413,6 @@ def calculate_holdings(portfolio_code, calc_date):
             valuation.fetch_transactions(trade_date=calc_date)
             valuation.asset_valuation()
             valuation.cash_calculation()
-            valuation.leverage_calculation()
-
             valuation.save_holding(trade_date=calc_date,
                                    portfolio_code=portfolio_code,
                                    holding_data=valuation.holding_df)
