@@ -18,6 +18,7 @@ class Valuation():
         self.total_cash_flow = 0.0
         self.asset_df = ''
         self.total_external_flow = 0.0
+        self.total_leverage = 0.0
         self.response_list = []
         self.error_list = []
         self.portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
@@ -44,7 +45,7 @@ class Valuation():
             'fx_rate': [],
             'beginning_mv': [],
             'ending_mv': [],
-            'pnl': []
+            'unrealized_pnl': []
         })
 
     def fetch_transactions(self, trade_date):
@@ -69,12 +70,14 @@ and pt.trade_date = '{trade_date}'
 
         asset_flows = df[df['sec_group'] != 'Cash']
         asset_flows['base_cashflow'] = asset_flows['net_cashflow']
+        asset_flows['base_margin_balance'] = asset_flows['margin_balance']
         for index, trade in asset_flows.iterrows():
             if trade['currency'] == self.portfolio_data.currency:
                 asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow']
             else:
                 fx_rate = self.fx_rates[self.fx_rates['name'] == trade['name']]['fx_rate'].sum()
                 asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow'] * fx_rate
+                asset_flows.at[index, 'base_margin_balance'] = trade['margin_balance'] * fx_rate
         self.asset_df = asset_flows
         self.transactions = df
 
@@ -137,10 +140,9 @@ and pt.trade_date = '{trade_date}'
     def asset_valuation(self):
         # PROCESSING EXISTING TRANSACTIONS AND NEW RELATED TRANSACTIONS
         try:
-            previous_assets = self.previous_valuation[self.previous_valuation['type'] != 'Cash']
+            previous_assets = self.previous_valuation[(self.previous_valuation['type'] != 'Cash') & (self.previous_valuation['type'] != 'Leverage')]
         except:
             previous_assets = pd.DataFrame({})
-
         if previous_assets.empty is not True:
             for index, trade in previous_assets.iterrows():
                 # Filtering for linked transactions
@@ -160,7 +162,7 @@ and pt.trade_date = '{trade_date}'
                     str(trade['trade_date']),
                     trade['transaction_type'],
                     trade['ending_pos'],
-                    trade['ending_pos'] - linked_quantity,
+                    trade['ending_pos'] - abs(linked_quantity),
                     0,
                     round(trade['trade_price'], 4),
                     0,
@@ -185,7 +187,7 @@ and pt.trade_date = '{trade_date}'
                     str(trade['trade_date']),
                     trade['transaction_type'],
                     0,
-                    trade['quantity'] - linked_transactions['quantity'].sum(),
+                    trade['quantity'] - abs(linked_transactions['quantity'].sum()),
                     0,
                     round(trade['price'], 4),
                     0,
@@ -223,13 +225,49 @@ and pt.trade_date = '{trade_date}'
 
             self.holding_df.at[index, 'valuation_price'] = valuation_price
             self.holding_df.at[index, 'fx_rate'] = fx_rate
-        self.holding_df['ending_mv'] = self.holding_df['ending_pos'] * self.holding_df['valuation_price'] * self.holding_df['fx_rate']
 
-        # print(self.holding_df)
+            if trade['ending_pos'] == 0.0:
+                unrealized_pnl = 0.0
+            else:
+                if trade['transaction_type'] == 'Purchase':
+                    unrealized_pnl = trade['ending_pos'] * (valuation_price - trade['trade_price']) * fx_rate
+                else:
+                    unrealized_pnl = trade['ending_pos'] * (trade['trade_price'] - valuation_price) * fx_rate
+
+            self.holding_df.at[index, 'unrealized_pnl'] = unrealized_pnl
+            self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
+        self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
 
     def leverage_calculation(self):
 
-        return ''
+        if self.previous_valuation.empty:
+            previous_leverage = 0.0
+        else:
+            previous_leverage = self.previous_valuation[self.previous_valuation['type'] == 'Leverage']['ending_mv'].sum()
+
+        leverage_df = pd.DataFrame({
+            'transaction_id': ['-'],
+            'instrument_name': ['Leverage'],
+            'instrument_id': [0],
+            'group': ['Leverage'],
+            'type': ['Leverage'],
+            'currency': [self.portfolio_data.currency],
+            'trade_date': [str(self.calc_date)],
+            'transaction_type': ['Leverage'],
+            'beginning_pos': [previous_leverage],
+            'ending_pos': [previous_leverage + self.asset_df['base_margin_balance'].sum()],
+            'change': [previous_leverage + self.asset_df['base_margin_balance'].sum() - previous_leverage],
+            'trade_price': [1],
+            'valuation_price': [1],
+            'fx_rate': [0],
+            'beginning_mv': [previous_leverage],
+            'ending_mv': [previous_leverage + self.asset_df['base_margin_balance'].sum()],
+            'unrealized_pnl': [0]
+        })
+        self.holding_df = pd.concat([self.holding_df, leverage_df], ignore_index=True)
+        self.total_leverage = previous_leverage + self.asset_df['base_margin_balance'].sum()
+
+
 
     def cash_calculation(self):
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
@@ -257,9 +295,10 @@ and pt.trade_date = '{trade_date}'
             'fx_rate': 0,
             'beginning_mv': previous_cashflow,
             'ending_mv': float(total_cash_flow),
-            'pnl': 0
+            'unrealized_pnl': 0
         }
         self.total_cash_flow = total_cash_flow
+        self.holding_df['change'] = self.holding_df['ending_pos'] - self.holding_df['beginning_pos']
 
     def nav_calculation(self, calc_date, previous_date, portfolio_code):
         # # Previous NAV
@@ -278,13 +317,13 @@ and pt.trade_date = '{trade_date}'
         else:
             period_return = 0.0
 
-        total_asset_value = self.holding_df[self.holding_df['type'] != 'Cash']['ending_mv']
+        total_asset_value = self.holding_df[(self.holding_df['type'] != 'Cash') & (self.holding_df['type'] != 'Leverage')]['ending_mv']
 
         if self.portfolio_data.calc_holding == True:
             asset_value = total_asset_value.sum() # -> Update
             cash_value = self.total_cash_flow
-            liability = 0 # -> Update
-            h_nav = total_asset_value.sum() # -> Update
+            liability = self.total_leverage
+            h_nav = total_asset_value.sum() + self.total_cash_flow - self.total_leverage
         else:
             asset_value = 0.0
             cash_value = 0.0
@@ -367,10 +406,9 @@ def calculate_holdings(portfolio_code, calc_date):
                 time_back = 3
             else:
                 time_back = 1
+            print('Valuation Date', calc_date)
             previous_date = calc_date - timedelta(days=time_back)
-
             valuation.fetch_previous_valuation(previous_date=previous_date, portfolio_code=portfolio_code)
-
             if valuation.previous_valuation.empty and calc_date != valuation.portfolio_data.inception_date:
                 valuation.add_error_message({'portfolio_code': portfolio_code,
                                              'date': calc_date,
@@ -391,15 +429,13 @@ def calculate_holdings(portfolio_code, calc_date):
             valuation.fetch_transactions(trade_date=calc_date)
             valuation.asset_valuation()
             valuation.cash_calculation()
+            valuation.leverage_calculation()
+
             valuation.save_holding(trade_date=calc_date,
                                    portfolio_code=portfolio_code,
                                    holding_data=valuation.holding_df)
             valuation.nav_calculation(calc_date=calc_date,
                                       previous_date=previous_date,
                                       portfolio_code=portfolio_code)
-
-#                 holding_df = holding_df[holding_df.ending_pos != 0]
-#                 holding_nav = holding_df[holding_df['type'] != 'Leverage']['ending_mv'].sum() - holding_df[holding_df['type'] == 'Leverage']['ending_mv'].sum()
-
         calc_date = calc_date + timedelta(days=1)
     return valuation.send_responses()
