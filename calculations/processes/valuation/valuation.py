@@ -234,7 +234,7 @@ and pt.trade_date = '{trade_date}'
                 else:
                     unrealized_pnl = trade['ending_pos'] * (trade['trade_price'] - valuation_price) * fx_rate
 
-            self.holding_df.at[index, 'unrealized_pnl'] = unrealized_pnl
+            self.holding_df.at[index, 'unrealized_pnl'] = float(unrealized_pnl)
             self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
         self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
 
@@ -243,7 +243,7 @@ and pt.trade_date = '{trade_date}'
         if self.previous_valuation.empty:
             previous_leverage = 0.0
         else:
-            previous_leverage = self.previous_valuation[self.previous_valuation['type'] == 'Leverage']['ending_mv'].sum()
+            previous_leverage = float(self.previous_valuation[self.previous_valuation['type'] == 'Leverage']['ending_mv'].sum())
 
         leverage_df = pd.DataFrame({
             'transaction_id': ['-'],
@@ -255,13 +255,13 @@ and pt.trade_date = '{trade_date}'
             'trade_date': [str(self.calc_date)],
             'transaction_type': ['Leverage'],
             'beginning_pos': [previous_leverage],
-            'ending_pos': [previous_leverage + self.asset_df['base_margin_balance'].sum()],
-            'change': [previous_leverage + self.asset_df['base_margin_balance'].sum() - previous_leverage],
+            'ending_pos': [previous_leverage + float(self.asset_df['base_margin_balance'].sum())],
+            'change': [previous_leverage + float(self.asset_df['base_margin_balance'].sum()) - previous_leverage],
             'trade_price': [1],
             'valuation_price': [1],
             'fx_rate': [0],
             'beginning_mv': [previous_leverage],
-            'ending_mv': [previous_leverage + self.asset_df['base_margin_balance'].sum()],
+            'ending_mv': [previous_leverage + float(self.asset_df['base_margin_balance'].sum())],
             'unrealized_pnl': [0]
         })
         self.holding_df = pd.concat([self.holding_df, leverage_df], ignore_index=True)
@@ -287,13 +287,13 @@ and pt.trade_date = '{trade_date}'
             'currency': self.portfolio_data.currency,
             'trade_date': 0,
             'transaction_type': 'Cash',
-            'beginning_pos': previous_cashflow,
+            'beginning_pos': float(previous_cashflow),
             'ending_pos': float(total_cash_flow),
             'change': 0,
             'trade_price': 1,
             'valuation_price': 1,
             'fx_rate': 0,
-            'beginning_mv': previous_cashflow,
+            'beginning_mv': float(previous_cashflow),
             'ending_mv': float(total_cash_flow),
             'unrealized_pnl': 0
         }
