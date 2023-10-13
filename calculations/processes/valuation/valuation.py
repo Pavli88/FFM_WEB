@@ -309,7 +309,7 @@ and pt.trade_date = '{trade_date}'
             asset_value = total_asset_value.sum() # -> Update
             cash_value = self.total_cash_flow
             liability = self.total_leverage
-            h_nav = total_asset_value.sum() + self.total_cash_flow - self.total_leverage
+            h_nav = total + total_unrealized_pnl
         else:
             asset_value = 0.0
             cash_value = 0.0
