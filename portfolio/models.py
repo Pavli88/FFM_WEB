@@ -51,6 +51,7 @@ class Nav(models.Model):
     nav_per_share = models.FloatField(default=0.0)
     period_return = models.FloatField(default=0.0)
     pnl = models.FloatField(default=0.0)
+    unrealized_pnl = models.FloatField(default=0.0)
     date = models.DateField()
     holding_nav = models.FloatField(default=0.0)
 

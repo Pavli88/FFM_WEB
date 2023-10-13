@@ -293,7 +293,9 @@ and pt.trade_date = '{trade_date}'
             previous_nav = previous_nav[0]['total']
 
         # Total NAV
-        total = previous_nav + self.total_external_flow + self.asset_df['realized_pnl'].sum()
+        total_realized_pnl = round(self.asset_df['realized_pnl'].sum(), 2)
+        total_unrealized_pnl = round(self.holding_df['unrealized_pnl'].sum(), 2)
+        total = previous_nav + self.total_external_flow + total_realized_pnl
 
         # Total Return Calculation
         if previous_nav != 0.0:
@@ -321,6 +323,8 @@ and pt.trade_date = '{trade_date}'
             nav.short_liab = liability
             nav.total = total
             nav.holding_nav = h_nav
+            nav.pnl = total_realized_pnl
+            nav.unrealized_pnl = total_unrealized_pnl
             nav.period_return = round(period_return, 5)
             nav.save()
         except:
@@ -331,6 +335,8 @@ and pt.trade_date = '{trade_date}'
                 short_liab=liability,
                 total=total,
                 holding_nav=h_nav,
+                pnl=total_realized_pnl,
+                unrealized_pnl=total_unrealized_pnl,
                 period_return=round(period_return, 5)).save()
 
         self.response_list.append({'portfolio_code': portfolio_code,
