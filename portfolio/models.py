@@ -35,7 +35,7 @@ class TradeRoutes(models.Model):
     ticker_id = models.IntegerField()
     broker_account_id = models.IntegerField()
     is_active = models.BooleanField(default=False)
-    quantity = models.IntegerField(default=0)
+    quantity = models.IntegerField(default=1)
 
 
 class Nav(models.Model):

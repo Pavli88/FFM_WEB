@@ -42,7 +42,7 @@ class TradeExecution:
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message=transaction_type + ' ' + self.security.name + ' ' + quantity,
+                          message=transaction_type + ' ' + self.security.name + ' ' + str(quantity),
                           sub_message='Rejected - ' + trade['response']['reason'],
                           broker_name=self.account.broker_name).save()
             return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
@@ -89,7 +89,7 @@ class TradeExecution:
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=transaction_type + ' ' + self.security.name + ' ' + quantity + ' @ ' + trade_price,
+                      message=transaction_type + ' ' + self.security.name + ' ' + str(quantity) + ' @ ' + trade_price,
                       sub_message='Executed',
                       broker_name=self.account.broker_name).save()
 
@@ -118,7 +118,8 @@ class TradeExecution:
             # Main transaction update
             dynamic_model_update(table_object=Transaction,
                                  request_object={'id': transaction['id'],
-                                                 'is_active': 0})
+                                                 'is_active': 0,
+                                                 'open_status': 'Closed'})
 
         # FX Conversion to Base Currency
         conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
@@ -224,8 +225,15 @@ def new_transaction_signal(request):
                           broker_name='-').save()
             return JsonResponse({}, safe=False)
 
+        if 'manual' in request_body:
+            quantity_multiplier = 1
+            account_id = request_body['account_id']
+        else:
+            quantity_multiplier = routing.quantity
+            account_id = routing.broker_account_id
+
         execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
-                                   account_id=request_body['account_id'],
+                                   account_id=account_id,
                                    security=request_body['security'],
                                    trade_date=trade_date)
 
@@ -264,7 +272,7 @@ def new_transaction_signal(request):
                 closed_out_units = 0
             else:
                 closed_out_units = closed_transactions['quantity'].sum()
-            quantity = transaction['quantity'] + closed_out_units
+            quantity = transaction['quantity'] - abs(closed_out_units)
             execution.close(transaction=transaction, quantity=quantity)
         else:
             if 'sl' in request_body:
@@ -275,6 +283,6 @@ def new_transaction_signal(request):
                 quantity = str(int(risked_amount / price_diff))
                 request_body['quantity'] = quantity
             execution.new_trade(transaction_type=request_body['transaction_type'],
-                                quantity=request_body['quantity'])
+                                quantity=float(request_body['quantity']) * quantity_multiplier)
         calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
         return JsonResponse({}, safe=False)
