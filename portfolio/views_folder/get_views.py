@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
-
+from calculations.processes.valuation.valuation import calculate_holdings
 
 def get_portfolios(request):
     if request.method == "GET":
@@ -191,6 +191,7 @@ def transactions_pnls(request):
 
 def get_holding(request):
     if request.method == "GET":
+        print("GET PORTHOLDING")
         try:
             holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
             return JsonResponse(holding_df.to_dict('records'), safe=False)
@@ -226,28 +227,22 @@ and inst.group != 'Cash';
 
 def get_exposures(request):
     if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-                        select inst.name, pt.quantity, pt.mv, pt.trade_date 
-from portfolio_transaction as pt, instrument_instruments inst
-where pt.security = inst.id
-and inst.type != 'Cash'
-and pt.portfolio_code='{portfolio_code}'
-and pt.trade_date >= '{start_date}';""".format(portfolio_code=request.GET.get("portfolio_code"),
-                                   start_date=request.GET.get("start_date")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        pivot = pd.pivot_table(df, values='mv', index=['trade_date'], columns=['name'], aggfunc=np.sum).fillna(0).cumsum().reset_index()
-
-        series_list = []
-        for column in pivot.columns.values:
-            print(column)
-            if column != 'trade_date':
-                series_list.append({'name': column,
-                                    'data': pivot[column].tolist()})
-
-        return JsonResponse({'dates': pivot['trade_date'].tolist(), 'series': series_list}, safe=False)
+        try:
+            # responses = calculate_holdings(portfolio_code=request.GET.get("portfolio_code"), calc_date=request.GET.get("date"))
+            # print(responses)
+            holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
+            nav = Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date=request.GET.get("date")).values()[0]['total']
+            holding_df['contribution'] = (holding_df['unrealized_pnl'] / nav) * 100
+            holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round({'ending_mv': 1,
+                                                                            'base_leverage': 1,
+                                                                            'unrealized_pnl': 2,
+                                                                            'fx_rate': 2,
+                                                                            'trade_price': 4,
+                                                                            'valuation_price': 4,
+                                                                            'contribution': 2})
+            return JsonResponse({'data': holding_df.to_dict('records'), 'nav': round(nav, 2)}, safe=False)
+        except Holding.DoesNotExist:
+            return JsonResponse([{}], safe=False)
 
 
 def get_drawdown(request):
