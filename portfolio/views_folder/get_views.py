@@ -242,7 +242,7 @@ def get_exposures(request):
                                                                             'contribution': 2})
             return JsonResponse({'data': holding_df.to_dict('records'), 'nav': round(nav, 2)}, safe=False)
         except Holding.DoesNotExist:
-            return JsonResponse([{}], safe=False)
+            return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
 
 
 def get_drawdown(request):
