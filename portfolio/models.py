@@ -27,6 +27,7 @@ class Portfolio(models.Model):
     valuation_frequency = models.CharField(max_length=30, default="Daily")
     calc_holding = models.BooleanField(default=False)
     description = models.CharField(max_length=2000, default="")
+    pricing_tolerance = models.IntegerField(default=30)
 
 
 class TradeRoutes(models.Model):

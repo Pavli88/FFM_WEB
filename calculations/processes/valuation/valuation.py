@@ -226,15 +226,31 @@ and pt.trade_date = '{trade_date}'
             try:
                 valuation_price = list(prices_df[prices_df['inst_code'] == trade['instrument_id']]['price'])[0]
             except:
-                self.error_list.append(
-                    {'portfolio_code': self.portfolio_code,
-                     'date': self.calc_date,
-                     'process': 'Valuation',
-                     'exception': 'Missing Price',
-                     'status': 'Error',
-                     'comment': 'Missing Price for ID (' + str(trade['instrument_id']) + ')'}
-                )
-                valuation_price = 1
+                # print(self.portfolio_data.pricing_tolerance, trade['instrument_id'], self.calc_date, self.calc_date-timedelta(days=self.portfolio_data.pricing_tolerance))
+                price_look_back = Prices.objects.filter(inst_code=trade['instrument_id'], date__gte=self.calc_date-timedelta(days=self.portfolio_data.pricing_tolerance), date__lte=self.calc_date).order_by('-date').values()
+                # print(price_look_back, len(price_look_back))
+                if len(price_look_back) == 0:
+                    self.error_list.append(
+                        {'portfolio_code': self.portfolio_code,
+                         'date': self.calc_date,
+                         'process': 'Valuation',
+                         'exception': 'Missing Price',
+                         'status': 'Error',
+                         'comment': 'Missing Price for ID (' + str(trade['instrument_id']) + ')'}
+                    )
+                    valuation_price = 1
+                else:
+                    # print('')
+                    # print('PRICE LOOKBACK', price_look_back[0])
+                    self.error_list.append(
+                        {'portfolio_code': self.portfolio_code,
+                         'date': self.calc_date,
+                         'process': 'Valuation',
+                         'exception': 'Price Tolerance',
+                         'status': 'Alert',
+                         'comment': str(self.portfolio_data.pricing_tolerance) + ' days price tolerance for ID (' + str(trade['instrument_id']) + '). Price: ' + str(price_look_back[0]['price'])}
+                    )
+                    valuation_price = price_look_back[0]['price']
 
             self.holding_df.at[index, 'valuation_price'] = valuation_price
             self.holding_df.at[index, 'fx_rate'] = fx_rate
