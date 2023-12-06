@@ -230,17 +230,37 @@ def get_exposures(request):
         try:
             # responses = calculate_holdings(portfolio_code=request.GET.get("portfolio_code"), calc_date=request.GET.get("date"))
             # print(responses)
+            stress_percentage = float(request.GET.get("stress_percentage")) / 100
             holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
             nav = Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date=request.GET.get("date")).values()[0]['total']
             holding_df['contribution'] = (holding_df['unrealized_pnl'] / nav) * 100
-            holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round({'ending_mv': 1,
-                                                                            'base_leverage': 1,
-                                                                            'unrealized_pnl': 2,
-                                                                            'fx_rate': 2,
-                                                                            'trade_price': 4,
-                                                                            'valuation_price': 4,
-                                                                            'contribution': 2})
-            return JsonResponse({'data': holding_df.to_dict('records'), 'nav': round(nav, 2)}, safe=False)
+            holding_df['ticked'] = False
+            holding_df['sim_price'] = np.where(holding_df['transaction_type'] == 'Purchase', holding_df['valuation_price'] * (1 - stress_percentage), holding_df['valuation_price'] * (1 + stress_percentage))
+            holding_df['sim_profit'] = np.where(holding_df['transaction_type'] == 'Purchase', (holding_df['sim_price'] - holding_df['trade_price']) * holding_df['ending_pos'] * holding_df['fx_rate'], (holding_df['trade_price'] - holding_df['sim_price']) * holding_df['ending_pos'] * holding_df['fx_rate'])
+            holding_df['sim_contr'] = (holding_df['sim_profit'] / nav) * 100
+            holding_df['sensitivity'] = abs(holding_df['sim_contr']) - abs(holding_df['contribution'])
+            holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round(
+                {'ending_mv': 1,
+                 'base_leverage': 1,
+                 'unrealized_pnl': 2,
+                 'fx_rate': 2,
+                 'trade_price': 4,
+                 'valuation_price': 4,
+                 'contribution': 2,
+                 'sim_contr': 2,
+                 'sim_profit': 2,
+                 'sensitivity': 2
+                 })
+            total_sim_profit = holding_df['sim_profit'].sum()
+            sim_nav = round(nav + total_sim_profit, 2)
+            sim_drawdown = round((nav - sim_nav) / nav, 3) * -100
+
+            return JsonResponse({
+                'data': holding_df.to_dict('records'),
+                'nav': round(nav, 2),
+                'sim_nav': sim_nav,
+                'sim_dd': sim_drawdown
+            }, safe=False)
         except Holding.DoesNotExist:
             return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
 
