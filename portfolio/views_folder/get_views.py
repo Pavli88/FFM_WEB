@@ -238,6 +238,7 @@ def get_exposures(request):
             holding_df['sim_price'] = np.where(holding_df['transaction_type'] == 'Purchase', holding_df['valuation_price'] * (1 - stress_percentage), holding_df['valuation_price'] * (1 + stress_percentage))
             holding_df['sim_profit'] = np.where(holding_df['transaction_type'] == 'Purchase', (holding_df['sim_price'] - holding_df['trade_price']) * holding_df['ending_pos'] * holding_df['fx_rate'], (holding_df['trade_price'] - holding_df['sim_price']) * holding_df['ending_pos'] * holding_df['fx_rate'])
             holding_df['sim_contr'] = (holding_df['sim_profit'] / nav) * 100
+            holding_df['sim_contr_amended'] = (holding_df['sim_profit'] / nav) * 100
             holding_df['sensitivity'] = abs(holding_df['sim_contr']) - abs(holding_df['contribution'])
             holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round(
                 {'ending_mv': 1,
@@ -249,7 +250,8 @@ def get_exposures(request):
                  'contribution': 2,
                  'sim_contr': 2,
                  'sim_profit': 2,
-                 'sensitivity': 2
+                 'sensitivity': 2,
+                 'sim_contr_amended': 2
                  })
             total_sim_profit = holding_df['sim_profit'].sum()
             sim_nav = round(nav + total_sim_profit, 2)
