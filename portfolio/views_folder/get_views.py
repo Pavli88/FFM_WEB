@@ -250,6 +250,7 @@ def get_exposures(request):
                  'contribution': 2,
                  'sim_contr': 2,
                  'sim_profit': 2,
+                 'sim_price': 2,
                  'sensitivity': 2,
                  'sim_contr_amended': 2
                  })
@@ -261,7 +262,7 @@ def get_exposures(request):
                 'data': holding_df.to_dict('records'),
                 'nav': round(nav, 2),
                 'sim_nav': sim_nav,
-                'sim_dd': sim_drawdown
+                'sim_dd': round(sim_drawdown, 2)
             }, safe=False)
         except Holding.DoesNotExist:
             return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
