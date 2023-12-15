@@ -171,9 +171,9 @@ def get_total_pnl(request):
     if request.method == "GET":
         cursor = connection.cursor()
         cursor.execute("""
-                          select sum(realized_pnl) as total, portfolio_code
-from portfolio_transaction
-group by portfolio_code;
+                          select sum(pnl) as total, portfolio_code
+from portfolio_nav
+group by portfolio_code order by total desc;
 """)
 
         row = cursor.fetchall()
@@ -313,6 +313,18 @@ inner join instrument_tickers on pt.ticker_id = instrument_tickers.id
 inner join accounts_brokeraccounts on pt.broker_account_id = accounts_brokeraccounts.id
 where pt.portfolio_code = '{portfolio_code}';
         """.format(portfolio_code=request.GET.get("portfolio_code")))
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+
+        return JsonResponse(df.to_dict('records'), safe=False)
+
+
+def get_monthly_pnl(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+                select sum(pnl) as pnl, any_value(date) as date from portfolio_nav group by month(date);""")
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
