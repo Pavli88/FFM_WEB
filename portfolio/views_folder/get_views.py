@@ -330,3 +330,22 @@ def get_monthly_pnl(request):
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
 
         return JsonResponse(df.to_dict('records'), safe=False)
+
+
+def get_historic_nav(request):
+    if request.method == "GET":
+        cursor = connection.cursor()
+        cursor.execute("""
+        select pn.date, sum(pn.holding_nav) as holding_nav, sum(pn.total) as total
+from portfolio_nav as pn,
+     portfolio_portfolio as p
+where p.portfolio_code = pn.portfolio_code
+  and p.portfolio_type = 'Automated'
+group by pn.date
+order by pn.date asc;
+        """)
+
+        row = cursor.fetchall()
+        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        print(df)
+        return JsonResponse(df.to_dict('records'), safe=False)

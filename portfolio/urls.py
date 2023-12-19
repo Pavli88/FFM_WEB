@@ -32,6 +32,7 @@ get_views = [
     path('portfolios/get/transactions/', get_views.get_portfolio_transactions),
     path('portfolios/get/perf_dashboard/', get_views.get_perf_dashboard),
     path('portfolios/get/trade_routes/', get_views.get_trade_routes),
+    path('portfolios/get/historic_nav/', get_views.get_historic_nav),
 ]
 
 update_views = [
