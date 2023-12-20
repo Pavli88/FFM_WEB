@@ -347,5 +347,8 @@ order by pn.date asc;
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        df['diff'] = df['holding_nav'] - df['total']
+        df['drawdown'] = df['diff'] / df['total']
+        df = df.fillna(0)
         print(df)
         return JsonResponse(df.to_dict('records'), safe=False)
