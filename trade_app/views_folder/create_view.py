@@ -208,6 +208,24 @@ def new_transaction_signal(request):
         #                 'transaction_type': 'Close',
         #                 'quantity': 1,
         #                 }
+
+        # Close transaction from the Risk view
+        if request_body['transaction_type'] == 'risk_closure':
+            transactions = pd.DataFrame(Transaction.objects.filter(id__in=request_body['ids']).values())
+            for index, transaction in transactions.iterrows():
+                execution = TradeExecution(portfolio_code=transaction['portfolio_code'],
+                                           account_id=transaction['account_id'],
+                                           security=transaction['security'],
+                                           trade_date=trade_date)
+                closed_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=transaction['id']).values())
+                if len(closed_transactions) == 0:
+                    closed_out_units = 0
+                else:
+                    closed_out_units = closed_transactions['quantity'].sum()
+                quantity = transaction['quantity'] - abs(closed_out_units)
+                execution.close(transaction=transaction, quantity=quantity)
+            return JsonResponse('Transactions are closed', safe=False)
+
         try:
             routing = TradeRoutes.objects.get(portfolio_code=request_body['portfolio_code'],
                                               inst_id=request_body['security'])
