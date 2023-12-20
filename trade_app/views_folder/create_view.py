@@ -42,8 +42,9 @@ class TradeExecution:
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message=transaction_type + ' ' + self.security.name + ' ' + str(quantity),
-                          sub_message='Rejected - ' + trade['response']['reason'],
+                          message=trade['response']['reason'] + ' - ' + transaction_type + ' ' + self.security.name + ' ' + str(quantity),
+                          security=self.security.name,
+                          sub_message='Rejected',
                           broker_name=self.account.broker_name).save()
             return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
 
@@ -91,6 +92,7 @@ class TradeExecution:
         Notifications(portfolio_code=self.portfolio.portfolio_code,
                       message=transaction_type + ' ' + self.security.name + ' ' + str(quantity) + ' @ ' + trade_price,
                       sub_message='Executed',
+                      security=self.security.name,
                       broker_name=self.account.broker_name).save()
 
         self.save_price(trade_price=trade_price)
@@ -170,9 +172,9 @@ class TradeExecution:
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message='Close ' + self.security.name + ' @ ' + trade_price + ' Broker ID ' +
-                              str(broker_id),
+                      message=self.security.name + ' @ ' + trade_price + ' Broker ID ' + str(broker_id),
                       sub_message='Close',
+                      security=self.security.name,
                       broker_name=self.account.broker_name).save()
 
         self.save_price(trade_price=trade_price)
