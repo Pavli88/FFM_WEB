@@ -324,7 +324,7 @@ def get_monthly_pnl(request):
     if request.method == "GET":
         cursor = connection.cursor()
         cursor.execute("""
-                select sum(pnl) as pnl, any_value(date) as date from portfolio_nav group by month(date);""")
+                select sum(pnl) as pnl, any_value(date) as date from portfolio_nav group by year(date), month(date);""")
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
