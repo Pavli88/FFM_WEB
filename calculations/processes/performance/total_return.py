@@ -2,7 +2,8 @@ import datetime as dt
 from datetime import datetime
 import pandas as pd
 from portfolio.models import Portfolio, Nav, Transaction, TotalReturn
-
+from django.db.models import Q
+from django.db.models import Sum
 
 def first_day_calculator(day):
     if day.weekday() == 6:
@@ -140,35 +141,46 @@ def total_return_calc(portfolio_code, period, end_date):
                            'comment': 'Missing Valuation as of ' + str(end_date)})
         return response_list + error_list
 
-    print('')
-    print('START NAV')
-    print(start_nav)
-    print('')
-    print('END NAV')
-    print(end_nav)
-    print('')
-
     # Quering out transactions for the period
     transactions = pd.DataFrame(
-        Transaction.objects.filter(portfolio_code=portfolio_code, trade_date__gte=start_date, trade_date__lte=end_date).values())
-
+        Transaction.objects.filter(portfolio_code=portfolio_code,
+                                   trade_date__gte=start_date,
+                                   trade_date__lte=end_date).filter(
+            Q(transaction_type='Subscription') | Q(transaction_type='Redemption') | Q(
+                transaction_type='Commission')).values())
+    # print(transactions)
     # Weighted Cash Flow table calculation------------------------------------------------------------------------------
-    cash_flow_table = transactions[
-        (transactions['transaction_type'] == 'Subscription') | (transactions['transaction_type'] == 'Redemption')][['net_cashflow', 'trade_date']]
-    cash_flow_table['days_left'] = [(date-start_date).days for date in cash_flow_table['trade_date']]
-    cash_flow_table['ratio'] = cash_flow_table['days_left'] / number_of_days
-    cash_flow_table['weighted_cf'] = cash_flow_table['ratio'] * cash_flow_table['net_cashflow']
-    total_cf = cash_flow_table['net_cashflow'].sum()
-    total_weighted_cf = cash_flow_table['weighted_cf'].sum()
+    if transactions.empty:
+        total_cf = 0.0
+        total_weighted_cf = 0.0
+    else:
+        cash_flow_table = transactions[['net_cashflow', 'trade_date']].groupby('trade_date').sum().reset_index().sort_values('trade_date')
+        day_count_list = []
+        for date in cash_flow_table['trade_date']:
+            day_count_list.append((date - start_date).days)
 
-    print(cash_flow_table)
-    print('TOTAL CF', total_cf)
-    print('TOTAL WEIGHTED CF', total_weighted_cf)
-    print('')
+        cash_flow_table['days_left'] = day_count_list
+        cash_flow_table['ratio'] = cash_flow_table['days_left'] / number_of_days
+        cash_flow_table['ratio2'] = (1 - cash_flow_table['ratio']) / 1
+        cash_flow_table['weighted_cf'] = cash_flow_table['ratio2'] * cash_flow_table['net_cashflow']
+        total_cf = cash_flow_table['net_cashflow'].sum()
+        total_weighted_cf = cash_flow_table['weighted_cf'].sum()
+        print(cash_flow_table)
+
+    # print('')
+    # print('START NAV')
+    # print(start_nav)
+    # print('')
+    # print('END NAV')
+    # print(end_nav)
+    # print('')
+    # print('TOTAL CF', total_cf)
+    # print('TOTAL WEIGHTED CF', total_weighted_cf)
+    # print('')
 
     # Total Return Calculation
     total_return = round((end_nav - start_nav - total_cf) / (start_nav + total_weighted_cf), 4)
-    print('RET 1', total_return)
+    # print('RET 1', total_return)
 
     # Saving record to database
     try:
