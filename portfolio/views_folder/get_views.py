@@ -171,13 +171,15 @@ def get_total_pnl(request):
     if request.method == "GET":
         cursor = connection.cursor()
         cursor.execute("""
-                          select sum(pnl) as total, portfolio_code
+                          select sum(pnl) as total, sum(cost) as cost, portfolio_code
 from portfolio_nav
 group by portfolio_code order by total desc;
 """)
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
+        df['net_pnl'] = df['total'] + df['cost']
+        print(df)
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
@@ -328,7 +330,6 @@ def get_monthly_pnl(request):
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
@@ -350,5 +351,4 @@ order by pn.date asc;
         df['diff'] = df['holding_nav'] - df['total']
         df['drawdown'] = (df['diff'] / df['total']) * 100
         df = df.fillna(0)
-        print(df)
         return JsonResponse(df.to_dict('records'), safe=False)

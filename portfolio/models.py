@@ -55,6 +55,7 @@ class Nav(models.Model):
     unrealized_pnl = models.FloatField(default=0.0)
     date = models.DateField()
     holding_nav = models.FloatField(default=0.0)
+    cost = models.FloatField(default=0.0)
 
 
 class Transaction(models.Model):

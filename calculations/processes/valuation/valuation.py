@@ -269,7 +269,11 @@ and pt.trade_date = '{trade_date}'
         self.total_leverage = self.holding_df['base_leverage'].sum()
 
     def cash_calculation(self):
+        self.cash_transactions = self.transactions[self.transactions['sec_group'] == 'Cash']
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
+        self.total_cost = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Commission']['net_cashflow'].sum()
+        print('TOTAL EXT FLOW')
+        print(self.total_cost)
         if self.previous_valuation.empty:
             previous_cashflow = 0.0
         else:
@@ -342,6 +346,7 @@ and pt.trade_date = '{trade_date}'
             nav.pnl = total_realized_pnl
             nav.unrealized_pnl = total_unrealized_pnl
             nav.period_return = round(period_return, 5)
+            nav.cost = self.total_cost
             nav.save()
         except:
             Nav(date=calc_date,
@@ -353,6 +358,7 @@ and pt.trade_date = '{trade_date}'
                 holding_nav=h_nav,
                 pnl=total_realized_pnl,
                 unrealized_pnl=total_unrealized_pnl,
+                cost=self.total_cost,
                 period_return=round(period_return, 5)).save()
 
         self.response_list.append({'portfolio_code': portfolio_code,
