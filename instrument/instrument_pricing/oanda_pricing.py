@@ -1,12 +1,15 @@
 from broker_apis.oanda import OandaV20
 from instrument.models import Tickers, Prices
 from datetime import datetime, timedelta
+from accounts.models import BrokerAccounts
 
 
 def oanda_pricing(start_date, end_date):
     tickers = Tickers.objects.filter(source='oanda').values()
-    o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
-                 account_id="001-004-2840244-004",
+    accounts = BrokerAccounts.objects.get(id=2)
+
+    o = OandaV20(access_token=accounts.access_token,
+                 account_id=accounts.account_number,
                  environment="live")
     params = {
         "granularity": 'D',
