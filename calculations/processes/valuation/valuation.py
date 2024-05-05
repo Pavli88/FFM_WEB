@@ -307,10 +307,14 @@ and pt.trade_date = '{trade_date}'
     def nav_calculation(self, calc_date, previous_date, portfolio_code):
         # # Previous NAV
         previous_nav = Nav.objects.filter(portfolio_code=portfolio_code, date=previous_date).values()
+        print("PREVIOUS HOLDING NAV", previous_nav[0]['holding_nav'])
         if len(previous_nav) == 0:
             previous_nav = 0
+            previous_holding_nav = 0
         else:
+            previous_holding_nav = previous_nav[0]['holding_nav']
             previous_nav = previous_nav[0]['total']
+
 
         # Total NAV
         total_realized_pnl = round(self.asset_df['realized_pnl'].sum(), 2)
@@ -336,6 +340,11 @@ and pt.trade_date = '{trade_date}'
             liability = 0.0
             h_nav = 0.0
 
+        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
+            dietz_return = round((h_nav - previous_holding_nav - self.total_external_flow) / previous_holding_nav, 2)
+        else:
+            dietz_return = 0.0
+
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
             nav.cash_val = cash_value
@@ -346,7 +355,9 @@ and pt.trade_date = '{trade_date}'
             nav.pnl = total_realized_pnl
             nav.unrealized_pnl = total_unrealized_pnl
             nav.period_return = round(period_return, 5)
+            nav.dietz_return = dietz_return
             nav.cost = self.total_cost
+            nav.total_cf = self.total_external_flow
             nav.save()
         except:
             Nav(date=calc_date,
@@ -359,6 +370,8 @@ and pt.trade_date = '{trade_date}'
                 pnl=total_realized_pnl,
                 unrealized_pnl=total_unrealized_pnl,
                 cost=self.total_cost,
+                total_cf=self.total_external_flow,
+                dietz_return=dietz_return,
                 period_return=round(period_return, 5)).save()
 
         self.response_list.append({'portfolio_code': portfolio_code,
