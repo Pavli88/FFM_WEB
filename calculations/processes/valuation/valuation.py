@@ -328,6 +328,11 @@ and pt.trade_date = '{trade_date}'
         total_unrealized_pnl = round(self.holding_df['unrealized_pnl'].sum(), 2)
         total = previous_nav + self.total_external_flow + total_realized_pnl
 
+        if total_unrealized_pnl == 0.0:
+            ugl_diff = 0.0
+        else:
+            ugl_diff = total_unrealized_pnl - prev_ugl
+
         # Total Return Calculation
         if previous_nav != 0.0:
             period_return = total_realized_pnl / (previous_nav + self.total_external_flow)
@@ -348,7 +353,7 @@ and pt.trade_date = '{trade_date}'
             h_nav = 0.0
 
         if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0 and total_unrealized_pnl != 0.0:
-            dietz_return = round((total_unrealized_pnl - prev_ugl) / (previous_holding_nav + self.total_external_flow), 4)
+            dietz_return = round(ugl_diff / (previous_holding_nav + self.total_external_flow), 4)
         else:
             dietz_return = 0.0
 
@@ -361,8 +366,8 @@ and pt.trade_date = '{trade_date}'
             nav.holding_nav = h_nav
             nav.pnl = total_realized_pnl
             nav.unrealized_pnl = total_unrealized_pnl
-            nav.total_pnl = total_realized_pnl + total_unrealized_pnl - prev_ugl
-            nav.ugl_diff = total_unrealized_pnl - prev_ugl
+            nav.total_pnl = total_realized_pnl + ugl_diff
+            nav.ugl_diff = ugl_diff
             nav.trade_return = round(period_return, 5)
             nav.price_return = dietz_return
             nav.cost = self.total_cost
@@ -380,8 +385,8 @@ and pt.trade_date = '{trade_date}'
                 holding_nav=h_nav,
                 pnl=total_realized_pnl,
                 unrealized_pnl=total_unrealized_pnl,
-                total_pnl = total_realized_pnl + total_unrealized_pnl - prev_ugl,
-                ugl_diff=total_unrealized_pnl - prev_ugl,
+                total_pnl = total_realized_pnl + ugl_diff,
+                ugl_diff=ugl_diff,
                 cost=self.total_cost,
                 subscription=self.subscriptions,
                 redemption=self.redemptions,
