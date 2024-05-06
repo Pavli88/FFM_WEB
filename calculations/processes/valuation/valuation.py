@@ -335,7 +335,7 @@ and pt.trade_date = '{trade_date}'
 
         # Total Return Calculation
         if previous_nav != 0.0:
-            period_return = total_realized_pnl / (previous_nav + self.total_external_flow)
+            period_return = total_realized_pnl / previous_nav
         else:
             period_return = 0.0
 
@@ -352,8 +352,8 @@ and pt.trade_date = '{trade_date}'
             liability = 0.0
             h_nav = 0.0
 
-        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0 and total_unrealized_pnl != 0.0:
-            dietz_return = round(ugl_diff / (previous_holding_nav + self.total_external_flow), 4)
+        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
+            dietz_return = round(ugl_diff / previous_holding_nav, 4)
         else:
             dietz_return = 0.0
 
