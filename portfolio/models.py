@@ -50,16 +50,18 @@ class Nav(models.Model):
     total = models.FloatField(default=0.0)
     units = models.FloatField(default=0.0)
     nav_per_share = models.FloatField(default=0.0)
-    period_return = models.FloatField(default=0.0)
-    dietz_return = models.FloatField(default=0.0)
     pnl = models.FloatField(default=0.0)
     unrealized_pnl = models.FloatField(default=0.0)
+    ugl_diff = models.FloatField(default=0.0)
+    total_pnl = models.FloatField(default=0.0)
     date = models.DateField()
     holding_nav = models.FloatField(default=0.0)
     cost = models.FloatField(default=0.0)
     subscription = models.FloatField(default=0.0)
     redemption = models.FloatField(default=0.0)
     total_cf = models.FloatField(default=0.0)
+    trade_return = models.FloatField(default=0.0)
+    price_return = models.FloatField(default=0.0)
 
 
 class Transaction(models.Model):

@@ -270,8 +270,13 @@ and pt.trade_date = '{trade_date}'
 
     def cash_calculation(self):
         self.cash_transactions = self.transactions[self.transactions['sec_group'] == 'Cash']
+        print(self.cash_transactions)
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
         self.total_cost = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Commission']['net_cashflow'].sum()
+        self.subscriptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Subscription'][
+            'net_cashflow'].sum()
+        self.redemptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Redemption'][
+            'net_cashflow'].sum()
         print('TOTAL EXT FLOW')
         print(self.total_cost)
         if self.previous_valuation.empty:
@@ -311,8 +316,10 @@ and pt.trade_date = '{trade_date}'
         if len(previous_nav) == 0:
             previous_nav = 0
             previous_holding_nav = 0
+            prev_ugl = 0
         else:
             previous_holding_nav = previous_nav[0]['holding_nav']
+            prev_ugl = previous_nav[0]['unrealized_pnl']
             previous_nav = previous_nav[0]['total']
 
 
@@ -323,7 +330,7 @@ and pt.trade_date = '{trade_date}'
 
         # Total Return Calculation
         if previous_nav != 0.0:
-            period_return = (total - previous_nav - self.total_external_flow) / previous_nav
+            period_return = total_realized_pnl / (previous_nav + self.total_external_flow)
         else:
             period_return = 0.0
 
@@ -341,7 +348,7 @@ and pt.trade_date = '{trade_date}'
             h_nav = 0.0
 
         if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
-            dietz_return = round((h_nav - previous_holding_nav - self.total_external_flow) / previous_holding_nav, 2)
+            dietz_return = round((total_unrealized_pnl - prev_ugl) / (previous_holding_nav + self.total_external_flow), 4)
         else:
             dietz_return = 0.0
 
@@ -354,9 +361,13 @@ and pt.trade_date = '{trade_date}'
             nav.holding_nav = h_nav
             nav.pnl = total_realized_pnl
             nav.unrealized_pnl = total_unrealized_pnl
-            nav.period_return = round(period_return, 5)
-            nav.dietz_return = dietz_return
+            nav.total_pnl = total_realized_pnl + total_unrealized_pnl - prev_ugl
+            nav.ugl_diff = total_unrealized_pnl - prev_ugl
+            nav.trade_return = round(period_return, 5)
+            nav.price_return = dietz_return
             nav.cost = self.total_cost
+            nav.subscription = self.subscriptions
+            nav.redemption = self.redemptions
             nav.total_cf = self.total_external_flow
             nav.save()
         except:
@@ -369,10 +380,14 @@ and pt.trade_date = '{trade_date}'
                 holding_nav=h_nav,
                 pnl=total_realized_pnl,
                 unrealized_pnl=total_unrealized_pnl,
+                total_pnl = total_realized_pnl + total_unrealized_pnl - prev_ugl,
+                ugl_diff=total_unrealized_pnl - prev_ugl,
                 cost=self.total_cost,
+                subscription=self.subscriptions,
+                redemption=self.redemptions,
                 total_cf=self.total_external_flow,
-                dietz_return=dietz_return,
-                period_return=round(period_return, 5)).save()
+                price_return=dietz_return,
+                trade_return=round(period_return, 5)).save()
 
         self.response_list.append({'portfolio_code': portfolio_code,
                                    'date': calc_date,
