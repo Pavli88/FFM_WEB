@@ -347,7 +347,7 @@ and pt.trade_date = '{trade_date}'
             liability = 0.0
             h_nav = 0.0
 
-        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
+        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0 and total_unrealized_pnl != 0.0:
             dietz_return = round((total_unrealized_pnl - prev_ugl) / (previous_holding_nav + self.total_external_flow), 4)
         else:
             dietz_return = 0.0
