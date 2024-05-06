@@ -327,11 +327,7 @@ and pt.trade_date = '{trade_date}'
         total_realized_pnl = round(self.asset_df['realized_pnl'].sum(), 2)
         total_unrealized_pnl = round(self.holding_df['unrealized_pnl'].sum(), 2)
         total = previous_nav + self.total_external_flow + total_realized_pnl
-
-        if total_unrealized_pnl == 0.0:
-            ugl_diff = 0.0
-        else:
-            ugl_diff = total_unrealized_pnl - prev_ugl
+        ugl_diff = total_unrealized_pnl - prev_ugl
 
         # Total Return Calculation
         if previous_nav != 0.0:
