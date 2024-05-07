@@ -120,7 +120,7 @@ def total_return_calc(portfolio_code, period, end_date):
 
     # Quering out start and end NAV
     try:
-        start_nav = Nav.objects.filter(date=start_date, portfolio_code=portfolio_code).values()[0]['total']
+        start_nav = Nav.objects.filter(date=start_date, portfolio_code=portfolio_code).values()[0]['holding_nav']
     except:
         error_list.append({'portfolio_code': portfolio_code,
                            'date': end_date,
@@ -131,7 +131,7 @@ def total_return_calc(portfolio_code, period, end_date):
         return response_list + error_list
 
     try:
-        end_nav = Nav.objects.filter(date=end_date, portfolio_code=portfolio_code).values()[0]['total']
+        end_nav = Nav.objects.filter(date=end_date, portfolio_code=portfolio_code).values()[0]['holding_nav']
     except:
         error_list.append({'portfolio_code': portfolio_code,
                            'date': end_date,
@@ -140,6 +140,9 @@ def total_return_calc(portfolio_code, period, end_date):
                            'status': 'Error',
                            'comment': 'Missing Valuation as of ' + str(end_date)})
         return response_list + error_list
+
+    # print('START NAV', start_nav)
+    # print('END NAV', end_nav)
 
     # Quering out transactions for the period
     transactions = pd.DataFrame(
@@ -157,26 +160,27 @@ def total_return_calc(portfolio_code, period, end_date):
         cash_flow_table = transactions[['net_cashflow', 'trade_date']].groupby('trade_date').sum().reset_index().sort_values('trade_date')
         day_count_list = []
         for date in cash_flow_table['trade_date']:
-            day_count_list.append((date - start_date).days)
+            day_count_list.append((date - start_date).days + 1)
 
         cash_flow_table['days_left'] = day_count_list
-        cash_flow_table['ratio'] = cash_flow_table['days_left'] / number_of_days
+        cash_flow_table['factor'] = (number_of_days - cash_flow_table['days_left']) / number_of_days
+        cash_flow_table['ratio'] = (number_of_days - cash_flow_table['days_left']) / number_of_days
         cash_flow_table['ratio2'] = (1 - cash_flow_table['ratio']) / 1
-        cash_flow_table['weighted_cf'] = cash_flow_table['ratio2'] * cash_flow_table['net_cashflow']
+        cash_flow_table['weighted_cf'] = cash_flow_table['factor'] * cash_flow_table['net_cashflow']
         total_cf = cash_flow_table['net_cashflow'].sum()
         total_weighted_cf = cash_flow_table['weighted_cf'].sum()
         print(cash_flow_table)
 
-    # print('')
-    # print('START NAV')
-    # print(start_nav)
-    # print('')
-    # print('END NAV')
-    # print(end_nav)
-    # print('')
-    # print('TOTAL CF', total_cf)
-    # print('TOTAL WEIGHTED CF', total_weighted_cf)
-    # print('')
+    print('')
+    print('START NAV')
+    print(start_nav)
+    print('')
+    print('END NAV')
+    print(end_nav)
+    print('')
+    print('TOTAL CF', total_cf)
+    print('TOTAL WEIGHTED CF', total_weighted_cf)
+    print('')
 
     # Total Return Calculation
     total_return = round((end_nav - start_nav - total_cf) / (start_nav + total_weighted_cf), 4)
