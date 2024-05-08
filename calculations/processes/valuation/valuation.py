@@ -262,7 +262,7 @@ and pt.trade_date = '{trade_date}'
                      'process': 'Valuation',
                      'exception': 'Missing Margin Factor',
                      'status': 'Alert',
-                     'comment': 'Broker: ' +  + str(trade['instrument_id'])}
+                     'comment': 'Broker: ' + str(trade['instrument_id'])}
                 )
                 margin_factor = 1
 
@@ -306,16 +306,25 @@ and pt.trade_date = '{trade_date}'
                 else:
                     unrealized_pnl = trade['ending_pos'] * (trade['trade_price'] - valuation_price) * fx_rate
 
+            if margin_factor == 1:
+                bv_adjustment = 0.0
+            else:
+                bv_adjustment = unrealized_pnl
+
             self.holding_df.at[index, 'unrealized_pnl'] = float(unrealized_pnl)
             self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
-            self.holding_df.at[index, 'ending_bv'] = trade['ending_pos'] * valuation_price * fx_rate * margin_factor
+            self.holding_df.at[index, 'ending_bv'] = (trade['ending_pos'] * valuation_price * fx_rate * margin_factor) + bv_adjustment
             self.holding_df.at[index, 'end_lev'] = trade['ending_pos'] * valuation_price * fx_rate * (1-margin_factor)
         self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
         self.total_leverage = self.holding_df['end_lev'].sum()
+        self.total_realized_pnl = self.holding_df['realized_pnl'].sum()
+        self.total_unrealized_pnl = self.holding_df['unrealized_pnl'].sum()
 
     def cash_calculation(self):
         self.cash_transactions = self.transactions[self.transactions['sec_group'] == 'Cash']
+        print(self.transactions)
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
+        self.total_trade_flow = self.transactions[self.transactions['sec_group'] != 'Cash']['net_cashflow'].sum()
         self.total_cost = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Commission']['net_cashflow'].sum()
         self.subscriptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Subscription'][
             'net_cashflow'].sum()
@@ -328,7 +337,8 @@ and pt.trade_date = '{trade_date}'
             previous_cashflow = self.previous_valuation[self.previous_valuation['type'] == 'Cash']['ending_mv'].sum()
 
         current_trade_cash = self.asset_df['base_cashflow'].sum()
-        total_cash_flow = round(self.total_external_flow + current_trade_cash, 4) + previous_cashflow
+        total_cash_flow = round(self.subscriptions + self.redemptions + self.total_cost + self.total_realized_pnl + self.total_trade_flow, 4) + previous_cashflow
+
         self.holding_df.loc[len(self.holding_df)] = {
             'transaction_id': '-',
             'instrument_name': 'Cash',
@@ -346,13 +356,39 @@ and pt.trade_date = '{trade_date}'
             'fx_rate': 0,
             'beginning_mv': float(previous_cashflow),
             'ending_mv': float(total_cash_flow),
-            'beginning_bv': 0,
-            'ending_bv': 0,
+            'beginning_bv': float(previous_cashflow),
+            'ending_bv': float(total_cash_flow),
             'beg_lev': 0,
             'end_lev': 0,
             'unrealized_pnl': 0,
             'realized_pnl': 0
         }
+
+        # self.holding_df.loc[len(self.holding_df)] = {
+        #     'transaction_id': '-',
+        #     'instrument_name': 'Cash',
+        #     'instrument_id': 'Cash',
+        #     'group': 'Cash',
+        #     'type': 'Cash',
+        #     'currency': self.portfolio_data.currency,
+        #     'trade_date': 0,
+        #     'transaction_type': 'Total',
+        #     'beginning_pos': 0,
+        #     'ending_pos': 0,
+        #     'change': 0,
+        #     'trade_price': 1,
+        #     'valuation_price': 1,
+        #     'fx_rate': 0,
+        #     'beginning_mv': float(self.holding_df['beginning_bv'].sum()),
+        #     'ending_mv': float(self.holding_df['ending_mv'].sum()),
+        #     'beginning_bv': 0,
+        #     'ending_bv': float(self.holding_df['ending_bv'].sum()),
+        #     'beg_lev': 0,
+        #     'end_lev': 0,
+        #     'unrealized_pnl': 0,
+        #     'realized_pnl': 0
+        # }
+
         self.total_cash_flow = total_cash_flow
         self.holding_df['change'] = self.holding_df['ending_pos'] - self.holding_df['beginning_pos']
         self.holding_df['lev_chg'] = self.holding_df['end_lev'] - self.holding_df['beg_lev']
