@@ -190,5 +190,18 @@ class TotalReturn(models.Model):
     end_date = models.DateField(null=True)
     period = models.CharField(max_length=30, default="")
 
+
+class SecurityReturn(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    date = models.DateField()
+    security = models.IntegerField(default=0)
+    weight = models.FloatField(default=0.0)
+    trade_return = models.FloatField(default=0.0)
+    price_return = models.FloatField(default=0.0)
+    income_return = models.FloatField(default=0.0)
+    fx_return = models.FloatField(default=0.0)
+    contribution = models.FloatField(default=0.0)
+
+
 # models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
 # models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)

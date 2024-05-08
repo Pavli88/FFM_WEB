@@ -1,5 +1,5 @@
 from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio
-from instrument.models import Instruments, Prices
+from instrument.models import Instruments, Prices, Tickers
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
@@ -45,8 +45,12 @@ class Valuation():
             'fx_rate': [],
             'beginning_mv': [],
             'ending_mv': [],
-            'base_leverage': [],
-            'unrealized_pnl': []
+            'beginning_bv': [],
+            'ending_bv': [],
+            'beg_lev': [],
+            'end_lev': [],
+            'unrealized_pnl': [],
+            'realized_pnl': []
         })
 
     def fetch_transactions(self, trade_date):
@@ -154,14 +158,32 @@ and pt.trade_date = '{trade_date}'
             previous_assets = pd.DataFrame({})
         if previous_assets.empty is not True:
             for index, trade in previous_assets.iterrows():
-
+                print('TRADE PRICE', trade['trade_price'])
                 # Filtering for linked transactions
                 try:
-                    linked_transactions = self.asset_df[self.asset_df['transaction_link_code'] == trade['transaction_id']]
+                    linked_transactions = self.asset_df[
+                        self.asset_df['transaction_link_code'] == trade['transaction_id']]
                     linked_quantity = linked_transactions['quantity'].sum()
-                    linked_leverage = linked_transactions['base_margin_balance'].sum()
+                    # if list(trade['transaction_type'])[0] == 'Purchase':
+                    #     transaction_factor = 1
+                    # else:
+                    #     transaction_factor = -1
+                    # linked_transactions['realized_pnl_calced'] = (float(linked_transactions['price']) - float(list(trade['trade_price'])[0])) * float(list(trade['quantity'])[0]) #* transaction_factor
+                    # print(linked_transactions['realized_pnl_calced'])
+                    realized_pnl = linked_transactions['realized_pnl'].sum()
                 except:
                     linked_quantity = 0.0
+                    realized_pnl = 0
+                print('realized pnl', realized_pnl)
+                # print('PARENT TR')
+                # print(trade)
+                # print('LINKED')
+                # print(linked_transactions)
+                # print(linked_transactions['price'])
+                # print('')
+                print('LINKED TRANS')
+                print(linked_transactions)
+                # realized_pnl = (round(trade['trade_price'], 4) - list(linked_transactions['price'])) * list(linked_transactions['quantity'])[0]
 
                 self.holding_df.loc[len(self.holding_df.index)] = [
                     trade['transaction_id'],
@@ -180,13 +202,16 @@ and pt.trade_date = '{trade_date}'
                     1,
                     trade['ending_mv'],
                     trade['ending_mv'],
-                    trade['base_leverage'] - abs(linked_leverage),
-                    0]
+                    trade['ending_bv'],
+                    trade['ending_bv'],
+                    trade['end_lev'],
+                    trade['end_lev'],
+                    0,
+                    realized_pnl]
 
         # PROCESSING NEW TRASACTIONS AND RELATED TRANSACTIONS
         for index, trade in self.asset_df.iterrows():
             if trade['transaction_link_code'] == 0:
-
                 # Filtering for linked transactions
                 linked_transactions = self.asset_df[self.asset_df['transaction_link_code'] == trade['id']]
                 self.holding_df.loc[len(self.holding_df.index)] = [
@@ -206,12 +231,17 @@ and pt.trade_date = '{trade_date}'
                     1,
                     0,
                     0,
-                    trade['base_margin_balance'] - abs(linked_transactions['base_margin_balance'].sum()),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
                     0]
 
         # POSITION VALUATION
         intrument_list = list(dict.fromkeys(self.holding_df['instrument_id']))
         prices_df = pd.DataFrame(Prices.objects.filter(date=self.calc_date, inst_code__in=intrument_list).values())
+        inst_ticker_df = pd.DataFrame(Tickers.objects.filter(inst_code__in=intrument_list).values())
 
         for index, trade in self.holding_df.iterrows():
             if trade['currency'] == self.portfolio_data.currency:
@@ -222,6 +252,19 @@ and pt.trade_date = '{trade_date}'
                 if fx_rate.empty:
                     fx_rate = self.fx_rates[self.fx_rates['reverse_pair'] == searched_pair]
                 fx_rate = fx_rate['fx_rate'].sum()
+
+            try:
+                margin_factor = inst_ticker_df[inst_ticker_df['inst_code'] == str(trade['instrument_id'])]['margin'][0]
+            except:
+                self.error_list.append(
+                    {'portfolio_code': self.portfolio_code,
+                     'date': self.calc_date,
+                     'process': 'Valuation',
+                     'exception': 'Missing Margin Factor',
+                     'status': 'Alert',
+                     'comment': 'Broker: ' +  + str(trade['instrument_id'])}
+                )
+                margin_factor = 1
 
             try:
                 valuation_price = list(prices_df[prices_df['inst_code'] == trade['instrument_id']]['price'])[0]
@@ -265,20 +308,20 @@ and pt.trade_date = '{trade_date}'
 
             self.holding_df.at[index, 'unrealized_pnl'] = float(unrealized_pnl)
             self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
+            self.holding_df.at[index, 'ending_bv'] = trade['ending_pos'] * valuation_price * fx_rate * margin_factor
+            self.holding_df.at[index, 'end_lev'] = trade['ending_pos'] * valuation_price * fx_rate * (1-margin_factor)
         self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
-        self.total_leverage = self.holding_df['base_leverage'].sum()
+        self.total_leverage = self.holding_df['end_lev'].sum()
 
     def cash_calculation(self):
         self.cash_transactions = self.transactions[self.transactions['sec_group'] == 'Cash']
-        print(self.cash_transactions)
         self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
         self.total_cost = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Commission']['net_cashflow'].sum()
         self.subscriptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Subscription'][
             'net_cashflow'].sum()
         self.redemptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Redemption'][
             'net_cashflow'].sum()
-        print('TOTAL EXT FLOW')
-        print(self.total_cost)
+
         if self.previous_valuation.empty:
             previous_cashflow = 0.0
         else:
@@ -303,16 +346,21 @@ and pt.trade_date = '{trade_date}'
             'fx_rate': 0,
             'beginning_mv': float(previous_cashflow),
             'ending_mv': float(total_cash_flow),
-            'base_leverage': 0,
-            'unrealized_pnl': 0
+            'beginning_bv': 0,
+            'ending_bv': 0,
+            'beg_lev': 0,
+            'end_lev': 0,
+            'unrealized_pnl': 0,
+            'realized_pnl': 0
         }
         self.total_cash_flow = total_cash_flow
         self.holding_df['change'] = self.holding_df['ending_pos'] - self.holding_df['beginning_pos']
+        self.holding_df['lev_chg'] = self.holding_df['end_lev'] - self.holding_df['beg_lev']
 
     def nav_calculation(self, calc_date, previous_date, portfolio_code):
         # # Previous NAV
         previous_nav = Nav.objects.filter(portfolio_code=portfolio_code, date=previous_date).values()
-        print("PREVIOUS HOLDING NAV", previous_nav[0]['holding_nav'])
+
         if len(previous_nav) == 0:
             previous_nav = 0
             previous_holding_nav = 0
