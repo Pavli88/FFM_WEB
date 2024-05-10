@@ -14,8 +14,6 @@ def data_import(request):
         print('DATA IMPORT')
         csv_file = pd.read_csv(request.FILES['file'])
 
-        print(csv_file)
-
         for index, row in csv_file.iterrows():
             try:
                 transaction = Transaction.objects.get(id=row['id'])
