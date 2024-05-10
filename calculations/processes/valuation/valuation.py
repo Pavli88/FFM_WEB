@@ -340,7 +340,7 @@ and pt.trade_date = '{trade_date}'
         else:
             previous_cashflow = self.previous_valuation[self.previous_valuation['instrument_name'] == 'Total Cash']['ending_mv'].sum()
 
-        # total_cash_flow = round(self.subscriptions + self.redemptions + self.total_cost + self.total_trade_flow, 4) + previous_cashflow
+        #total_cash_flow = round(self.subscriptions + self.redemptions + self.total_cost + self.total_trade_flow, 4) + previous_cashflow
         total_cash_flow = round(self.transactions['net_cashflow'].sum(), 4) + previous_cashflow
 
         self.holding_df = self.holding_df.reset_index(drop=True)

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from . import views
-from mysite.views_folder import get_views
+from mysite.views_folder import get_views, data_operations
 from risk.views import *
 
 
@@ -15,9 +15,10 @@ my_process()
 get_patterns = [
     path('home/load_robot_stats/<str:env>/', views.load_robot_stats),
     path('exceptions/get/', views.get_exceptions),
-    path('home/total_robot_pnl/', views.total_robot_pnl),
-    path('home/robot_balances_by_date/', get_views.robot_balances_by_date),
-    path('home/get/robot/all/daily_returns/', get_views.all_daily_returns),
+]
+
+create_patterns = [
+    path('data/import/', data_operations.data_import),
 ]
 
 general_patterns = [
@@ -49,4 +50,4 @@ general_patterns = [
     path('exceptions/update/', views.update_exception_by_id)
 ]
 
-urlpatterns = get_patterns + general_patterns
+urlpatterns = get_patterns + general_patterns + create_patterns
