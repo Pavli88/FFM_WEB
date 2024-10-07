@@ -103,9 +103,7 @@ class Transaction(models.Model):
             raise ValidationError("Security must be provided.")
 
         instrument = Instruments.objects.get(id=self.security_id)
-        print('TRANSACTION LINK CODE IN SAVE MODEL')
-        print(self.transaction_link_code)
-        print('')
+
         if self.transaction_link_code == 0:
             super().save(*args, **kwargs)
             self.transaction_link_code = self.id
@@ -138,36 +136,14 @@ class Transaction(models.Model):
             transaction_id=self.id
         ).save()
 
-    def save_margin(self):
-        Margin(
-            date=self.trade_date,
-            portfolio_code=self.portfolio_code,
-            base_mv=self.net_cashflow * -1,
-            local_mv=self.local_cashflow * -1,
-            type='Initial Margin' if self.open_status == 'Open' else 'Margin Close',
-            transaction_id=self.id
-        ).save()
-
     def calculate_pnl(self):
 
         if self.parent_transaction.transaction_type == 'Purchase':
             pnl = (float(self.price) - float(self.parent_transaction.price)) * (
                 abs(float(self.quantity)))
-            # margin_factor = 1
-            # cash_factor = -1
 
         if self.parent_transaction.transaction_type == 'Sale':
             pnl = (float(self.parent_transaction.price) - float(self.price)) * abs(float(self.quantity))
-            # margin_factor = -1
-            # cash_factor = 1
-
-        # Margin(
-        #     date=self.trade_date,
-        #     portfolio_code=self.portfolio_code,
-        #     base_mv=round(pnl * float(self.fx_rate) * self.parent_transaction.margin_rate, 2) * margin_factor,
-        #     local_mv=round(pnl * self.parent_transaction.margin_rate, 2) * margin_factor,
-        #     type='Margin Adjustment',
-        #     transaction_id=self.id).save()
 
         Cash(
             date=self.trade_date,
@@ -177,14 +153,6 @@ class Transaction(models.Model):
             type='Trade PnL',
             transaction_id=self.id
         ).save()
-
-        # RGL(
-        #     date=self.trade_date,
-        #     portfolio_code=self.portfolio_code,
-        #     base_mv=round(pnl * float(self.fx_rate), 2),
-        #     local_mv=round(pnl, 2),
-        #     transaction_id=self.id
-        # ).save()
 
     def cash_transaction(self, *args, **kwargs):
         multiplier = -1 if self.transaction_type in ['Redemption', 'Interest Paid', 'Commission'] else 1
@@ -197,8 +165,7 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
     def derivatives_transaction(self, *args, **kwargs):
-        print('DERIVATIVES')
-        print(self.security_id, self.broker)
+
         ticker = Tickers.objects.get(inst_code=self.security_id, source=self.broker)
         cf_multiplier = -1 if self.open_status in ['Open'] else 1
         self.quantity *= -1 if self.transaction_type in ['Sale'] else 1
@@ -213,9 +180,6 @@ class Transaction(models.Model):
         self.bv = 0
         self.local_bv = 0
         super().save(*args, **kwargs)
-
-        # Save margin and positions
-        # self.save_margin()
 
         # If it is a new transaction it will assign the ID to the INV Num as well
         if self.open_status == 'Close':

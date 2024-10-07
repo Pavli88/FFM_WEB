@@ -1,3 +1,5 @@
+from weakref import finalize
+
 from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio, Cash, RGL, UGL, Margin
 from instrument.models import Instruments, Prices, Tickers
 import pandas as pd
@@ -18,6 +20,8 @@ class Valuation():
         self.transactions = None
         self.previous_valuation = None
         self.total_cash_flow = 0.0
+        self.subscriptions = 0.0
+        self.redemptions = 0.0
         self.response_list = []
         self.error_list = []
         self.portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
@@ -27,7 +31,6 @@ class Valuation():
         cash_instruments = pd.DataFrame(Instruments.objects.filter(currency=self.base_currency, group='Cash').values())
         self.base_currency_sec_id = int(cash_instruments[cash_instruments['type'] == 'Cash']['id'].values[0])
         self.base_margin_instrument = cash_instruments[cash_instruments['type'] == 'Margin']['id'].values[0]
-        print(self.base_margin_instrument)
         self.previous_capital = pd.DataFrame({})
         self.previous_margin = pd.DataFrame({})
         self.previous_transactions = pd.DataFrame({})
@@ -72,28 +75,38 @@ class Valuation():
 
     def fetch_fx_rates(self, date):
         fx_data = Prices.objects.select_related('instrument').filter(date=date).filter(instrument__type='FX')
-        fx_pairs_list = []
-        for fx_pair in fx_data:
-            fx_pairs_list.append({
-                'rate': fx_pair.instrument.name,
-                'fx_rate': fx_pair.price,
-            })
-        fx_df = pd.DataFrame(fx_pairs_list)
-        reverse_fx_df = pd.DataFrame({})
-        reverse_fx_df['rate'] = fx_df['rate'].apply(lambda x: '/'.join(x.split('/')[::-1]))
-        reverse_fx_df['fx_rate'] = 1 / fx_df['fx_rate']
         base_df = pd.DataFrame({
             'rate': [self.base_currency + '/' + self.base_currency],
             'fx_rate': [1]
         })
-        self.fx_rates = pd.concat([fx_df, reverse_fx_df], ignore_index=True)
-        self.fx_rates = pd.concat([self.fx_rates, base_df], ignore_index=True)
+        reverse_fx_df = pd.DataFrame({
+            'rate': [],
+            'fx_rate': []
+        })
+        if fx_data.exists():
+            fx_pairs_list = []
+            for fx_pair in fx_data:
+                fx_pairs_list.append({
+                    'rate': fx_pair.instrument.name,
+                    'fx_rate': fx_pair.price,
+                })
+            fx_df = pd.DataFrame(fx_pairs_list)
+            reverse_fx_df['rate'] = fx_df['rate'].apply(lambda x: '/'.join(x.split('/')[::-1]))
+            reverse_fx_df['fx_rate'] = 1 / fx_df['fx_rate']
+        else:
+            fx_df = pd.DataFrame({
+                'rate': [],
+                'fx_rate': []
+            })
+        self.fx_rates = pd.concat([fx_df, reverse_fx_df, base_df], ignore_index=True)
+        print(self.fx_rates)
         return self.fx_rates
 
     def fetch_rgl(self):
         return pd.DataFrame(Cash.objects.filter(date=self.calc_date, portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
     def fetch_prices(self, date, instrument_code_list):
+        print(date, instrument_code_list)
         return pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values()).drop(columns=['id', 'date'])
 
     def ugl_calc(self, row):
@@ -108,10 +121,29 @@ class Valuation():
         else:
             return row['mv']
 
+    def fx_check(self, row):
+        if row['fx_rate'] == 0:
+            self.error_list.append({'portfolio_code': self.portfolio_code,
+                                    'date': self.calc_date,
+                                    'process': 'Valuation',
+                                    'exception': 'Missing FX Rate',
+                                    'status': 'Error',
+                                    'comment': row['fx_pair']})
+
     def price_cash_security(self, row):
+        self.fx_check(row)
+
         if row['group'] == 'Cash':
             return 1
         else:
+            if row['price'] == 0:
+                self.error_list.append({'portfolio_code': self.portfolio_code,
+                                     'date': self.calc_date,
+                                     'process': 'Valuation',
+                                     'exception': 'Missing Price',
+                                     'status': 'Error',
+                                     'comment': row['name'] + str(' (') + str(row['instrument_id']) + str(')')
+                                        })
             return row['price']
 
     def asset_valuation(self):
@@ -178,15 +210,9 @@ class Valuation():
             aggregated_transactions['date'] = self.calc_date
             instrument_code_list = aggregated_transactions['instrument_id'].drop_duplicates().tolist()
             instrument_df = self.fetch_instrument_data(instrument_code_list)
-            cash_price_df = instrument_df[instrument_df['group'] == 'Cash'].drop(columns=['name', 'group', 'type', 'currency', 'country']).rename(columns={'id': 'instrument_id'})
-            cash_price_df['market_price'] = 1
-            cash_price_df['source'] = 'system'
 
-            if instrument_df[instrument_df['group'] != 'Cash'].empty:
-                prices_df = cash_price_df
-            else:
-                prices_df = self.fetch_prices(date=self.calc_date, instrument_code_list=instrument_code_list)
-                prices_df = pd.concat([prices_df, cash_price_df], ignore_index=True)
+            prices_df = self.fetch_prices(date=self.calc_date, instrument_code_list=instrument_code_list)
+            # prices_df = pd.concat([prices_df, self.cash_price_df], ignore_index=True)
 
             aggregated_transactions = pd.merge(aggregated_transactions, instrument_df, left_on='instrument_id', right_on='id', how='left')
             aggregated_transactions['fx_pair'] = aggregated_transactions['currency'] + '/' + self.base_currency
@@ -194,6 +220,8 @@ class Valuation():
                                                right_on='rate', how='left')
             aggregated_transactions = pd.merge(aggregated_transactions, prices_df, left_on='instrument_id',
                                                right_on='instrument_id', how='left')
+            aggregated_transactions['price'].fillna(0, inplace=True)
+            aggregated_transactions['fx_rate'].fillna(0, inplace=True)
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
@@ -247,6 +275,7 @@ class Valuation():
 
             # print(margin_cash_list)
             aggregated_transactions = pd.concat([aggregated_transactions, total_margin_cash_df, total_margin_df], ignore_index=True)
+
             # print('')
             # print('AGGREGATED TRANSACTIONS')
             # print(aggregated_transactions)
@@ -260,10 +289,9 @@ class Valuation():
         # This is needed at the end because of the CFD position valuation. On CFD the BV is the UGL.
         cash_transactions = self.cash_calculation()
         aggregated_transactions = aggregated_transactions[~((aggregated_transactions['quantity'] == 0) & (aggregated_transactions['rgl'] == 0))]
+
         self.final_df = pd.concat([cash_transactions, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        print('')
-        print('FINAl DF')
         print(self.final_df)
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
@@ -317,6 +345,12 @@ class Valuation():
 
     def cash_calculation(self):
         cash_data = Cash.objects.select_related('transaction').filter(date=self.calc_date)
+        capital_df = pd.DataFrame(cash_data.values())
+
+        if not capital_df.empty:
+            self.subscriptions = capital_df[capital_df['type'] == 'Subscription']['base_mv'].sum()
+            self.redemptions = capital_df[capital_df['type'] == 'Redemption']['base_mv'].sum()
+
         cash_list = [
             {
                 'portfolio_code': self.portfolio_code,
@@ -369,7 +403,8 @@ class Valuation():
         # previous_nav = Nav.objects.filter(portfolio_code=portfolio_code, date=previous_date).values()
 
         total_cash = self.final_df[(self.final_df['trade_type'] == 'Cash Margin') | (self.final_df['trade_type'] == 'Capital')]['mv'].sum()
-        print(total_cash)
+        current_nav = self.final_df['bv'].sum()
+
         # if len(previous_nav) == 0:
         #     previous_nav = 0
         #     previous_holding_nav = 0
@@ -380,8 +415,8 @@ class Valuation():
         #     previous_nav = previous_nav[0]['total']
         #
         # # Total NAV
-        # total_realized_pnl = round(self.final_df['rgl'].sum(), 2)
-        # total_unrealized_pnl = round(self.final_df['ugl'].sum(), 2)
+        total_realized_pnl = round(self.final_df['rgl'].sum(), 2)
+        total_unrealized_pnl = round(self.final_df['ugl'].sum(), 2)
         # total = previous_nav + self.total_external_flow + total_realized_pnl
         # ugl_diff = total_unrealized_pnl - prev_ugl
         #
@@ -391,7 +426,7 @@ class Valuation():
         # else:
         #     period_return = 0.0
         #
-        # total_asset_value = self.holding_df[(self.holding_df['type'] != 'Cash') & (self.holding_df['type'] != 'Leverage')]['ending_bv']
+        # total_asset_value = self.final_df[self.final_df['']]
         #
         # if self.portfolio_data.calc_holding == True:
         #     asset_value = total_asset_value.sum() # -> Update
@@ -414,18 +449,18 @@ class Valuation():
             nav.cash_val = total_cash
             nav.pos_val = 0
             nav.short_liab = 0
-            nav.total = 0
-            nav.holding_nav = self.final_df['bv'].sum()
-            nav.pnl = 0
-            nav.unrealized_pnl = self.final_df['ugl'].sum()
-            nav.total_pnl = self.final_df['rgl'].sum()
+            nav.total = self.final_df['bv'].sum() - total_unrealized_pnl
+            nav.holding_nav = current_nav
+            nav.pnl = total_realized_pnl
+            nav.unrealized_pnl = total_unrealized_pnl
+            nav.total_pnl = total_realized_pnl + total_realized_pnl
             nav.ugl_diff = 0
             nav.trade_return = 0
             nav.price_return = 0
             nav.cost = 0
-            nav.subscription = 0
-            nav.redemption = 0
-            nav.total_cf = 0
+            nav.subscription = self.subscriptions
+            nav.redemption = self.redemptions
+            nav.total_cf = self.subscriptions + self.redemptions
             nav.save()
         except:
             Nav(date=calc_date,
@@ -433,25 +468,34 @@ class Valuation():
                 pos_val=0,
                 cash_val=total_cash,
                 short_liab=0,
-                total=0,
-                holding_nav=self.final_df['bv'].sum(),
-                pnl=0,
-                unrealized_pnl=self.final_df['ugl'].sum(),
-                total_pnl = self.final_df['rgl'].sum(),
+                total=self.final_df['bv'].sum() - total_unrealized_pnl,
+                holding_nav=current_nav,
+                pnl=total_realized_pnl,
+                unrealized_pnl=total_unrealized_pnl,
+                total_pnl = total_realized_pnl + total_realized_pnl,
                 ugl_diff=0,
                 cost=0,
-                subscription=0,
-                redemption=0,
-                total_cf=0,
+                subscription=self.subscriptions,
+                redemption=self.subscriptions,
+                total_cf=self.subscriptions + self.redemptions,
                 price_return=0,
                 trade_return=0).save()
 
-        self.response_list.append({'portfolio_code': portfolio_code,
-                                   'date': calc_date,
-                                   'process': 'Realized NAV Valuation',
-                                   'exception': '-',
-                                   'status': 'Completed',
-                                   'comment': 'NAV ' + str(round(0, 2)) + ' ' + str(self.portfolio_data.currency)})
+        if len(self.error_list) == 0:
+            self.response_list.append({'portfolio_code': portfolio_code,
+                                       'date': calc_date,
+                                       'process': 'NAV Valuation',
+                                       'exception': '-',
+                                       'status': 'Completed',
+                                       'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(self.portfolio_data.currency)})
+        else:
+            self.response_list.append({'portfolio_code': portfolio_code,
+                                       'date': calc_date,
+                                       'process': 'NAV Valuation',
+                                       'exception': 'Incorrect Valuation',
+                                       'status': 'Alert',
+                                       'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(
+                                           self.portfolio_data.currency)})
 
     def save_valuation(self, valuation_list):
         print('SAVING VALUATION')
