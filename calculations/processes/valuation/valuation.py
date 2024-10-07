@@ -1,4 +1,4 @@
-from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio
+from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio, Cash, RGL, UGL, Margin
 from instrument.models import Instruments, Prices, Tickers
 import pandas as pd
 import numpy as np
@@ -6,505 +6,489 @@ from datetime import datetime, date
 from django.db import connection
 from datetime import timedelta
 from django.db.models import Q
+from sqlparse.engine.grouping import group
 
 
 class Valuation():
     def __init__(self, portfolio_code, calc_date):
         self.portfolio_code = portfolio_code
         self.calc_date = calc_date
-        self.fx_rates = ''
-        self.transactions = ''
-        self.previous_valuation = ''
+        self.previous_date = None
+        self.fx_rates = None
+        self.transactions = None
+        self.previous_valuation = None
         self.total_cash_flow = 0.0
-        self.asset_df = ''
-        self.total_external_flow = 0.0
-        self.total_leverage = 0.0
         self.response_list = []
         self.error_list = []
         self.portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
-        self.portfolio_cash_security = Instruments.objects.get(currency=self.portfolio_data.currency,
-                                                               group='Cash')
-        self.leverage_security = Instruments.objects.get(currency=self.portfolio_data.currency,
-                                                         type='Leverage')
-
-    def initialize_dataframe(self):
-        self.holding_df = pd.DataFrame({
-            'transaction_id': [],
-            'instrument_name': [],
-            'instrument_id': [],
-            'group': [],
-            'type': [],
-            'currency': [],
-            'trade_date': [],
-            'transaction_type': [],
-            'beginning_pos': [],
-            'ending_pos': [],
-            'change': [],
-            'trade_price': [],
-            'valuation_price': [],
-            'fx_rate': [],
-            'beginning_mv': [],
-            'ending_mv': [],
-            'beginning_bv': [],
-            'ending_bv': [],
-            'beg_lev': [],
-            'end_lev': [],
-            'beginning_margin': [],
-            'ending_margin': [],
-            'margin_adjustment': [],
-            'unrealized_pnl': [],
-            'realized_pnl': []
-        })
+        self.base_currency = self.portfolio_data.currency
+        self.holding_df = []
+        self.instrument_code_list = []
+        cash_instruments = pd.DataFrame(Instruments.objects.filter(currency=self.base_currency, group='Cash').values())
+        self.base_currency_sec_id = int(cash_instruments[cash_instruments['type'] == 'Cash']['id'].values[0])
+        self.base_margin_instrument = cash_instruments[cash_instruments['type'] == 'Margin']['id'].values[0]
+        print(self.base_margin_instrument)
+        self.previous_capital = pd.DataFrame({})
+        self.previous_margin = pd.DataFrame({})
+        self.previous_transactions = pd.DataFrame({})
+        self.final_df = pd.DataFrame({})
 
     def fetch_transactions(self, trade_date):
-        cursor = connection.cursor()
-        cursor.execute(
-            """
-            select
-            pt.id, name, security, quantity, price, mv,
-   pt.currency, trading_cost, transaction_type, transaction_link_code,
-   trade_date, sec_group, type, margin_balance, net_cashflow,
-   realized_pnl, financing_cost, local_cashflow, local_mv, local_pnl,
-   fx_pnl, fx_rate, country
-            from portfolio_transaction as pt, instrument_instruments as inst
-where pt.security = inst.id
-and pt.portfolio_code = '{portfolio_code}'
-and pt.trade_date = '{trade_date}'
-            """.format(trade_date=trade_date,
-                       portfolio_code=self.portfolio_code)
-        )
-        current_transactions = cursor.fetchall()
-        df = pd.DataFrame(current_transactions, columns=[col[0] for col in cursor.description])
+        transactions = Transaction.objects.select_related('security').filter(trade_date=trade_date).exclude(security_id__type='Cash')
+        transactions_list = [
+            {
+                'portfolio_code': self.portfolio_code,
+                'date': self.calc_date,
+                'trd_id': transaction.id,
+                'inv_num': transaction.transaction_link_code,
+                'trade_date': self.calc_date,
+                'trade_type': transaction.transaction_type,
+                'instrument_id': transaction.security_id,
+                'quantity': transaction.quantity,  # -> Needed for valuation
+                'trade_price': transaction.price,
+                'market_price': 0.0,  # -> Needed for valuation
+                'fx_rate': 0.0,  # -> Needed for valuation
+                'mv': 0.0,
+                'bv': 0.0,
+                'weight': 0.0,
+                'ugl': 0.0,
+                'rgl': 0.0,
+                'margin_rate': transaction.margin_rate
+            }
+            for transaction in transactions
+        ]
+        return pd.DataFrame(transactions_list)
 
-        asset_flows = df[df['sec_group'] != 'Cash']
-        asset_flows['base_cashflow'] = asset_flows['net_cashflow']
-        asset_flows['base_margin_balance'] = asset_flows['margin_balance']
-        for index, trade in asset_flows.iterrows():
-            if trade['currency'] == self.portfolio_data.currency:
-                asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow']
-            else:
-                # fx_rate = self.fx_rates[self.fx_rates['name'] == trade['name']]['fx_rate'].sum()
-
-                searched_pair = trade['currency'] + '/' + self.portfolio_data.currency
-                fx_rate = self.fx_rates[self.fx_rates['name'] == searched_pair]
-                if fx_rate.empty:
-                    fx_rate = self.fx_rates[self.fx_rates['reverse_pair'] == searched_pair]
-                fx_rate = fx_rate['fx_rate'].sum()
-
-                asset_flows.at[index, 'base_cashflow'] = trade['net_cashflow'] * fx_rate
-                asset_flows.at[index, 'base_margin_balance'] = trade['margin_balance'] * fx_rate
-                # print('ID', trade['id'], 'FX', fx_rate, 'Sec', trade['security'], 'name', trade['name'])
-        self.asset_df = asset_flows
-        self.transactions = df
+    def fetch_instrument_data(self, instrument_code_list):
+        return pd.DataFrame(Instruments.objects.filter(id__in=instrument_code_list).values())
 
     def fetch_previous_valuation(self, previous_date, portfolio_code):
-        try:
-            self.previous_valuation = pd.read_json(Holding.objects.get(date=previous_date, portfolio_code=portfolio_code).data)
-        except Holding.DoesNotExist:
-            self.previous_valuation = pd.DataFrame({})
+        previous_valuations = pd.DataFrame(Holding.objects.filter(date=previous_date,
+                                                                  portfolio_code=portfolio_code).exclude(trade_type__in=['Cash Margin', 'Margin']).values())
+        if not previous_valuations.empty:
+            self.previous_capital = previous_valuations[previous_valuations['trade_type'] == 'Capital']
+            self.previous_capital['trd_id'] = None
+            self.previous_transactions = previous_valuations[~previous_valuations['instrument_id'].isin([self.base_currency_sec_id, self.base_margin_instrument])]
 
-    def load_fx_rates(self, trade_date):
-        cursor = connection.cursor()
-        cursor.execute(
-            """ 
-            select
-        name, currency, type, date, price
-        from instrument_instruments as inst, instrument_prices as ip
-        where
-        inst.id = ip.inst_code
-        and inst.type = 'FX'
-        and inst.name
-        like
-        '%/%'
-        and date = '{trade_date}';
-            """.format(trade_date=trade_date))
-        currency_rates = pd.DataFrame(cursor.fetchall(), columns=[col[0] for col in cursor.description])
-        currency_rates['reverse_price'] = 1 / currency_rates['price']
-        currency_rates['base_currency'] = currency_rates.name.str[0:3]
-        currency_rates['reverse_pair'] = currency_rates.name.str[4:] + '/' + currency_rates.name.str[0:3]
-        currency_rates['fx_rate'] = currency_rates['price']
+    def fetch_fx_rates(self, date):
+        fx_data = Prices.objects.select_related('instrument').filter(date=date).filter(instrument__type='FX')
+        fx_pairs_list = []
+        for fx_pair in fx_data:
+            fx_pairs_list.append({
+                'rate': fx_pair.instrument.name,
+                'fx_rate': fx_pair.price,
+            })
+        fx_df = pd.DataFrame(fx_pairs_list)
+        reverse_fx_df = pd.DataFrame({})
+        reverse_fx_df['rate'] = fx_df['rate'].apply(lambda x: '/'.join(x.split('/')[::-1]))
+        reverse_fx_df['fx_rate'] = 1 / fx_df['fx_rate']
+        base_df = pd.DataFrame({
+            'rate': [self.base_currency + '/' + self.base_currency],
+            'fx_rate': [1]
+        })
+        self.fx_rates = pd.concat([fx_df, reverse_fx_df], ignore_index=True)
+        self.fx_rates = pd.concat([self.fx_rates, base_df], ignore_index=True)
+        return self.fx_rates
 
-        for index, rate in currency_rates.iterrows():
-            if rate['base_currency'] == self.portfolio_data.currency and rate[
-                'currency'] != self.portfolio_data.currency:
-                currency_rates.at[index, 'fx_rate'] = rate['reverse_price']
-            elif rate['base_currency'] != self.portfolio_data.currency and rate[
-                'currency'] == self.portfolio_data.currency:
-                pass
-            else:
-                searched_pair = rate['currency'] + '/' + self.portfolio_data.currency
-                filtered_currency_df_1 = currency_rates[currency_rates['name'] == searched_pair]['price']
-                filtered_currency_df_2 = currency_rates[currency_rates['reverse_pair'] == searched_pair][
-                    'reverse_price']
+    def fetch_rgl(self):
+        return pd.DataFrame(Cash.objects.filter(date=self.calc_date, portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
-                try:
-                    if len(filtered_currency_df_1) == 0:
-                        conversion_price = filtered_currency_df_2.tolist()[0]
-                    else:
-                        conversion_price = filtered_currency_df_1.tolist()[0]
-                    currency_rates.at[index, 'fx_rate'] = conversion_price * rate['price']
-                except:
-                    currency_rates.at[index, 'fx_rate'] = 0.0
-                    self.error_list.append({'portfolio_code': self.portfolio_code,
-                                            'date': trade_date,
-                                            'process': 'Valuation',
-                                            'exception': 'Missing FX Rate',
-                                            'status': 'Error',
-                                            'comment': 'Missing FX Coversion Rate: ' + rate['name'] + ' - ' + self.portfolio_data.currency + ' to ' + rate['name'][4:]})
-        self.fx_rates = currency_rates
+    def fetch_prices(self, date, instrument_code_list):
+        return pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values()).drop(columns=['id', 'date'])
+
+    def ugl_calc(self, row):
+        if row['quantity'] > 0:
+            return round((row['price'] - row['trade_price']) * row['quantity'] * row['fx_rate'], 2)
+        else:
+            return round((row['trade_price'] - row['price']) * abs(row['quantity']) * row['fx_rate'], 2)
+
+    def book_value_calc(self, row):
+        if row['group'] == 'CFD':
+            return row['ugl']
+        else:
+            return row['mv']
+
+    def price_cash_security(self, row):
+        if row['group'] == 'Cash':
+            return 1
+        else:
+            return row['price']
 
     def asset_valuation(self):
-        # PROCESSING EXISTING TRANSACTIONS AND NEW RELATED TRANSACTIONS
-        try:
-            previous_assets = self.previous_valuation[(self.previous_valuation['type'] != 'Cash') & (self.previous_valuation['type'] != 'Leverage')]
-        except:
-            previous_assets = pd.DataFrame({})
-        if previous_assets.empty is not True:
-            for index, trade in previous_assets.iterrows():
+        print('')
+        print('ASSET VALUATION-------------------------------------------')
+        print('PREVOUS DATE', self.previous_date, 'CURRENT DATE', self.calc_date)
 
-                # Filtering for linked transactions
-                try:
-                    linked_transactions = self.asset_df[
-                        self.asset_df['transaction_link_code'] == trade['transaction_id']]
-                    linked_quantity = linked_transactions['quantity'].sum()
-                    # if list(trade['transaction_type'])[0] == 'Purchase':
-                    #     transaction_factor = 1
-                    # else:
-                    #     transaction_factor = -1
-                    # linked_transactions['realized_pnl_calced'] = (float(linked_transactions['price']) - float(list(trade['trade_price'])[0])) * float(list(trade['quantity'])[0]) #* transaction_factor
-                    # print(linked_transactions['realized_pnl_calced'])
-                    realized_pnl = linked_transactions['realized_pnl'].sum()
-                except:
-                    linked_quantity = 0.0
-                    realized_pnl = 0
+        # FETCHING----------------------------------------------
 
-                # realized_pnl = (round(trade['trade_price'], 4) - list(linked_transactions['price'])) * list(linked_transactions['quantity'])[0]
-
-                self.holding_df.loc[len(self.holding_df.index)] = [
-                    trade['transaction_id'],
-                    trade['instrument_name'],
-                    trade['instrument_id'],
-                    trade['group'],
-                    trade['type'],
-                    trade['currency'],
-                    str(trade['trade_date']),
-                    trade['transaction_type'],
-                    trade['ending_pos'],
-                    trade['ending_pos'] - abs(linked_quantity),
-                    0,
-                    round(trade['trade_price'], 4),
-                    0,
-                    1,
-                    trade['ending_mv'],
-                    trade['ending_mv'],
-                    trade['ending_bv'],
-                    trade['ending_bv'],
-                    trade['end_lev'],
-                    trade['end_lev'],
-                    trade['ending_margin'],
-                    0,
-                    0,
-                    0,
-                    realized_pnl]
-
-        # PROCESSING NEW TRASACTIONS AND RELATED TRANSACTIONS
-        for index, trade in self.asset_df.iterrows():
-            if trade['transaction_link_code'] == 0:
-                # Filtering for linked transactions
-                linked_transactions = self.asset_df[self.asset_df['transaction_link_code'] == trade['id']]
-                self.holding_df.loc[len(self.holding_df.index)] = [
-                    trade['id'],
-                    trade['name'],
-                    trade['security'],
-                    trade['sec_group'],
-                    trade['type'],
-                    trade['currency'],
-                    str(trade['trade_date']),
-                    trade['transaction_type'],
-                    0,
-                    trade['quantity'] - abs(linked_transactions['quantity'].sum()),
-                    0,
-                    round(trade['price'], 4),
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0]
-
-        # POSITION VALUATION
-        intrument_list = list(dict.fromkeys(self.holding_df['instrument_id']))
-        prices_df = pd.DataFrame(Prices.objects.filter(date=self.calc_date, inst_code__in=intrument_list).values())
-        inst_ticker_df = pd.DataFrame(Tickers.objects.filter(inst_code__in=intrument_list).values())
-
-        for index, trade in self.holding_df.iterrows():
-            if trade['currency'] == self.portfolio_data.currency:
-                fx_rate = 1
-            else:
-                searched_pair = trade['currency'] + '/' + self.portfolio_data.currency
-                fx_rate = self.fx_rates[self.fx_rates['name'] == searched_pair]
-                if fx_rate.empty:
-                    fx_rate = self.fx_rates[self.fx_rates['reverse_pair'] == searched_pair]
-                fx_rate = fx_rate['fx_rate'].sum()
-
-            try:
-                margin_factor = list(inst_ticker_df[inst_ticker_df['inst_code'] == str(trade['instrument_id'])]['margin'])[0]
-            except:
-                self.error_list.append(
-                    {'portfolio_code': self.portfolio_code,
-                     'date': self.calc_date,
-                     'process': 'Valuation',
-                     'exception': 'Missing Margin Factor',
-                     'status': 'Error',
-                     'comment': 'Broker: ' + str(trade['instrument_id'])}
-                )
-                margin_factor = 1
-
-            try:
-                valuation_price = list(prices_df[prices_df['inst_code'] == trade['instrument_id']]['price'])[0]
-            except:
-                # print(self.portfolio_data.pricing_tolerance, trade['instrument_id'], self.calc_date, self.calc_date-timedelta(days=self.portfolio_data.pricing_tolerance))
-                price_look_back = Prices.objects.filter(inst_code=trade['instrument_id'], date__gte=self.calc_date-timedelta(days=self.portfolio_data.pricing_tolerance), date__lte=self.calc_date).order_by('-date').values()
-                # print(price_look_back, len(price_look_back))
-                if len(price_look_back) == 0:
-                    self.error_list.append(
-                        {'portfolio_code': self.portfolio_code,
-                         'date': self.calc_date,
-                         'process': 'Valuation',
-                         'exception': 'Missing Price',
-                         'status': 'Error',
-                         'comment': 'Missing Price for ID (' + str(trade['instrument_id']) + ')'}
-                    )
-                    valuation_price = 1
-                else:
-                    # print('')
-                    # print('PRICE LOOKBACK', price_look_back[0])
-                    self.error_list.append(
-                        {'portfolio_code': self.portfolio_code,
-                         'date': self.calc_date,
-                         'process': 'Valuation',
-                         'exception': 'Price Tolerance',
-                         'status': 'Alert',
-                         'comment': str(self.portfolio_data.pricing_tolerance) + ' days price tolerance for ID (' + str(trade['instrument_id']) + '). Price: ' + str(price_look_back[0]['price'])}
-                    )
-                    valuation_price = price_look_back[0]['price']
-
-            self.holding_df.at[index, 'valuation_price'] = valuation_price
-            self.holding_df.at[index, 'fx_rate'] = fx_rate
-
-            if trade['ending_pos'] == 0.0:
-                unrealized_pnl = 0.0
-            else:
-                if trade['transaction_type'] == 'Purchase':
-                    unrealized_pnl = trade['ending_pos'] * (valuation_price - trade['trade_price']) * fx_rate
-                else:
-                    unrealized_pnl = trade['ending_pos'] * (trade['trade_price'] - valuation_price) * fx_rate
-
-            if margin_factor == 1:
-                bv_adjustment = 0.0
-            else:
-                bv_adjustment = unrealized_pnl
-
-            self.holding_df.at[index, 'unrealized_pnl'] = float(unrealized_pnl)
-            self.holding_df.at[index, 'ending_margin'] = trade['ending_pos'] * valuation_price * fx_rate * margin_factor
-            # self.holding_df.at[index, 'ending_margin'] = margin_adjustment
-            self.holding_df.at[index, 'ending_mv'] = trade['ending_pos'] * valuation_price * fx_rate
-            self.holding_df.at[index, 'ending_bv'] = (trade['ending_pos'] * valuation_price * fx_rate * margin_factor) + bv_adjustment
-            self.holding_df.at[index, 'end_lev'] = trade['ending_pos'] * valuation_price * fx_rate * (1 - margin_factor)
-
-        self.holding_df = self.holding_df[(self.holding_df.ending_pos != 0) | (self.holding_df.beginning_pos != 0)]
-        self.total_leverage = self.holding_df['end_lev'].sum()
-        self.total_realized_pnl = self.holding_df['realized_pnl'].sum()
-        self.total_unrealized_pnl = self.holding_df['unrealized_pnl'].sum()
-        self.total_margin = self.holding_df['ending_margin'].sum()
-
-    def cash_calculation(self):
-        self.cash_transactions = self.transactions[self.transactions['sec_group'] == 'Cash']
-        self.total_external_flow = self.transactions[self.transactions['sec_group'] == 'Cash']['net_cashflow'].sum()
-        self.total_trade_flow = self.transactions[self.transactions['sec_group'] != 'Cash']['net_cashflow'].sum()
-        self.total_cost = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Commission']['net_cashflow'].sum()
-        self.subscriptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Subscription'][
-            'net_cashflow'].sum()
-        self.redemptions = self.cash_transactions[self.cash_transactions['transaction_type'] == 'Redemption'][
-            'net_cashflow'].sum()
-
-        if self.previous_valuation.empty:
-            previous_cashflow = 0.0
-        else:
-            previous_cashflow = self.previous_valuation[self.previous_valuation['instrument_name'] == 'Total Cash']['ending_mv'].sum()
-
-        #total_cash_flow = round(self.subscriptions + self.redemptions + self.total_cost + self.total_trade_flow, 4) + previous_cashflow
-        total_cash_flow = round(self.transactions['net_cashflow'].sum(), 4) + previous_cashflow
-
-        self.holding_df = self.holding_df.reset_index(drop=True)
-
-        self.holding_df.loc[len(self.holding_df)] = {
-            'transaction_id': '-',
-            'instrument_name': 'Margin',
-            'instrument_id': 'Margin',
-            'group': 'Cash',
-            'type': 'Cash',
-            'currency': self.portfolio_data.currency,
-            'trade_date': 0,
-            'transaction_type': 'Margin',
-            'beginning_pos': 0,
-            'ending_pos': float(self.total_margin),
-            'change': 0,
-            'trade_price': 1,
-            'valuation_price': 1,
-            'fx_rate': 0,
-            'beginning_mv': 0,
-            'ending_mv': float(self.total_margin),
-            'beginning_bv': 0,
-            'ending_bv': float(self.total_margin),
-            'beg_lev': 0,
-            'end_lev': 0,
-            'beginning_margin': 0,
-            'ending_margin': 0,
-            'margin_adjustment': 0,
-            'unrealized_pnl': 0,
-            'realized_pnl': 0
-        }
-
-        self.holding_df.loc[len(self.holding_df)] = {
-            'transaction_id': '-',
-            'instrument_name': 'Total Cash',
-            'instrument_id': 'Cash',
-            'group': 'Cash',
-            'type': 'Cash',
-            'currency': self.portfolio_data.currency,
-            'trade_date': 0,
-            'transaction_type': 'Cash',
-            'beginning_pos': float(previous_cashflow),
-            'ending_pos': float(total_cash_flow),
-            'change': 0,
-            'trade_price': 1,
-            'valuation_price': 1,
-            'fx_rate': 0,
-            'beginning_mv': float(previous_cashflow),
-            'ending_mv': float(total_cash_flow),
-            'beginning_bv': float(previous_cashflow),
-            'ending_bv': float(total_cash_flow),
-            'beg_lev': 0,
-            'end_lev': 0,
-            'beginning_margin': 0,
-            'ending_margin': 0,
-            'margin_adjustment': 0,
-            'unrealized_pnl': 0,
-            'realized_pnl': 0
-        }
-
-        self.total_cash_flow = total_cash_flow
-        self.holding_df['change'] = self.holding_df['ending_pos'] - self.holding_df['beginning_pos']
-        self.holding_df['lev_chg'] = self.holding_df['end_lev'] - self.holding_df['beg_lev']
+        # Previous Valuations
+        self.fetch_previous_valuation(previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
         # print('')
-        # print('AFTER CASH')
-        # print(self.holding_df)
+        # print('PREVOUS TRANSACTIONS')
+        # print(self.previous_transactions)
+
+        # Current Transactions
+        current_transactions = self.fetch_transactions(trade_date=self.calc_date)
+        # print('')
+        # print('CURERNT TRANSACTIONS')
+        # print(current_transactions)
+        #
+
+        prev_plus_current = pd.concat([self.previous_transactions, current_transactions], ignore_index=True)
+        prev_plus_current['rgl'] = 0.0
+        # print('')
+        # print('PREV + CURRENT TRAN')
+        # print(prev_plus_current)
+        # print('-------------------------------------------------------------')
+
+        # RGL
+        rgl_data = self.fetch_rgl()
+        # print('')
+        # print('RGL DATA')
+        # print(rgl_data)
+
+        if not current_transactions.empty and not rgl_data.empty:
+            rgl_merge = pd.merge(prev_plus_current, rgl_data[['transaction_id', 'base_mv']], left_on='trd_id', right_on='transaction_id', how='left')
+            prev_plus_current['rgl'] = rgl_merge['base_mv'].fillna(prev_plus_current['rgl'])
+
+        #  FX
+        fx_rates = self.fetch_fx_rates(date=self.calc_date)
+        # print(fx_rates)
+
+        if not prev_plus_current.empty:
+            aggregated_transactions = prev_plus_current.groupby('inv_num', as_index=False).agg({
+                'quantity': 'sum',
+                'portfolio_code': 'first',
+                'date': 'first',
+                'trd_id': 'first',
+                'inv_num': 'first',
+                'trade_date': 'first',
+                'trade_type': 'first',
+                'instrument_id': 'first',
+                'trade_price': 'first',
+                'mv': 'first',
+                'bv': 'first',
+                'weight': 'first',
+                'ugl': 'first',
+                'rgl': 'sum',
+                'margin_rate': 'first'
+            })
+
+            aggregated_transactions['date'] = self.calc_date
+            instrument_code_list = aggregated_transactions['instrument_id'].drop_duplicates().tolist()
+            instrument_df = self.fetch_instrument_data(instrument_code_list)
+            cash_price_df = instrument_df[instrument_df['group'] == 'Cash'].drop(columns=['name', 'group', 'type', 'currency', 'country']).rename(columns={'id': 'instrument_id'})
+            cash_price_df['market_price'] = 1
+            cash_price_df['source'] = 'system'
+
+            if instrument_df[instrument_df['group'] != 'Cash'].empty:
+                prices_df = cash_price_df
+            else:
+                prices_df = self.fetch_prices(date=self.calc_date, instrument_code_list=instrument_code_list)
+                prices_df = pd.concat([prices_df, cash_price_df], ignore_index=True)
+
+            aggregated_transactions = pd.merge(aggregated_transactions, instrument_df, left_on='instrument_id', right_on='id', how='left')
+            aggregated_transactions['fx_pair'] = aggregated_transactions['currency'] + '/' + self.base_currency
+            aggregated_transactions = pd.merge(aggregated_transactions, fx_rates, left_on='fx_pair',
+                                               right_on='rate', how='left')
+            aggregated_transactions = pd.merge(aggregated_transactions, prices_df, left_on='instrument_id',
+                                               right_on='instrument_id', how='left')
+            aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
+            aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
+            aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
+            aggregated_transactions['bv'] = aggregated_transactions.apply(self.book_value_calc, axis=1)
+            aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
+            aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
+
+            total_margin = aggregated_transactions['margin_req'].sum()
+            total_margin_df = pd.DataFrame({
+                'portfolio_code': [self.portfolio_code],
+                'date': [self.calc_date],
+                'trd_id': [None],
+                'inv_num': [0],
+                'trade_date': [self.calc_date],
+                'trade_type': ['Margin'],
+                'instrument_id': [self.base_margin_instrument],
+                'quantity': [total_margin],
+                'trade_price': [1],
+                'market_price': [1],
+                'fx_rate': [1],
+                'mv': [total_margin],
+                'bv': [total_margin],
+                'weight': [0.0],
+                'ugl': [0.0],
+                'rgl': [0.0],
+                'margin_rate': [0.0],
+                'margin_req': [0.0]
+            })
+            total_margin_cash_df = pd.DataFrame(
+                {
+                    'portfolio_code': [self.portfolio_code],
+                    'date': [self.calc_date],
+                    'trd_id': [None],
+                    'inv_num': [0],
+                    'trade_date': [self.calc_date],
+                    'trade_type': ['Cash Margin'],
+                    'instrument_id': [self.base_currency_sec_id],
+                    'quantity': [total_margin * -1],
+                    'trade_price': [1],
+                    'market_price': [1],
+                    'fx_rate': [1],
+                    'mv': [total_margin * -1],
+                    'bv': [total_margin * -1],
+                    'weight': [0.0],
+                    'ugl': [0.0],
+                    'rgl': [0.0],
+                    'margin_rate': [0.0],
+                    'margin_req': [0.0]
+                }
+            )
+
+            # print(margin_cash_list)
+            aggregated_transactions = pd.concat([aggregated_transactions, total_margin_cash_df, total_margin_df], ignore_index=True)
+            # print('')
+            # print('AGGREGATED TRANSACTIONS')
+            # print(aggregated_transactions)
+            # print('')
+        else:
+            aggregated_transactions = pd.DataFrame({})
+
+        # It will iterate through the final positions based on the sec group type
+
+        # CASH VALUATION ----------------------------------
+        # This is needed at the end because of the CFD position valuation. On CFD the BV is the UGL.
+        cash_transactions = self.cash_calculation()
+        aggregated_transactions = aggregated_transactions[~((aggregated_transactions['quantity'] == 0) & (aggregated_transactions['rgl'] == 0))]
+        self.final_df = pd.concat([cash_transactions, aggregated_transactions], ignore_index=True)
+        self.final_df = self.final_df.replace({np.nan: None})
+        print('')
+        print('FINAl DF')
+        print(self.final_df)
+        self.save_valuation(valuation_list=self.final_df.to_dict('records'))
+        self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
+
+    def save_ugl(self, valuation_list):
+
+        # Gather Holding objects to update existing records
+        existing_ugls = UGL.objects.filter(
+            date=self.calc_date,
+            portfolio_code=self.portfolio_code,
+            transaction_id__in=[valuation['trd_id'] for valuation in valuation_list],
+            )
+        existing_ugls_dict = {
+            (ugl.transaction_id): ugl for ugl in existing_ugls
+        }
+
+        new_ugls = []
+        updated_ugls = []
+
+        for valuation in valuation_list:
+            trd_num = valuation['trd_id']
+
+            if trd_num in existing_ugls_dict:
+                # Update existing holding
+                holding = existing_ugls_dict[trd_num]
+                holding.base_mv = valuation['ugl']
+            else:
+                # Create a new holding
+                new_ugls.append(
+                    UGL(
+                        portfolio_code=valuation['portfolio_code'],
+                        date=valuation['date'],
+                        transaction_id=trd_num,
+                        base_mv=valuation['ugl'],
+                    )
+                )
+
+        # Perform bulk updates and insertions
+        if updated_ugls:
+            UGL.objects.bulk_update(updated_ugls, [
+                'inv_num',
+                'trade_date',
+                'instrument_id',
+                'quantity',
+                'trade_price',
+                'market_price',
+            ])
+
+        if new_ugls:
+            UGL.objects.bulk_create(new_ugls)
+
+    def cash_calculation(self):
+        cash_data = Cash.objects.select_related('transaction').filter(date=self.calc_date)
+        cash_list = [
+            {
+                'portfolio_code': self.portfolio_code,
+                'date': self.calc_date,
+                'trd_id': None,
+                'inv_num': 0,
+                'trade_date': self.calc_date,
+                'trade_type': 'Capital',
+                'instrument_id': self.base_currency_sec_id,
+                'quantity': cash.base_mv,
+                'trade_price': cash.transaction.fx_rate,
+                'market_price': 1,
+                'fx_rate': 1,
+                'mv': cash.base_mv,
+                'bv': cash.base_mv,
+                'weight': 0.0,
+                'ugl': 0.0,
+                'rgl': 0.0,
+                'margin_rate': 0.0,
+                'margin_req': 0
+            }
+            for cash in cash_data
+        ]
+        cash_df = pd.DataFrame(cash_list)
+        cash_df = pd.concat([cash_df, self.previous_capital], ignore_index=True)
+        cash_df['date'] = self.calc_date
+        cash_df = cash_df.groupby('instrument_id', as_index=False).agg({
+                'quantity': 'sum',
+                'portfolio_code': 'first',
+                'date': 'first',
+                'trd_id': 'first',
+                'inv_num': 'first',
+                'trade_date': 'first',
+                'trade_type': 'first',
+                'instrument_id': 'first',
+                'trade_price': 'first',
+                'mv': 'sum',
+                'bv': 'sum',
+                'weight': 'first',
+                'ugl': 'first',
+                'rgl': 'sum',
+                'margin_rate': 'first',
+                'market_price': 'first',
+                'fx_rate': 'first'
+            })
+        return cash_df
 
     def nav_calculation(self, calc_date, previous_date, portfolio_code):
         # # Previous NAV
-        previous_nav = Nav.objects.filter(portfolio_code=portfolio_code, date=previous_date).values()
+        # previous_nav = Nav.objects.filter(portfolio_code=portfolio_code, date=previous_date).values()
 
-        if len(previous_nav) == 0:
-            previous_nav = 0
-            previous_holding_nav = 0
-            prev_ugl = 0
-        else:
-            previous_holding_nav = previous_nav[0]['holding_nav']
-            prev_ugl = previous_nav[0]['unrealized_pnl']
-            previous_nav = previous_nav[0]['total']
+        total_cash = self.final_df[(self.final_df['trade_type'] == 'Cash Margin') | (self.final_df['trade_type'] == 'Capital')]['mv'].sum()
+        print(total_cash)
+        # if len(previous_nav) == 0:
+        #     previous_nav = 0
+        #     previous_holding_nav = 0
+        #     prev_ugl = 0
+        # else:
+        #     previous_holding_nav = previous_nav[0]['holding_nav']
+        #     prev_ugl = previous_nav[0]['unrealized_pnl']
+        #     previous_nav = previous_nav[0]['total']
+        #
+        # # Total NAV
+        # total_realized_pnl = round(self.final_df['rgl'].sum(), 2)
+        # total_unrealized_pnl = round(self.final_df['ugl'].sum(), 2)
+        # total = previous_nav + self.total_external_flow + total_realized_pnl
+        # ugl_diff = total_unrealized_pnl - prev_ugl
+        #
+        # # Total Return Calculation
+        # if previous_nav != 0.0:
+        #     period_return = total_realized_pnl / previous_nav
+        # else:
+        #     period_return = 0.0
+        #
+        # total_asset_value = self.holding_df[(self.holding_df['type'] != 'Cash') & (self.holding_df['type'] != 'Leverage')]['ending_bv']
+        #
+        # if self.portfolio_data.calc_holding == True:
+        #     asset_value = total_asset_value.sum() # -> Update
+        #     cash_value = self.total_cash_flow
+        #     liability =
+        #     h_nav = self.final_df['bv'].sum()
+        # else:
+        #     asset_value = 0.0
+        #     cash_value = 0.0
+        #     liability = 0.0
+        #     h_nav = 0.0
 
-        # Total NAV
-        total_realized_pnl = round(self.asset_df['realized_pnl'].sum(), 2)
-        total_unrealized_pnl = round(self.holding_df['unrealized_pnl'].sum(), 2)
-        total = previous_nav + self.total_external_flow + total_realized_pnl
-        ugl_diff = total_unrealized_pnl - prev_ugl
-
-        # Total Return Calculation
-        if previous_nav != 0.0:
-            period_return = total_realized_pnl / previous_nav
-        else:
-            period_return = 0.0
-
-        total_asset_value = self.holding_df[(self.holding_df['type'] != 'Cash') & (self.holding_df['type'] != 'Leverage')]['ending_bv']
-
-        if self.portfolio_data.calc_holding == True:
-            asset_value = total_asset_value.sum() # -> Update
-            cash_value = self.total_cash_flow
-            liability = self.total_leverage
-            h_nav = total + total_unrealized_pnl
-        else:
-            asset_value = 0.0
-            cash_value = 0.0
-            liability = 0.0
-            h_nav = 0.0
-
-        if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
-            dietz_return = round(ugl_diff / previous_holding_nav, 4)
-        else:
-            dietz_return = 0.0
+        # if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
+        #     dietz_return = round(ugl_diff / previous_holding_nav, 4)
+        # else:
+        #     dietz_return = 0.0
 
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
-            nav.cash_val = cash_value
-            nav.pos_val = asset_value
-            nav.short_liab = liability
-            nav.total = total
-            nav.holding_nav = h_nav
-            nav.pnl = total_realized_pnl
-            nav.unrealized_pnl = total_unrealized_pnl
-            nav.total_pnl = total_realized_pnl + ugl_diff
-            nav.ugl_diff = ugl_diff
-            nav.trade_return = round(period_return, 5)
-            nav.price_return = dietz_return
-            nav.cost = self.total_cost
-            nav.subscription = self.subscriptions
-            nav.redemption = self.redemptions
-            nav.total_cf = self.total_external_flow
+            nav.cash_val = total_cash
+            nav.pos_val = 0
+            nav.short_liab = 0
+            nav.total = 0
+            nav.holding_nav = self.final_df['bv'].sum()
+            nav.pnl = 0
+            nav.unrealized_pnl = self.final_df['ugl'].sum()
+            nav.total_pnl = self.final_df['rgl'].sum()
+            nav.ugl_diff = 0
+            nav.trade_return = 0
+            nav.price_return = 0
+            nav.cost = 0
+            nav.subscription = 0
+            nav.redemption = 0
+            nav.total_cf = 0
             nav.save()
         except:
             Nav(date=calc_date,
                 portfolio_code=portfolio_code,
-                pos_val=asset_value,
-                cash_val=cash_value,
-                short_liab=liability,
-                total=total,
-                holding_nav=h_nav,
-                pnl=total_realized_pnl,
-                unrealized_pnl=total_unrealized_pnl,
-                total_pnl = total_realized_pnl + ugl_diff,
-                ugl_diff=ugl_diff,
-                cost=self.total_cost,
-                subscription=self.subscriptions,
-                redemption=self.redemptions,
-                total_cf=self.total_external_flow,
-                price_return=dietz_return,
-                trade_return=round(period_return, 5)).save()
+                pos_val=0,
+                cash_val=total_cash,
+                short_liab=0,
+                total=0,
+                holding_nav=self.final_df['bv'].sum(),
+                pnl=0,
+                unrealized_pnl=self.final_df['ugl'].sum(),
+                total_pnl = self.final_df['rgl'].sum(),
+                ugl_diff=0,
+                cost=0,
+                subscription=0,
+                redemption=0,
+                total_cf=0,
+                price_return=0,
+                trade_return=0).save()
 
         self.response_list.append({'portfolio_code': portfolio_code,
                                    'date': calc_date,
                                    'process': 'Realized NAV Valuation',
                                    'exception': '-',
                                    'status': 'Completed',
-                                   'comment': 'NAV ' + str(round(total, 2)) + ' ' + str(self.portfolio_data.currency)})
+                                   'comment': 'NAV ' + str(round(0, 2)) + ' ' + str(self.portfolio_data.currency)})
 
-    def save_holding(self, trade_date, portfolio_code, holding_data):
-        try:
-            holding = Holding.objects.get(date=trade_date, portfolio_code=portfolio_code)
-            holding.data = holding_data.to_json()
-            holding.save()
-        except:
-            Holding(date=trade_date,
-                    portfolio_code=portfolio_code,
-                    data=holding_data.to_json()).save()
+    def save_valuation(self, valuation_list):
+        print('SAVING VALUATION')
+
+        # Delete existing holdings
+        Holding.objects.filter(
+            date=self.calc_date,
+            portfolio_code=self.portfolio_code,
+        ).delete()
+
+        new_holdings = []
+
+        for valuation in valuation_list:
+            # Create a new holding
+            new_holdings.append(
+                Holding(
+                    portfolio_code=valuation['portfolio_code'],
+                    date=valuation['date'],
+                    trd_id=valuation['trd_id'],
+                    inv_num=valuation['inv_num'],
+                    trade_date=str(valuation['trade_date']),
+                    trade_type=valuation['trade_type'],
+                    instrument_id=valuation['instrument_id'],
+                    quantity=round(valuation['quantity'], 4),
+                    trade_price=valuation['trade_price'],
+                    market_price=valuation['market_price'],
+                    fx_rate=valuation['fx_rate'],
+                    mv=round(valuation['mv'], 4),
+                    bv=round(valuation['bv'], 4),
+                    weight=valuation['weight'],
+                    rgl=valuation['rgl'],
+                    ugl=valuation['ugl'],
+                    margin_rate=valuation['margin_rate'],
+                )
+            )
+        if new_holdings:
+            Holding.objects.bulk_create(new_holdings)
 
     def add_error_message(self, message):
         self.error_list.append(message)
@@ -546,34 +530,33 @@ def calculate_holdings(portfolio_code, calc_date):
                 time_back = 3
             else:
                 time_back = 1
-            print('Valuation Date', calc_date)
+
             previous_date = calc_date - timedelta(days=time_back)
-            valuation.fetch_previous_valuation(previous_date=previous_date, portfolio_code=portfolio_code)
-            if valuation.previous_valuation.empty and calc_date != valuation.portfolio_data.inception_date:
-                valuation.add_error_message({'portfolio_code': portfolio_code,
-                                             'date': calc_date,
-                                             'process': 'Valuation',
-                                             'exception': 'Missing Valuation',
-                                             'status': 'Error',
-                                             'comment': 'Missing valuation on ' + str(previous_date)})
-                valuation.add_error_message({'portfolio_code': portfolio_code,
-                                             'date': calc_date,
-                                             'process': 'Valuation',
-                                             'exception': 'Stopped Valuation',
-                                             'status': 'Error',
-                                             'comment': 'Valuation stopped due to missing previous valuation'})
-                break
+
+            # valuation.fetch_previous_valuation(previous_date=previous_date, portfolio_code=portfolio_code)
+            # if calc_date != valuation.portfolio_data.inception_date: #valuation.previous_valuation.empty
+            #     valuation.add_error_message({'portfolio_code': portfolio_code,
+            #                                  'date': calc_date,
+            #                                  'process': 'Valuation',
+            #                                  'exception': 'Missing Valuation',
+            #                                  'status': 'Error',
+            #                                  'comment': 'Missing valuation on ' + str(previous_date)})
+            #     valuation.add_error_message({'portfolio_code': portfolio_code,
+            #                                  'date': calc_date,
+            #                                  'process': 'Valuation',
+            #                                  'exception': 'Stopped Valuation',
+            #                                  'status': 'Error',
+            #                                  'comment': 'Valuation stopped due to missing previous valuation'})
+            #     break
             valuation.calc_date = calc_date
-            valuation.initialize_dataframe()
-            valuation.load_fx_rates(trade_date=calc_date)
-            valuation.fetch_transactions(trade_date=calc_date)
+            valuation.previous_date = previous_date
             valuation.asset_valuation()
-            valuation.cash_calculation()
-            valuation.save_holding(trade_date=calc_date,
-                                   portfolio_code=portfolio_code,
-                                   holding_data=valuation.holding_df)
-            valuation.nav_calculation(calc_date=calc_date,
-                                      previous_date=previous_date,
-                                      portfolio_code=portfolio_code)
+            # valuation.cash_calculation()
+            # valuation.save_holding(trade_date=calc_date,
+            #                        portfolio_code=portfolio_code,
+            #                        holding_data=valuation.holding_df)
+            # valuation.nav_calculation(calc_date=calc_date,
+            #                           previous_date=previous_date,
+            #                           portfolio_code=portfolio_code)
         calc_date = calc_date + timedelta(days=1)
     return valuation.send_responses()

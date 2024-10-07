@@ -1,7 +1,7 @@
 import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from portfolio.models import TradeRoutes, Portfolio, Transaction
+from portfolio.models import TradeRoutes, Portfolio, Transaction, Cash, PortGroup
 from instrument.models import Instruments, Tickers, Prices
 from accounts.models import BrokerAccounts
 import json
@@ -29,6 +29,7 @@ def create_robot(request):
 def create_portfolio(request):
     if request.method == "POST":
         body_data = json.loads(request.body.decode('utf-8'))
+        print(body_data)
         try:
             port = Portfolio(portfolio_name=body_data["port_name"],
                              portfolio_code=body_data["port_code"],
@@ -38,6 +39,7 @@ def create_portfolio(request):
                              owner=body_data["owner"])
             port.save()
             Nav(date=body_data["inception_date"], portfolio_code=body_data["port_code"]).save()
+
             return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
         except:
             return JsonResponse({'msg': "Portfolio exists in database!", 'port': 0}, safe=False)
@@ -47,17 +49,33 @@ def create_portfolio(request):
 def create_cashflow(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        Transaction(
+        print(type(request_body['security']), "TYPE")
+        transaction = Transaction.objects.create(
             portfolio_code=request_body['portfolio_code'],
-            security=request_body['security'],
+            security_id=request_body['security'],
             transaction_type=request_body['transaction_type'],
             trade_date=request_body['trade_date'],
             quantity=float(request_body['quantity']),
             currency=request_body['currency']
-        ).save_cashflow()
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+        )
+        transaction.save_cashflow()
+
+        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
         return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)
 
+
+@csrf_exempt
+def new_transaction(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+
+        print('NEW TRANSACTION')
+        print(request_body)
+
+        request_body['quantity'] = float(request_body['quantity']) if request_body['quantity'] else 0.0
+        Transaction.objects.create(**request_body)
+
+    return JsonResponse({"message": "Transaction is created!", 'success': True}, safe=False)
 
 @csrf_exempt
 def save_transaction(request):
@@ -66,9 +84,9 @@ def save_transaction(request):
         print(request_body)
         account = BrokerAccounts.objects.get(id=6)
 
-        transaction = Transaction(
+        transaction = Transaction.objects.create(
             portfolio_code=request_body['portfolio_code'],
-            security=request_body['security'],
+            security_id=request_body['security'],
             sec_group=request_body['sec_group'],
             transaction_type=request_body['transaction_type'],
             trade_date=request_body['trade_date'],
@@ -82,6 +100,7 @@ def save_transaction(request):
             fx_rate=request_body['fx_rate'],
             broker_id=request_body['broker_id']
         )
+
         print(request_body['transaction_link_code'], type(request_body['transaction_link_code']))
         if 'id' in request_body:
             transaction.save_transaction(broker_name=account.broker_name, transaction='update', id=request_body['id'])
@@ -97,8 +116,23 @@ def save_transaction(request):
         #         Prices(inst_code=request_body['security'],
         #                date=request_body['trade_date'],
         #                price=request_body['price']).save()
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
         return JsonResponse({"response": "Transaction is created!"}, safe=False)
 
+
+@csrf_exempt
+def add_to_portgroup(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+
+        parent_id = request_body.get('parent_id')
+        portfolio_id = request_body.get('portfolio_id')
+
+        if PortGroup.objects.filter(parent_id=parent_id, portfolio_id=portfolio_id).exists():
+            return JsonResponse({"message": "Portfolio is already assigned to a portfolio group"}, status=409)
+
+        PortGroup.objects.create(parent_id=parent_id, portfolio_id=portfolio_id)
+
+        return JsonResponse({"message": "Portfolio is added to the group", "success": True}, status=201)
 
 

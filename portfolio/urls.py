@@ -11,7 +11,9 @@ create_views = [
     path('portfolios/new/trade_routing/', create_views.create_robot),
     path('portfolios/new/portfolio/', create_views.create_portfolio),
     path('portfolios/new/cashflow/', create_views.create_cashflow),
+    path('portfolios/new/transaction/', create_views.new_transaction),
     path('portfolios/save/transaction/', create_views.save_transaction),
+    path('portfolios/group/add/', create_views.add_to_portgroup),
 ]
 
 get_views = [
@@ -33,6 +35,7 @@ get_views = [
     path('portfolios/get/perf_dashboard/', get_views.get_perf_dashboard),
     path('portfolios/get/trade_routes/', get_views.get_trade_routes),
     path('portfolios/get/historic_nav/', get_views.get_historic_nav),
+    path('portfolios/get/port_groups/', get_views.get_port_groups),
 ]
 
 update_views = [
@@ -44,6 +47,7 @@ update_views = [
 delete_views = [
     path('portfolios/delete/transaction/', delete_views.delete_transaction),
     path('portfolios/delete/trade_routing/', delete_views.delete_trade_routing),
+    path('portfolios/delete/port_group/', delete_views.delete_port_group),
 ]
 
 other_patterns = [

@@ -11,22 +11,30 @@ def get_instruments(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
         print(request_data)
-        # if request_data['name'] == '':
+        # if request_data.get('name') is None:
         #     instrument_name = ''
         # else:
         #     instrument_name = request_data['name']
-        # filters = {}
-        # for key, value in request_data.items():
-        #     if isinstance(value, list) and len(value) > 0:
-        #         filters[key + '__in'] = value
-        #     elif key == 'group':
-        #         filters[key] = value
 
-        results = dynamic_mode_get(request_object=request_data.items(),
-                                   column_list=['name', 'group', 'group__in', 'type__in', 'country__in', 'cash', 'currency', 'currency__in'],
-                                   table=Instruments)
+        filters = {}
+        for key, value in request_data.items():
+            print(key,value)
+
+            if isinstance(value, list):
+                print('MULTIPLE')
+                if len(value) > 0:
+                    filters[key + '__in'] = value
+            else:
+                print('GROUP')
+                if key == "name":
+                    print('NAME')
+                    filters['name__contains'] = value
+                else:
+                    filters[key] = value
+        print(filters)
+        results = Instruments.objects.filter(**filters).values()
+
         print(results)
-        # Instruments.objects.filter(name__contains=instrument_name).filter(**filters).values()
         return JsonResponse(list(results), safe=False)
 
 

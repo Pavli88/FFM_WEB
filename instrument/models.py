@@ -10,7 +10,7 @@ class Instruments(models.Model):
 
 
 class Prices(models.Model):
-    inst_code = models.IntegerField(max_length=30, default="")
+    instrument = models.ForeignKey(Instruments, on_delete=models.CASCADE, null=True)
     price = models.FloatField(default=0.0)
     source = models.CharField(max_length=30, default="")
     date = models.DateField()

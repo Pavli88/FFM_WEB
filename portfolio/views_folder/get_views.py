@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
-from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 from calculations.processes.valuation.valuation import calculate_holdings
@@ -18,29 +20,66 @@ def get_portfolios(request):
                                              table=Portfolio), safe=False)
 
 
+@csrf_exempt
 def get_portfolio_transactions(request):
-    if request.method == "GET":
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
+        filters = {}
+        for key, value in request_body.items():
+            print(key, value)
 
-        # filters = {}
-        # for key, value in request.GET.items():
-        #     if value == '':
-        #         pass
-        #     else:
-        #         if key in ['id', 'portfolio_code', 'currency', 'transaction_type',
+            if isinstance(value, list):
+                print('MULTIPLE')
+                if len(value) > 0:
+                    filters[key + '__in'] = value
+            else:
+                print('GROUP')
+                filters[key] = value
+
+        print(filters)
+        results = Transaction.objects.select_related('security').all().filter(**filters) ##.values()
+
+        l = []
+        for transaction in results:
+            l.append({
+                'id': transaction.id,
+                'transaction_link_code': transaction.transaction_link_code,
+                'name': transaction.security.name,
+                'security_id': transaction.security_id,
+                'portfolio_code': transaction.portfolio_code,
+                'transaction_type': transaction.transaction_type,
+                'currency': transaction.currency,
+                'open_status': transaction.open_status,
+                'is_active': transaction.is_active,
+                'quantity': transaction.quantity,
+                'price': transaction.price,
+                'fx_rate': transaction.fx_rate,
+                'mv': transaction.mv,
+                'local_mv': transaction.local_mv,
+                'net_cashflow': transaction.net_cashflow,
+                'local_cashflow': transaction.local_cashflow,
+                'margin_balance': transaction.margin_balance,
+                'margin_rate': transaction.margin_rate,
+                'account_id': transaction.account_id,
+                'broker_id': transaction.broker_id,
+                'broker': transaction.broker,
+                'trade_date': transaction.trade_date,
+                'settlement_date': transaction.settlement_date,
+                'option': transaction.option,
+                'bv': transaction.bv,
+                'local_bv': transaction.local_bv
+            })
+            # print(transaction.values())
+            print(transaction.id, transaction.security.name)
+
+            # transactions = dynamic_mode_get(request_object=request.GET.items(),
+        #                                 column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
         #                                              'trade_date__gte', 'trade_date__lte', 'is_active',
-        #                                              'security', '']:
-        #             filters[key] = value
-        # results = Transaction.objects.filter(**filters).select_related('security').values()
-        # print(results)
-        # df = pd.DataFrame(results)
-        # print(df)
-        transactions = dynamic_mode_get(request_object=request.GET.items(),
-                                        column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
-                                                     'trade_date__gte', 'trade_date__lte', 'is_active',
-                                                     'security', ''],
-                                        table=Transaction)
+        #                                              'security', ''],
+        #                                 table=Transaction)
 
-
+        print(results)
         # security_codes = list(dict.fromkeys(df['security']))
 
         # df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
@@ -48,7 +87,7 @@ def get_portfolio_transactions(request):
         # response = []
         # for i in df.to_dict('records'):
         #     print(type(i))
-        return JsonResponse(transactions, safe=False)
+        return JsonResponse(l, safe=False)
 
 
 def get_open_transactions(request):
@@ -57,14 +96,14 @@ def get_open_transactions(request):
         cursor = connection.cursor()
         cursor.execute(
             """select pt.id, pt.portfolio_code,
-       inst.name, pt.sec_group, pt.security,
+       inst.name, pt.sec_group, pt.security_id,
        pt.currency, pt.transaction_type,
        pt.quantity, pt.price, pt.account_id, pt.broker_id, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
 from portfolio_transaction as pt, instrument_instruments as inst
 where pt.transaction_link_code in (select id from portfolio_transaction where is_active = 1)
 or pt.is_active = 1
 and pt.sec_group != 'Cash'
-and pt.security = inst.id;"""
+and pt.security_id = inst.id;"""
         )
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
@@ -88,7 +127,7 @@ and pt.security = inst.id;"""
                 df_transaction['updated_id'].tolist()[0],
                 df_transaction['portfolio_code'].tolist()[0],
                 df_transaction['name'].tolist()[0],
-                df_transaction['security'].tolist()[0],
+                df_transaction['security_id'].tolist()[0],
                 df_transaction['sec_group'].tolist()[0],
                 df_transaction['currency'].tolist()[0],
                 df_transaction['transaction_type'].tolist()[0],
@@ -193,12 +232,33 @@ def transactions_pnls(request):
 
 def get_holding(request):
     if request.method == "GET":
-        print("GET PORTHOLDING")
-        try:
-            holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
-            return JsonResponse(holding_df.to_dict('records'), safe=False)
-        except Holding.DoesNotExist:
-            return JsonResponse([{}], safe=False)
+        holdings = Holding.objects.select_related('instrument').filter(date=request.GET.get("date")).filter(portfolio_code=request.GET.get("portfolio_code"))
+        holdings_list = [
+            {
+                'portfolio_code': holding.portfolio_code,
+                'date': holding.date,
+                'trd_id': holding.id,
+                'inv_num': holding.inv_num,
+                'trade_date': holding.trade_date,
+                'trade_type': holding.trade_type,
+                'instrument_id': holding.instrument_id,
+                'name': holding.instrument.name,
+                'group': holding.instrument.group,
+                'type': holding.instrument.type,
+                'currency': holding.instrument.currency,
+                'quantity': holding.quantity,
+                'trade_price': round(holding.trade_price, 4),
+                'market_price': round(holding.market_price, 4),
+                'fx_rate': round(holding.fx_rate,  4),
+                'mv': holding.mv,
+                'bv': holding.bv,
+                'weight': holding.weight,
+                'ugl': holding.ugl,
+                'rgl': holding.rgl,
+            }
+            for holding in holdings
+        ]
+        return JsonResponse(pd.DataFrame(holdings_list).to_dict('records'), safe=False)
 
 
 def aggregated_security_pnl(request):
@@ -352,3 +412,24 @@ order by pn.date asc;
         df['drawdown'] = (df['diff'] / df['total']) * 100
         df = df.fillna(0)
         return JsonResponse(df.to_dict('records'), safe=False)
+
+
+@require_GET
+def get_port_groups(request):
+    port_groups = PortGroup.objects.select_related('portfolio').all()
+    print(port_groups)
+    g = []
+    for group in port_groups:
+        g.append({
+            'id': group.id,
+            'name': group.portfolio.portfolio_name,
+            'parent_id': group.parent_id,
+            'portfolio_code': group.portfolio.portfolio_code,
+            'portfolio_type': group.portfolio.portfolio_type,
+        })
+    return JsonResponse(g, safe=False, status=200)
+    # try:
+    #
+    #
+    # except Exception as e:
+    #     return JsonResponse({'error': str(e)}, status=500)

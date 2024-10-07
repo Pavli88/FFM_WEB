@@ -10,7 +10,7 @@ from instrument.models import Instruments, Tickers
 
 class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
-    portfolio_code = models.CharField(max_length=30, unique=True)
+    portfolio_code = models.CharField(max_length=30, unique=True, null=True)
     portfolio_type = models.CharField(max_length=30, default="")
     status = models.CharField(max_length=30, default="Not Funded")
     currency = models.CharField(max_length=30, default="")
@@ -29,6 +29,11 @@ class Portfolio(models.Model):
     description = models.CharField(max_length=2000, default="")
     pricing_tolerance = models.IntegerField(default=30)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.portfolio_type == 'Business':
+            PortGroup(portfolio_id=self.id).save()
 
 class TradeRoutes(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
@@ -66,14 +71,16 @@ class Nav(models.Model):
 
 class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
-    security = models.IntegerField(default=0)
-    sec_group = models.CharField(max_length=30, default="")
+    security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
     option = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
     price = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
     local_mv = models.FloatField(default=0.0)
+    bv = models.FloatField(default=0.0)
+    local_bv = models.FloatField(default=0.0)
     trade_date = models.DateField(null=True)
+    settlement_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now_add=True)
     currency = models.CharField(max_length=30, default="")
@@ -81,79 +88,138 @@ class Transaction(models.Model):
     financing_cost = models.FloatField(default=0.0)
     transaction_type = models.CharField(max_length=30, default="")
     transaction_link_code = models.IntegerField(default=0)
-    open_status = models.CharField(max_length=50, default="")
+    open_status = models.CharField(max_length=50, default="Open")
     account_id = models.IntegerField(null=True)
     broker_id = models.IntegerField(null=True)
+    broker = models.CharField(max_length=30, default="")
     net_cashflow = models.FloatField(default=0.0)
     local_cashflow = models.FloatField(default=0.0)
     margin_balance = models.FloatField(default=0.0)
-    realized_pnl = models.FloatField(default=0.0)
-    local_pnl = models.FloatField(default=0.0)
-    margin = models.FloatField(default=0.0)
+    margin_rate = models.FloatField(default=0.0)
     fx_rate = models.FloatField(default=1.0)
-    fx_pnl = models.FloatField(default=0.0)
 
-    def save_cashflow(self, *args, **kwargs):
-        multiplier = 1.0
-        if self.transaction_type == 'Redemption' or self.transaction_type == 'Interest Paid' or self.transaction_type == 'Commission':
-            multiplier = -1.0
+    def save(self, *args, **kwargs):
+        if not self.security:
+            raise ValidationError("Security must be provided.")
+
+        instrument = Instruments.objects.get(id=self.security_id)
+        print('TRANSACTION LINK CODE IN SAVE MODEL')
+        print(self.transaction_link_code)
+        print('')
+        if self.transaction_link_code == 0:
+            super().save(*args, **kwargs)
+            self.transaction_link_code = self.id
+        else:
+            # Linked transaction
+            self.parent_transaction = Transaction.objects.get(id=self.transaction_link_code)
+            self.is_active = False
+            self.open_status = 'Close'
+            if self.parent_transaction.transaction_type == 'Purchase':
+                self.transaction_type = 'Sale'
+            if self.parent_transaction.transaction_type == 'Sale':
+                self.transaction_type = 'Purchase'
+
+        self.currency = instrument.currency
+
+        # Adjust values if the security group is "Cash"
+        if instrument.group == "Cash":
+            self.cash_transaction()
+            self.save_cashflow()
+        if instrument.group == "CFD":
+            self.derivatives_transaction()
+
+    def save_cashflow(self):
+        Cash(
+            date=self.trade_date,
+            portfolio_code=self.portfolio_code,
+            base_mv=self.net_cashflow,
+            local_mv=self.local_cashflow,
+            type=self.transaction_type,
+            transaction_id=self.id
+        ).save()
+
+    def save_margin(self):
+        Margin(
+            date=self.trade_date,
+            portfolio_code=self.portfolio_code,
+            base_mv=self.net_cashflow * -1,
+            local_mv=self.local_cashflow * -1,
+            type='Initial Margin' if self.open_status == 'Open' else 'Margin Close',
+            transaction_id=self.id
+        ).save()
+
+    def calculate_pnl(self):
+
+        if self.parent_transaction.transaction_type == 'Purchase':
+            pnl = (float(self.price) - float(self.parent_transaction.price)) * (
+                abs(float(self.quantity)))
+            # margin_factor = 1
+            # cash_factor = -1
+
+        if self.parent_transaction.transaction_type == 'Sale':
+            pnl = (float(self.parent_transaction.price) - float(self.price)) * abs(float(self.quantity))
+            # margin_factor = -1
+            # cash_factor = 1
+
+        # Margin(
+        #     date=self.trade_date,
+        #     portfolio_code=self.portfolio_code,
+        #     base_mv=round(pnl * float(self.fx_rate) * self.parent_transaction.margin_rate, 2) * margin_factor,
+        #     local_mv=round(pnl * self.parent_transaction.margin_rate, 2) * margin_factor,
+        #     type='Margin Adjustment',
+        #     transaction_id=self.id).save()
+
+        Cash(
+            date=self.trade_date,
+            portfolio_code=self.portfolio_code,
+            base_mv=round(pnl * float(self.fx_rate), 2),
+            local_mv=round(pnl, 2),
+            type='Trade PnL',
+            transaction_id=self.id
+        ).save()
+
+        # RGL(
+        #     date=self.trade_date,
+        #     portfolio_code=self.portfolio_code,
+        #     base_mv=round(pnl * float(self.fx_rate), 2),
+        #     local_mv=round(pnl, 2),
+        #     transaction_id=self.id
+        # ).save()
+
+    def cash_transaction(self, *args, **kwargs):
+        multiplier = -1 if self.transaction_type in ['Redemption', 'Interest Paid', 'Commission'] else 1
+        self.quantity *= multiplier
         self.price = 1
-        self.mv = self.quantity
-        self.local_mv = self.quantity
-        self.net_cashflow = self.quantity * multiplier
-        self.local_cashflow = self.quantity * multiplier
-        self.open_status = 'Closed'
-        self.sec_group = 'Cash'
+        self.mv = self.local_mv = self.bv = self.local_bv = self.quantity
+        self.net_cashflow = self.local_cashflow = self.quantity
+        self.open_status = 'Close'
         self.is_active = False
         super().save(*args, **kwargs)
 
-    def save_transaction(self, **kwargs):
-        if kwargs['transaction'] == 'new' or kwargs['transaction'] == 'update':
-            multiplier = 1
-            if self.transaction_type == 'Purchase' or self.sec_group == 'CFD':
-                multiplier = -1
-            if self.sec_group == 'CFD':
-                ticker = Tickers.objects.get(inst_code=self.security, source=kwargs['broker_name'])
-                self.margin = ticker.margin
-                self.net_cashflow = round(float(self.quantity) * float(self.price) * ticker.margin * float(self.fx_rate), 5) * multiplier
-                self.local_cashflow = round(float(self.quantity) * float(self.price) * ticker.margin, 5) * multiplier
-                self.margin_balance = round(float(self.quantity) * float(self.price) * (1 - ticker.margin), 5)
-            else:
-                self.net_cashflow = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5) * multiplier
-                self.local_cashflow = round(float(self.quantity) * float(self.price), 5) * multiplier
-            self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
-            self.local_mv = round(float(self.quantity) * float(self.price), 5)
+    def derivatives_transaction(self, *args, **kwargs):
+        print('DERIVATIVES')
+        print(self.security_id, self.broker)
+        ticker = Tickers.objects.get(inst_code=self.security_id, source=self.broker)
+        cf_multiplier = -1 if self.open_status in ['Open'] else 1
+        self.quantity *= -1 if self.transaction_type in ['Sale'] else 1
+        self.margin_rate = ticker.margin
 
-            # Updating Main Transaction
-            if 'id' in kwargs:
-                self.id = kwargs['id']
-                self.created_on = datetime.now()
+        self.net_cashflow = round(abs(float(self.quantity)) * float(self.price) * (ticker.margin), 5) * float(self.fx_rate) * cf_multiplier
+        self.local_cashflow = round(abs(float(self.quantity)) * float(self.price) * (ticker.margin), 5) * cf_multiplier
 
-        if kwargs['transaction'] == 'linked':
-            main_transaction = Transaction.objects.get(id=self.transaction_link_code)
-            transaction_weight = abs(float(self.quantity) / float(main_transaction.quantity))
+        self.margin_balance = self.net_cashflow * -1
+        self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
+        self.local_mv = round(float(self.quantity) * float(self.price), 5)
+        self.bv = 0
+        self.local_bv = 0
+        super().save(*args, **kwargs)
 
-            if main_transaction.transaction_type == 'Purchase' or main_transaction.sec_group == 'CFD':
-                if main_transaction.transaction_type == 'Purchase':
-                    pnl = round(float(self.quantity) * (float(self.price) - float(main_transaction.price)), 5)
-                else:
-                    pnl = round(float(self.quantity) * (float(main_transaction.price) - float(self.price)), 5)
-                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
-                margin_balance = round(transaction_weight * main_transaction.margin_balance * -1, 5)
-            else:
-                pnl = round(float(self.quantity) * (float(main_transaction.price) - float(self.price)), 5)
-                net_cf = round((transaction_weight * main_transaction.net_cashflow * -1) + pnl, 5)
-                margin_balance = round(transaction_weight * main_transaction.margin_balance, 5)
+        # Save margin and positions
+        # self.save_margin()
 
-            self.realized_pnl = round(pnl * float(self.fx_rate), 5)
-            self.local_pnl = round(pnl, 5)
-            self.net_cashflow = round(net_cf * float(self.fx_rate), 5)
-            self.local_cashflow = round(net_cf, 5)
-            self.margin_balance = round(margin_balance, 5)
-            self.mv = round(float(self.quantity) * float(self.price) * float(self.fx_rate), 5)
-            self.local_mv = round(float(self.quantity) * float(self.price), 5)
-            self.fx_pnl = round((float(self.fx_rate) - main_transaction.fx_rate) * main_transaction.quantity, 5)
-        super().save()
+        # If it is a new transaction it will assign the ID to the INV Num as well
+        if self.open_status == 'Close':
+            self.calculate_pnl()
 
 
 class TransactionPnl(models.Model):
@@ -161,28 +227,71 @@ class TransactionPnl(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     security = models.IntegerField(default=0)
     pnl = models.FloatField(default=0.0)
-    closing_date = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(null=True)
 
 
 class Positions(models.Model):
-    portfolio_name = models.CharField(max_length=30, default="")
-    security = models.IntegerField(default=0)
+    portfolio_code = models.CharField(max_length=30, default="")
+    security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
     quantity = models.FloatField(default=0.0)
     date = models.DateTimeField(auto_now_add=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
 
+class Cash(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    type = models.CharField(max_length=30, default="")
+    base_mv = models.FloatField(default=0.0)
+    local_mv = models.FloatField(default=0.0)
+    date = models.DateField(null=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
+
+
+class Margin(models.Model):
+    # types -> Initial Margin, Mark to Mark valuation
+    portfolio_code = models.CharField(max_length=30, default="")
+    type = models.CharField(max_length=30, default="")
+    base_mv = models.FloatField(default=0.0)
+    local_mv = models.FloatField(default=0.0)
+    date = models.DateField(null=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
+
+class UGL(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    base_mv = models.FloatField(default=0.0)
+    local_mv = models.FloatField(default=0.0)
+    date = models.DateField(null=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
+
+class RGL(models.Model):
+    portfolio_code = models.CharField(max_length=30, default="")
+    base_mv = models.FloatField(default=0.0)
+    local_mv = models.FloatField(default=0.0)
+    date = models.DateField(null=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
 
 class PortGroup(models.Model):
-    parent_id = models.IntegerField()
-    children_id = models.IntegerField()
-    connection_id = models.CharField(max_length=30, default="", unique=True)
-    type = models.CharField(max_length=30, default="")
+    parent_id = models.IntegerField(default=0)
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True)
 
 
 class Holding(models.Model):
-    date = models.DateField()
     portfolio_code = models.CharField(max_length=30)
-    data = models.JSONField(null=True)
-
+    date = models.DateField(null=True)
+    trd = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
+    inv_num = models.IntegerField(default=0)
+    trade_type = models.CharField(max_length=30, default="")
+    trade_date = models.DateField(null=True)
+    instrument = models.ForeignKey(Instruments, on_delete=models.CASCADE, null=True)
+    quantity = models.FloatField(default=0.0) # -> Needed for valuation
+    trade_price = models.FloatField(default=0.0)
+    market_price = models.FloatField(default=0.0) # -> Needed for valuation
+    fx_rate = models.FloatField(default=0.0) # -> Needed for valuation
+    mv = models.FloatField(default=0.0)
+    bv = models.FloatField(default=0.0)
+    weight = models.FloatField(default=0.0)
+    ugl = models.FloatField(default=0.0)
+    rgl = models.FloatField(default=0.0)
+    margin_rate = models.FloatField(default=0.0)
 
 class TotalReturn(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
@@ -192,7 +301,7 @@ class TotalReturn(models.Model):
 
 
 class SecurityReturn(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
+    portfolio_code = models.CharField(max_length=40, default="")
     date = models.DateField()
     security = models.IntegerField(default=0)
     weight = models.FloatField(default=0.0)
@@ -202,6 +311,11 @@ class SecurityReturn(models.Model):
     fx_return = models.FloatField(default=0.0)
     contribution = models.FloatField(default=0.0)
 
+
+class Process(models.Model):
+    portfolio_code = models.CharField(max_length=40, default="")
+    date = models.DateTimeField(auto_now_add=True)
+    process = models.CharField(max_length=40, default="")
 
 # models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
 # models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)

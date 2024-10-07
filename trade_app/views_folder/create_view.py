@@ -14,54 +14,35 @@ from calculations.processes.valuation.valuation import calculate_holdings
 
 
 class TradeExecution:
-    def __init__(self, portfolio_code, account_id, security, trade_date):
+    def __init__(self, portfolio_code, account_id, security_id, trade_date):
         self.portfolio = Portfolio.objects.get(portfolio_code=portfolio_code)
         self.account = BrokerAccounts.objects.get(id=account_id)
-        self.security = Instruments.objects.get(id=security)
+        self.security_id = security_id
         self.trade_date = trade_date
-        self.ticker = Tickers.objects.get(inst_code=self.security.id,
+        self.ticker = Tickers.objects.get(inst_code=self.security_id,
                                           source=self.account.broker_name)
+
+        # It has to be selected based on the account ID which connection has to be established
         self.broker_connection = OandaV20(access_token=self.account.access_token,
                                           account_id=self.account.account_number,
                                           environment=self.account.env)
 
     def new_trade(self, transaction_type, quantity):
 
-        if self.ticker.margin == 0.0:
-            margin = 1
-        else:
-            margin = self.ticker.margin
-
-        if transaction_type == "Purchase":
-            multiplier = 1
-        else:
-            multiplier = -1
+        multiplier = 1 if transaction_type == "Purchase" else -1
 
         # # Trade execution at broker
         trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message=trade['response']['reason'] + ' - ' + transaction_type + ' ' + self.security.name + ' ' + str(quantity),
-                          security=self.security.name,
+                          message=trade['response']['reason'] + ' - ' + transaction_type + ' ' + ' ' + str(quantity),
+                          security=self.security_id,
                           sub_message='Rejected',
                           broker_name=self.account.broker_name).save()
             return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
 
         trade_price = trade['response']["price"]
-
-        if self.security.group == 'CFD':
-            net_cash_flow = float(quantity) * float(
-                trade_price) * margin * -1
-            margin_balance = float(quantity) * float(
-                trade_price) * (1 - margin)
-        # Without margin
-        else:
-            if transaction_type == 'Purchase':
-                net_cash_flow = float(quantity) * float(trade_price) * -1
-            else:
-                net_cash_flow = float(quantity) * float(trade_price)
-            margin_balance = 0.0
 
         print(trade)
 
@@ -72,27 +53,21 @@ class TradeExecution:
             portfolio_code=self.portfolio.portfolio_code,
             quantity=quantity,
             price=trade_price,
-            currency=self.security.currency,
+            fx_rate=round(float(conversion_factor), 4),
             transaction_type=transaction_type,
             trade_date=self.trade_date,
-            security=self.security.id,
-            sec_group=self.security.group,
+            security_id=self.security_id,
             broker_id=trade['response']['id'],
+            broker=self.account.broker_name,
             account_id=self.account.id,
-            margin=margin,
             open_status="Open",
-            margin_balance=round(margin_balance, 4),
-            mv=round(float(quantity) * float(trade_price) * conversion_factor, 4),
-            local_mv=round(float(quantity) * float(trade_price), 4),
-            net_cashflow=round(net_cash_flow * conversion_factor, 4),
-            local_cashflow=round(net_cash_flow, 4),
-            fx_rate=round(float(conversion_factor), 4)
+            is_active=True
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=transaction_type + ' ' + self.security.name + ' ' + str(quantity) + ' @ ' + trade_price,
+                      message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + trade_price,
                       sub_message='Executed',
-                      security=self.security.name,
+                      security=self.security_id,
                       broker_name=self.account.broker_name).save()
 
         self.save_price(trade_price=trade_price)
@@ -106,22 +81,17 @@ class TradeExecution:
         ask = prices['asks'][0]['price']
         return (float(bid) + float(ask)) / 2
 
-    def close(self, transaction, quantity, close_out=False):
+    def close(self, transaction, quantity=None):
         # BROKER SECTION -----------------------------------------------------------------------------------------------
         broker_connection = OandaV20(access_token=self.account.access_token,
                                      account_id=self.account.account_number,
                                      environment=self.account.env)
-        if close_out is True:
+        if quantity is not None:
             trade = broker_connection.close_out(trd_id=transaction['broker_id'], units=quantity)
         else:
             trade = broker_connection.close_trade(trd_id=transaction['broker_id'])
 
         # --------------------------------------------------------------------------------------------------------------
-            # Main transaction update
-            dynamic_model_update(table_object=Transaction,
-                                 request_object={'id': transaction['id'],
-                                                 'is_active': 0,
-                                                 'open_status': 'Closed'})
 
         # FX Conversion to Base Currency
         conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
@@ -129,63 +99,38 @@ class TradeExecution:
         # Linked transaction creation
         trade_price = trade["price"]
         broker_id = trade['id']
-        transaction_weight = abs(float(quantity) / float(transaction['quantity']))
-        if transaction['transaction_type'] == 'Purchase' or transaction['sec_group'] == 'CFD':
-            if transaction['transaction_type'] == 'Purchase':
-                pnl = float(quantity) * (
-                        float(trade_price) - float(transaction['price']))
-            else:
-                pnl = float(quantity) * (
-                         float(transaction['price']) - float(trade_price))
-            net_cash_flow = (transaction_weight * float(transaction['net_cashflow']) * -1) + pnl
-            margin_balance = transaction_weight * transaction['margin_balance'] * -1
-            transaction_type = 'Sale'
-        else:
-            pnl = float(quantity) * (float(transaction['price']) - float(trade_price))
-            net_cash_flow = (transaction_weight * transaction['net_cashflow'] * -1) + pnl
-            margin_balance = transaction_weight * transaction['margin_balance']
-            transaction_type = 'Purchase'
+
+        print('TRADE EXECUTION PART', quantity)
+        print(trade)
 
         Transaction(
             portfolio_code=self.portfolio.portfolio_code,
-            quantity=quantity,
+            quantity=abs(float(trade['units'])),
             price=trade_price,
-            currency=self.security.currency,
-            transaction_type=transaction_type,
             trade_date=self.trade_date,
-            security=self.security.id,
-            sec_group=self.security.group,
+            security_id=self.security_id,
             broker_id=broker_id,
+            broker=self.account.broker_name,
             account_id=self.account.id,
-            is_active=0,
-            open_status='Closed',
-            realized_pnl=round(pnl * conversion_factor, 5),
-            local_pnl=round(pnl, 5),
-            margin_balance=round(margin_balance, 4),
-            mv=round(float(quantity) * float(trade_price) * conversion_factor, 4),
-            local_mv=round(float(quantity) * float(trade_price), 4),
-            net_cashflow=round(net_cash_flow * conversion_factor, 4),
-            local_cashflow=round(net_cash_flow, 4),
             transaction_link_code=transaction['id'],
             fx_rate=round(float(conversion_factor), 4),
-            fx_pnl=round((float(conversion_factor) - float(transaction['fx_rate']) * float(quantity)),4)
         ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=self.security.name + ' @ ' + trade_price + ' Broker ID ' + str(broker_id),
+                      message=' @ ' + trade_price + ' Broker ID ' + str(broker_id),
                       sub_message='Close',
-                      security=self.security.name,
+                      security=self.security_id,
                       broker_name=self.account.broker_name).save()
 
         self.save_price(trade_price=trade_price)
 
     def save_price(self, trade_price):
         try:
-            price = Prices.objects.get(date=self.trade_date, inst_code=self.security.id)
+            price = Prices.objects.get(date=self.trade_date, inst_code=self.security_id)
             price.price = trade_price
             price.save()
         except Prices.DoesNotExist:
-            Prices(inst_code=self.security.id,
+            Prices(inst_code=self.security_id,
                    date=self.trade_date,
                    price=trade_price).save()
 
@@ -228,23 +173,25 @@ def new_transaction_signal(request):
                 execution.close(transaction=transaction, quantity=quantity)
             return JsonResponse('Transactions are closed', safe=False)
 
+        # Checking if trade routing exists
         try:
             routing = TradeRoutes.objects.get(portfolio_code=request_body['portfolio_code'],
-                                              inst_id=request_body['security'])
+                                              inst_id=request_body['security_id'])
         except:
             Notifications(portfolio_code=request_body['portfolio_code'],
-                          message='Missing trade routing. Security Code: ' + str(request_body['security']),
+                          message='Missing trade routing. Security Code: ' + str(request_body['security_id']),
                           sub_message='Error',
                           broker_name='-').save()
             return JsonResponse({}, safe=False)
 
         if routing.is_active == 0:
             Notifications(portfolio_code=request_body['portfolio_code'],
-                          message='Rejected Trade. Inactive Routing. Security: ' + str(request_body['security']),
+                          message='Rejected Trade. Inactive Routing. Security: ' + str(request_body['security_id']),
                           sub_message='Inactive trade routing',
                           broker_name='-').save()
             return JsonResponse({}, safe=False)
 
+        # This code determines if trade routing quantity has to be applied or manual quantity multiplier
         if 'manual' in request_body:
             quantity_multiplier = 1
             account_id = request_body['account_id']
@@ -252,48 +199,38 @@ def new_transaction_signal(request):
             quantity_multiplier = routing.quantity
             account_id = routing.broker_account_id
 
+        # Initalizing trade execution
+        # Account ID determines the broker and the broker account to trade on
         execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
                                    account_id=account_id,
-                                   security=request_body['security'],
+                                   security_id=request_body['security_id'],
                                    trade_date=trade_date)
 
         if request_body['transaction_type'] == "Close All":
-            open_transactions = Transaction.objects.filter(security=request_body['security'],
+            open_transactions = Transaction.objects.filter(security=request_body['security_id'],
                                                            is_active=1,
                                                            portfolio_code=request_body['portfolio_code']).values()
             for transaction in open_transactions:
-                closed_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=transaction['id']).values())
-                if len(closed_transactions) == 0:
-                    closed_out_units = 0
-                else:
-                    closed_out_units = closed_transactions['quantity'].sum()
-                quantity = transaction['quantity'] + closed_out_units
-                execution.close(transaction=transaction, quantity=quantity)
+                execution.close(transaction=transaction)
+
+        # Liquidating the whole portfolio and open trades at the same time
         elif request_body['transaction_type'] == 'Liquidate':
             open_transactions = Transaction.objects.filter(is_active=1,
                                                            portfolio_code=request_body['portfolio_code']).values()
             for transaction in open_transactions:
-                closed_transactions = pd.DataFrame(
-                    Transaction.objects.filter(transaction_link_code=transaction['id']).values())
-                if len(closed_transactions) == 0:
-                    closed_out_units = 0
-                else:
-                    closed_out_units = closed_transactions['quantity'].sum()
-                quantity = transaction['quantity'] + closed_out_units
-                execution.close(transaction=transaction, quantity=quantity)
+                execution.close(transaction=transaction)
+
+        # Partial close out of an existing position
         elif request_body['transaction_type'] == 'Close Out':
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
-            execution.close(transaction=transaction, quantity=request_body['quantity'], close_out=True)
+            execution.close(transaction=transaction, quantity=request_body['quantity'])
+
+        # Closing a single open trade with the rest outstanding quantity
         elif request_body['transaction_type'] == 'Close':
             transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
-            closed_transactions = pd.DataFrame(
-                Transaction.objects.filter(transaction_link_code=transaction['id']).values())
-            if len(closed_transactions) == 0:
-                closed_out_units = 0
-            else:
-                closed_out_units = closed_transactions['quantity'].sum()
-            quantity = transaction['quantity'] - abs(closed_out_units)
-            execution.close(transaction=transaction, quantity=quantity)
+            execution.close(transaction=transaction)
+
+        # This is the trade execution
         else:
             if 'sl' in request_body:
                 latest_nav = list(Nav.objects.filter(portfolio_code=request_body['portfolio_code']).order_by('date').values_list('total', flat=True))[-1]
@@ -304,5 +241,5 @@ def new_transaction_signal(request):
                 request_body['quantity'] = quantity
             execution.new_trade(transaction_type=request_body['transaction_type'],
                                 quantity=float(request_body['quantity']) * quantity_multiplier)
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
+        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
         return JsonResponse({}, safe=False)

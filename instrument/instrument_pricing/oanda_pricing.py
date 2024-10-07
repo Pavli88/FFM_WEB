@@ -28,12 +28,12 @@ def oanda_pricing(start_date, end_date):
 
             try:
                 price = Prices.objects.get(date=date,
-                                           inst_code=int(ticker['inst_code']))
+                                           instrument_id=int(ticker['inst_code']))
                 price.price = float(data['mid']['c'])
                 price.save()
             except:
                 Prices(date=date,
-                       inst_code=int(ticker['inst_code']),
+                       instrument_id=int(ticker['inst_code']),
                        price=float(data['mid']['c']),
                        source='oanda'
                        ).save()

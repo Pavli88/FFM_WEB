@@ -6,6 +6,7 @@ def dynamic_mode_get(request_object, column_list, table):
         else:
             if key in column_list:
                 filters[key] = value
+    print(filters)
     return list(table.objects.filter(**filters).values())
 
 
