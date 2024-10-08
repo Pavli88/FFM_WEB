@@ -13,10 +13,7 @@ def delete_transaction(request):
         request_data = json.loads(request.body.decode('utf-8'))
         transaction = Transaction.objects.get(id=request_data['id'])
         transaction.delete()
-        linked_transactions = Transaction.objects.filter(transaction_link_code=request_data['id'])
-        for tr in linked_transactions:
-            tr.delete()
-        # calculate_holdings(portfolio_code=transaction.portfolio_code, calc_date=transaction.trade_date)
+        calculate_holdings(portfolio_code=transaction.portfolio_code, calc_date=transaction.trade_date)
         return JsonResponse({'message': 'Transaction is deleted!', 'success': True}, safe=False)
 
 

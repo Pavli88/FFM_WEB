@@ -49,7 +49,6 @@ def create_portfolio(request):
 def create_cashflow(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(type(request_body['security']), "TYPE")
         transaction = Transaction.objects.create(
             portfolio_code=request_body['portfolio_code'],
             security_id=request_body['security'],
@@ -74,51 +73,8 @@ def new_transaction(request):
 
         request_body['quantity'] = float(request_body['quantity']) if request_body['quantity'] else 0.0
         Transaction.objects.create(**request_body)
-
+        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
     return JsonResponse({"message": "Transaction is created!", 'success': True}, safe=False)
-
-@csrf_exempt
-def save_transaction(request):
-    if request.method == "POST":
-        request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
-        account = BrokerAccounts.objects.get(id=6)
-
-        transaction = Transaction.objects.create(
-            portfolio_code=request_body['portfolio_code'],
-            security_id=request_body['security'],
-            sec_group=request_body['sec_group'],
-            transaction_type=request_body['transaction_type'],
-            trade_date=request_body['trade_date'],
-            quantity=request_body['quantity'],
-            price=request_body['price'],
-            currency=request_body['currency'],
-            is_active=request_body['is_active'],
-            open_status=request_body['open_status'],
-            transaction_link_code=request_body['transaction_link_code'],
-            option=request_body['option'],
-            fx_rate=request_body['fx_rate'],
-            broker_id=request_body['broker_id']
-        )
-
-        print(request_body['transaction_link_code'], type(request_body['transaction_link_code']))
-        if 'id' in request_body:
-            transaction.save_transaction(broker_name=account.broker_name, transaction='update', id=request_body['id'])
-        elif request_body['transaction_link_code'] != 0:
-            transaction.save_transaction(broker_name=account.broker_name, transaction='linked')
-        else:
-            transaction.save_transaction(broker_name=account.broker_name, transaction='new')
-        #     try:
-        #         price = Prices.objects.get(date=request_body['trade_date'], inst_code=request_body['security'])
-        #         price.price = request_body['price']
-        #         price.save()
-        #     except Prices.DoesNotExist:
-        #         Prices(inst_code=request_body['security'],
-        #                date=request_body['trade_date'],
-        #                price=request_body['price']).save()
-        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
-        return JsonResponse({"response": "Transaction is created!"}, safe=False)
-
 
 @csrf_exempt
 def add_to_portgroup(request):

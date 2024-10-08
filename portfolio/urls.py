@@ -12,7 +12,6 @@ create_views = [
     path('portfolios/new/portfolio/', create_views.create_portfolio),
     path('portfolios/new/cashflow/', create_views.create_cashflow),
     path('portfolios/new/transaction/', create_views.new_transaction),
-    path('portfolios/save/transaction/', create_views.save_transaction),
     path('portfolios/group/add/', create_views.add_to_portgroup),
 ]
 

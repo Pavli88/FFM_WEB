@@ -99,15 +99,21 @@ class Valuation():
                 'fx_rate': []
             })
         self.fx_rates = pd.concat([fx_df, reverse_fx_df, base_df], ignore_index=True)
-        print(self.fx_rates)
         return self.fx_rates
 
     def fetch_rgl(self):
         return pd.DataFrame(Cash.objects.filter(date=self.calc_date, portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
     def fetch_prices(self, date, instrument_code_list):
-        print(date, instrument_code_list)
-        return pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values()).drop(columns=['id', 'date'])
+        prices_df = pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values())
+        if not prices_df.empty:
+            return prices_df.drop(columns=['id', 'date'])
+        else:
+            return pd.DataFrame({
+                'instrument_id': [],
+                'price': [],
+                'source': []
+            })
 
     def ugl_calc(self, row):
         if row['quantity'] > 0:
@@ -212,7 +218,6 @@ class Valuation():
             instrument_df = self.fetch_instrument_data(instrument_code_list)
 
             prices_df = self.fetch_prices(date=self.calc_date, instrument_code_list=instrument_code_list)
-            # prices_df = pd.concat([prices_df, self.cash_price_df], ignore_index=True)
 
             aggregated_transactions = pd.merge(aggregated_transactions, instrument_df, left_on='instrument_id', right_on='id', how='left')
             aggregated_transactions['fx_pair'] = aggregated_transactions['currency'] + '/' + self.base_currency
@@ -275,7 +280,8 @@ class Valuation():
 
             # print(margin_cash_list)
             aggregated_transactions = pd.concat([aggregated_transactions, total_margin_cash_df, total_margin_df], ignore_index=True)
-
+            aggregated_transactions = aggregated_transactions[
+                ~((aggregated_transactions['quantity'] == 0) & (aggregated_transactions['rgl'] == 0))]
             # print('')
             # print('AGGREGATED TRANSACTIONS')
             # print(aggregated_transactions)
@@ -288,11 +294,10 @@ class Valuation():
         # CASH VALUATION ----------------------------------
         # This is needed at the end because of the CFD position valuation. On CFD the BV is the UGL.
         cash_transactions = self.cash_calculation()
-        aggregated_transactions = aggregated_transactions[~((aggregated_transactions['quantity'] == 0) & (aggregated_transactions['rgl'] == 0))]
+
 
         self.final_df = pd.concat([cash_transactions, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        print(self.final_df)
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
