@@ -36,8 +36,9 @@ class Valuation():
         self.previous_transactions = pd.DataFrame({})
         self.final_df = pd.DataFrame({})
 
-    def fetch_transactions(self, trade_date):
-        transactions = Transaction.objects.select_related('security').filter(trade_date=trade_date).exclude(security_id__type='Cash')
+    def fetch_transactions(self):
+        transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
+                                                                             portfolio_code=self.portfolio_code).exclude(security_id__type='Cash')
         transactions_list = [
             {
                 'portfolio_code': self.portfolio_code,
@@ -102,7 +103,8 @@ class Valuation():
         return self.fx_rates
 
     def fetch_rgl(self):
-        return pd.DataFrame(Cash.objects.filter(date=self.calc_date, portfolio_code=self.portfolio_code, type='Trade PnL').values())
+        return pd.DataFrame(Cash.objects.filter(date=self.calc_date,
+                                                portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
     def fetch_prices(self, date, instrument_code_list):
         prices_df = pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values())
@@ -167,7 +169,7 @@ class Valuation():
         # print(self.previous_transactions)
 
         # Current Transactions
-        current_transactions = self.fetch_transactions(trade_date=self.calc_date)
+        current_transactions = self.fetch_transactions()
         # print('')
         # print('CURERNT TRANSACTIONS')
         # print(current_transactions)
@@ -234,7 +236,7 @@ class Valuation():
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
 
-            total_margin = aggregated_transactions['margin_req'].sum()
+            total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_margin_df = pd.DataFrame({
                 'portfolio_code': [self.portfolio_code],
                 'date': [self.calc_date],
@@ -349,7 +351,7 @@ class Valuation():
             UGL.objects.bulk_create(new_ugls)
 
     def cash_calculation(self):
-        cash_data = Cash.objects.select_related('transaction').filter(date=self.calc_date)
+        cash_data = Cash.objects.select_related('transaction').filter(date=self.calc_date, portfolio_code=self.portfolio_code)
         capital_df = pd.DataFrame(cash_data.values())
 
         if not capital_df.empty:

@@ -43,24 +43,7 @@ def create_portfolio(request):
             return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
         except:
             return JsonResponse({'msg': "Portfolio exists in database!", 'port': 0}, safe=False)
-
-
-@csrf_exempt
-def create_cashflow(request):
-    if request.method == "POST":
-        request_body = json.loads(request.body.decode('utf-8'))
-        transaction = Transaction.objects.create(
-            portfolio_code=request_body['portfolio_code'],
-            security_id=request_body['security'],
-            transaction_type=request_body['transaction_type'],
-            trade_date=request_body['trade_date'],
-            quantity=float(request_body['quantity']),
-            currency=request_body['currency']
-        )
-        transaction.save_cashflow()
-
-        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
-        return JsonResponse({"msg": "Cashflow entered into database!"}, safe=False)
+    return JsonResponse({'msg': "Invalid request method"}, status=405)
 
 
 @csrf_exempt
@@ -70,6 +53,12 @@ def new_transaction(request):
 
         print('NEW TRANSACTION')
         print(request_body)
+
+        if 'initial_cash' in request_body:
+            portfolio = Portfolio.objects.get(portfolio_code=request_body['portfolio_code'])
+            portfolio.status = 'Funded'
+            portfolio.save()
+            del request_body['initial_cash']
 
         request_body['quantity'] = float(request_body['quantity']) if request_body['quantity'] else 0.0
         Transaction.objects.create(**request_body)

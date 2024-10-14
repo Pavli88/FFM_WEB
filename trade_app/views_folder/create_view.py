@@ -28,7 +28,6 @@ class TradeExecution:
                                           environment=self.account.env)
 
     def new_trade(self, transaction_type, quantity):
-
         multiplier = 1 if transaction_type == "Purchase" else -1
 
         # # Trade execution at broker
@@ -43,8 +42,6 @@ class TradeExecution:
             return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
 
         trade_price = trade['response']["price"]
-
-        print(trade)
 
         # FX Conversion to Base Currency
         conversion_factor = (float(trade['response']['gainQuoteHomeConversionFactor']) + float(trade['response']['lossQuoteHomeConversionFactor'])) / 2
@@ -87,9 +84,11 @@ class TradeExecution:
                                      account_id=self.account.account_number,
                                      environment=self.account.env)
         if quantity is not None:
-            trade = broker_connection.close_out(trd_id=transaction['broker_id'], units=quantity)
+            trade = broker_connection.close_out(trd_id=transaction.broker_id, units=quantity)
         else:
-            trade = broker_connection.close_trade(trd_id=transaction['broker_id'])
+            trade = broker_connection.close_trade(trd_id=transaction.broker_id)
+            transaction.is_active = False
+            transaction.overwrite()
 
         # --------------------------------------------------------------------------------------------------------------
 
@@ -100,9 +99,6 @@ class TradeExecution:
         trade_price = trade["price"]
         broker_id = trade['id']
 
-        print('TRADE EXECUTION PART', quantity)
-        print(trade)
-
         Transaction(
             portfolio_code=self.portfolio.portfolio_code,
             quantity=abs(float(trade['units'])),
@@ -112,7 +108,7 @@ class TradeExecution:
             broker_id=broker_id,
             broker=self.account.broker_name,
             account_id=self.account.id,
-            transaction_link_code=transaction['id'],
+            transaction_link_code=transaction.id,
             fx_rate=round(float(conversion_factor), 4),
         ).save()
 
@@ -126,11 +122,11 @@ class TradeExecution:
 
     def save_price(self, trade_price):
         try:
-            price = Prices.objects.get(date=self.trade_date, inst_code=self.security_id)
+            price = Prices.objects.get(date=self.trade_date, instrument_id=self.security_id)
             price.price = trade_price
             price.save()
         except Prices.DoesNotExist:
-            Prices(inst_code=self.security_id,
+            Prices(instrument_id=self.security_id,
                    date=self.trade_date,
                    price=trade_price).save()
 
@@ -209,25 +205,27 @@ def new_transaction_signal(request):
         if request_body['transaction_type'] == "Close All":
             open_transactions = Transaction.objects.filter(security=request_body['security_id'],
                                                            is_active=1,
-                                                           portfolio_code=request_body['portfolio_code']).values()
+                                                           portfolio_code=request_body['portfolio_code'])
             for transaction in open_transactions:
                 execution.close(transaction=transaction)
 
         # Liquidating the whole portfolio and open trades at the same time
         elif request_body['transaction_type'] == 'Liquidate':
             open_transactions = Transaction.objects.filter(is_active=1,
-                                                           portfolio_code=request_body['portfolio_code']).values()
+                                                           portfolio_code=request_body['portfolio_code'])
             for transaction in open_transactions:
                 execution.close(transaction=transaction)
 
         # Partial close out of an existing position
         elif request_body['transaction_type'] == 'Close Out':
-            transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
+            transaction = Transaction.objects.get(id=request_body['id'])
             execution.close(transaction=transaction, quantity=request_body['quantity'])
 
         # Closing a single open trade with the rest outstanding quantity
         elif request_body['transaction_type'] == 'Close':
-            transaction = Transaction.objects.filter(id=request_body['id']).values()[0]
+            transaction = Transaction.objects.get(id=request_body['id'])
+            # print('PARENT')
+            # print(transaction)
             execution.close(transaction=transaction)
 
         # This is the trade execution

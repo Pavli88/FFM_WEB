@@ -12,12 +12,19 @@ from calculations.processes.valuation.valuation import calculate_holdings
 
 def get_portfolios(request):
     if request.method == "GET":
-        for i in request.GET.items():
-            print(i)
-        return JsonResponse(dynamic_mode_get(request_object=request.GET.items(),
-                                             column_list=['portfolio_name', 'portfolio_type', 'currency', 'status',
-                                                          'portfolio_code', 'owner', ''],
-                                             table=Portfolio), safe=False)
+        filters = {key: value for key, value in request.GET.items() if value}
+
+        try:
+            portfolios = Portfolio.objects.filter(**filters).values()
+            portfolios_list = list(portfolios)
+            return JsonResponse(portfolios_list, safe=False, status=200)
+
+        except Exception as e:
+            # Handle errors, such as invalid filters
+            return JsonResponse({"error": str(e)}, status=400)
+
+        # Return bad request if method is not GET
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
 @csrf_exempt
@@ -27,8 +34,6 @@ def get_portfolio_transactions(request):
         print(request_body)
         filters = {}
         for key, value in request_body.items():
-            print(key, value)
-
             if isinstance(value, list):
                 print('MULTIPLE')
                 if len(value) > 0:
@@ -37,7 +42,6 @@ def get_portfolio_transactions(request):
                 print('GROUP')
                 filters[key] = value
 
-        print(filters)
         results = Transaction.objects.select_related('security').all().filter(**filters) ##.values()
 
         l = []
@@ -70,74 +74,33 @@ def get_portfolio_transactions(request):
                 'bv': transaction.bv,
                 'local_bv': transaction.local_bv
             })
-            # print(transaction.values())
-            print(transaction.id, transaction.security.name)
-
-            # transactions = dynamic_mode_get(request_object=request.GET.items(),
-        #                                 column_list=['id', 'portfolio_code', 'currency', 'transaction_type',
-        #                                              'trade_date__gte', 'trade_date__lte', 'is_active',
-        #                                              'security', ''],
-        #                                 table=Transaction)
-
-        print(results)
-        # security_codes = list(dict.fromkeys(df['security']))
-
-        # df.loc[df.transaction_link_code == '', 'transaction_link_code'] = df['id']
-        #
-        # response = []
-        # for i in df.to_dict('records'):
-        #     print(type(i))
         return JsonResponse(l, safe=False)
 
 
 def get_open_transactions(request):
     if request.method == "GET":
         print('test')
-        cursor = connection.cursor()
-        cursor.execute(
-            """select pt.id, pt.portfolio_code,
-       inst.name, pt.sec_group, pt.security_id,
-       pt.currency, pt.transaction_type,
-       pt.quantity, pt.price, pt.account_id, pt.broker_id, if(pt.transaction_link_code='', pt.id, pt.transaction_link_code) as updated_id
-from portfolio_transaction as pt, instrument_instruments as inst
-where pt.transaction_link_code in (select id from portfolio_transaction where is_active = 1)
-or pt.is_active = 1
-and pt.sec_group != 'Cash'
-and pt.security_id = inst.id;"""
-        )
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        transaction_codes = list(dict.fromkeys(df['updated_id'].tolist()))
-        new_df = pd.DataFrame({'id': [],
-                               'portfolio_code': [],
-                               'name': [],
-                               'security': [],
-                               'sec_group': [],
-                               'currency': [],
-                               'transaction_type': [],
-                               'quantity': [],
-                               'price': [],
-                               'mv': [],
-                               'account_id': [],
-                               'broker_id': []})
-        for transaction_code in transaction_codes:
-            df_transaction = df[df['updated_id'] == transaction_code]
-
-            new_df.loc[len(new_df.index)] = [
-                df_transaction['updated_id'].tolist()[0],
-                df_transaction['portfolio_code'].tolist()[0],
-                df_transaction['name'].tolist()[0],
-                df_transaction['security_id'].tolist()[0],
-                df_transaction['sec_group'].tolist()[0],
-                df_transaction['currency'].tolist()[0],
-                df_transaction['transaction_type'].tolist()[0],
-                df_transaction['quantity'].sum(),
-                df_transaction['price'].tolist()[0],
-                round(df_transaction['quantity'].sum() * df_transaction['price'].tolist()[0], 2),
-                df_transaction['account_id'].tolist()[0],
-                df_transaction['broker_id'].tolist()[0],
-            ]
-        return JsonResponse(new_df.to_json(orient='records'), safe=False)
+        results = Transaction.objects.select_related('security').all().filter(is_active=1)
+        print(results)
+        l = []
+        for transaction in results:
+            l.append({
+                'id': transaction.id,
+                'portfolio_code': transaction.portfolio_code,
+                'name': transaction.security.name,
+                'security_id': transaction.security_id,
+                'sec_group': transaction.security.group,
+                'currency': transaction.currency,
+                'transaction_type': transaction.transaction_type,
+                'quantity': transaction.quantity,
+                'price': transaction.price,
+                'mv': transaction.mv,
+                'account_id': transaction.account_id,
+                'broker_id': transaction.broker_id,
+                'broker': transaction.broker,
+                'trade_date': transaction.trade_date,
+            })
+        return JsonResponse(l, safe=False)
 
 
 def daily_cashflow_by_type(request):

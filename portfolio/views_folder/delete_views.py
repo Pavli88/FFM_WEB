@@ -11,9 +11,13 @@ from calculations.processes.valuation.valuation import calculate_holdings
 def delete_transaction(request):
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
-        transaction = Transaction.objects.get(id=request_data['id'])
+        transaction = Transaction.objects.filter(id__in=request_data['ids'])
+        transaction_df = pd.DataFrame(transaction.values())
+        date = transaction_df['trade_date'].min()
+        portfolio_code = transaction_df['portfolio_code'][0]
+        print(date, portfolio_code)
         transaction.delete()
-        calculate_holdings(portfolio_code=transaction.portfolio_code, calc_date=transaction.trade_date)
+        calculate_holdings(portfolio_code=portfolio_code, calc_date=date)
         return JsonResponse({'message': 'Transaction is deleted!', 'success': True}, safe=False)
 
 

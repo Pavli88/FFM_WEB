@@ -33,7 +33,11 @@ class Portfolio(models.Model):
         super().save(*args, **kwargs)
 
         if self.portfolio_type == 'Business':
+            self.portfolio_code = self.portfolio_code + '_BS'
             PortGroup(portfolio_id=self.id).save()
+        if self.portfolio_type == 'Portfolio Group':
+            self.portfolio_code = self.portfolio_code + '_GROUP'
+        super().save(*args, **kwargs)
 
 class TradeRoutes(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
@@ -165,7 +169,6 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
     def derivatives_transaction(self, *args, **kwargs):
-
         ticker = Tickers.objects.get(inst_code=self.security_id, source=self.broker)
         cf_multiplier = -1 if self.open_status in ['Open'] else 1
         self.quantity *= -1 if self.transaction_type in ['Sale'] else 1
@@ -185,6 +188,8 @@ class Transaction(models.Model):
         if self.open_status == 'Close':
             self.calculate_pnl()
 
+    def overwrite(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
 class TransactionPnl(models.Model):
     transaction_id = models.IntegerField(default=0)
