@@ -483,7 +483,7 @@ class Valuation():
                 ugl_diff=0,
                 cost=0,
                 subscription=self.subscriptions,
-                redemption=self.subscriptions,
+                redemption=self.redemptions,
                 total_cf=self.subscriptions + self.redemptions,
                 price_return=0,
                 trade_return=0).save()
