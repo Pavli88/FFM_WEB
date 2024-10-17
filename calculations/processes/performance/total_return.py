@@ -47,6 +47,11 @@ def previous_year_end(input_date):
     last_day_of_previous_year = datetime(input_date.year - 1, 12, 31)
     return last_day_of_previous_year.date()
 
+def months_earlier(input_date, months):
+    if isinstance(input_date, str):
+        input_date = datetime.strptime(input_date, '%Y-%m-%d')  # Adjust format as needed
+    new_date = input_date - relativedelta(months=months)
+    return new_date.date()
 
 def month_end_dates(month, month_range, year=None):
     if year is None:
@@ -66,7 +71,7 @@ def month_end_dates(month, month_range, year=None):
 
     return end_date_of_month, previous_month_end_date
 
-def total_return_calc(portfolio_code, period, end_date):
+def total_return_calc(portfolio_code, period, end_date, start_date=None):
     print('TOTAL RETURN CALC')
     print('PORTFOLIO CODE:', portfolio_code, 'PERIOD:', period, 'END DATE:', end_date)
 
@@ -102,7 +107,8 @@ def total_return_calc(portfolio_code, period, end_date):
         'mtd': 'Month to Date',
         'qtd': 'Quarter to Date',
         'ytd': 'Year to Date',
-        'si': 'Since Inception'
+        'si': 'Since Inception',
+        'adhoc': 'Ad-Hoc'
     }
 
     # Defining start and end dates
@@ -117,8 +123,10 @@ def total_return_calc(portfolio_code, period, end_date):
                 start_date = previous_year_end(input_date=end_date)
             elif period == 'qtd':
                 start_date = previous_qtd_date(input_date=end_date)
+            elif period == '1m':
+                start_date = months_earlier(input_date=end_date, months=1)
             else:
-                start_date = end_date - dt.timedelta(weeks=period_mapping[period])
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         else:
             if period == 'mtd':
                 start_date = mtd_date
@@ -150,7 +158,7 @@ def total_return_calc(portfolio_code, period, end_date):
         return response_list + error_list
 
         # Calculation based on parameters
-    nav_data = pd.DataFrame(Nav.objects.filter(portfolio_code=portfolio_code, date__gte=start_date).values()).sort_values('date')[
+    nav_data = pd.DataFrame(Nav.objects.filter(portfolio_code=portfolio_code, date__range=(start_date, end_date)).values()).sort_values('date')[
         ['holding_nav', 'total_cf', 'date']]
     initial_value = nav_data['holding_nav'].to_list()[0]
     final_value = nav_data['holding_nav'].to_list()[-1]

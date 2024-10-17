@@ -411,50 +411,18 @@ class Valuation():
 
         total_cash = self.final_df[(self.final_df['trade_type'] == 'Cash Margin') | (self.final_df['trade_type'] == 'Capital')]['mv'].sum()
         current_nav = self.final_df['bv'].sum()
+        total_margin = self.final_df[self.final_df['trade_type'] == 'Margin']['mv'].sum()
+        total_asset_val = self.final_df[(self.final_df['trade_type'] == 'Sale') | (self.final_df['trade_type'] == 'Purchase')]['bv'].sum()
 
-        # if len(previous_nav) == 0:
-        #     previous_nav = 0
-        #     previous_holding_nav = 0
-        #     prev_ugl = 0
-        # else:
-        #     previous_holding_nav = previous_nav[0]['holding_nav']
-        #     prev_ugl = previous_nav[0]['unrealized_pnl']
-        #     previous_nav = previous_nav[0]['total']
-        #
         # # Total NAV
         total_realized_pnl = round(self.final_df['rgl'].sum(), 2)
         total_unrealized_pnl = round(self.final_df['ugl'].sum(), 2)
-        # total = previous_nav + self.total_external_flow + total_realized_pnl
-        # ugl_diff = total_unrealized_pnl - prev_ugl
-        #
-        # # Total Return Calculation
-        # if previous_nav != 0.0:
-        #     period_return = total_realized_pnl / previous_nav
-        # else:
-        #     period_return = 0.0
-        #
-        # total_asset_value = self.final_df[self.final_df['']]
-        #
-        # if self.portfolio_data.calc_holding == True:
-        #     asset_value = total_asset_value.sum() # -> Update
-        #     cash_value = self.total_cash_flow
-        #     liability =
-        #     h_nav = self.final_df['bv'].sum()
-        # else:
-        #     asset_value = 0.0
-        #     cash_value = 0.0
-        #     liability = 0.0
-        #     h_nav = 0.0
-
-        # if self.portfolio_data.calc_holding == True and previous_holding_nav != 0.0:
-        #     dietz_return = round(ugl_diff / previous_holding_nav, 4)
-        # else:
-        #     dietz_return = 0.0
 
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
             nav.cash_val = total_cash
-            nav.pos_val = 0
+            nav.margin = total_margin
+            nav.pos_val = total_asset_val
             nav.short_liab = 0
             nav.total = self.final_df['bv'].sum() - total_unrealized_pnl
             nav.holding_nav = current_nav
@@ -472,8 +440,9 @@ class Valuation():
         except:
             Nav(date=calc_date,
                 portfolio_code=portfolio_code,
-                pos_val=0,
+                pos_val=total_asset_val,
                 cash_val=total_cash,
+                margin=total_margin,
                 short_liab=0,
                 total=self.final_df['bv'].sum() - total_unrealized_pnl,
                 holding_nav=current_nav,

@@ -52,6 +52,7 @@ class Nav(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
     pos_val = models.FloatField(default=0.0)
     cash_val = models.FloatField(default=0.0)
+    margin = models.FloatField(default=0.0)
     accured_income = models.FloatField(default=0.0)
     short_liab = models.FloatField(default=0.0)
     long_liab = models.FloatField(default=0.0)
