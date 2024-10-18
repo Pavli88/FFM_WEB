@@ -297,9 +297,9 @@ class Valuation():
         # This is needed at the end because of the CFD position valuation. On CFD the BV is the UGL.
         cash_transactions = self.cash_calculation()
 
-
         self.final_df = pd.concat([cash_transactions, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
+        self.final_df['weight'] = self.final_df['mv'] / self.final_df['bv'].sum()
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
