@@ -16,11 +16,11 @@ print('BASE_DIR', BASE_DIR)
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', False) == 'True'
+DEBUG = True #os.getenv('DEBUG', False) == 'True'
 
 print('DEBUG', DEBUG)
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1, localhost, pavliati.pythonanywhere.com').split(",")
+ALLOWED_HOSTS = os.getenv('137.184.111.7', '127.0.0.1, localhost, pavliati.pythonanywhere.com').split(",")
 # MainApplication definition
 
 INSTALLED_APPS = [
