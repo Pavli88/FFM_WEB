@@ -94,22 +94,26 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
 if DEVELOPMENT_MODE:
+    # Local development settings
     DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': 'ffm_web',
-                'USER': 'root',
-                'PASSWORD': 'test88',
-                'HOST': 'localhost',
-                'PORT': '3306',
-            }
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'ffm_web',
+            'USER': 'root',
+            'PASSWORD': 'test88',
+            'HOST': 'localhost',
+            'PORT': '3306',
         }
-elif len(sys.argv) > 0 and sys.argv[1] == 'collectstatic':
-    if os.getenv('DATABASE_URL', None) is None:
-        raise Exception('DATABASE_URL environment variable not defined')
-    DATABASES = {
-        'default': { dj_database_url.parse(os.environ.get("DATABASE_URL"))}
     }
+else:
+    # Production settings - Use DATABASE_URL environment variable
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL)
+        }
+    else:
+        raise Exception('DATABASE_URL environment variable not defined')
 
 # print('DATABASES', DATABASES)
 
