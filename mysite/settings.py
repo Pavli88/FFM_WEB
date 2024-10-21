@@ -3,9 +3,10 @@ import sys
 from django.core.management.utils import get_random_secret_key
 from mysite.credentials import *
 import dj_database_url
+from pathlib import Path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 print('BASE_DIR', BASE_DIR)
 
@@ -70,7 +71,7 @@ CORS_ALLOWED_ORIGINS = [
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR + '/cache',
+        'LOCATION': str(BASE_DIR) + '/cache',
     }
 }
 
@@ -173,6 +174,6 @@ STATICFILES_DIRS = [
 # default static files settings for PythonAnywhere.
 MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 LOGIN_URL = "/home/"
 
