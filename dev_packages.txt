@@ -52,7 +52,7 @@ python-dateutil==2.8.2
 python-status==1.0.1
 pytz==2023.3.post1
 redis==3.5.3
-requests==2.23.0
+requests==2.32.3
 service-identity==21.1.0
 simplejson==3.19.2
 six==1.14.0
@@ -63,7 +63,7 @@ txaio==21.2.1
 typing_extensions==4.12.2
 tzdata==2023.3
 tzlocal==2.1
-urllib3==2.0.6
+urllib3==2.2.3
 wcwidth==0.2.5
 websocket-client==1.6.4
 websockets==11.0.3
