@@ -40,8 +40,6 @@ oandapy==0.0.9
 oandapyV20==0.6.3
 pandas==2.2.3
 Pillow==8.3.2
-polygon==1.2.5
-polygon-api-client==1.14.2
 pubcontrol==3.3.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
