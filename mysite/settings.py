@@ -11,7 +11,13 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import socket
 from mysite.credentials import *
+
+hostname = socket.gethostname()
+local_ip = socket.gethostbyname(hostname)
+
+print('HOST', hostname, local_ip, type(local_ip))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,7 +29,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '3u!ch(l*!xyc=&(ans63fc_%b#$3d5vxe4h!jwnpvhqa*tk7y@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
                  '127.0.0.1',
@@ -108,9 +114,29 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # test
 credentials = Credentials().db_parameters
 
-print()
-
-DATABASES = credentials
+if local_ip == '127.0.1.1':
+    DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': 'ffm_web',
+                'USER': 'root',
+                'PASSWORD': 'test88',
+                'HOST': 'localhost',
+                'PORT': '3306',
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'ffm_live',
+            'USER': 'root',
+            'PASSWORD': 'tedikE88e',
+            'HOST': '137.184.111.7',
+            'PORT': '3306',
+        }
+    }
+# DATABASES = credentials
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
