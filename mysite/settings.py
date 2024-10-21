@@ -11,31 +11,25 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-import socket
+import sys
+from django.core.management.utils import get_random_secret_key
 from mysite.credentials import *
-
-hostname = socket.gethostname()
-local_ip = socket.gethostbyname(hostname)
-
-print('HOST', hostname, local_ip, type(local_ip))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+print('BASE_DIR', BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '3u!ch(l*!xyc=&(ans63fc_%b#$3d5vxe4h!jwnpvhqa*tk7y@'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DEBUG', False) == 'True'
 
-ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
-                 '127.0.0.1',
-                 '137.184.111.7'
-                 ]
-
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1, localhost, pavliati.pythonanywhere.com').split(",")
 # MainApplication definition
 
 INSTALLED_APPS = [
@@ -107,14 +101,9 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 
-# Database settings are imported from the credentials file.
-# If I make new migrations in the TEST environment's manage.py file with the production python engine then
-# it will updated ffm_system_test database
-# test
-credentials = Credentials().db_parameters
-
-if local_ip == '127.0.1.1':
+if DEVELOPMENT_MODE:
     DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.mysql',
@@ -125,18 +114,12 @@ if local_ip == '127.0.1.1':
                 'PORT': '3306',
             }
         }
-else:
+elif len(sys.argv) > 0 and sys.argv[1] == 'collectstatic':
+    if os.getenv('DATABASE_URL', None) is None:
+        raise Exception('DATABASE_URL environment variable not defined')
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'ffm_live',
-            'USER': 'root',
-            'PASSWORD': 'tedikE88e',
-            'HOST': '137.184.111.7',
-            'PORT': '3306',
-        }
+        'default': { dj_database_url.parse(os.environ.get("DATABASE_URL"))}
     }
-# DATABASES = credentials
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
