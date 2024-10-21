@@ -6,7 +6,7 @@ attrs==21.2.0
 autobahn==21.2.1
 Automat==20.2.0
 blessed==1.18.1
-certifi==2020.4.5.1
+certifi==2024.8.30
 cffi==1.16.0
 channels==4.1.0
 chardet==3.0.4
@@ -40,8 +40,8 @@ oandapy==0.0.9
 oandapyV20==0.6.3
 pandas==2.2.3
 Pillow==8.3.2
-polygon==1.1.2
-polygon-api-client==1.12.8
+polygon==1.2.5
+polygon-api-client==1.14.2
 pubcontrol==3.3.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -65,7 +65,7 @@ txaio==21.2.1
 typing_extensions==4.12.2
 tzdata==2023.3
 tzlocal==2.1
-urllib3==1.25.9
+urllib3==2.0.6
 wcwidth==0.2.5
 websocket-client==1.6.4
 websockets==11.0.3
