@@ -107,24 +107,13 @@ if DEVELOPMENT_MODE:
     }
 else:
     # Production settings - Use DATABASE_URL environment variable
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'ffm_live',
-            'USER': 'root',
-            'PASSWORD': 'tedikE88e',
-            'HOST': 'fractal-trade-solutions',
-            'PORT': '3306',
+    DATABASE_URL = os.getenv('DATABASE_URL')
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL)
         }
-    }
-
-    # DATABASE_URL = os.getenv('DATABASE_URL')
-    # if DATABASE_URL:
-    #     DATABASES = {
-    #         'default': dj_database_url.parse(DATABASE_URL)
-    #     }
-    # else:
-    #     raise Exception('DATABASE_URL environment variable not defined')
+    else:
+        raise Exception('DATABASE_URL environment variable not defined')
 
 # print('DATABASES', DATABASES)
 
