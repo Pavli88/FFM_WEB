@@ -11,24 +11,25 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import sys
+from django.core.management.utils import get_random_secret_key
 from mysite.credentials import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+print('BASE_DIR', BASE_DIR)
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '3u!ch(l*!xyc=&(ans63fc_%b#$3d5vxe4h!jwnpvhqa*tk7y@'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', False) == 'True'
 
-ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
-                 '127.0.0.1',
-                 ]
-
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1, localhost, pavliati.pythonanywhere.com').split(",")
 # MainApplication definition
 
 INSTALLED_APPS = [
@@ -43,7 +44,6 @@ INSTALLED_APPS = [
     'instrument',
     'calculations',
     'corsheaders',
-    'django_q',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -66,7 +66,8 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://pavliati.pythonanywhere.com'
+    'https://pavliati.pythonanywhere.com',
+    'https://137.184.111.7'
 ]
 
 CACHES = {
@@ -74,21 +75,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': BASE_DIR + '/cache',
     }
-}
-
-Q_CLUSTER = {
-    'name': 'ffm_web',
-    'workers': 20,
-    'recycle': 500,
-    'timeout': None,
-    'compress': True,
-    'save_limit': 250,
-    'queue_limit': 500,
-    'cpu_affinity': 1,
-    'label': 'Django Q',
-    'max_attempts' : 0,
-    'orm': 'default',
-    'retry': 2000000,
 }
 
 ROOT_URLCONF = 'mysite.urls'
@@ -115,14 +101,25 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 
-# Database settings are imported from the credentials file.
-# If I make new migrations in the TEST environment's manage.py file with the production python engine then
-# it will updated ffm_system_test database
-# test
-credentials = Credentials().db_parameters
-
-DATABASES = credentials
+if DEVELOPMENT_MODE:
+    DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': 'ffm_web',
+                'USER': 'root',
+                'PASSWORD': 'test88',
+                'HOST': 'localhost',
+                'PORT': '3306',
+            }
+        }
+elif len(sys.argv) > 0 and sys.argv[1] == 'collectstatic':
+    if os.getenv('DATABASE_URL', None) is None:
+        raise Exception('DATABASE_URL environment variable not defined')
+    DATABASES = {
+        'default': { dj_database_url.parse(os.environ.get("DATABASE_URL"))}
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
@@ -173,8 +170,8 @@ STATICFILES_DIRS = [
 
 # default static files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
-MEDIA_ROOT = '/home/pavliati/mysite/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = '/home/pavliati/mysite/static'
+STATIC_ROOT = os.path.join(BASE_DIR, '/static')
 LOGIN_URL = "/home/"
 

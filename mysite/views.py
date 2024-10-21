@@ -29,12 +29,6 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User, auth
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
-from django_q.tasks import async_task, result, fetch
-from django_q.models import Schedule
-from django_q.tasks import AsyncTask, Task
-from django_q.cluster import *
-from django_q.monitor import Stat
-from django_q.brokers.orm import ORM
 from django.conf import settings
 from django.db import connection
 

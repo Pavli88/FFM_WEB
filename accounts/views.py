@@ -21,7 +21,9 @@ def create_broker(request):
                            env=request_data['env'],
                            access_token=request_data['token'],
                            currency=request_data['currency'],
-                           owner=request_data['owner']).save()
+                           owner=request_data['owner'],
+                           margin_account=request_data['margin_account'],
+                           margin_percentage=request_data['margin_percentage']).save()
             response = "Account is created successfully!"
         except:
             response = "Account already exists in the database!"
@@ -35,15 +37,15 @@ def get_account_data(request, account):
         return JsonResponse(response, safe=False)
 
 
-def get_accounts_data(request):
-    if request.method == "GET":
-        filters = {}
-        for key, value in request.GET.items():
-            if key in ['broker_name', 'account_number', 'env']:
-                filters[key] = value
-        accounts = BrokerAccounts.objects.filter(**filters).values()
-        response = list(accounts)
-        return JsonResponse(response, safe=False)
+# def get_accounts_data(request):
+#     if request.method == "GET":
+#         filters = {}
+#         for key, value in request.GET.items():
+#             if key in ['broker_name', 'account_number', 'env']:
+#                 filters[key] = value
+#         accounts = BrokerAccounts.objects.filter(**filters).values()
+#         response = list(accounts)
+#         return JsonResponse(response, safe=False)
 
 
 def get_brokers(request):
