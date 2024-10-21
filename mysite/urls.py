@@ -13,7 +13,6 @@ def my_process():
 my_process()
 
 get_patterns = [
-    path('home/load_robot_stats/<str:env>/', views.load_robot_stats),
     path('exceptions/get/', views.get_exceptions),
 ]
 
@@ -36,7 +35,6 @@ general_patterns = [
     path('', include('trade_app.urls')),
     path('', include('instrument.urls')),
     path('', include('calculations.urls')),
-    path('home/get_robot_risk/', get_robot_risk),
     path('home/update/risk_per_trade/', update_risk_per_trade),
     path('home/system_messages/<str:type>/', system_messages),
     path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
@@ -44,9 +42,6 @@ general_patterns = [
     path('new/schedule/', views.new_schedule),
     path('delete/schedule/', views.delete_schedule),
     path('update_task/', views.update_task),
-    path('home/daily_robot_balances/', views.aggregated_robot_pnl_by_date),
-    path('home/robot_pnl/', views.aggregated_robot_pnl),
-    path('test/', views.test),
     path('exceptions/update/', views.update_exception_by_id)
 ]
 

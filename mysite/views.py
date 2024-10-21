@@ -19,7 +19,6 @@ from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.return_calculation import *
 from portfolio.processes.processes import *
-# from robots.processes.processes import *
 
 # Django imports
 from django.http import HttpResponse
@@ -34,120 +33,10 @@ from django.db import connection
 
 # Database imports
 from mysite.models import *
-from robots.models import *
 from accounts.models import *
 from portfolio.models import Portfolio
 
 from robots.processes.run_robot import run_robot
-
-
-def aggregated_robot_pnl_by_date(request):
-    if request.method == "GET":
-        env = request.GET.get("env")
-        print(env)
-        cursor = connection.cursor()
-        cursor.execute("""select rb.date, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as diff
-                            from robots_balance as rb, robots_robots as r
-                            where rb.robot_id=r.id
-                            and rb.date>='{date}'
-                            and r.status='active'
-                            and r.env='{env}' group by date;""".format(env=env, date=str(date.today().year)+'-01-01'))
-        row = cursor.fetchall()
-        response_list = []
-        for item in row:
-            response_list.append({'x': item[0], 'y': item[1]})
-        return JsonResponse(response_list, safe=False)
-
-
-def aggregated_robot_pnl(request):
-    if request.method == "GET":
-        start_date = request.GET.get("start_date")
-        env = request.GET.get("env")
-        cursor = connection.cursor()
-        cursor.execute("""select r.name, (sum(rb.close_balance)-sum(rb.opening_balance)-sum(rb.cash_flow)) as pnl
-                            from robots_balance as rb, robots_robots as r
-                            where rb.robot_id=r.id
-                            and rb.date>='{date}'
-                            and status='active'
-                            and r.env='{env}' group by rb.robot_id order by pnl desc;""".format(date=start_date, env=env))
-        row = cursor.fetchall()
-        response_list = []
-        for item in row:
-            response_list.append({'x': item[0], 'y': round(item[1], 2)})
-        return JsonResponse(response_list, safe=False)
-
-
-def total_robot_pnl(request):
-    if request.method == "GET":
-        start_date = request.GET.get("start_date")
-        env = request.GET.get("env")
-        cursor = connection.cursor()
-        cursor.execute("""select sum(rb.realized_pnl) as total_pnl
-                        from robots_balance rb, robots_robots as r
-                        where rb.robot_id=r.id
-                        and r.status='active'
-                        and r.env='{env}' and rb.date >='{date}';""".format(date=start_date, env=env))
-        row = cursor.fetchall()
-        if row[0][0] is None:
-            response_list = [{'data': 0.0}]
-        else:
-            response_list = [{'data': round(row[0][0], 2)}]
-        return JsonResponse(response_list, safe=False)
-
-
-def load_robot_stats(request, env):
-    if request.method == "GET":
-        year_beg = beginning_of_year()
-        month_beg = beginning_of_month()
-        robots = Robots.objects.filter(env=env).filter(status='active').values()
-        response = []
-        robot_list = []
-        dtd_list = []
-        mtd_list = []
-        ytd_list = []
-        dtd_pnl_list = []
-        mtd_pnl_list = []
-        ytd_pnl_list = []
-        balance_list = []
-        total_dtd_pnl = 0.0
-        total_mtd_pnl = 0.0
-        total_ytd_pnl = 0.0
-        for robot in robots:
-            robot_trades_all = pd.DataFrame(list(Balance.objects.filter(robot_id=robot["id"]).values()))
-            yearly_trades = robot_trades_all[robot_trades_all["date"] >= year_beg]
-            monthly_trades = robot_trades_all[robot_trades_all["date"] >= month_beg]
-            mtd_series = cumulative_return_calc(data_series=monthly_trades["ret"].tolist())
-            ytd_series = cumulative_return_calc(data_series=yearly_trades["ret"].tolist())
-            last_balance = round(list(robot_trades_all["close_balance"])[-1], 2)
-            dtd = round(list(robot_trades_all["ret"])[-1]*100, 1)
-            mtd = round(mtd_series[-1]-100, 1)
-            ytd = round(ytd_series[-1]-100, 1)
-            ytd_pnl = round(total_pnl_calc(yearly_trades["realized_pnl"].tolist()), 2)
-            mtd_pnl = round(total_pnl_calc(monthly_trades["realized_pnl"].tolist()), 2)
-            try:
-                dtd_pnl = round(monthly_trades["realized_pnl"].tolist()[-1], 2)
-            except:
-                dtd_pnl = 0.0
-            total_ytd_pnl = total_ytd_pnl + ytd_pnl
-            total_mtd_pnl = total_mtd_pnl + mtd_pnl
-            total_dtd_pnl = total_dtd_pnl + dtd_pnl
-            robot_list.append(robot["name"])
-            dtd_list.append(dtd)
-            mtd_list.append(mtd)
-            ytd_list.append(ytd)
-            dtd_pnl_list.append(dtd_pnl)
-            mtd_pnl_list.append(mtd_pnl)
-            ytd_pnl_list.append(ytd_pnl)
-            balance_list.append(last_balance)
-            response.append({
-                'robot': robot,
-                'dtd_ret': dtd,
-                'mtd_ret': mtd,
-                'ytd_ret': ytd,
-                'balance': last_balance,
-            })
-        return JsonResponse(response, safe=False)
-
 
 # MAIN PAGE ************************************************************************************************************
 def main_page_react(request):
@@ -188,6 +77,7 @@ def login_user(request):
         password = request_data["password"]
         print(username, password)
         user = authenticate(request, username=username, password=password)
+        print(user)
         print(user, type(user))
         if user is not None:
             login(request, user)
