@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'instrument',
     'calculations',
     'corsheaders',
-    'django_q',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -74,21 +73,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': BASE_DIR + '/cache',
     }
-}
-
-Q_CLUSTER = {
-    'name': 'ffm_web',
-    'workers': 20,
-    'recycle': 500,
-    'timeout': None,
-    'compress': True,
-    'save_limit': 250,
-    'queue_limit': 500,
-    'cpu_affinity': 1,
-    'label': 'Django Q',
-    'max_attempts' : 0,
-    'orm': 'default',
-    'retry': 2000000,
 }
 
 ROOT_URLCONF = 'mysite.urls'
