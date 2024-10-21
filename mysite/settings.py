@@ -20,7 +20,12 @@ DEBUG = os.getenv('DEBUG', False) == 'True'
 
 print('DEBUG', DEBUG)
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '137.184.111.7, 127.0.0.1, localhost, pavliati.pythonanywhere.com').split(",")
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '137.184.111.7',
+    'pavliati.pythonanywhere.com']
+
 # MainApplication definition
 
 INSTALLED_APPS = [
@@ -91,7 +96,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
-DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
+DEVELOPMENT_MODE = True #os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
 if DEVELOPMENT_MODE:
     # Local development settings

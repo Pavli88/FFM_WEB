@@ -71,8 +71,10 @@ def logout_user(request):
 
 @csrf_exempt
 def login_user(request):
+    print('POSSSS')
     if request.method == "POST":
         request_data = json.loads(request.body.decode('utf-8'))
+        print(request_data)
         username = request_data["username"]
         password = request_data["password"]
         print(username, password)
