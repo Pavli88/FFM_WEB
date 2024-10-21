@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['pavliati.pythonanywhere.com',
                  '127.0.0.1',
+                 '137.184.111.7'
                  ]
 
 # MainApplication definition
@@ -65,7 +66,8 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://pavliati.pythonanywhere.com'
+    'https://pavliati.pythonanywhere.com',
+    'https://137.184.111.7'
 ]
 
 CACHES = {
@@ -105,6 +107,8 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # it will updated ffm_system_test database
 # test
 credentials = Credentials().db_parameters
+
+print()
 
 DATABASES = credentials
 
@@ -157,8 +161,8 @@ STATICFILES_DIRS = [
 
 # default static files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
-MEDIA_ROOT = '/home/pavliati/mysite/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = '/home/pavliati/mysite/static'
+STATIC_ROOT = os.path.join(BASE_DIR, '/static')
 LOGIN_URL = "/home/"
 
