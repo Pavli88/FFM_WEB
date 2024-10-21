@@ -24,7 +24,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '137.184.111.7',
-    'pavliati.pythonanywhere.com']
+    'pavliati.pythonanywhere.com'
+]
 
 # MainApplication definition
 
