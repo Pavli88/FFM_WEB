@@ -64,7 +64,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:80',
     'https://pavliati.pythonanywhere.com',
-    'https://137.184.111.7'
+    'http://137.184.111.7'
 ]
 print(CORS_ALLOWED_ORIGINS)
 CACHES = {
