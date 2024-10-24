@@ -3,7 +3,6 @@ import pandas as pd
 from mysite.my_functions.general_functions import *
 
 # Model Imports
-from robots.models import Robots, RobotTrades, Balance
 from risk.models import RobotRisk
 from accounts.models import BrokerAccounts
 

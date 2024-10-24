@@ -5,13 +5,6 @@ from . import views
 from mysite.views_folder import get_views, data_operations
 from risk.views import *
 
-
-def my_process():
-    print("Initial caching run")
-
-
-my_process()
-
 get_patterns = [
     path('exceptions/get/', views.get_exceptions),
 ]
@@ -27,7 +20,6 @@ general_patterns = [
     path('user_register/', views.register),
     path('admin/', admin.site.urls),
     path('', include('reports.urls')),
-    path('', include('robots.urls')),
     path('', include('risk.urls')),
     path('', include('signals.urls')),
     path('', include('portfolio.urls')),

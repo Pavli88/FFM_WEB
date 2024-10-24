@@ -5,7 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Model imports
 from portfolio.models import *
-from robots.models import *
 from mysite.models import *
 from instrument.models import *
 
@@ -20,7 +19,6 @@ from portfolio.portfolio_functions import *
 from portfolio.processes.port_pos import *
 from portfolio.processes.cash_holding import *
 from portfolio.processes.processes import *
-from robots.processes.robot_balance_calc import *
 from portfolio.processes.portfolio_holding import portfolio_holding_calc
 
 

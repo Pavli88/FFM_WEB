@@ -5,11 +5,8 @@ from django.http import HttpResponse
 
 from mysite.processes.oanda import *
 from mysite.models import *
-from robots.models import *
 from accounts.models import *
 from mysite.models import *
-
-from robots.processes.robot_balance_calc import *
 from datetime import datetime
 
 # Process imports

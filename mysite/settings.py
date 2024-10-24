@@ -31,7 +31,6 @@ ALLOWED_HOSTS = [
 # MainApplication definition
 
 INSTALLED_APPS = [
-    'robots',
     'risk',
     'reports',
     'signals',
@@ -63,11 +62,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
+    'http://localhost:80',
     'https://pavliati.pythonanywhere.com',
     'https://137.184.111.7'
 ]
-
+print(CORS_ALLOWED_ORIGINS)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
@@ -80,7 +79,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates', 'front_end/build'],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -100,6 +99,7 @@ TEMPLATES = [
 # Database
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
+
 if DEVELOPMENT_MODE:
     # Local development settings
     DATABASES = {
@@ -167,12 +167,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
+    # os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'front_end/build/static'), # This is the path for the React fornt end static files
 ]
 
 # default static files settings for PythonAnywhere.
 MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/') #/var/www/ffm_static/
 LOGIN_URL = "/home/"
 

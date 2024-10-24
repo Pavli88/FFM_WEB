@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from robots.models import Robots, RobotTrades
 from trade_app.models import Notifications
 import pandas as pd
 from broker_apis.oanda import OandaV20

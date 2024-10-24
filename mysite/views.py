@@ -15,7 +15,6 @@ from portfolio.models import *
 from mysite.processes.oanda import *
 from mysite.processes.calculations import *
 
-from robots.robot_functions import *
 from mysite.my_functions.general_functions import *
 from mysite.processes.return_calculation import *
 from portfolio.processes.processes import *
@@ -35,8 +34,6 @@ from django.db import connection
 from mysite.models import *
 from accounts.models import *
 from portfolio.models import Portfolio
-
-from robots.processes.run_robot import run_robot
 
 # MAIN PAGE ************************************************************************************************************
 def main_page_react(request):

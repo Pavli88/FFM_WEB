@@ -3,7 +3,6 @@ from risk.processes.account import *
 from mysite.processes.oanda import *
 from mysite.views import *
 from risk.models import *
-from robots.views import *
 from django.http import JsonResponse
 from risk.forms import *
 
