@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 
-from . import views
+from . import views, consumers
 from mysite.views_folder import get_views, data_operations
 from risk.views import *
 
@@ -38,3 +38,4 @@ general_patterns = [
 ]
 
 urlpatterns = get_patterns + general_patterns + create_patterns
+

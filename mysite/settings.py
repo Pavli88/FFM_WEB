@@ -25,12 +25,21 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     '137.184.111.7',
-    'pavliati.pythonanywhere.com'
+    'pavliati.pythonanywhere.com',
+    'fractalportfolios.com'
 ]
 
 # MainApplication definition
 
 INSTALLED_APPS = [
+    'channels',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_crontab',
     'risk',
     'reports',
     'signals',
@@ -41,13 +50,7 @@ INSTALLED_APPS = [
     'instrument',
     'calculations',
     'corsheaders',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_crontab',
+
 ]
 
 MIDDLEWARE = [
@@ -62,11 +65,13 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:80',
+    'http://127.0.0.1:8000',
+    'http://localhost:3000',
     'https://pavliati.pythonanywhere.com',
-    'http://137.184.111.7'
+    'http://137.184.111.7',
+    'https://fractalportfolios.com',
 ]
-print(CORS_ALLOWED_ORIGINS)
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
@@ -79,7 +84,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': ['front_end/build'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -94,10 +99,10 @@ TEMPLATES = [
 
 # WSGI_APPLICATION = 'mysite.wsgi.application'
 
-# ASGI_APPLICATION = 'mysite.asgi.application'
+ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
-DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
+DEVELOPMENT_MODE = True #os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
 
 if DEVELOPMENT_MODE:
@@ -148,9 +153,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/2.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Europe/Budapest'
@@ -161,10 +163,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, 'static'),
@@ -174,6 +172,6 @@ STATICFILES_DIRS = [
 # default static files settings for PythonAnywhere.
 MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/') #/var/www/ffm_static/
+STATIC_ROOT = '/var/www/ffm_static/'
 LOGIN_URL = "/home/"
 
