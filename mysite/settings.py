@@ -172,6 +172,6 @@ STATICFILES_DIRS = [
 # default static files settings for PythonAnywhere.
 MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, '/static') #'/var/www/ffm_static/'
+STATIC_ROOT =  '/var/www/ffm_static/' #os.path.join(BASE_DIR, '/staticfiles')
 LOGIN_URL = "/home/"
 
