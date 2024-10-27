@@ -22,7 +22,7 @@ DEBUG = os.getenv('DEBUG', False) == 'True'
 print('DEBUG', DEBUG)
 
 ALLOWED_HOSTS = [
-    '127.0.0.1',
+    '127.0.0.0',
     'localhost',
     '137.184.111.7',
     'pavliati.pythonanywhere.com',
@@ -65,7 +65,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.1:8000',
+    'http://127.0.0.0:8001',
     'http://localhost:3000',
     'https://pavliati.pythonanywhere.com',
     'http://137.184.111.7',
@@ -172,6 +172,6 @@ STATICFILES_DIRS = [
 # default static files settings for PythonAnywhere.
 MEDIA_ROOT = os.path.join(BASE_DIR, '/media')
 MEDIA_URL = '/media/'
-STATIC_ROOT = '/var/www/ffm_static/'
+STATIC_ROOT = os.path.join(BASE_DIR, '/static') #'/var/www/ffm_static/'
 LOGIN_URL = "/home/"
 
