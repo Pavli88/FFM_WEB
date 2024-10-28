@@ -72,7 +72,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://137.184.111.7',
     'https://137.184.111.7',
     'https://fractalportfolios.com',
-    'http://fractalportfolios.com',
+    'http://www.fractalportfolios.com',
 ]
 
 CACHES = {
