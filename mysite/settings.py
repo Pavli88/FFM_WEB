@@ -26,6 +26,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '137.184.111.7',
     'pavliati.pythonanywhere.com',
+    'fractalportfolios.com',
     'fractalportfolios.com'
 ]
 
