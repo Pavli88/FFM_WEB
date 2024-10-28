@@ -27,7 +27,7 @@ ALLOWED_HOSTS = [
     '137.184.111.7',
     'pavliati.pythonanywhere.com',
     'fractalportfolios.com',
-    'fractalportfolios.com'
+    'www.fractalportfolios.com'
 ]
 
 # MainApplication definition
