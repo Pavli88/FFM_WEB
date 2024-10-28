@@ -69,7 +69,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://pavliati.pythonanywhere.com',
     'http://137.184.111.7',
+    'https://137.184.111.7',
     'https://fractalportfolios.com',
+    'http://fractalportfolios.com',
 ]
 
 CACHES = {
@@ -104,7 +106,7 @@ ASGI_APPLICATION = 'mysite.asgi.application'
 # Database
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
-
+#####
 if DEVELOPMENT_MODE:
     # Local development settings
     DATABASES = {
