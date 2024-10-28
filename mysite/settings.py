@@ -107,7 +107,7 @@ ASGI_APPLICATION = 'mysite.asgi.application'
 # Database
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
-#####
+
 if DEVELOPMENT_MODE:
     # Local development settings
     DATABASES = {

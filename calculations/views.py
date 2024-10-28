@@ -17,13 +17,11 @@ def valuation(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
-        # response_list = []
-        # for portfolio_code in request_body['portfolios']:
-        #     responses = calculate_holdings(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
-        #     for resp in responses:
-        #         response_list.append(resp)
-        notification_signal.send(sender=None, message="New Notification!")
         response_list = []
+        for portfolio_code in request_body['portfolios']:
+            responses = calculate_holdings(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
+            for resp in responses:
+                response_list.append(resp)
         return JsonResponse(response_list, safe=False)
 
 
