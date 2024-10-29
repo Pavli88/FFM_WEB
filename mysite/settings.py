@@ -71,6 +71,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://pavliati.pythonanywhere.com',
     'http://137.184.111.7',
     'https://137.184.111.7',
+    'https://137.184.111.7:80',
     'https://fractalportfolios.com',
     'http://www.fractalportfolios.com',
 ]
