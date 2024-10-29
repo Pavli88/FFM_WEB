@@ -1,5 +1,5 @@
 import datetime as dt
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 import pandas as pd
@@ -18,6 +18,14 @@ def first_day_calculator(day):
     else:
         return 1
 
+
+def previous_business_day(input_date):
+    if isinstance(input_date, str):
+        input_date = datetime.strptime(input_date, '%Y-%m-%d').date()
+    previous_day = input_date - timedelta(days=1)
+    while previous_day.weekday() > 4:  # 5 = Saturday, 6 = Sunday
+        previous_day -= timedelta(days=1)
+    return previous_day
 
 def previous_month_end(input_date):
     if isinstance(input_date, str):
@@ -104,6 +112,7 @@ def total_return_calc(portfolio_code, period, end_date, start_date=None):
         '1m': '1 Month',
         '3m': '3 Months',
         '6m': '6 Months',
+        'dtd': 'Day to Date',
         'mtd': 'Month to Date',
         'qtd': 'Quarter to Date',
         'ytd': 'Year to Date',
@@ -125,6 +134,8 @@ def total_return_calc(portfolio_code, period, end_date, start_date=None):
                 start_date = previous_qtd_date(input_date=end_date)
             elif period == '1m':
                 start_date = months_earlier(input_date=end_date, months=1)
+            elif period == 'dtd':
+                start_date = previous_business_day(input_date=end_date)
             else:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         else:

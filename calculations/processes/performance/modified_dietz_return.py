@@ -12,7 +12,7 @@ def modified_dietz_return(initial_value, final_value, cash_flows, cash_flow_date
 
     # Calculate the number of days in the period
     T = (end_date - start_date).days
-
+    print(T)
     # Calculate weighted cash flows
     weighted_cash_flows = 0
     total_cash_flow = 0
@@ -21,6 +21,10 @@ def modified_dietz_return(initial_value, final_value, cash_flows, cash_flow_date
         weight = days_invested / T
         weighted_cash_flows += cf * weight
         total_cash_flow += cf
+
+    # Weight for DTD calculation
+    if T == 1:
+        weighted_cash_flows = 0
 
     # Calculate Modified Dietz return
     numerator = final_value - initial_value - total_cash_flow
