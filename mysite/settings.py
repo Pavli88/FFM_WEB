@@ -67,11 +67,9 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.0:8001',
-    'http://localhost:3000',
     'https://pavliati.pythonanywhere.com',
-    'http://137.184.111.7',
-    'https://137.184.111.7',
     'https://fractalportfolios.com',
+    'https://fractalportfolios.com/user_login/',
     'http://www.fractalportfolios.com',
 ]
 
