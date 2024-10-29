@@ -71,8 +71,8 @@ CORS_ALLOWED_ORIGINS = [
     'https://137.184.111.7',
     'https://pavliati.pythonanywhere.com',
     'https://fractalportfolios.com',
-    'https://fractalportfolios.com/user_login/',
     'http://www.fractalportfolios.com',
+    'https://www.fractalportfolios.com',
 ]
 
 CACHES = {
