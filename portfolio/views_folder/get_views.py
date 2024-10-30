@@ -266,26 +266,10 @@ def get_exposures(request):
         except Holding.DoesNotExist:
             return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
 
-
 def get_drawdown(request):
     if request.method == "GET":
-        portfolio_daily_returns = pd.DataFrame(Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"),
-                                                     date__gte=request.GET.get("start_date")).values())
-        drawdown_list = drawdown_calc(data_series=portfolio_daily_returns['period_return'])
-        return JsonResponse({
-            'dates': list(portfolio_daily_returns['date']),
-            'data': drawdown_list
-        }, safe=False)
-
-
-def get_drawdown2(request):
-    if request.method == "GET":
-        portfolio = Portfolio.objects.get(portfolio_code=request.GET.get("portfolio_code"))
-        navs = pd.DataFrame(Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date__gte=portfolio.inception_date).values())
-        drawdown_records = calculate_drawdowns(nav_values=navs['holding_nav'])
-        print('DRAWDOWN 2')
-        print(portfolio)
-        print(drawdown_records)
+        total_returns = pd.DataFrame(TotalReturn.objects.filter(portfolio_code=request.GET.get("portfolio_code"), period='dtd').order_by('end_date').values())
+        drawdown_records = calculate_drawdowns(return_series=total_returns['total_return'])
         return JsonResponse(drawdown_records, safe=False)
 
 @csrf_exempt

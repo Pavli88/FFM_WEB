@@ -23,7 +23,6 @@ get_views = [
     path('portfolios/get/portfolio_nav/', get_views.get_portfolio_nav),
     path('portfolios/get/grouped/portfolio_nav/', get_views.get_portfolio_nav_grouped),
     path('portfolios/get/drawdown/', get_views.get_drawdown),
-    path('portfolios/get/drawdown2/', get_views.get_drawdown2),
     path('portfolios/get/cashflow/', get_views.daily_cashflow_by_type),
     path('portfolios/get/portfolios/', get_views.get_portfolios),
     path('portfolios/get/holding/', get_views.get_holding),
