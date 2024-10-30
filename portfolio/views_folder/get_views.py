@@ -5,10 +5,11 @@ from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup
+from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup, TotalReturn
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 from calculations.processes.valuation.valuation import calculate_holdings
+from calculations.processes.risk.drawdown import calculate_drawdowns
 
 def get_portfolios(request):
     if request.method == "GET":
@@ -276,6 +277,23 @@ def get_drawdown(request):
             'data': drawdown_list
         }, safe=False)
 
+
+def get_drawdown2(request):
+    if request.method == "GET":
+        portfolio = Portfolio.objects.get(portfolio_code=request.GET.get("portfolio_code"))
+        navs = pd.DataFrame(Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date__gte=portfolio.inception_date).values())
+        drawdown_records = calculate_drawdowns(nav_values=navs['holding_nav'])
+        print('DRAWDOWN 2')
+        print(portfolio)
+        print(drawdown_records)
+        return JsonResponse(drawdown_records, safe=False)
+
+@csrf_exempt
+def get_total_returns(request):
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        total_returns = TotalReturn.objects.filter(portfolio_code=request_body['portfolio_code'], period__in=request_body['periods']).order_by('end_date').values()
+        return JsonResponse(list(total_returns), safe=False)
 
 def get_perf_dashboard(request):
     if request.method == "GET":

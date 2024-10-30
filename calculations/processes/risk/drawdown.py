@@ -25,4 +25,4 @@ def calculate_drawdowns(nav_values):
     # Calculate the maximum drawdown
     max_drawdown = drawdowns.min()
 
-    return drawdowns, max_drawdown
+    return {'drawdowns': drawdowns.tolist(), 'max_drawdown': float(max_drawdown)}

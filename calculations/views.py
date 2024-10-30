@@ -2,8 +2,6 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-import datetime
-from datetime import datetime
 from mysite.my_functions.general_functions import *
 from calculations.processes.performance.total_return import total_return_calc
 from calculations.processes.valuation.valuation import calculate_holdings
@@ -11,6 +9,7 @@ from portfolio.models import Portfolio, TotalReturn
 import pandas as pd
 from mysite.signals import notification_signal
 from mysite import consumers
+from datetime import datetime, timedelta
 
 @csrf_exempt
 def valuation(request):
@@ -51,7 +50,19 @@ def total_return(request):
                         response_list.append(resp)
             else:
                 print('multi dates')
-
+                start_date = datetime.strptime(request_body['start_date'], "%Y-%m-%d")
+                end_date = datetime.strptime(request_body['end_date'], "%Y-%m-%d")
+                for period in request_body['periods']:
+                    current_date = start_date
+                    while current_date <= end_date:
+                        print()
+                        responses = total_return_calc(portfolio_code=portfolio_code,
+                                                      period=period,
+                                                      end_date=current_date.strftime("%Y-%m-%d"))
+                        for resp in responses:
+                            response_list.append(resp)
+                        current_date += timedelta(days=1)
+                        #
         # # for portfolio_code in request_body['portfolios']:
         #     for period in request_body['periods']:
         #         responses = total_return_calc(portfolio_code=portfolio_code, period=period, end_date=request_body['date'])

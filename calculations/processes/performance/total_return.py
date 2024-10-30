@@ -126,6 +126,7 @@ def total_return_calc(portfolio_code, period, end_date, start_date=None):
     else:
         if portfolio_data.weekend_valuation is False:
             print('WEEKEND VALUATION NOT ALLOWED')
+
             if period == 'mtd':
                 start_date = previous_month_end(input_date=end_date)
             elif period == 'ytd':
