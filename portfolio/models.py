@@ -57,7 +57,6 @@ class Nav(models.Model):
     short_liab = models.FloatField(default=0.0)
     long_liab = models.FloatField(default=0.0)
     accured_expenses = models.FloatField(default=0.0)
-    total = models.FloatField(default=0.0)
     units = models.FloatField(default=0.0)
     nav_per_share = models.FloatField(default=0.0)
     pnl = models.FloatField(default=0.0)

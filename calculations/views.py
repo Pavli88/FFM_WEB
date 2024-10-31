@@ -55,7 +55,6 @@ def total_return(request):
                 for period in request_body['periods']:
                     current_date = start_date
                     while current_date <= end_date:
-                        print()
                         responses = total_return_calc(portfolio_code=portfolio_code,
                                                       period=period,
                                                       end_date=current_date.strftime("%Y-%m-%d"))
