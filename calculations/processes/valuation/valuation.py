@@ -125,14 +125,19 @@ class Valuation():
             })
 
     def ugl_calc(self, row):
-        if row['quantity'] > 0:
-            return round((row['price'] - row['trade_price']) * row['quantity'] * row['fx_rate'], 2)
-        else:
-            return round((row['trade_price'] - row['price']) * abs(row['quantity']) * row['fx_rate'], 2)
+        try:
+            existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
+            return row['bv'] - existing_trade['bv'].sum()
+        except:
+            return row['bv']
+
 
     def book_value_calc(self, row):
         if row['group'] == 'CFD':
-            return row['ugl']
+            if row['quantity'] > 0:
+                return round((row['price'] - row['trade_price']) * row['quantity'] * row['fx_rate'], 2)
+            else:
+                return round((row['trade_price'] - row['price']) * abs(row['quantity']) * row['fx_rate'], 2)
         else:
             return row['mv']
 
@@ -220,8 +225,8 @@ class Valuation():
             aggregated_transactions['fx_rate'].fillna(0, inplace=True)
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
-            aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['bv'] = aggregated_transactions.apply(self.book_value_calc, axis=1)
+            aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
 
@@ -316,7 +321,7 @@ class Valuation():
 
         self.final_df = pd.concat([available_cash_df, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        self.final_df['weight'] = self.final_df['mv'] / self.final_df['bv'].sum()
+        self.final_df['weight'] = self.final_df['mv'].abs() / self.final_df['bv'].sum()
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
@@ -372,13 +377,11 @@ class Valuation():
                                                                    portfolio_code=self.portfolio_code,
                                                                    transaction_type__in=['Subscription', 'Redemption',
                                                                                          'Commission']).values())
-        # print(capital_cashflow)
         if capital_cashflow.empty:
             self.subscriptions = 0
             self.redemptions = 0
             return 0
         else:
-            print(capital_cashflow[capital_cashflow['transaction_type'] == 'Subscription']['mv'].sum())
             self.subscriptions = capital_cashflow[capital_cashflow['transaction_type'] == 'Subscription']['mv'].sum()
             self.redemptions = capital_cashflow[capital_cashflow['transaction_type'] == 'Redemption']['mv'].sum()
             return capital_cashflow['mv'].sum()
@@ -393,8 +396,8 @@ class Valuation():
         # P&L numbers
         total_realized_pnl = round(self.final_df['rgl'].sum(), 5)
         total_unrealized_pnl = round(self.final_df['ugl'].sum(), 5)
-
-        print('SUB', self.subscriptions, 'RED', self.redemptions, self.calc_date)
+        total_pnl = total_realized_pnl + total_unrealized_pnl
+        # print('REAL', total_realized_pnl, 'UNREAL', total_unrealized_pnl, total_unrealized_pnl + total_realized_pnl , self.calc_date)
 
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
@@ -405,7 +408,7 @@ class Valuation():
             nav.holding_nav = current_nav
             nav.pnl = total_realized_pnl
             nav.unrealized_pnl = total_unrealized_pnl
-            nav.total_pnl = total_realized_pnl + total_realized_pnl
+            nav.total_pnl = total_pnl
             nav.ugl_diff = 0
             nav.trade_return = 0
             nav.price_return = 0
@@ -424,7 +427,7 @@ class Valuation():
                 holding_nav=current_nav,
                 pnl=total_realized_pnl,
                 unrealized_pnl=total_unrealized_pnl,
-                total_pnl = total_realized_pnl + total_realized_pnl,
+                total_pnl = total_pnl,
                 ugl_diff=0,
                 cost=0,
                 subscription=self.subscriptions,
@@ -526,31 +529,8 @@ def calculate_holdings(portfolio_code, calc_date):
                 time_back = 1
 
             previous_date = calc_date - timedelta(days=time_back)
-
-            # valuation.fetch_previous_valuation(previous_date=previous_date, portfolio_code=portfolio_code)
-            # if calc_date != valuation.portfolio_data.inception_date: #valuation.previous_valuation.empty
-            #     valuation.add_error_message({'portfolio_code': portfolio_code,
-            #                                  'date': calc_date,
-            #                                  'process': 'Valuation',
-            #                                  'exception': 'Missing Valuation',
-            #                                  'status': 'Error',
-            #                                  'comment': 'Missing valuation on ' + str(previous_date)})
-            #     valuation.add_error_message({'portfolio_code': portfolio_code,
-            #                                  'date': calc_date,
-            #                                  'process': 'Valuation',
-            #                                  'exception': 'Stopped Valuation',
-            #                                  'status': 'Error',
-            #                                  'comment': 'Valuation stopped due to missing previous valuation'})
-            #     break
             valuation.calc_date = calc_date
             valuation.previous_date = previous_date
             valuation.asset_valuation()
-            # valuation.cash_calculation()
-            # valuation.save_holding(trade_date=calc_date,
-            #                        portfolio_code=portfolio_code,
-            #                        holding_data=valuation.holding_df)
-            # valuation.nav_calculation(calc_date=calc_date,
-            #                           previous_date=previous_date,
-            #                           portfolio_code=portfolio_code)
         calc_date = calc_date + timedelta(days=1)
     return valuation.send_responses()

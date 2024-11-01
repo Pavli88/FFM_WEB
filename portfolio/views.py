@@ -15,12 +15,6 @@ import pandas as pd
 
 # Process imports
 from mysite.my_functions.general_functions import *
-from portfolio.portfolio_functions import *
-from portfolio.processes.port_pos import *
-from portfolio.processes.cash_holding import *
-from portfolio.processes.processes import *
-from portfolio.processes.portfolio_holding import portfolio_holding_calc
-
 
 # CRUD------------------------------------------------------------------------------------------------------------------
 

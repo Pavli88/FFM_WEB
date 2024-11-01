@@ -17,7 +17,7 @@ from mysite.processes.calculations import *
 
 from mysite.my_functions.general_functions import *
 from mysite.processes.return_calculation import *
-from portfolio.processes.processes import *
+
 
 # Django imports
 from django.http import HttpResponse
