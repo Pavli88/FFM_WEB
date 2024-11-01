@@ -19,8 +19,6 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', False) == 'True'
 
-print('DEBUG', DEBUG)
-
 ALLOWED_HOSTS = [
     '127.0.0.0',
     'localhost',
@@ -107,7 +105,6 @@ ASGI_APPLICATION = 'mysite.asgi.application'
 
 # Database
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
-print('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
 
 if DEVELOPMENT_MODE:
     # Local development settings
@@ -130,8 +127,6 @@ else:
         }
     else:
         raise Exception('DATABASE_URL environment variable not defined')
-    print(DATABASES)
-# print('DATABASES', DATABASES)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 

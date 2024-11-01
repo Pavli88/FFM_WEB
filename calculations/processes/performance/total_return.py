@@ -161,13 +161,7 @@ def total_return_calc(portfolio_code, period, end_date, start_date=None):
 
     # Check if start date is less than inception date
     if start_date < portfolio_data.perf_start_date:
-        error_list.append({'portfolio_code': portfolio_code,
-                           'date': end_date,
-                           'process': 'Total Return',
-                           'exception': 'Incorrect Start Date',
-                           'status': 'Alert',
-                           'comment': period_text_mapping[period] + ' start date (' + str(start_date) + ') is less than inception date (' + str(portfolio_data.perf_start_date) + ')'})
-        return response_list + error_list
+        start_date = portfolio_data.perf_start_date
 
         # Calculation based on parameters
     nav_data = pd.DataFrame(Nav.objects.filter(portfolio_code=portfolio_code, date__range=(start_date, end_date)).values()).sort_values('date')[

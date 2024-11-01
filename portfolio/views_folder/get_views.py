@@ -276,7 +276,12 @@ def get_drawdown(request):
 def get_total_returns(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        total_returns = TotalReturn.objects.filter(portfolio_code=request_body['portfolio_code'], period__in=request_body['periods']).order_by('end_date').values()
+        print(request_body)
+        filters = {}
+        for key, value in request_body.items():
+            filters[key] = value
+
+        total_returns = TotalReturn.objects.filter(**filters).order_by('end_date').values()
         return JsonResponse(list(total_returns), safe=False)
 
 def get_perf_dashboard(request):
@@ -335,7 +340,7 @@ def get_historic_nav(request):
     if request.method == "GET":
         cursor = connection.cursor()
         cursor.execute("""
-        select pn.date, sum(pn.holding_nav) as holding_nav, sum(pn.total) as total
+        select pn.date, sum(pn.holding_nav) as holding_nav as total
 from portfolio_nav as pn,
      portfolio_portfolio as p
 where p.portfolio_code = pn.portfolio_code
@@ -346,8 +351,8 @@ order by pn.date asc;
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        df['diff'] = df['holding_nav'] - df['total']
-        df['drawdown'] = (df['diff'] / df['total']) * 100
+        df['diff'] = df['holding_nav']
+        df['drawdown'] = df['diff']
         df = df.fillna(0)
         return JsonResponse(df.to_dict('records'), safe=False)
 
