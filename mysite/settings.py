@@ -130,7 +130,7 @@ else:
         }
     else:
         raise Exception('DATABASE_URL environment variable not defined')
-
+    print(DATABASES)
 # print('DATABASES', DATABASES)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
