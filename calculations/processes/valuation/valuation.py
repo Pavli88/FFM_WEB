@@ -233,6 +233,7 @@ class Valuation():
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
+            total_bv = aggregated_transactions['bv'].sum()
 
             total_margin_df = pd.DataFrame({
                 'portfolio_code': [self.portfolio_code],
@@ -262,14 +263,14 @@ class Valuation():
                     'trd_id': [None],
                     'inv_num': [0],
                     'trade_date': [self.calc_date],
-                    'trade_type': ['Collateral'],
+                    'trade_type': ['Contra'],
                     'instrument_id': [self.base_currency_sec_id],
-                    'quantity': [total_ugl * -1],
+                    'quantity': [total_bv* -1],
                     'trade_price': [1],
                     'market_price': [1],
                     'fx_rate': [1],
-                    'mv': [total_ugl * -1],
-                    'bv': [total_ugl * -1],
+                    'mv': [total_bv * -1],
+                    'bv': [total_bv * -1],
                     'weight': [0.0],
                     'ugl': [0.0],
                     'rgl': [0.0],
@@ -292,9 +293,8 @@ class Valuation():
         # CASH VALUATION ----------------------------------
         capital_cash = self.capital_cash_calculation()
         margin_change = self.previous_margin - total_margin
-        ugl_change = total_ugl - self.previous_ugl
-        current_cash_flow = total_rgl + capital_cash
-        total_cash = self.previous_cash + current_cash_flow + margin_change + ugl_change
+        # # ugl_change = total_ugl
+        total_cash = self.previous_cash + total_rgl + capital_cash + total_ugl + margin_change
 
         available_cash_df = pd.DataFrame(
             {
@@ -376,7 +376,8 @@ class Valuation():
         capital_cashflow = pd.DataFrame(Transaction.objects.filter(trade_date=self.calc_date,
                                                                    portfolio_code=self.portfolio_code,
                                                                    transaction_type__in=['Subscription', 'Redemption',
-                                                                                         'Commission']).values())
+                                                                                         'Commission', 'Financing']).values())
+
         if capital_cashflow.empty:
             self.subscriptions = 0
             self.redemptions = 0
