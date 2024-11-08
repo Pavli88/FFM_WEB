@@ -321,7 +321,7 @@ class Valuation():
 
         self.final_df = pd.concat([available_cash_df, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        self.final_df['weight'] = self.final_df['mv'].abs() / self.final_df['bv'].sum()
+        self.final_df['weight'] = self.final_df['mv']/ self.final_df['bv'].sum()
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
