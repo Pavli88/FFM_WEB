@@ -13,7 +13,7 @@ from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 from calculations.processes.valuation.valuation import calculate_holdings
 from calculations.processes.risk.drawdown import calculate_drawdowns
-from calculations.processes.risk.positions_correlation import correlation_matrix
+from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_returns, portfolio_std
 from datetime import datetime, timedelta
 
 
@@ -200,9 +200,13 @@ def transactions_pnls(request):
         return JsonResponse(list(transactions), safe=False)
 
 
+@csrf_exempt
 def get_holding(request):
-    if request.method == "GET":
-        holdings = Holding.objects.select_related('instrument').filter(date=request.GET.get("date")).filter(portfolio_code=request.GET.get("portfolio_code"))
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        date = request_body['date']
+        portfolio_codes = request_body['portfolio_code']
+        holdings = Holding.objects.select_related('instrument').filter(date=date).filter(portfolio_code__in=portfolio_codes)
         holdings_list = [
             {
                 'portfolio_code': holding.portfolio_code,
@@ -384,14 +388,15 @@ def get_port_groups(request):
     #     return JsonResponse({'error': str(e)}, status=500)
 
 
-@require_GET
-def get_position_correlation(request):
+@csrf_exempt
+def get_position_exposures(request):
     try:
         # Extract and validate query parameters
-        portfolio_code = request.GET.get("portfolio_code")
-        period = int(request.GET.get("period"))
-        date = request.GET.get("date")
-
+        request_body = json.loads(request.body.decode('utf-8'))
+        portfolio_code = request_body["portfolio_code"]
+        period = int(request_body["period"]) + 2
+        date = request_body["date"]
+        print(portfolio_code, period, date)
         if not portfolio_code or not date:
             return JsonResponse({"error": "Missing required parameters."}, status=400)
 
@@ -402,11 +407,12 @@ def get_position_correlation(request):
 
         # Retrieve and filter portfolio holdings
         portfolio_holding = pd.DataFrame(
-            Holding.objects.filter(portfolio_code=portfolio_code, date=date)
+            Holding.objects.filter(portfolio_code__in=portfolio_code, date=date).select_related('instrument')
             .exclude(trade_type__in=['Available Cash', 'Margin', 'Contra'])
-            .values()
-        )
+            .values('instrument__name', 'weight', 'instrument_id')
+        ).groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
 
+        # print(portfolio_holding)
         if portfolio_holding.empty:
             return JsonResponse({"error": "No holdings found for given portfolio and date."}, status=404)
 
@@ -416,7 +422,7 @@ def get_position_correlation(request):
         prices_df = pd.DataFrame(
             Prices.objects.filter(instrument_id__in=securities_list, date__range=(start_date, original_date))
             .select_related('instrument')
-            .values('instrument_id', 'price', 'instrument__name')
+            .values('instrument_id', 'price', 'instrument__name', 'date')
         )
 
         if prices_df.empty:
@@ -426,9 +432,19 @@ def get_position_correlation(request):
         data = prices_df.groupby('instrument__name')['price'].apply(list).to_dict()
         prices_matrix = pd.DataFrame(data)
 
+        std_devs = std_dev_of_returns(prices_matrix)
+        # print(std_devs)
         # Calculate correlation matrix
         corr_matrix = correlation_matrix(prices_matrix)
+
+        # print(corr_matrix)
+
         corr_dict = corr_matrix.to_dict()
+
+        # portstd, std_contributions = portfolio_std(portfolio_holding, std_devs, corr_matrix)
+        #
+        # print("STD",port_std)
+        # print(std_contributions)
 
         return JsonResponse(corr_dict, safe=False, status=200)
 
