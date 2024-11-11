@@ -1,15 +1,21 @@
 import json
 import numpy as np
 import pandas as pd
+from django.db.models import F
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
+from oandapy.api import Pricing
 from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup, TotalReturn
+from instrument.models import Prices
 from app_functions.request_functions import *
 from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 from calculations.processes.valuation.valuation import calculate_holdings
 from calculations.processes.risk.drawdown import calculate_drawdowns
+from calculations.processes.risk.positions_correlation import correlation_matrix
+from datetime import datetime, timedelta
+
 
 def get_portfolios(request):
     if request.method == "GET":
@@ -376,3 +382,58 @@ def get_port_groups(request):
     #
     # except Exception as e:
     #     return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_GET
+def get_position_correlation(request):
+    try:
+        # Extract and validate query parameters
+        portfolio_code = request.GET.get("portfolio_code")
+        period = int(request.GET.get("period"))
+        date = request.GET.get("date")
+
+        if not portfolio_code or not date:
+            return JsonResponse({"error": "Missing required parameters."}, status=400)
+
+        # Parse and calculate date range
+        date_format = "%Y-%m-%d"
+        original_date = datetime.strptime(date, date_format)
+        start_date = original_date - timedelta(days=period)
+
+        # Retrieve and filter portfolio holdings
+        portfolio_holding = pd.DataFrame(
+            Holding.objects.filter(portfolio_code=portfolio_code, date=date)
+            .exclude(trade_type__in=['Available Cash', 'Margin', 'Contra'])
+            .values()
+        )
+
+        if portfolio_holding.empty:
+            return JsonResponse({"error": "No holdings found for given portfolio and date."}, status=404)
+
+        securities_list = portfolio_holding['instrument_id'].drop_duplicates().tolist()
+
+        # Fetch price data within date range for relevant securities
+        prices_df = pd.DataFrame(
+            Prices.objects.filter(instrument_id__in=securities_list, date__range=(start_date, original_date))
+            .select_related('instrument')
+            .values('instrument_id', 'price', 'instrument__name')
+        )
+
+        if prices_df.empty:
+            return JsonResponse({"error": "No price data available for the selected period."}, status=404)
+
+        # Prepare data for correlation matrix calculation
+        data = prices_df.groupby('instrument__name')['price'].apply(list).to_dict()
+        prices_matrix = pd.DataFrame(data)
+
+        # Calculate correlation matrix
+        corr_matrix = correlation_matrix(prices_matrix)
+        corr_dict = corr_matrix.to_dict()
+
+        return JsonResponse(corr_dict, safe=False, status=200)
+
+    except ValueError as e:
+        return JsonResponse({"error": f"Invalid parameter: {e}"}, status=400)
+    except Exception as e:
+        # Log the error if logging is configured
+        return JsonResponse({"error": "An unexpected error occurred."}, status=500)
