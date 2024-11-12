@@ -408,11 +408,14 @@ def get_position_exposures(request):
         # Retrieve and filter portfolio holdings
         portfolio_holding = pd.DataFrame(
             Holding.objects.filter(portfolio_code__in=portfolio_code, date=date).select_related('instrument')
-            .exclude(trade_type__in=['Available Cash', 'Margin', 'Contra'])
-            .values('instrument__name', 'weight', 'instrument_id')
-        ).groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
+            .values('instrument__name','mv', 'bv','instrument__group', 'instrument_id')
+        )
 
-        # print(portfolio_holding)
+        portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
+        portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
+        portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
+        print(portfolio_holding)
+
         if portfolio_holding.empty:
             return JsonResponse({"error": "No holdings found for given portfolio and date."}, status=404)
 
@@ -446,7 +449,10 @@ def get_position_exposures(request):
         # print("STD",port_std)
         # print(std_contributions)
 
-        return JsonResponse(corr_dict, safe=False, status=200)
+        return JsonResponse({
+            "correlation": corr_dict,
+            "exposures": portfolio_holding.to_dict('records'),
+        }, safe=False, status=200)
 
     except ValueError as e:
         return JsonResponse({"error": f"Invalid parameter: {e}"}, status=400)
