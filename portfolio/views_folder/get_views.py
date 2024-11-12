@@ -396,7 +396,7 @@ def get_position_exposures(request):
         portfolio_code = request_body["portfolio_code"]
         period = int(request_body["period"]) + 2
         date = request_body["date"]
-        print(portfolio_code, period, date)
+        # print(portfolio_code, period, date)
         if not portfolio_code or not date:
             return JsonResponse({"error": "Missing required parameters."}, status=400)
 
@@ -414,7 +414,6 @@ def get_position_exposures(request):
         portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
         portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
         portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
-        print(portfolio_holding)
 
         if portfolio_holding.empty:
             return JsonResponse({"error": "No holdings found for given portfolio and date."}, status=404)
@@ -444,14 +443,12 @@ def get_position_exposures(request):
 
         corr_dict = corr_matrix.to_dict()
 
-        # portstd, std_contributions = portfolio_std(portfolio_holding, std_devs, corr_matrix)
-        #
-        # print("STD",port_std)
-        # print(std_contributions)
-
+        port_std = portfolio_std(portfolio_holding, std_devs, corr_matrix)
         return JsonResponse({
             "correlation": corr_dict,
             "exposures": portfolio_holding.to_dict('records'),
+            "port_std": port_std,
+            "lev_exp": portfolio_holding['weight'].sum()
         }, safe=False, status=200)
 
     except ValueError as e:

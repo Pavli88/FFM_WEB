@@ -14,9 +14,6 @@ def std_dev_of_returns(prices_df):
 
 
 def portfolio_std(instrument_df, std_devs, correlation_matrix):
-
-    print('PORT STD')
-    # Initialize variables
     portfolio_variance = 0
     contributions = {}
 
@@ -39,17 +36,5 @@ def portfolio_std(instrument_df, std_devs, correlation_matrix):
 
     # Portfolio standard deviation is the square root of portfolio variance
     portfolio_std_dev = np.sqrt(portfolio_variance)
-
-    # Calculate individual contributions to total standard deviation
-    for _, row in instrument_df.iterrows():
-        name = row['instrument__name']
-        weight = row['weight']
-        std_dev = std_devs[name]
-
-        # Contribution to the total standard deviation for this security
-        contribution = (weight * std_dev / portfolio_std_dev) * 100
-        contributions[name] = contribution
-    print(portfolio_std_dev)
-    print(contributions)
-    return portfolio_std_dev, contributions
+    return portfolio_std_dev
 
