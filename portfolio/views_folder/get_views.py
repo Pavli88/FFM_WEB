@@ -14,6 +14,7 @@ from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
 from calculations.processes.valuation.valuation import calculate_holdings
 from calculations.processes.risk.drawdown import calculate_drawdowns
 from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_returns, portfolio_std
+from calculations.processes.risk.calculations import exposure_metrics
 from datetime import datetime, timedelta
 
 
@@ -391,65 +392,26 @@ def get_port_groups(request):
 @csrf_exempt
 def get_position_exposures(request):
     try:
-        # Extract and validate query parameters
         request_body = json.loads(request.body.decode('utf-8'))
         portfolio_code = request_body["portfolio_code"]
         period = int(request_body["period"]) + 2
-        date = request_body["date"]
-        # print(portfolio_code, period, date)
-        if not portfolio_code or not date:
-            return JsonResponse({"error": "Missing required parameters."}, status=400)
+        end_date = request_body["date"]
+        sample_period = 60
+        start_date = datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=sample_period)
 
-        # Parse and calculate date range
-        date_format = "%Y-%m-%d"
-        original_date = datetime.strptime(date, date_format)
-        start_date = original_date - timedelta(days=period)
+        exp_list = []
 
-        # Retrieve and filter portfolio holdings
-        portfolio_holding = pd.DataFrame(
-            Holding.objects.filter(portfolio_code__in=portfolio_code, date=date).select_related('instrument')
-            .values('instrument__name','mv', 'bv','instrument__group', 'instrument_id')
-        )
+        while start_date <= datetime.strptime(end_date, "%Y-%m-%d"):
+            # print(start_date)
 
-        portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
-        portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
-        portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
+            if start_date.weekday() == 5 or start_date.weekday() == 6:
+                pass
+            else:
+                exp_metrics = exposure_metrics(portfolio_code=portfolio_code, end_date=start_date, pricing_period=period)
+                exp_list.append(exp_metrics)
+            start_date += timedelta(days=1)
 
-        if portfolio_holding.empty:
-            return JsonResponse({"error": "No holdings found for given portfolio and date."}, status=404)
-
-        securities_list = portfolio_holding['instrument_id'].drop_duplicates().tolist()
-
-        # Fetch price data within date range for relevant securities
-        prices_df = pd.DataFrame(
-            Prices.objects.filter(instrument_id__in=securities_list, date__range=(start_date, original_date))
-            .select_related('instrument')
-            .values('instrument_id', 'price', 'instrument__name', 'date')
-        )
-
-        if prices_df.empty:
-            return JsonResponse({"error": "No price data available for the selected period."}, status=404)
-
-        # Prepare data for correlation matrix calculation
-        data = prices_df.groupby('instrument__name')['price'].apply(list).to_dict()
-        prices_matrix = pd.DataFrame(data)
-
-        std_devs = std_dev_of_returns(prices_matrix)
-        # print(std_devs)
-        # Calculate correlation matrix
-        corr_matrix = correlation_matrix(prices_matrix)
-
-        # print(corr_matrix)
-
-        corr_dict = corr_matrix.to_dict()
-
-        port_std = portfolio_std(portfolio_holding, std_devs, corr_matrix)
-        return JsonResponse({
-            "correlation": corr_dict,
-            "exposures": portfolio_holding.to_dict('records'),
-            "port_std": port_std,
-            "lev_exp": portfolio_holding['weight'].sum()
-        }, safe=False, status=200)
+        return JsonResponse(exp_list, safe=False, status=200)
 
     except ValueError as e:
         return JsonResponse({"error": f"Invalid parameter: {e}"}, status=400)
