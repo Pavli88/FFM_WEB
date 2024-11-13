@@ -6,7 +6,6 @@ from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_r
 
 
 def exposure_metrics(portfolio_code, pricing_period, end_date):
-    # end_date = datetime.strptime(end_date, "%Y-%m-%d")
     start_date = end_date - timedelta(days=pricing_period)
 
     portfolio_holding = pd.DataFrame(
@@ -19,15 +18,16 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                     "correlation": {},
                     "exposures": [],
                     "port_std": 0,
-                    "lev_exp": 0
+                    "lev_exp": 0,
+                    "risk_structure": []
                 }}
 
     portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
     portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
     portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
-
-    securities_list = portfolio_holding['instrument_id'].drop_duplicates().tolist()
-
+    # portfolio_holding['weight2'] = portfolio_holding['weight'].abs() / portfolio_holding['weight'].abs().sum()
+    securities_list = portfolio_holding['instrument_id'].tolist()
+    # print(portfolio_holding)
     # Fetch price data within date range for relevant securities
     prices_df = pd.DataFrame(
         Prices.objects.filter(instrument_id__in=securities_list, date__range=(start_date, end_date))
@@ -41,7 +41,8 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                     "correlation": {},
                     "exposures": [],
                     "port_std": 0,
-                    "lev_exp": 0
+                    "lev_exp": 0,
+                    "risk_structure": []
                 }}
 
     # Prepare data for correlation matrix calculation
@@ -49,19 +50,22 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
     prices_matrix = pd.DataFrame(data)
 
     std_devs = std_dev_of_returns(prices_matrix)
-    # print(std_devs)
+
     # Calculate correlation matrix
     corr_matrix = correlation_matrix(prices_matrix)
-
-    # print(corr_matrix)
-
     corr_dict = corr_matrix.to_dict()
 
-    port_std = portfolio_std(portfolio_holding, std_devs, corr_matrix)
+    port_std, marginal_risks = portfolio_std(portfolio_holding, std_devs, corr_matrix)
+    risk_contribs = [{"label": key, "value": float(value)} for key, value in marginal_risks.items()]
+    # print(corr_matrix)
+    # print(portfolio_holding)
+    # print(std_devs)
+
     return {"date": end_date.date(),
             "data": {
                 "correlation": corr_dict,
                 "exposures": portfolio_holding.to_dict('records'),
                 "port_std": port_std,
-                "lev_exp": portfolio_holding['weight'].sum()
+                "lev_exp": portfolio_holding['weight'].sum(),
+                "risk_structure": risk_contribs
             }}

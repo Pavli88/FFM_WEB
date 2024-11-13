@@ -396,7 +396,7 @@ def get_position_exposures(request):
         portfolio_code = request_body["portfolio_code"]
         period = int(request_body["period"]) + 2
         end_date = request_body["date"]
-        sample_period = 60
+        sample_period = int(request_body["sample_period"])
         start_date = datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=sample_period)
 
         exp_list = []

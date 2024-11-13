@@ -15,8 +15,7 @@ def std_dev_of_returns(prices_df):
 
 def portfolio_std(instrument_df, std_devs, correlation_matrix):
     portfolio_variance = 0
-    contributions = {}
-
+    marginal_risks = {}
     # Iterate over each pair of securities to calculate portfolio variance
     for i, (id_i, row_i) in enumerate(instrument_df.iterrows()):
         weight_i = row_i['weight']
@@ -36,5 +35,32 @@ def portfolio_std(instrument_df, std_devs, correlation_matrix):
 
     # Portfolio standard deviation is the square root of portfolio variance
     portfolio_std_dev = np.sqrt(portfolio_variance)
-    return portfolio_std_dev
+
+    # Calculate marginal risk for each instrument
+    for i, (id_i, row_i) in enumerate(instrument_df.iterrows()):
+        weight_i = row_i['weight']
+        name_i = row_i['instrument__name']
+        std_dev_i = std_devs[name_i]
+
+        # Marginal risk contribution for security i
+        marginal_contribution = 0
+        for j, (id_j, row_j) in enumerate(instrument_df.iterrows()):
+            weight_j = row_j['weight']
+            name_j = row_j['instrument__name']
+            std_dev_j = std_devs[name_j]
+
+            # Get correlation between securities i and j
+            correlation = correlation_matrix.loc[name_i, name_j]
+
+            # Contribution from security i in relation to security j
+            marginal_contribution += weight_j * std_dev_i * std_dev_j * correlation
+
+        # Adjust for the weight of security i
+        marginal_risks[name_i] = (2 * weight_i * marginal_contribution) / portfolio_std_dev
+
+    # print(marginal_risks)
+    # print(portfolio_std_dev)
+    return portfolio_std_dev, marginal_risks
+
+
 
