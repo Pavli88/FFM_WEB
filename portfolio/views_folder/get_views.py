@@ -137,44 +137,22 @@ from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfol
         }, safe=False)
 
 
+@csrf_exempt
 def get_nav(request):
-    if request.method == "GET":
-        navs = dynamic_mode_get(request_object=request.GET.items(),
-                                column_list=['date', 'date__gte', 'portfolio_code'],
-                                table=Nav)
-        return JsonResponse(pd.DataFrame(navs).sort_values(by=['date']).to_dict('records'), safe=False)
+    if request.method == "POST":
+        request_body = json.loads(request.body.decode('utf-8'))
+        print(request_body)
+        filters = {}
+        for key, value in request_body.items():
+            filters[key] = value
 
+        navs = pd.DataFrame(Nav.objects.filter(**filters).values())
+        # print(pd.DataFrame(navs))
+        grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
 
-def get_portfolio_nav(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-                        select pn.total, pp.portfolio_code, pp.currency 
-                        from portfolio_nav as pn, portfolio_portfolio as pp
-                        where pn.portfolio_code = pp.portfolio_code and pn.date = '{date}'
-                        order by pn.total desc;
-                        """.format(date=request.GET.get("date")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        return JsonResponse(df.to_dict('records'), safe=False)
-
-
-def get_portfolio_nav_grouped(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-                        select sum(pn.total) as total, pp.portfolio_type
-from portfolio_nav as pn, portfolio_portfolio as pp
-where pn.portfolio_code = pp.portfolio_code
-and pn.date = '{date}'
-group by pp.portfolio_type
-order by total desc;
-                        """.format(date=request.GET.get("date")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        return JsonResponse(df.to_dict('records'), safe=False)
+        # Resulting grouped data as a list of records for each date
+        result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+        return JsonResponse(result, safe=False)
 
 
 def get_total_pnl(request):
@@ -344,27 +322,6 @@ def get_monthly_pnl(request):
 
         row = cursor.fetchall()
         df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        return JsonResponse(df.to_dict('records'), safe=False)
-
-
-def get_historic_nav(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-        select pn.date, sum(pn.holding_nav) as holding_nav as total
-from portfolio_nav as pn,
-     portfolio_portfolio as p
-where p.portfolio_code = pn.portfolio_code
-  and p.portfolio_type = 'Automated'
-group by pn.date
-order by pn.date asc;
-        """)
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        df['diff'] = df['holding_nav']
-        df['drawdown'] = df['diff']
-        df = df.fillna(0)
         return JsonResponse(df.to_dict('records'), safe=False)
 
 

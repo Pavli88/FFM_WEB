@@ -18,10 +18,7 @@ get_views = [
     path('portfolios/get/exposures/', get_views.get_exposures),
     path('portfolios/get/nav/', get_views.get_nav),
     path('portfolios/get/total_pnl/', get_views.get_total_pnl),
-    path('portfolios/get/monthly_pnl/', get_views.get_monthly_pnl),
     path('portfolios/get/total_returns/', get_views.get_total_returns),
-    path('portfolios/get/portfolio_nav/', get_views.get_portfolio_nav),
-    path('portfolios/get/grouped/portfolio_nav/', get_views.get_portfolio_nav_grouped),
     path('portfolios/get/drawdown/', get_views.get_drawdown),
     path('portfolios/get/cashflow/', get_views.daily_cashflow_by_type),
     path('portfolios/get/portfolios/', get_views.get_portfolios),
@@ -32,7 +29,6 @@ get_views = [
     path('portfolios/get/transactions/', get_views.get_portfolio_transactions),
     path('portfolios/get/perf_dashboard/', get_views.get_perf_dashboard),
     path('portfolios/get/trade_routes/', get_views.get_trade_routes),
-    path('portfolios/get/historic_nav/', get_views.get_historic_nav),
     path('portfolios/get/port_groups/', get_views.get_port_groups),
     path('portfolios/get/position_exposures/', get_views.get_position_exposures),
 ]
