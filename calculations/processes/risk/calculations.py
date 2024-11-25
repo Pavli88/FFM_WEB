@@ -23,9 +23,14 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                 }}
 
     portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
+    portfolio_holding['pos_lev'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
+    leverage = abs(portfolio_holding['mv'].sum()/portfolio_holding['bv'].sum())
+    # print(portfolio_holding['mv'].sum()/portfolio_holding['bv'].sum())
+    # print(portfolio_holding['mv'].sum())
+    # print(portfolio_holding['weight'].sum())
     portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
     portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
-    # portfolio_holding['weight2'] = portfolio_holding['weight'].abs() / portfolio_holding['weight'].abs().sum()
+
     securities_list = portfolio_holding['instrument_id'].tolist()
     # print(portfolio_holding)
     # Fetch price data within date range for relevant securities
@@ -42,7 +47,8 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                     "exposures": [],
                     "port_std": 0,
                     "lev_exp": 0,
-                    "risk_structure": []
+                    "risk_structure": [],
+                    "leverage": 0
                 }}
 
     # Prepare data for correlation matrix calculation
@@ -54,12 +60,14 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
     # Calculate correlation matrix
     corr_matrix = correlation_matrix(prices_matrix)
     corr_dict = corr_matrix.to_dict()
-
+    # print(corr_matrix)
+    # print(std_devs)
+    # print(portfolio_holding)
     port_std, marginal_risks = portfolio_std(portfolio_holding, std_devs, corr_matrix)
     risk_contribs = [{"label": key, "value": float(value)} for key, value in marginal_risks.items()]
     # print(corr_matrix)
     # print(portfolio_holding)
-    # print(std_devs)
+    # print(port_std)
 
     return {"date": end_date.date(),
             "data": {
@@ -67,5 +75,6 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                 "exposures": portfolio_holding.to_dict('records'),
                 "port_std": port_std,
                 "lev_exp": portfolio_holding['weight'].sum(),
-                "risk_structure": risk_contribs
+                "risk_structure": risk_contribs,
+                "leverage": leverage
             }}

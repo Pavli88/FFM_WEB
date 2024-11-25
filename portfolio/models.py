@@ -258,6 +258,7 @@ class Holding(models.Model):
     mv = models.FloatField(default=0.0)
     bv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
+    pos_lev = models.FloatField(default=0.0)
     ugl = models.FloatField(default=0.0)
     rgl = models.FloatField(default=0.0)
     margin_rate = models.FloatField(default=0.0)

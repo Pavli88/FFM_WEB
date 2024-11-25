@@ -229,7 +229,7 @@ class Valuation():
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
-
+            print(aggregated_transactions[['quantity', 'ugl', 'margin_req']])
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
@@ -321,7 +321,8 @@ class Valuation():
 
         self.final_df = pd.concat([available_cash_df, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        self.final_df['weight'] = self.final_df['mv']/ self.final_df['bv'].sum()
+        self.final_df['weight'] = self.final_df['mv']/ self.final_df['mv'].sum()
+        self.final_df['pos_lev'] = self.final_df['mv'] / self.final_df['bv'].sum()
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
         self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
@@ -480,6 +481,7 @@ class Valuation():
                     mv=round(valuation['mv'], 4),
                     bv=round(valuation['bv'], 4),
                     weight=valuation['weight'],
+                    pos_lev=valuation['pos_lev'],
                     rgl=valuation['rgl'],
                     ugl=valuation['ugl'],
                     margin_rate=valuation['margin_rate'],

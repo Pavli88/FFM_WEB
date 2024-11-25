@@ -206,6 +206,7 @@ def get_holding(request):
                 'mv': holding.mv,
                 'bv': holding.bv,
                 'weight': holding.weight,
+                'pos_lev': holding.pos_lev,
                 'ugl': holding.ugl,
                 'rgl': holding.rgl,
             }
