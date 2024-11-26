@@ -4,7 +4,7 @@ import numpy as np
 def correlation_matrix(prices_df):
     returns_df = prices_df.pct_change().dropna()
     correlation_matrix = returns_df.corr()
-    return correlation_matrix
+    return correlation_matrix.fillna(0)
 
 
 def std_dev_of_returns(prices_df):
@@ -58,9 +58,35 @@ def portfolio_std(instrument_df, std_devs, correlation_matrix):
         # Adjust for the weight of security i
         marginal_risks[name_i] = (2 * weight_i * marginal_contribution) / portfolio_std_dev
 
+    desired_order = correlation_matrix.index.tolist()
+    instrument_df['instrument__name'] = pd.Categorical(instrument_df['instrument__name'], categories=desired_order, ordered=True)
+    instrument_df_sorted = instrument_df.sort_values('instrument__name').reset_index(drop=True)
+    # print(instrument_df_sorted)
+    # print("FIRST")
+    # print(correlation_matrix)
+    # print(instrument_df_sorted['weight'].to_list())
+    # print(desired_order)
     # print(marginal_risks)
     # print(portfolio_std_dev)
     return portfolio_std_dev, marginal_risks
+
+def portfolio_risk_calc(correlation_matrix, std_devs, weights):
+    asset_names = list(std_devs.keys())
+    std_dev_values = np.array(list(std_devs.values()))
+    covariance_matrix = np.outer(std_dev_values, std_dev_values) * correlation_matrix
+
+    # Portfolio variance and standard deviation (total risk)
+    portfolio_variance = weights.T @ covariance_matrix @ weights
+    portfolio_std_dev = np.sqrt(portfolio_variance)
+
+    # Calculate Marginal Risk Contributions (MRC)
+    mrcs = (covariance_matrix @ weights) / portfolio_std_dev
+    mrcs_dict = [{'label': asset, 'value': mrc} for asset, mrc in zip(asset_names, mrcs)]
+
+    # Calculate individual contributions
+    individual_contributions = weights * mrcs
+    contrib_dict = [{'label': asset, 'value': cont} for asset, cont in zip(asset_names, individual_contributions)]
+    return portfolio_std_dev, mrcs_dict, contrib_dict
 
 
 

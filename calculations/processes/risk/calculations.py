@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from portfolio.models import Holding
 from instrument.models import Prices
-from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_returns, portfolio_std
+from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_returns, portfolio_risk_calc
 
 
 def exposure_metrics(portfolio_code, pricing_period, end_date):
@@ -25,9 +25,9 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
     portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
     portfolio_holding['pos_lev'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
     leverage = portfolio_holding['mv'].abs().sum()/portfolio_holding['bv'].sum()
-    print(portfolio_holding['mv'].sum()/portfolio_holding['bv'].sum())
+    # print(portfolio_holding)
     # print(portfolio_holding['mv'].sum())
-    # print(portfolio_holding['weight'].sum())
+    # print(portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index())
     portfolio_holding = portfolio_holding[portfolio_holding['instrument__group'] != 'Cash']
     portfolio_holding = portfolio_holding.groupby(['instrument_id', 'instrument__name'])['weight'].sum().reset_index()
 
@@ -48,6 +48,7 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                     "port_std": 0,
                     "lev_exp": 0,
                     "risk_structure": [],
+                    "risk_contribs": [],
                     "leverage": 0
                 }}
 
@@ -55,26 +56,28 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
     data = prices_df.groupby('instrument__name')['price'].apply(list).to_dict()
     prices_matrix = pd.DataFrame(data)
 
+    # print(prices_matrix)
     std_devs = std_dev_of_returns(prices_matrix)
 
     # Calculate correlation matrix
     corr_matrix = correlation_matrix(prices_matrix)
     corr_dict = corr_matrix.to_dict()
-    # print(corr_matrix)
-    # print(std_devs)
-    # print(portfolio_holding)
-    port_std, marginal_risks = portfolio_std(portfolio_holding, std_devs, corr_matrix)
-    risk_contribs = [{"label": key, "value": float(value)} for key, value in marginal_risks.items()]
-    # print(corr_matrix)
-    # print(portfolio_holding)
-    # print(port_std)
+
+    desired_order = corr_matrix.index.tolist()
+    portfolio_holding['instrument__name'] = pd.Categorical(portfolio_holding['instrument__name'],
+                                                           categories=desired_order,
+                                                           ordered=True)
+    instrument_df_sorted = portfolio_holding.sort_values('instrument__name').reset_index(drop=True)
+
+    port_risk, mrcs, risk_contribs = portfolio_risk_calc(correlation_matrix=corr_matrix, std_devs=std_devs, weights=instrument_df_sorted['weight'].to_numpy())
 
     return {"date": end_date.date(),
             "data": {
                 "correlation": corr_dict,
                 "exposures": portfolio_holding.to_dict('records'),
-                "port_std": port_std,
+                "port_std": port_risk,
                 "lev_exp": portfolio_holding['weight'].sum(),
-                "risk_structure": risk_contribs,
+                "risk_structure": mrcs,
+                "risk_contribs": risk_contribs,
                 "leverage": leverage
             }}
