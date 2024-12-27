@@ -55,6 +55,7 @@ def new_price(request):
         except:
             price_list = [request_body]
         for price_record in price_list:
+            print(price_record)
             try:
                 price = Prices.objects.get(date=price_record['date'], instrument_id=int(price_record['instrument_id']))
                 price.price = float(price_record['price'])
