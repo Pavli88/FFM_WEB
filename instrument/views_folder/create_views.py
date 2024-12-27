@@ -49,19 +49,21 @@ def new_broker_ticker(request):
 def new_price(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
+
         try:
             price_list = request_body['data']
         except:
             price_list = [request_body]
         for price_record in price_list:
             try:
-                price = Prices.objects.get(date=price_record['date'], inst_code=int(price_record['inst_code']))
+                price = Prices.objects.get(date=price_record['date'], instrument_id=int(price_record['instrument_id']))
                 price.price = float(price_record['price'])
                 price.save()
             except:
                 Prices(date=price_record['date'],
-                       inst_code=int(price_record['inst_code']),
-                       price=float(price_record['price'])).save()
+                       instrument_id=int(price_record['instrument_id']),
+                       price=float(price_record['price']),
+                       source=price_record['source']).save()
         return JsonResponse({'response': 'Price inserted into database'}, safe=False)
 
 

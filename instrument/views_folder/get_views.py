@@ -18,23 +18,22 @@ def get_instruments(request):
 
         filters = {}
         for key, value in request_data.items():
-            print(key,value)
+            # print(key,value)
 
             if isinstance(value, list):
-                print('MULTIPLE')
+                # print('MULTIPLE')
                 if len(value) > 0:
                     filters[key + '__in'] = value
             else:
-                print('GROUP')
+                # print('GROUP')
                 if key == "name":
                     print('NAME')
                     filters['name__contains'] = value
                 else:
                     filters[key] = value
-        print(filters)
+        # print(filters)
         results = Instruments.objects.filter(**filters).values()
 
-        print(results)
         return JsonResponse(list(results), safe=False)
 
 
@@ -53,11 +52,11 @@ def get_broker_tickers(request):
 def get_prices(request):
     if request.method == "GET":
         prices = dynamic_mode_get(request_object=request.GET.items(),
-                                  column_list=['inst_code', 'date', 'date__gte', 'date__lte'],
+                                  column_list=['instrument_id', 'date', 'date__gte', 'date__lte'],
                                   table=Prices)
-        print(len(prices))
+        # print(len(prices))
         if len(prices) == 0:
             return JsonResponse(list({}), safe=False)
         else:
-            print(pd.DataFrame(prices).sort_values('date').to_dict('records'))
+            # print(pd.DataFrame(prices).sort_values('date').to_dict('records'))
             return JsonResponse(pd.DataFrame(prices).sort_values('date').to_dict('records'), safe=False)
