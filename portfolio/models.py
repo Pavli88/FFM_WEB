@@ -30,14 +30,15 @@ class Portfolio(models.Model):
     pricing_tolerance = models.IntegerField(default=30)
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-
-        if self.portfolio_type == 'Business':
-            self.portfolio_code = self.portfolio_code + '_BS'
-            PortGroup(portfolio_id=self.id).save()
-        if self.portfolio_type == 'Portfolio Group':
-            self.portfolio_code = self.portfolio_code + '_GROUP'
-        super().save(*args, **kwargs)
+        if is_new:
+            if self.portfolio_type == 'Business':
+                self.portfolio_code = self.portfolio_code + '_BS'
+                PortGroup(portfolio_id=self.id).save()
+            if self.portfolio_type == 'Portfolio Group':
+                self.portfolio_code = self.portfolio_code + '_GROUP'
+            super().save(*args, **kwargs)
 
 class TradeRoutes(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
