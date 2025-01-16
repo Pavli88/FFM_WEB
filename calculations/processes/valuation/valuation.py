@@ -1,6 +1,6 @@
 from weakref import finalize
 
-from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio, Cash, RGL, UGL, Margin
+from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio, Cash, RGL, UGL, Margin, PortGroup
 from instrument.models import Instruments, Prices, Tickers
 import pandas as pd
 import numpy as np
@@ -324,7 +324,6 @@ class Valuation():
         self.final_df['weight'] = self.final_df['mv']/ self.final_df['mv'].sum()
         self.final_df['pos_lev'] = self.final_df['mv'] / self.final_df['bv'].sum()
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
-        self.nav_calculation(calc_date=self.calc_date, previous_date=self.previous_date, portfolio_code=self.portfolio_code)
 
     def save_ugl(self, valuation_list):
 
@@ -388,21 +387,53 @@ class Valuation():
             self.redemptions = capital_cashflow[capital_cashflow['transaction_type'] == 'Redemption']['mv'].sum()
             return capital_cashflow['mv'].sum()
 
-    def nav_calculation(self, calc_date, previous_date, portfolio_code):
-        # NAV numbers
-        total_cash = round(self.final_df[self.final_df['trade_type'] == 'Available Cash']['mv'].sum(), 5)
-        current_nav = round(self.final_df['bv'].sum(), 5)
-        total_margin = round(self.final_df[self.final_df['trade_type'] == 'Margin']['mv'].sum(), 5)
-        total_asset_val = round(self.final_df[(self.final_df['trade_type'] == 'Sale') | (self.final_df['trade_type'] == 'Purchase')]['bv'].sum(), 5)
+    def nav_calculation(self, calc_date):
 
-        # P&L numbers
-        total_realized_pnl = round(self.final_df['rgl'].sum(), 5)
-        total_unrealized_pnl = round(self.final_df['ugl'].sum(), 5)
-        total_pnl = total_realized_pnl + total_unrealized_pnl
+        if self.portfolio_data.portfolio_type == 'Portfolio Group':
+            child_portfolio_ids = PortGroup.objects.filter(parent_id=self.portfolio_data.id).values_list(
+                'portfolio_id', flat=True)
+            print(child_portfolio_ids)
+            child_portfolios = Portfolio.objects.filter(id__in=child_portfolio_ids).values_list('portfolio_code',
+                                                                                                flat=True)
+            portfolio_navs = pd.DataFrame(
+                Nav.objects.filter(date=calc_date, portfolio_code__in=child_portfolios).values())
+            print(child_portfolios)
+            print(portfolio_navs)
+
+            total_cash = portfolio_navs['cash_val'].sum()
+            current_nav = portfolio_navs['holding_nav'].sum()
+            total_margin = portfolio_navs['margin'].sum()
+            total_asset_val = portfolio_navs['pos_val'].sum()
+
+            # P&L numbers
+            total_realized_pnl = portfolio_navs['pnl'].sum()
+            total_unrealized_pnl = portfolio_navs['unrealized_pnl'].sum()
+            total_pnl = portfolio_navs['total_pnl'].sum()
+
+            # Cash Flows
+            subscriptions = portfolio_navs['subscription'].sum()
+            redemptions = portfolio_navs['redemption'].sum()
+            total_cashflow = portfolio_navs['total_cf'].sum()
+        else:
+            # NAV numbers
+            total_cash = round(self.final_df[self.final_df['trade_type'] == 'Available Cash']['mv'].sum(), 5)
+            current_nav = round(self.final_df['bv'].sum(), 5)
+            total_margin = round(self.final_df[self.final_df['trade_type'] == 'Margin']['mv'].sum(), 5)
+            total_asset_val = round(self.final_df[(self.final_df['trade_type'] == 'Sale') | (self.final_df['trade_type'] == 'Purchase')]['bv'].sum(), 5)
+
+            # P&L numbers
+            total_realized_pnl = round(self.final_df['rgl'].sum(), 5)
+            total_unrealized_pnl = round(self.final_df['ugl'].sum(), 5)
+            total_pnl = total_realized_pnl + total_unrealized_pnl
+
+            # Cash Flows
+            subscriptions = self.subscriptions
+            redemptions = self.redemptions
+            total_cashflow = self.subscriptions + self.redemptions
         # print('REAL', total_realized_pnl, 'UNREAL', total_unrealized_pnl, total_unrealized_pnl + total_realized_pnl , self.calc_date)
 
         try:
-            nav = Nav.objects.get(date=calc_date, portfolio_code=portfolio_code)
+            nav = Nav.objects.get(date=calc_date, portfolio_code=self.portfolio_code)
             nav.cash_val = total_cash
             nav.margin = total_margin
             nav.pos_val = total_asset_val
@@ -415,13 +446,13 @@ class Valuation():
             nav.trade_return = 0
             nav.price_return = 0
             nav.cost = 0
-            nav.subscription = self.subscriptions
-            nav.redemption = self.redemptions
-            nav.total_cf = self.subscriptions + self.redemptions
+            nav.subscription = subscriptions
+            nav.redemption = redemptions
+            nav.total_cf = total_cashflow
             nav.save()
         except:
             Nav(date=calc_date,
-                portfolio_code=portfolio_code,
+                portfolio_code=self.portfolio_code,
                 pos_val=total_asset_val,
                 cash_val=total_cash,
                 margin=total_margin,
@@ -432,21 +463,21 @@ class Valuation():
                 total_pnl = total_pnl,
                 ugl_diff=0,
                 cost=0,
-                subscription=self.subscriptions,
-                redemption=self.redemptions,
-                total_cf=self.subscriptions + self.redemptions,
+                subscription=subscriptions,
+                redemption=redemptions,
+                total_cf=total_cashflow,
                 price_return=0,
                 trade_return=0).save()
 
         if len(self.error_list) == 0:
-            self.response_list.append({'portfolio_code': portfolio_code,
+            self.response_list.append({'portfolio_code': self.portfolio_code,
                                        'date': calc_date,
                                        'process': 'NAV Valuation',
                                        'exception': '-',
                                        'status': 'Completed',
                                        'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(self.portfolio_data.currency)})
         else:
-            self.response_list.append({'portfolio_code': portfolio_code,
+            self.response_list.append({'portfolio_code': self.portfolio_code,
                                        'date': calc_date,
                                        'process': 'NAV Valuation',
                                        'exception': 'Incorrect Valuation',
@@ -503,7 +534,7 @@ def calculate_holdings(portfolio_code, calc_date):
 
     valuation = Valuation(portfolio_code=portfolio_code, calc_date=calc_date)
 
-    if calc_date < valuation.portfolio_data.inception_date:
+    if calc_date < valuation.portfolio_data.inception_date and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
         valuation.add_error_message({'portfolio_code': portfolio_code,
                                      'date': calc_date,
                                      'process': 'Valuation',
@@ -513,7 +544,7 @@ def calculate_holdings(portfolio_code, calc_date):
         return valuation.send_responses()
 
     # Checking if fund is funded
-    if valuation.portfolio_data.status == 'Not Funded':
+    if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
         valuation.add_error_message({'portfolio_code': portfolio_code,
                                      'date': calc_date,
                                      'process': 'Valuation',
@@ -523,17 +554,22 @@ def calculate_holdings(portfolio_code, calc_date):
         return valuation.send_responses()
 
     while calc_date <= date.today():
-        if valuation.portfolio_data.weekend_valuation is False and (calc_date.weekday() == 6 or calc_date.weekday() == 5):
+        if valuation.portfolio_data.weekend_valuation is False and (
+                calc_date.weekday() == 6 or calc_date.weekday() == 5):
             print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
         else:
             if valuation.portfolio_data.weekend_valuation is False and calc_date.weekday() == 0:
                 time_back = 3
             else:
                 time_back = 1
-
             previous_date = calc_date - timedelta(days=time_back)
-            valuation.calc_date = calc_date
-            valuation.previous_date = previous_date
-            valuation.asset_valuation()
+
+            if valuation.portfolio_data.portfolio_type == 'Portfolio Group':
+                valuation.nav_calculation(calc_date=calc_date)
+            else:
+                valuation.calc_date = calc_date
+                valuation.previous_date = previous_date
+                valuation.asset_valuation()
+                valuation.nav_calculation(calc_date=calc_date)
         calc_date = calc_date + timedelta(days=1)
     return valuation.send_responses()
