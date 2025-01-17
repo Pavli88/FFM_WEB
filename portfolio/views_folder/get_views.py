@@ -376,3 +376,16 @@ def get_position_exposures(request):
     except Exception as e:
         # Log the error if logging is configured
         return JsonResponse({"error": "An unexpected error occurred."}, status=500)
+
+
+# from django.db.models import Sum, Case, When, F
+
+# Query to group by date and calculate positive and negative rgl
+# result = (
+#     PortfolioHolding.objects.values('date')
+#     .annotate(
+#         positive_rgl=Sum(Case(When(rgl__gt=0, then=F('rgl')), default=0)),
+#         negative_rgl=Sum(Case(When(rgl__lt=0, then=F('rgl')), default=0)),
+#     )
+#     .order_by('date')  # Optional: to order by date
+# )
