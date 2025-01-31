@@ -31,6 +31,7 @@ get_views = [
     path('portfolios/get/trade_routes/', get_views.get_trade_routes),
     path('portfolios/get/port_groups/', get_views.get_port_groups),
     path('portfolios/get/position_exposures/', get_views.get_position_exposures),
+    path('portfolios/group/<str:portfolio_code>/', get_views.get_child_portfolios),
 ]
 
 update_views = [

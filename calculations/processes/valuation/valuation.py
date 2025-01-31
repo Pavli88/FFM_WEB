@@ -234,7 +234,7 @@ class Valuation():
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
             total_bv = aggregated_transactions['bv'].sum()
-
+            print(total_margin)
             total_margin_df = pd.DataFrame({
                 'portfolio_code': [self.portfolio_code],
                 'date': [self.calc_date],

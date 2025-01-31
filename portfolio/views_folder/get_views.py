@@ -352,6 +352,7 @@ def get_position_exposures(request):
     try:
         request_body = json.loads(request.body.decode('utf-8'))
         portfolio_code = request_body["portfolio_code"]
+        print('EXXXXXXX', portfolio_code)
         period = int(request_body["period"]) + 2
         end_date = request_body["date"]
         sample_period = int(request_body["sample_period"])
@@ -377,6 +378,58 @@ def get_position_exposures(request):
         # Log the error if logging is configured
         return JsonResponse({"error": "An unexpected error occurred."}, status=500)
 
+
+def get_child_portfolios(request, portfolio_code):
+    if request.method == "GET":
+        query = """
+        WITH RECURSIVE portfolio_hierarchy AS (
+            -- Base case: Select the given Portfolio Group using its portfolio_code
+            SELECT 
+                p.id AS parent_id,
+                p.portfolio_name AS parent_name,
+                p.portfolio_type,
+                p.portfolio_code,
+                p.id AS child_id,
+                p.portfolio_name AS child_name,
+                p.portfolio_type AS child_type,
+                p.portfolio_code AS child_code
+            FROM portfolio_portfolio p
+            WHERE p.portfolio_code = %s  -- Parameterized query
+    
+            UNION ALL
+    
+            -- Recursive case: Find all children of the current parent in the hierarchy
+            SELECT 
+                ph.child_id AS parent_id,
+                ph.child_name AS parent_name,
+                ph.child_type AS portfolio_type,
+                ph.child_code AS portfolio_code,
+                p2.id AS child_id,
+                p2.portfolio_name AS child_name,
+                p2.portfolio_type AS child_type,
+                p2.portfolio_code AS child_code
+            FROM portfolio_hierarchy ph
+            JOIN portfolio_portgroup pr ON ph.child_id = pr.parent_id
+            JOIN portfolio_portfolio p2 ON pr.portfolio_id = p2.id
+        )
+        -- Retrieve only Automated portfolios from the hierarchy
+        SELECT child_id, child_name, child_type, child_code
+        FROM portfolio_hierarchy
+        WHERE child_type = 'Automated' or child_type = 'Trade';
+        """
+
+        # Execute query
+        with connection.cursor() as cursor:
+            cursor.execute(query, [portfolio_code])  # Prevents SQL injection
+            results = cursor.fetchall()
+
+        # Convert results to a list of dictionaries
+        data = [
+            row[3] for row in results
+        ]
+        print(data)
+        # Return JSON response
+        return JsonResponse({"child_portfolios": data}, safe=False)
 
 # from django.db.models import Sum, Case, When, F
 
