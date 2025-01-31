@@ -266,7 +266,6 @@ def get_drawdown(request):
 def get_total_returns(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
         filters = {}
         for key, value in request_body.items():
             filters[key] = value
@@ -352,7 +351,6 @@ def get_position_exposures(request):
     try:
         request_body = json.loads(request.body.decode('utf-8'))
         portfolio_code = request_body["portfolio_code"]
-        print('EXXXXXXX', portfolio_code)
         period = int(request_body["period"]) + 2
         end_date = request_body["date"]
         sample_period = int(request_body["sample_period"])
