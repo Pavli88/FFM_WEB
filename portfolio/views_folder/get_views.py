@@ -141,17 +141,16 @@ from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfol
 def get_nav(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
         filters = {}
         for key, value in request_body.items():
             filters[key] = value
 
         navs = pd.DataFrame(Nav.objects.filter(**filters).values())
-        # print(pd.DataFrame(navs))
         grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
 
         # Resulting grouped data as a list of records for each date
         result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+
         return JsonResponse(result, safe=False)
 
 

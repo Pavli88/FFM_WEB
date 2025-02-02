@@ -544,7 +544,7 @@ def calculate_holdings(portfolio_code, calc_date):
         return valuation.send_responses()
 
     # Checking if fund is funded
-    if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
+    if valuation.portfolio_data.status == 'Not Funded' and (valuation.portfolio_data.portfolio_type != 'Portfolio Group' or valuation.portfolio_data.portfolio_type != 'Business'):
         valuation.add_error_message({'portfolio_code': portfolio_code,
                                      'date': calc_date,
                                      'process': 'Valuation',
