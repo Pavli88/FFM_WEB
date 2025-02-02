@@ -389,16 +389,46 @@ class Valuation():
 
     def nav_calculation(self, calc_date):
 
-        if self.portfolio_data.portfolio_type == 'Portfolio Group':
+        if self.portfolio_data.portfolio_type == 'Portfolio Group' or self.portfolio_data.portfolio_type == 'Business':
             child_portfolio_ids = PortGroup.objects.filter(parent_id=self.portfolio_data.id).values_list(
                 'portfolio_id', flat=True)
-            print(child_portfolio_ids)
+
             child_portfolios = Portfolio.objects.filter(id__in=child_portfolio_ids).values_list('portfolio_code',
                                                                                                 flat=True)
             portfolio_navs = pd.DataFrame(
                 Nav.objects.filter(date=calc_date, portfolio_code__in=child_portfolios).values())
-            print(child_portfolios)
-            print(portfolio_navs)
+
+            expected_portfolios = set(child_portfolios)
+
+            # Check if portfolio_navs has data
+            if portfolio_navs.empty:
+                for port_code in expected_portfolios:
+                    self.error_list.append({'portfolio_code': self.portfolio_code,
+                                            'date': calc_date,
+                                            'process': 'Group Valuation',
+                                            'exception': 'Missing Fund Valuation',
+                                            'status': 'Error',
+                                            'comment': str(port_code) + ' missing fund valuation on ' + str(calc_date),
+                                            })
+                return self.error_list
+            else:
+                # Convert the 'portfolio_code' column from portfolio_navs to a set
+                available_portfolios = set(portfolio_navs['portfolio_code'])
+
+                # Find missing portfolios
+                missing_portfolios = expected_portfolios - available_portfolios
+
+                if missing_portfolios:
+                    for port_code in missing_portfolios:
+                        self.error_list.append({'portfolio_code': self.portfolio_code,
+                                                'date': calc_date,
+                                                'process': 'Group Valuation',
+                                                'exception': 'Missing Fund Valuation',
+                                                'status': 'Error',
+                                                'comment': str(port_code) + ' missing fund valuation on ' + str(
+                                                    calc_date),
+                                                })
+                    return self.error_list
 
             total_cash = portfolio_navs['cash_val'].sum()
             current_nav = portfolio_navs['holding_nav'].sum()
@@ -544,7 +574,7 @@ def calculate_holdings(portfolio_code, calc_date):
         return valuation.send_responses()
 
     # Checking if fund is funded
-    if valuation.portfolio_data.status == 'Not Funded' and (valuation.portfolio_data.portfolio_type != 'Portfolio Group' or valuation.portfolio_data.portfolio_type != 'Business'):
+    if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group' and valuation.portfolio_data.portfolio_type != 'Business':
         valuation.add_error_message({'portfolio_code': portfolio_code,
                                      'date': calc_date,
                                      'process': 'Valuation',
@@ -564,7 +594,7 @@ def calculate_holdings(portfolio_code, calc_date):
                 time_back = 1
             previous_date = calc_date - timedelta(days=time_back)
 
-            if valuation.portfolio_data.portfolio_type == 'Portfolio Group':
+            if valuation.portfolio_data.portfolio_type == 'Portfolio Group' or valuation.portfolio_data.portfolio_type == 'Business':
                 valuation.nav_calculation(calc_date=calc_date)
             else:
                 valuation.calc_date = calc_date
