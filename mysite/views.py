@@ -68,38 +68,21 @@ def logout_user(request):
 
 @csrf_exempt
 def login_user(request):
+    print('POSSSS')
     if request.method == "POST":
-        try:
-            request_data = json.loads(request.body.decode('utf-8'))
-            username = request_data.get("username")
-            password = request_data.get("password")
-
-            user = authenticate(request, username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-
-                # Serialize the user data
-                user_data = {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "is_staff": user.is_staff,
-                    "is_superuser": user.is_superuser,
-                    "date_joined": user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
-                    "last_login": user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else None
-                }
-
-                return JsonResponse({'userAllowedToLogin': True, 'user': user_data}, safe=False)
-
-            return JsonResponse({'response': 'User is not registered in the database!'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+        request_data = json.loads(request.body.decode('utf-8'))
+        print(request_data)
+        username = request_data["username"]
+        password = request_data["password"]
+        print(username, password)
+        user = authenticate(request, username=username, password=password)
+        print(user)
+        print(user, type(user))
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'userAllowedToLogin': True, 'userName': username}, safe=False)
+        elif user is None:
+            return JsonResponse({'response': 'User is not registered in the database!'}, safe=False)
 
 
 @csrf_exempt
