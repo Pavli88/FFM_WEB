@@ -1,12 +1,8 @@
 import pandas as pd
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from portfolio.models import TradeRoutes, Portfolio, Transaction, Cash, PortGroup
-from instrument.models import Instruments, Tickers, Prices
-from accounts.models import BrokerAccounts
+from portfolio.models import TradeRoutes, PortGroup, Portfolio, Nav, Transaction
 import json
-from app_functions.request_functions import *
-from app_functions.calculations import *
 from calculations.processes.valuation.valuation import calculate_holdings
 
 
@@ -65,6 +61,7 @@ def new_transaction(request):
         Transaction.objects.create(**request_body)
         calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
     return JsonResponse({"message": "Transaction is created!", 'success': True}, safe=False)
+
 
 @csrf_exempt
 def add_to_portgroup(request):

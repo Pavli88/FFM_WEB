@@ -4,7 +4,7 @@ from portfolio.views import *
 from portfolio.views_folder import create_views, get_views, update_view, delete_views, calculate_views
 
 calculate_views = [
-    path('portfolios/calculate/holding/', calculate_views.portfolio_holding),
+
 ]
 
 create_views = [

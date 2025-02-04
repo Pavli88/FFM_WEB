@@ -27,13 +27,8 @@ general_patterns = [
     path('', include('trade_app.urls')),
     path('', include('instrument.urls')),
     path('', include('calculations.urls')),
-    path('home/update/risk_per_trade/', update_risk_per_trade),
     path('home/system_messages/<str:type>/', system_messages),
     path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
-    path('new_task/', views.new_task),
-    path('new/schedule/', views.new_schedule),
-    path('delete/schedule/', views.delete_schedule),
-    path('update_task/', views.update_task),
     path('exceptions/update/', views.update_exception_by_id)
 ]
 
