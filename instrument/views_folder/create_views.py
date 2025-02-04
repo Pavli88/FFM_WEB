@@ -1,6 +1,4 @@
 import json
-from instrument.models import Prices
-from app_functions.request_functions import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from instrument.instrument_pricing.oanda_pricing import oanda_pricing

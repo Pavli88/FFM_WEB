@@ -1,14 +1,9 @@
-from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from mysite.my_functions.general_functions import *
 from calculations.processes.performance.total_return import total_return_calc
 from calculations.processes.valuation.valuation import calculate_holdings
-from portfolio.models import Portfolio, TotalReturn
-import pandas as pd
-from mysite.signals import notification_signal
-from mysite import consumers
 from datetime import datetime, timedelta
 
 @csrf_exempt

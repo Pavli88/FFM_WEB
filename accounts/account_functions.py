@@ -1,6 +1,4 @@
 from accounts.models import *
-from mysite.my_functions.general_functions import *
-
 
 def get_brokers():
     return BrokerAccounts.objects.filter().values()

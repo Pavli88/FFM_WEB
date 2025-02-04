@@ -1,19 +1,12 @@
 import json
 import numpy as np
 import pandas as pd
-from django.db.models import F
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
-from oandapy.api import Pricing
 from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup, TotalReturn
-from instrument.models import Prices
-from app_functions.request_functions import *
-from app_functions.calculations import calculate_transaction_pnl, drawdown_calc
-from calculations.processes.valuation.valuation import calculate_holdings
 from calculations.processes.risk.drawdown import calculate_drawdowns
-from calculations.processes.risk.metrics import correlation_matrix, std_dev_of_returns, portfolio_std
 from calculations.processes.risk.calculations import exposure_metrics
 from datetime import datetime, timedelta
 

@@ -1,7 +1,6 @@
 import os
 import sys
 from django.core.management.utils import get_random_secret_key
-from mysite.credentials import *
 import dj_database_url
 from pathlib import Path
 
