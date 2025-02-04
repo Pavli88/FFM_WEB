@@ -69,6 +69,7 @@ def logout_user(request):
 @csrf_exempt
 def login_user(request):
     if request.method == "POST":
+        ##
         try:
             request_data = json.loads(request.body.decode('utf-8'))
             username = request_data.get("username")
