@@ -10,14 +10,16 @@ from calculations.processes.valuation.valuation import calculate_holdings
 @csrf_exempt
 def delete_transaction(request):
     if request.method == "POST":
+
         request_data = json.loads(request.body.decode('utf-8'))
+        print("IDS",request_data['ids'])
         transaction = Transaction.objects.filter(id__in=request_data['ids'])
-        transaction_df = pd.DataFrame(transaction.values())
-        date = transaction_df['trade_date'].min()
-        portfolio_code = transaction_df['portfolio_code'][0]
-        print(date, portfolio_code)
+        # transaction_df = pd.DataFrame(transaction.values())
+        # date = transaction_df['trade_date'].min()
+        # portfolio_code = transaction_df['portfolio_code'][0]
+        # print(date, portfolio_code)
         transaction.delete()
-        calculate_holdings(portfolio_code=portfolio_code, calc_date=date)
+        # calculate_holdings(portfolio_code=portfolio_code, calc_date=date)
         return JsonResponse({'message': 'Transaction is deleted!', 'success': True}, safe=False)
 
 
