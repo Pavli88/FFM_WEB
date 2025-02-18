@@ -29,7 +29,9 @@ general_patterns = [
     path('', include('calculations.urls')),
     path('home/system_messages/<str:type>/', system_messages),
     path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
-    path('exceptions/update/', views.update_exception_by_id)
+    path('exceptions/update/', views.update_exception_by_id),
+    path("start-task/", start_task, name="start-task"),
+    path("celery-status/", check_celery_status, name="celery-status"),
 ]
 
 urlpatterns = get_patterns + general_patterns + create_patterns

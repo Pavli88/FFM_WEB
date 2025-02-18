@@ -12,6 +12,26 @@ from django.contrib.auth import logout, login, authenticate
 from mysite.models import *
 from portfolio.models import Portfolio
 
+from mysite.tasks import long_running_task
+from mysite.celery import app
+
+# TASK TEST
+def start_task(request):
+    # Start the Celery task asynchronously
+    print("KICKING OF TASK")
+    task = long_running_task.delay()
+
+    return JsonResponse({"task_id": task.id, "status": "Task started"})
+
+def check_celery_status(request):
+    inspector = app.control.inspect()
+    active_workers = inspector.ping()  # Ping all workers
+
+    if active_workers:
+        return JsonResponse({"status": "running", "workers": list(active_workers.keys())})
+    else:
+        return JsonResponse({"status": "stopped", "workers": []}, status=503)
+
 # MAIN PAGE ************************************************************************************************************
 def main_page_react(request):
     return render(request, 'index.html')
