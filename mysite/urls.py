@@ -15,10 +15,16 @@ create_patterns = [
 
 general_patterns = [
     path('', views.main_page_react),
-    path('user_login/', views.login_user),
-    path('user_logout/', views.logout_user),
-    path('user_register/', views.register),
     path('admin/', admin.site.urls),
+    path('user/login/', views.login_user),
+    path('user/logout/', views.logout_user),
+    path('user/register/', views.register),
+    path('user/change_password/', views.change_password),
+    path('home/system_messages/<str:type>/', system_messages),
+    path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
+    path('exceptions/update/', views.update_exception_by_id),
+    path("start-task/", start_task, name="start-task"),
+    path("celery-status/", check_celery_status, name="celery-status"),
     path('', include('reports.urls')),
     path('', include('risk.urls')),
     path('', include('signals.urls')),
@@ -27,11 +33,6 @@ general_patterns = [
     path('', include('trade_app.urls')),
     path('', include('instrument.urls')),
     path('', include('calculations.urls')),
-    path('home/system_messages/<str:type>/', system_messages),
-    path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
-    path('exceptions/update/', views.update_exception_by_id),
-    path("start-task/", start_task, name="start-task"),
-    path("celery-status/", check_celery_status, name="celery-status"),
 ]
 
 urlpatterns = get_patterns + general_patterns + create_patterns
