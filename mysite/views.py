@@ -1,6 +1,9 @@
 import json
 from mysite.my_functions.general_functions import *
-
+from django.contrib.auth.hashers import check_password
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 # Django imports
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
@@ -120,6 +123,29 @@ def register(request):
                       inception_date=date.today(),
                       owner=user_name).save()
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
+
+
+@csrf_exempt
+def change_password(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            current_password = data.get("current_password")
+            new_password = data.get("new_password")
+
+            user = request.user
+            if not user.check_password(current_password):
+                return JsonResponse({"error": "Current password is incorrect"}, status=400)
+
+            user.set_password(new_password)
+            user.save()
+
+            return JsonResponse({"message": "Password changed successfully"}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
 # **********************************************************************************************************************
