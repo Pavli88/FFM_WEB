@@ -39,68 +39,11 @@ def check_celery_status(request):
 def main_page_react(request):
     return render(request, 'index.html')
 
-
-def main_page(request):
-    print("=========")
-    print("MAIN PAGE")
-    print("=========")
-
-    if request.user.is_authenticated is True:
-        print("User has already logged in")
-        print("Redirecting to home page")
-        return redirect('home_page')
-    else:
-        print("Anonimous user! Login is requested!")
-
-    return render(request, 'login.html')
-
-
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def logout_user(request):
-
-    print("===========")
-    print("USER LOGOUT")
-    print("===========")
-    print("Redirecting to logout page")
-
     logout(request)
     return JsonResponse({'response': 'User logged out!'}, safe=False)
-
-
-@csrf_exempt
-def login_user(request):
-    if request.method == "POST":
-        try:
-            request_data = json.loads(request.body.decode('utf-8'))
-            username = request_data.get("username")
-            password = request_data.get("password")
-
-            user = authenticate(request, username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-
-                # Serialize the user data
-                user_data = {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "is_staff": user.is_staff,
-                    "is_superuser": user.is_superuser,
-                    "date_joined": user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
-                    "last_login": user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else None
-                }
-
-                return JsonResponse({'userAllowedToLogin': True, 'user': user_data}, safe=False)
-
-            return JsonResponse({'response': 'User is not registered in the database!'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def register(request):
@@ -125,27 +68,27 @@ def register(request):
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
 
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def change_password(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            current_password = data.get("current_password")
-            new_password = data.get("new_password")
+    print("change")
+    user = request.user
+    data = request.data
+    print(data, user)
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
 
-            user = request.user
-            if not user.check_password(current_password):
-                return JsonResponse({"error": "Current password is incorrect"}, status=400)
+    if not current_password or not new_password:
+        return JsonResponse({"error": "Both current and new passwords are required."}, status=400)
 
-            user.set_password(new_password)
-            user.save()
+    if not user.check_password(current_password):
+        return JsonResponse({"error": "Current password is incorrect."}, status=400)
 
-            return JsonResponse({"message": "Password changed successfully"}, status=200)
+    user.set_password(new_password)
+    user.save()
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+    return JsonResponse({"message": "Password changed successfully!"}, status=200)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
 # **********************************************************************************************************************
@@ -183,6 +126,21 @@ def update_exception_by_id(request):
         exception.status = request.GET.get('status')
         exception.save()
         return JsonResponse(list(''), safe=False)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_data(request):
+    user = request.user  # Get the authenticated user
+    user_data = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime
+    }
+    return JsonResponse(user_data, safe=False)
 
 
 
