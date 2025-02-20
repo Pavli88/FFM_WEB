@@ -44,6 +44,7 @@ delete_views = [
     path('portfolios/delete/transaction/', delete_views.delete_transaction),
     path('portfolios/delete/trade_routing/', delete_views.delete_trade_routing),
     path('portfolios/delete/port_group/', delete_views.delete_port_group),
+    path('portfolios/delete/portfolios/', delete_views.delete_portfolio),
 ]
 
 other_patterns = [

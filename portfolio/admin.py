@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Positions, Portfolio
+from .models import Portfolio, Nav, Transaction
 
-admin.site.register(Positions)
+admin.site.register(Nav)
 admin.site.register(Portfolio)
+admin.site.register(Transaction)
 

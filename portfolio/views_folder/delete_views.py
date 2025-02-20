@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
-from portfolio.models import Transaction, TradeRoutes, PortGroup
+from portfolio.models import Transaction, TradeRoutes, PortGroup, Portfolio
 import json
 import pandas as pd
 from calculations.processes.valuation.valuation import calculate_holdings
@@ -38,3 +38,12 @@ def delete_port_group(request):
         request_data = json.loads(request.body.decode('utf-8'))
         PortGroup.objects.get(id=request_data['id']).delete()
         return JsonResponse({'message': 'Portfolio relationship is deleted!', 'success': True}, safe=False)
+
+@csrf_exempt
+def delete_portfolio(request):
+    if request.method == "POST":
+        print('DELETE PORTFOLIOS')
+        request_data = json.loads(request.body.decode('utf-8'))
+        print(request_data['ids'])
+        # Portfolio.objects.get(id__in=request_data['ids']).delete()
+        return JsonResponse({'message': 'Portfolio is deleted!', 'success': True}, safe=False)
