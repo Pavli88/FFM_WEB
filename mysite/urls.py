@@ -15,7 +15,7 @@ create_patterns = [
 general_patterns = [
     path('', views.main_page_react),
     path('admin/', admin.site.urls),
-    path('user/login/', views.login_user),
+    path('api/user/login/', views.login_user),
     path('user/logout/', views.logout_user),
     path('user/register/', views.register),
     path('user/change_password/', views.change_password),
