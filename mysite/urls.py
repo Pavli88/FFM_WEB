@@ -13,15 +13,11 @@ create_patterns = [
 ]
 
 general_patterns = [
-    path('', views.main_page_react),
-    path('admin/', admin.site.urls),
+    path('api/admin/', admin.site.urls),
     path('api/user/login/', views.login_user),
     path('api/user/logout/', views.logout_user),
     path('api/user/register/', views.register),
     path('api/user/change_password/', views.change_password),
-    path('home/system_messages/<str:type>/', system_messages),
-    path('home/verify_sys_msg/<str:msg_id>/', verify_system_message),
-    path('exceptions/update/', views.update_exception_by_id),
     path("start-task/", start_task, name="start-task"),
     path("celery-status/", check_celery_status, name="celery-status"),
     path('api/', include('reports.urls')),

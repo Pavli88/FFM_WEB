@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 # Django imports
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
@@ -36,25 +37,6 @@ def check_celery_status(request):
         return JsonResponse({"status": "stopped", "workers": []}, status=503)
 
 # MAIN PAGE ************************************************************************************************************
-def main_page_react(request):
-    return render(request, 'index.html')
-
-
-def main_page(request):
-    print("=========")
-    print("MAIN PAGE")
-    print("=========")
-
-    if request.user.is_authenticated is True:
-        print("User has already logged in")
-        print("Redirecting to home page")
-        return redirect('home_page')
-    else:
-        print("Anonimous user! Login is requested!")
-
-    return render(request, 'login.html')
-
-
 def logout_user(request):
 
     print("===========")
@@ -148,41 +130,6 @@ def change_password(request):
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
-# **********************************************************************************************************************
-# HOME PAGE
-# @login_required(login_url="/")
-def system_messages(request, type):
-    if request.method == "GET":
-        date = request.GET.get("date")
-        if type == 'All':
-            system_messages = SystemMessages.objects.filter(date=date).order_by('-id').values()
-        elif type == 'not_verified':
-            system_messages = SystemMessages.objects.filter(date=date).filter(verified=0).order_by('-id').values()
-        return JsonResponse(list(system_messages), safe=False)
-
-
-def verify_system_message(request, msg_id):
-    if request.method == "GET":
-        msg = SystemMessages.objects.get(id=msg_id)
-        msg.verified = 1
-        msg.save()
-
-        return JsonResponse(list({}), safe=False)
-
-def get_exceptions(request):
-    if request.method == "GET":
-        exceptions = Exceptions.objects.filter(entity_code=request.GET.get('entity_code'),
-                                               calculation_date=request.GET.get('calculation_date'),
-                                               exception_level=request.GET.get('exception_level')).values()
-        return JsonResponse(list(exceptions), safe=False)
-
-
-def update_exception_by_id(request):
-    if request.method == "GET":
-        exception = Exceptions.objects.get(id=request.GET.get('id'))
-        exception.status = request.GET.get('status')
-        exception.save()
-        return JsonResponse(list(''), safe=False)
 
 
 
