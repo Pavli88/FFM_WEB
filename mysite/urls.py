@@ -4,10 +4,6 @@ from . import views, consumers
 from mysite.views_folder import get_views, data_operations
 from risk.views import *
 
-get_patterns = [
-    path('exceptions/get/', views.get_exceptions),
-]
-
 create_patterns = [
     path('data/import/', data_operations.data_import),
 ]
@@ -30,5 +26,5 @@ general_patterns = [
     path('api/', include('calculations.urls')),
 ]
 
-urlpatterns = get_patterns + general_patterns + create_patterns
+urlpatterns = general_patterns + create_patterns
 
