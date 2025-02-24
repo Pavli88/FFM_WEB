@@ -12,7 +12,7 @@ create_view = [
 ]
 
 update_views = [
-    path('trade_page/portfolio/close_transaction/', update_views.close_transaction),
+
 ]
 
 delete_views = [

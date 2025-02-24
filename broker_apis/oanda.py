@@ -126,7 +126,7 @@ class OandaV20:
         return r.response
 
 if __name__ == "__main__":
-    o = OandaV20(access_token="acc56198776d1ce7917137567b23f9a1-c5f7a43c7c6ef8563d0ebdd4a3b496ac",
+    o = OandaV20(access_token="8266e498b3159a1171752e892daded37-c7d7ced541a949a9a39fb37c243d5f74",
                  account_id="001-004-2840244-004",
                  environment="live")
 
@@ -136,6 +136,8 @@ if __name__ == "__main__":
         "to": "2023-10-04"
     }
 
-    data = o.candle_data(instrument='HUF_USD',
-                         params=params)
+    # data = o.candle_data(instrument='HUF_USD',
+    #                      params=params)
+    data = o.position_list()
     print(data)
+    print(pd.DataFrame(data['positions']['long']))
