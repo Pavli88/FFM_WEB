@@ -229,12 +229,12 @@ class Valuation():
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
-            print(aggregated_transactions[['quantity', 'ugl', 'margin_req']])
+
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
             total_bv = aggregated_transactions['bv'].sum()
-            print(total_margin)
+
             total_margin_df = pd.DataFrame({
                 'portfolio_code': [self.portfolio_code],
                 'date': [self.calc_date],

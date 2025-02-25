@@ -178,11 +178,12 @@ def get_holding(request):
         date = request_body['date']
         portfolio_codes = request_body['portfolio_code']
         holdings = Holding.objects.select_related('instrument').filter(date=date).filter(portfolio_code__in=portfolio_codes)
+
         holdings_list = [
             {
                 'portfolio_code': holding.portfolio_code,
                 'date': holding.date,
-                'trd_id': holding.id,
+                'trd_id': holding.trd_id,
                 'inv_num': holding.inv_num,
                 'trade_date': holding.trade_date,
                 'trade_type': holding.trade_type,
@@ -204,7 +205,8 @@ def get_holding(request):
             }
             for holding in holdings
         ]
-        return JsonResponse(pd.DataFrame(holdings_list).to_dict('records'), safe=False)
+        response_df = pd.DataFrame(holdings_list).fillna(0)
+        return JsonResponse(response_df.to_dict('records'), safe=False)
 
 def get_exposures(request):
     if request.method == "GET":
