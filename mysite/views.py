@@ -1,21 +1,12 @@
 import json
-from mysite.my_functions.general_functions import *
-from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-# Django imports
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
-from django.contrib.auth.hashers import check_password
 from .serializers import ChangePasswordSerializer
-
-# Database imports
-from mysite.models import *
-from portfolio.models import Portfolio
 
 from mysite.tasks import long_running_task
 from mysite.celery import app
@@ -61,12 +52,6 @@ def register(request):
                                            password=request_data["password"],
                                            email=request_data["email"])
             user.save()
-            Portfolio(portfolio_name='Main Portfolio',
-                      portfolio_code='MAIN_' + user_name.upper(),
-                      portfolio_type='Main',
-                      status="active",
-                      inception_date=date.today(),
-                      owner=user_name).save()
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
 @api_view(['POST'])
@@ -99,11 +84,6 @@ def change_password(request):
 
     # If serializer validation fails, return the first error message
     return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
-
-
-
-
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
