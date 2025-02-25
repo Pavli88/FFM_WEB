@@ -1,15 +1,15 @@
 import json
 from mysite.my_functions.general_functions import *
-from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 # Django imports
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.contrib.auth.models import User, auth
-from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth import logout
+from django.contrib.auth.hashers import check_password
+from .serializers import ChangePasswordSerializer
 
 # Database imports
 from mysite.models import *
@@ -67,27 +67,37 @@ def register(request):
                       owner=user_name).save()
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Ensures only authenticated users can access this
 def change_password(request):
-    print("change")
-    user = request.user
-    data = request.data
-    print(data, user)
-    current_password = data.get("current_password")
-    new_password = data.get("new_password")
+    user = request.user  # Get the authenticated user
+    serializer = ChangePasswordSerializer(data=request.data)
 
-    if not current_password or not new_password:
-        return JsonResponse({"error": "Both current and new passwords are required."}, status=400)
+    if serializer.is_valid():
+        old_password = serializer.validated_data['old_password']
+        new_password = serializer.validated_data['new_password']
 
-    if not user.check_password(current_password):
-        return JsonResponse({"error": "Current password is incorrect."}, status=400)
+        # 1. Check if the old password is correct
+        if not user.check_password(old_password):  # ✅ Correct usage
+            return JsonResponse({"error": "Old password is incorrect."}, status=400)
 
-    user.set_password(new_password)
-    user.save()
+        # 2. Ensure new password is different from the old one
+        if old_password == new_password:
+            return JsonResponse({"error": "New password cannot be the same as the old password."}, status=400)
 
-    return JsonResponse({"message": "Password changed successfully!"}, status=200)
+        # 3. Check password length and strength
+        if len(new_password) < 6:
+            return JsonResponse({"error": "New password must be at least 6 characters long."}, status=400)
+
+        # 4. Successfully change the password
+        user.set_password(new_password)
+        user.save()
+
+        return JsonResponse({"message": "Password changed successfully!"}, status=200)
+
+    # If serializer validation fails, return the first error message
+    return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
+
 
 
 
