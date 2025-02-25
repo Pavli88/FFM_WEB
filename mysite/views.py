@@ -4,13 +4,14 @@ from django.contrib.auth.hashers import check_password
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 # Django imports
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.contrib.auth.models import User, auth
-from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth import logout
+from django.contrib.auth.hashers import check_password
+from .serializers import ChangePasswordSerializer
 
 # Database imports
 from mysite.models import *
@@ -37,52 +38,14 @@ def check_celery_status(request):
         return JsonResponse({"status": "stopped", "workers": []}, status=503)
 
 # MAIN PAGE ************************************************************************************************************
+def main_page_react(request):
+    return render(request, 'index.html')
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def logout_user(request):
-
-    print("===========")
-    print("USER LOGOUT")
-    print("===========")
-    print("Redirecting to logout page")
-
     logout(request)
     return JsonResponse({'response': 'User logged out!'}, safe=False)
-
-
-@csrf_exempt
-def login_user(request):
-    if request.method == "POST":
-        try:
-            request_data = json.loads(request.body.decode('utf-8'))
-            username = request_data.get("username")
-            password = request_data.get("password")
-
-            user = authenticate(request, username=username, password=password)
-
-            if user is not None:
-                login(request, user)
-
-                # Serialize the user data
-                user_data = {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "is_staff": user.is_staff,
-                    "is_superuser": user.is_superuser,
-                    "date_joined": user.date_joined.strftime('%Y-%m-%d %H:%M:%S'),
-                    "last_login": user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else None
-                }
-
-                return JsonResponse({'userAllowedToLogin': True, 'user': user_data}, safe=False)
-
-            return JsonResponse({'response': 'User is not registered in the database!'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def register(request):
@@ -106,30 +69,55 @@ def register(request):
                       owner=user_name).save()
             return JsonResponse({'response': 'Succesfull registration'}, safe=False)
 
-
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Ensures only authenticated users can access this
 def change_password(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            current_password = data.get("current_password")
-            new_password = data.get("new_password")
+    user = request.user  # Get the authenticated user
+    serializer = ChangePasswordSerializer(data=request.data)
 
-            user = request.user
-            if not user.check_password(current_password):
-                return JsonResponse({"error": "Current password is incorrect"}, status=400)
+    if serializer.is_valid():
+        old_password = serializer.validated_data['old_password']
+        new_password = serializer.validated_data['new_password']
 
-            user.set_password(new_password)
-            user.save()
+        # 1. Check if the old password is correct
+        if not user.check_password(old_password):  # ✅ Correct usage
+            return JsonResponse({"error": "Old password is incorrect."}, status=400)
 
-            return JsonResponse({"message": "Password changed successfully"}, status=200)
+        # 2. Ensure new password is different from the old one
+        if old_password == new_password:
+            return JsonResponse({"error": "New password cannot be the same as the old password."}, status=400)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        # 3. Check password length and strength
+        if len(new_password) < 6:
+            return JsonResponse({"error": "New password must be at least 6 characters long."}, status=400)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+        # 4. Successfully change the password
+        user.set_password(new_password)
+        user.save()
+
+        return JsonResponse({"message": "Password changed successfully!"}, status=200)
+
+    # If serializer validation fails, return the first error message
+    return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
 
 
+
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_data(request):
+    user = request.user  # Get the authenticated user
+    user_data = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime
+    }
+    return JsonResponse(user_data, safe=False)
 
 
 

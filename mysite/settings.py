@@ -3,6 +3,7 @@ import sys
 from django.core.management.utils import get_random_secret_key
 import dj_database_url
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_crontab',
     'django_celery_beat',
+    "rest_framework",
+    "rest_framework_simplejwt",
     'risk',
     'reports',
     'signals',
@@ -49,7 +52,6 @@ INSTALLED_APPS = [
     'instrument',
     'calculations',
     'corsheaders',
-
 ]
 
 MIDDLEWARE = [
@@ -62,6 +64,21 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Configure REST Framework to use JWT
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # Short-lived access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # Longer-lived refresh token
+    "ROTATE_REFRESH_TOKENS": True,  # Issues new refresh token on refresh
+    "BLACKLIST_AFTER_ROTATION": True,  # Blacklist old refresh tokens
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Token sent in Authorization header
+}
 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
