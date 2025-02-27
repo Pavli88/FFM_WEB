@@ -30,7 +30,7 @@ def create_portfolio(request):
         body_data = json.loads(request.body.decode('utf-8'))
         if Portfolio.objects.filter(portfolio_code=body_data["port_code"]).exists():
             return JsonResponse({'msg': "Portfolio already exists!", 'port': 0}, status=400)
-
+        # test
         port = Portfolio(
             portfolio_name=body_data["port_name"],
             portfolio_code=body_data["port_code"],
