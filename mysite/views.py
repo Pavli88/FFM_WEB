@@ -1,13 +1,14 @@
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.password_validation import validate_password
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
+from rest_framework.exceptions import ValidationError
 from .serializers import ChangePasswordSerializer
-
 from mysite.tasks import long_running_task
 from mysite.celery import app
 
@@ -64,19 +65,22 @@ def change_password(request):
         old_password = serializer.validated_data['old_password']
         new_password = serializer.validated_data['new_password']
 
-        # 1. Check if the old password is correct
-        if not user.check_password(old_password):  # ✅ Correct usage
+        # 1️⃣ Check if the old password is correct
+        if not user.check_password(old_password):
             return JsonResponse({"error": "Old password is incorrect."}, status=400)
 
-        # 2. Ensure new password is different from the old one
+        # 2️⃣ Ensure new password is different from old password
         if old_password == new_password:
             return JsonResponse({"error": "New password cannot be the same as the old password."}, status=400)
 
-        # 3. Check password length and strength
-        if len(new_password) < 6:
-            return JsonResponse({"error": "New password must be at least 6 characters long."}, status=400)
+        # 3️⃣ Validate the new password using Django's built-in password validator
+        try:
+            validate_password(new_password, user)  # Only validate the new password
+        except ValidationError as e:
+            # If validation fails, return the error message
+            return JsonResponse({"error": e.messages[0]}, status=400)
 
-        # 4. Successfully change the password
+        # 4️⃣ Successfully change the password
         user.set_password(new_password)
         user.save()
 
@@ -84,6 +88,8 @@ def change_password(request):
 
     # If serializer validation fails, return the first error message
     return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
+
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
