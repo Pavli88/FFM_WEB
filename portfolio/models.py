@@ -1,12 +1,7 @@
 from django.db import models
 from datetime import datetime
-import pandas as pd
-from django.db.models import Sum
-from datetime import timedelta
-from datetime import date
-from django.db import connection
 from instrument.models import Instruments, Tickers
-
+from django.contrib.auth.models import User
 
 class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
@@ -20,6 +15,7 @@ class Portfolio(models.Model):
     termination_date = models.DateField(null=True)
     is_terminated = models.CharField(max_length=30, default=False)
     owner = models.CharField(max_length=30, default="")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user", default=1)
     manager = models.CharField(max_length=30, default="")
     public = models.BooleanField(default=False)
     is_automated = models.BooleanField(default=False)
@@ -76,6 +72,7 @@ class Nav(models.Model):
 
 class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
+    # portfolio_code = models.ForeignKey(Portfolio, on_delete=models.CASCADE, to_field="portfolio_code", db_column="portfolio_code", default="")
     security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
     option = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
@@ -108,7 +105,7 @@ class Transaction(models.Model):
             raise ValidationError("Security must be provided.")
 
         instrument = Instruments.objects.get(id=self.security_id)
-
+        print(self.transaction_link_code, self.id)
         if self.transaction_link_code == 0:
             super().save(*args, **kwargs)
             self.transaction_link_code = self.id

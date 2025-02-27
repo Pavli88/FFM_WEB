@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from portfolio.models import TradeRoutes, PortGroup, Portfolio, Nav, Transaction
 import json
 from calculations.processes.valuation.valuation import calculate_holdings
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
 @csrf_exempt
@@ -21,26 +23,29 @@ def create_robot(request):
             return JsonResponse({'response': 'Security mapping is completed'}, safe=False)
 
 
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])  # Require authentication
 def create_portfolio(request):
-    if request.method == "POST":
-        print('test')
+    try:
         body_data = json.loads(request.body.decode('utf-8'))
-        print(body_data)
-        try:
-            port = Portfolio(portfolio_name=body_data["port_name"],
-                             portfolio_code=body_data["port_code"],
-                             portfolio_type=body_data["port_type"],
-                             currency=body_data["port_currency"],
-                             inception_date=body_data["inception_date"],
-                             owner=body_data["owner"])
-            port.save()
-            Nav(date=body_data["inception_date"], portfolio_code=body_data["port_code"]).save()
+        if Portfolio.objects.filter(portfolio_code=body_data["port_code"]).exists():
+            return JsonResponse({'msg': "Portfolio already exists!", 'port': 0}, status=400)
 
-            return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, safe=False)
-        except:
-            return JsonResponse({'msg': "Portfolio exists in database!", 'port': 0}, safe=False)
-    return JsonResponse({'msg': "Invalid request method"}, status=405)
+        port = Portfolio(
+            portfolio_name=body_data["port_name"],
+            portfolio_code=body_data["port_code"],
+            portfolio_type=body_data["port_type"],
+            currency=body_data["port_currency"],
+            inception_date=body_data["inception_date"],
+            user=request.user
+        )
+        port.save()
+
+        Nav.objects.create(date=body_data["inception_date"], portfolio_code=body_data["port_code"])
+
+        return JsonResponse({'msg': "New Portfolio is created!", 'port': port.id}, status=201)
+    except KeyError as e:
+        return JsonResponse({'msg': f"Missing field: {str(e)}"}, status=400)
 
 
 @csrf_exempt

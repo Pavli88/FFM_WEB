@@ -9,24 +9,25 @@ from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, 
 from calculations.processes.risk.drawdown import calculate_drawdowns
 from calculations.processes.risk.calculations import exposure_metrics
 from datetime import datetime, timedelta
+from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_portfolios(request):
-    if request.method == "GET":
-        filters = {key: value for key, value in request.GET.items() if value}
+    print(request.user)
+    filters = {key: value for key, value in request.GET.items() if value}
+    filters['user'] = request.user
+    try:
+        portfolios = Portfolio.objects.select_related('user').filter(**filters).values()
+        portfolios_list = list(portfolios)
+        return JsonResponse(portfolios_list, safe=False, status=200)
 
-        try:
-            portfolios = Portfolio.objects.filter(**filters).values()
-            portfolios_list = list(portfolios)
-            return JsonResponse(portfolios_list, safe=False, status=200)
-
-        except Exception as e:
-            # Handle errors, such as invalid filters
-            return JsonResponse({"error": str(e)}, status=400)
-
-        # Return bad request if method is not GET
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
+    except Exception as e:
+        # Handle errors, such as invalid filters
+        return JsonResponse({"error": str(e)}, status=400)
 
 @csrf_exempt
 def get_portfolio_transactions(request):
@@ -319,25 +320,28 @@ def get_monthly_pnl(request):
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
-@require_GET
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_port_groups(request):
-    port_groups = PortGroup.objects.select_related('portfolio').all()
-    print(port_groups)
-    g = []
-    for group in port_groups:
-        g.append({
+    # Get the logged-in user
+    owner = request.user
+
+    # Filter PortGroup where the related Portfolio's owner is the logged-in user
+    port_groups = PortGroup.objects.select_related('portfolio').filter(portfolio__owner=owner)
+
+    # Format response
+    g = [
+        {
             'id': group.id,
             'name': group.portfolio.portfolio_name,
             'parent_id': group.parent_id,
             'portfolio_code': group.portfolio.portfolio_code,
             'portfolio_type': group.portfolio.portfolio_type,
-        })
+        }
+        for group in port_groups
+    ]
+
     return JsonResponse(g, safe=False, status=200)
-    # try:
-    #
-    #
-    # except Exception as e:
-    #     return JsonResponse({'error': str(e)}, status=500)
 
 
 @csrf_exempt

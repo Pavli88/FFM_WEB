@@ -126,18 +126,46 @@ class OandaV20:
         return r.response
 
 if __name__ == "__main__":
-    o = OandaV20(access_token="8266e498b3159a1171752e892daded37-c7d7ced541a949a9a39fb37c243d5f74",
-                 account_id="001-004-2840244-004",
-                 environment="live")
+    # o = OandaV20(access_token="8266e498b3159a1171752e892daded37-c7d7ced541a949a9a39fb37c243d5f74",
+    #              account_id="001-004-2840244-004",
+    #              environment="live")
+    #
+    # params = {
+    #     "granularity": 'D',
+    #     "from": "2023-01-01",
+    #     "to": "2023-10-04"
+    # }
+    #
+    # # data = o.candle_data(instrument='HUF_USD',
+    # #                      params=params)
+    # data = o.position_list()
+    # print(data)
+    # print(pd.DataFrame(data['positions']['long']))
 
-    params = {
-        "granularity": 'D',
-        "from": "2023-01-01",
-        "to": "2023-10-04"
-    }
+    import requests
 
-    # data = o.candle_data(instrument='HUF_USD',
-    #                      params=params)
-    data = o.position_list()
-    print(data)
-    print(pd.DataFrame(data['positions']['long']))
+
+    def get_transaction_details(account_id, transaction_id, access_token):
+        base_url = "https://api-fxtrade.oanda.com/v3/accounts"
+        url = f"{base_url}/{account_id}/transactions/{transaction_id}"
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return f"Error: {response.status_code}, {response.text}"
+
+
+    # Replace with your actual values
+    ACCOUNT_ID = "001-004-2840244-004"
+    TRANSACTION_ID = "103100"
+    ACCESS_TOKEN = "8266e498b3159a1171752e892daded37-c7d7ced541a949a9a39fb37c243d5f74"
+
+    transaction_details = get_transaction_details(ACCOUNT_ID, TRANSACTION_ID, ACCESS_TOKEN)
+    print(transaction_details)
