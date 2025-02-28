@@ -1,14 +1,14 @@
 import json
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.password_validation import validate_password
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.contrib.auth.models import User
 from django.contrib.auth import logout
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .serializers import ChangePasswordSerializer
+from .registerSerializer import RegisterSerializer
 from mysite.tasks import long_running_task
 from mysite.celery import app
 
@@ -39,21 +39,27 @@ def logout_user(request):
     logout(request)
     return JsonResponse({'response': 'User logged out!'}, safe=False)
 
-@csrf_exempt
-def register(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        user_name = request_data["user_name"]
-        if User.objects.filter(username=user_name).exists():
-            return JsonResponse({'response': 'User already exists'}, safe=False)
-        elif User.objects.filter(email=request_data["email"]).exists():
-            return JsonResponse({'response': 'Email already exists'}, safe=False)
-        else:
-            user = User.objects.create_user(username=user_name,
-                                           password=request_data["password"],
-                                           email=request_data["email"])
-            user.save()
-            return JsonResponse({'response': 'Succesfull registration'}, safe=False)
+@api_view(['POST'])
+def register_user(request):
+    """
+    Handle user registration and return JWT tokens (access and refresh tokens)
+    """
+    serializer = RegisterSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.save()
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+
+        return JsonResponse({
+            'refresh': str(refresh),
+            'access': str(access_token),
+        }, status=201)
+
+    return JsonResponse(serializer.errors, status=400)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  # Ensures only authenticated users can access this
@@ -78,7 +84,7 @@ def change_password(request):
             validate_password(new_password, user)  # Only validate the new password
         except ValidationError as e:
             # If validation fails, return the error message
-            return JsonResponse({"error": e.messages[0]}, status=400)
+            return JsonResponse({"error": e.messages}, status=400)
 
         # 4️⃣ Successfully change the password
         user.set_password(new_password)

@@ -12,7 +12,7 @@ create_patterns = [
 general_patterns = [
     path('api/admin/', admin.site.urls),
     path('api/user/logout/', views.logout_user),
-    path('api/user/register/', views.register),
+    path('api/user/register/', views.register_user),
     path('api/user/change_password/', views.change_password),
     path('api/user/get/data/', views.get_user_data),
     path("start-task/", start_task, name="start-task"),
