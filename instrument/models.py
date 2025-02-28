@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class Instruments(models.Model):
     name = models.CharField(max_length=100, default="")
@@ -7,7 +7,7 @@ class Instruments(models.Model):
     type = models.CharField(max_length=30, default="")
     currency = models.CharField(max_length=30, default="")
     country = models.CharField(max_length=30, default="")
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user", null=True, blank=True, default=None)
 
 class Prices(models.Model):
     instrument = models.ForeignKey(Instruments, on_delete=models.CASCADE, null=True)

@@ -64,7 +64,7 @@ def new_transaction(request):
 
         request_body['quantity'] = float(request_body['quantity']) if request_body['quantity'] else 0.0
         Transaction.objects.create(**request_body)
-        calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
+        # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=request_body['trade_date'])
     return JsonResponse({"message": "Transaction is created!", 'success': True}, safe=False)
 
 

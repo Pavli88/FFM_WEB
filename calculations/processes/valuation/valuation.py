@@ -229,7 +229,7 @@ class Valuation():
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
-
+            print(aggregated_transactions)
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
@@ -287,7 +287,9 @@ class Valuation():
                 ~((aggregated_transactions['quantity'] == 0) & (aggregated_transactions['rgl'] == 0))]
         else:
             aggregated_transactions = pd.DataFrame({})
-
+            total_margin = 0
+            total_ugl = 0
+            total_rgl = 0
         # It will iterate through the final positions based on the sec group type
 
         # CASH VALUATION ----------------------------------

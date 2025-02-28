@@ -72,7 +72,7 @@ class Nav(models.Model):
 
 class Transaction(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
-    # portfolio_code = models.ForeignKey(Portfolio, on_delete=models.CASCADE, to_field="portfolio_code", db_column="portfolio_code", default="")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
     security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
     option = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
