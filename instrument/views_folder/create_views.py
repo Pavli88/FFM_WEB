@@ -3,23 +3,47 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from instrument.instrument_pricing.oanda_pricing import oanda_pricing
 from instrument.models import *
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ValidationError
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_instrument(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        try:
-            Instruments(name=request_data['name'],
-                        country=request_data['country'],
-                        group=request_data['group'],
-                        type=request_data['type'],
-                        currency=request_data['currency'],
-                        ).save()
-            response = 'Instrument is Saved!'
-        except:
-            response = 'Error occured during saving the instrument!'
-        return JsonResponse(response, safe=False)
+    try:
+        request_data = request.data  # Use DRF's request.data instead of manually loading JSON
+        user = request.user
+        # Validate required fields
+        required_fields = ['name', 'country', 'group', 'type', 'currency']
+        missing_fields = [field for field in required_fields if field not in request_data]
+
+        if missing_fields:
+            return Response({'error': f'Missing fields: {", ".join(missing_fields)}'}, status=400)
+
+        # Create and save instrument
+        instrument, created = Instruments.objects.get_or_create(
+            user=user,
+            name=request_data['name'],
+            defaults={
+                'country': request_data['country'],
+                'group': request_data['group'],
+                'type': request_data['type'],
+                'currency': request_data['currency'],
+            }
+        )
+
+        if created:
+            return Response({'message': 'Instrument is saved successfully!'}, status=201)
+        else:
+            return Response({'message': 'Instrument already exists!'}, status=200)
+
+    except ValidationError as e:
+        return Response({'error': f'Validation error: {str(e)}'}, status=400)
+
+    except Exception as e:
+        return Response({'error': f'Error occurred: {str(e)}'}, status=500)
 
 
 @csrf_exempt

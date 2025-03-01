@@ -4,37 +4,44 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from instrument.models import Instruments, Tickers, Prices
 from app_functions.request_functions import *
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
-@csrf_exempt
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_instruments(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        print(request_data)
-        # if request_data.get('name') is None:
-        #     instrument_name = ''
-        # else:
-        #     instrument_name = request_data['name']
+    instrument_name = request.GET.get('name', '')  # Default to empty string if not provided
+    countries = request.GET.getlist('country')  # Get multiple values from query params
+    group = request.GET.getlist('group')
+    types = request.GET.getlist('type')
+    currencies = request.GET.getlist('currency')
 
-        filters = {}
-        for key, value in request_data.items():
-            # print(key,value)
+    # Construct filters dynamically
+    filters = {}
+    print(countries)
+    if instrument_name:
+        filters['name__icontains'] = instrument_name  # Case-insensitive search
 
-            if isinstance(value, list):
-                # print('MULTIPLE')
-                if len(value) > 0:
-                    filters[key + '__in'] = value
-            else:
-                # print('GROUP')
-                if key == "name":
-                    print('NAME')
-                    filters['name__contains'] = value
-                else:
-                    filters[key] = value
-        # print(filters)
-        results = Instruments.objects.filter(**filters).values()
+    if countries:
+        filters['country__in'] = countries
 
-        return JsonResponse(list(results), safe=False)
+    if group:
+        filters['group__in'] = group
+
+    if types:
+        filters['type__in'] = types
+
+    if currencies:
+        filters['currency__in'] = currencies
+
+    filters['user'] = request.user
+    print("Filters:", filters)  # Debugging
+
+    # Query the database (replace with actual query)
+    results = Instruments.objects.select_related('user').filter(**filters).values()
+
+    return JsonResponse(list(results), safe=False)
 
 
 def get_instrument(request):
