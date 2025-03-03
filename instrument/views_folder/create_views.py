@@ -67,27 +67,39 @@ def new_broker_ticker(request):
         return JsonResponse(response, safe=False)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_price(request):
-    if request.method == "POST":
-        request_body = json.loads(request.body.decode('utf-8'))
+    price_list = request.data.get('data', [request.data])
 
+    updated_records = 0
+    created_records = 0
+
+    for price_record in price_list:
         try:
-            price_list = request_body['data']
-        except:
-            price_list = [request_body]
-        for price_record in price_list:
-            print(price_record)
-            try:
-                price = Prices.objects.get(date=price_record['date'], instrument_id=int(price_record['instrument_id']))
-                price.price = float(price_record['price'])
-                price.save()
-            except:
-                Prices(date=price_record['date'],
-                       instrument_id=int(price_record['instrument_id']),
-                       price=float(price_record['price']),
-                       source=price_record['source']).save()
-        return JsonResponse({'response': 'Price inserted into database'}, safe=False)
+            instrument_id = int(price_record['instrument_id'])
+            date = price_record['date']
+            price_value = float(price_record['price'])
+            source = price_record.get('source', 'unknown')
+
+            price, created = Prices.objects.update_or_create(
+                date=date,
+                instrument_id=instrument_id,
+                defaults={'price': price_value, 'source': source}
+            )
+
+            if created:
+                created_records += 1
+            else:
+                updated_records += 1
+        except (ValueError, KeyError):
+            continue
+
+    return Response({
+        'message': 'Prices processed successfully',
+        'updated': updated_records,
+        'created': created_records
+    }, status=200)
 
 
 @csrf_exempt
