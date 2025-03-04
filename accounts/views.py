@@ -5,6 +5,8 @@ from accounts.account_functions import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
 @csrf_exempt
@@ -30,39 +32,26 @@ def create_broker(request):
         return JsonResponse(response, safe=False)
 
 
-def get_account_data(request, account):
-    if request.method == "GET":
-        account = BrokerAccounts.objects.filter(broker_name=account).values()
-        response = list(account)
-        return JsonResponse(response, safe=False)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_accounts(request):
+    filters = {key: value for key, value in request.GET.items() if value}
+    filters['user'] = request.user
+    try:
+        accounts = BrokerAccounts.objects.select_related('user').filter(**filters)
 
+        if not accounts.exists():
+            return JsonResponse({"error": "No accounts found for the given broker"}, status=404)
 
-# def get_accounts_data(request):
-#     if request.method == "GET":
-#         filters = {}
-#         for key, value in request.GET.items():
-#             if key in ['broker_name', 'account_number', 'env']:
-#                 filters[key] = value
-#         accounts = BrokerAccounts.objects.filter(**filters).values()
-#         response = list(accounts)
-#         return JsonResponse(response, safe=False)
+        return JsonResponse(list(accounts.values()), safe=False, status=200)
 
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 def get_brokers(request):
     if request.method == "GET":
         brokers = Brokers.objects.all().values()
         return JsonResponse(list(brokers), safe=False)
-
-
-def get_accounts(request):
-    if request.method == "GET":
-        filters = {}
-        for key, value in request.GET.items():
-            if key in ['broker_name', 'account_number', 'env', 'owner']:
-                filters[key] = value
-        accounts = BrokerAccounts.objects.filter(**filters).values()
-        response = list(accounts)
-        return JsonResponse(response, safe=False)
 
 
 @csrf_exempt
