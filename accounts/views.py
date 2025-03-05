@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from django.http import HttpResponse
 from accounts.models import *
 from accounts.account_functions import *
 from django.http import JsonResponse
@@ -7,29 +5,30 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def new_account(request):
+    request_data = json.loads(request.body.decode('utf-8'))
+    account, created = BrokerAccounts.objects.get_or_create(
+        broker_name=request_data['broker_name'],
+        account_number=request_data['account_number'],
+        user=request.user,
+        defaults={
+            'account_name': request_data['account_name'],
+            'env': request_data['env'],
+            'access_token': request_data['token'],
+            'currency': request_data['currency'],
+        }
+    )
 
-@csrf_exempt
-def create_broker(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        if BrokerAccounts.objects.filter(broker_name=request_data['broker_name'], account_number=request_data['account_number']).exists():
-            response = "Account already exists in the database!"
-            return JsonResponse(response, safe=False)
-        try:
-            BrokerAccounts(broker_name=request_data['broker_name'],
-                           account_number=request_data['account_number'],
-                           account_name=request_data['account_name'],
-                           env=request_data['env'],
-                           access_token=request_data['token'],
-                           currency=request_data['currency'],
-                           owner=request_data['owner'],
-                           margin_account=request_data['margin_account'],
-                           margin_percentage=request_data['margin_percentage']).save()
-            response = "Account is created successfully!"
-        except:
-            response = "Account already exists in the database!"
-        return JsonResponse(response, safe=False)
+    # Check if account was created or already exists
+    if created:
+        return JsonResponse({"message": "Account is created successfully!"}, status=201)
+    else:
+        return JsonResponse({"message": "Account already exists in the database!"}, status=400)
 
 
 @api_view(['GET'])
@@ -48,30 +47,53 @@ def get_accounts(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_brokers(request):
-    if request.method == "GET":
-        brokers = Brokers.objects.all().values()
-        return JsonResponse(list(brokers), safe=False)
+    brokers = Brokers.objects.filter(
+        Q(user=request.user) | Q(api_support=True)
+    ).values()
+    return JsonResponse(list(brokers), safe=False)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_broker(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        try:
-            Brokers(broker=request_data['broker'],
-                    broker_code=request_data['broker_code']).save()
-            response = 'New broker saved to database!'
-        except:
-            response = 'Broker code exists in database!'
-        return JsonResponse(response, safe=False)
+    broker = request.data.get('broker', '').strip()
+    type = request.data.get('type')
+    broker_code = request.data.get('broker_code', '').strip()
+
+    # Validate required fields
+    if not broker or not broker_code:
+        return Response({"error": "Both broker and broker_code are required."}, status=400)
+
+    # Check if broker_code already exists
+    broker_instance, created = Brokers.objects.get_or_create(
+        broker_code=broker_code,
+        api_support=True,
+        defaults={
+            'broker': broker,
+            'type': type,
+            'user': request.user,
+        }
+    )
+
+    if not created:
+        return Response({"error": "Broker code already exists!"}, status=400)
+
+    return Response({"message": "New broker saved to database!"}, status=201)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def delete_account(request):
-    # Add verification before deleting where the account is held
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        BrokerAccounts.objects.get(id=request_data['id']).delete()
-        response = 'Account is deleted'
-        return JsonResponse(response, safe=False)
+    request_data = json.loads(request.body.decode('utf-8'))
+    BrokerAccounts.objects.get(id=request_data['id']).delete()
+    return JsonResponse({'message': 'Account is deleted'}, status=200)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_broker(request):
+    request_data = json.loads(request.body.decode('utf-8'))
+    Brokers.objects.get(id=request_data['id']).delete()
+    return JsonResponse({'message': 'Broker is deleted'}, status=200)
