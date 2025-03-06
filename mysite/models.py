@@ -1,7 +1,8 @@
 from django.db import models
 import datetime
-"Restarting migration"
-"python manage.py migrate --fake robots zero"
+from django.contrib.auth.models import AbstractUser, Group, Permission
+import uuid
+from django.contrib.auth.models import User
 
 
 class Trades(models.Model):
@@ -59,4 +60,10 @@ class Exceptions(models.Model):
     calculation_date = models.DateField(default=datetime.date.today)
     creation_date = models.DateTimeField()
     security_id = models.CharField(max_length=100, default="")
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    reset_token = models.CharField(max_length=255, blank=True, null=True)  # Token field
+    token_created_at = models.DateTimeField(blank=True, null=True)  # Token creation timestamp
 

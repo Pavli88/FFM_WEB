@@ -11,9 +11,12 @@ create_patterns = [
 
 general_patterns = [
     path('api/admin/', admin.site.urls),
+    path('api/user/login/', views.login_user),
     path('api/user/logout/', views.logout_user),
     path('api/user/register/', views.register_user),
+    path('api/user/forgot_password/', views.forgot_password),
     path('api/user/change_password/', views.change_password),
+    path('api/user/reset_password/<str:reset_token>/', views.reset_password),
     path('api/user/get/data/', views.get_user_data),
     path("start-task/", start_task, name="start-task"),
     path("celery-status/", check_celery_status, name="celery-status"),

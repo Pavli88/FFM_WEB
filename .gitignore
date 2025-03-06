@@ -7,3 +7,7 @@ robots/__pycache__/
 
 .idea/
 *.log
+
+# Ignore the .env file containing sensitive data
+.env
+.env.production
