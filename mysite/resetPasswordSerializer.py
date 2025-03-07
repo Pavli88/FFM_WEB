@@ -7,7 +7,7 @@ class ResetPasswordConfirmSerializer(serializers.Serializer):
 
     def validate_new_password(self, value):
         try:
-            password_validation.validate_password(value)
+            password_validation.validate_password(value)  # ✅ Now includes CustomPasswordValidator
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.messages)  # Return list of errors
         return value

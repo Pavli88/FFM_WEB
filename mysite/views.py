@@ -19,6 +19,9 @@ from mysite.tasks import long_running_task
 from mysite.celery import app
 from mysite.models import UserProfile
 from .resetPasswordSerializer import ResetPasswordConfirmSerializer
+from rest_framework.views import APIView
+from .validators import CustomPasswordValidator
+
 
 # TASK TEST
 def start_task(request):
@@ -64,6 +67,27 @@ def login_user(request):
         "access": str(refresh.access_token),
         "refresh": str(refresh)
     })
+
+@api_view(['POST'])
+def register_user(request):
+    """
+    Handle user registration and return JWT tokens (access and refresh tokens)
+    """
+    serializer = RegisterSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.save()
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+
+        return JsonResponse({
+            'refresh': str(refresh),
+            'access': str(access_token),
+        }, status=201)
+
+    return JsonResponse(serializer.errors, status=400)
 
 @api_view(['POST'])
 def forgot_password(request):
@@ -147,28 +171,6 @@ def logout_user(request):
     return JsonResponse({'response': 'User logged out!'}, safe=False)
 
 @api_view(['POST'])
-def register_user(request):
-    """
-    Handle user registration and return JWT tokens (access and refresh tokens)
-    """
-    serializer = RegisterSerializer(data=request.data)
-
-    if serializer.is_valid():
-        user = serializer.save()
-
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        access_token = refresh.access_token
-
-        return JsonResponse({
-            'refresh': str(refresh),
-            'access': str(access_token),
-        }, status=201)
-
-    return JsonResponse(serializer.errors, status=400)
-
-
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])  # Ensures only authenticated users can access this
 def change_password(request):
     user = request.user  # Get the authenticated user
@@ -201,8 +203,6 @@ def change_password(request):
 
     # If serializer validation fails, return the first error message
     return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
-
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
