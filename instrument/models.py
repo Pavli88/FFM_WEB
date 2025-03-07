@@ -17,7 +17,7 @@ class Prices(models.Model):
 
 
 class Tickers(models.Model):
-    inst_code = models.CharField(max_length=30, default="")
+    inst_code = models.ForeignKey(Instruments, on_delete=models.CASCADE, db_column="inst_code", null=True, blank=True, default=None)
     source_ticker = models.CharField(max_length=30, default="")
     source = models.CharField(max_length=30, default="")
     margin = models.FloatField(default=0.0)

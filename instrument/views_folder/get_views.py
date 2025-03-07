@@ -1,7 +1,5 @@
 import pandas as pd
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
 from instrument.models import Instruments, Tickers, Prices
 from app_functions.request_functions import *
 from rest_framework.decorators import api_view, permission_classes
@@ -19,7 +17,7 @@ def get_instruments(request):
 
     # Construct filters dynamically
     filters = {}
-    print(countries)
+
     if instrument_name:
         filters['name__icontains'] = instrument_name  # Case-insensitive search
 
@@ -36,17 +34,11 @@ def get_instruments(request):
         filters['currency__in'] = currencies
 
     filters['user'] = request.user
-    print("Filters:", filters)  # Debugging
 
     # Query the database (replace with actual query)
     results = Instruments.objects.select_related('user').filter(**filters).values()
 
     return JsonResponse(list(results), safe=False)
-
-
-def get_instrument(request):
-    if request.method == "GET":
-        return JsonResponse(list(Instruments.objects.filter(id=request.GET.get('id')).values()), safe=False)
 
 
 def get_broker_tickers(request):
