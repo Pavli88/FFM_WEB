@@ -6,6 +6,7 @@ from accounts.models import BrokerAccounts
 
 def oanda_pricing(start_date, end_date):
     tickers = Tickers.objects.filter(source='oanda').values()
+    print(tickers)
     accounts = BrokerAccounts.objects.get(id=2)
 
     o = OandaV20(access_token=accounts.access_token,
@@ -18,7 +19,7 @@ def oanda_pricing(start_date, end_date):
     }
 
     for ticker in tickers:
-        print(ticker['source_ticker'], ticker['inst_code'])
+        print(ticker['source_ticker'], ticker['inst_code_id'])
         response = o.candle_data(instrument=ticker['source_ticker'],
                                  params=params)['candles']
 
@@ -28,12 +29,12 @@ def oanda_pricing(start_date, end_date):
 
             try:
                 price = Prices.objects.get(date=date,
-                                           instrument_id=int(ticker['inst_code']))
+                                           instrument_id=int(ticker['inst_code_id']))
                 price.price = float(data['mid']['c'])
                 price.save()
             except:
                 Prices(date=date,
-                       instrument_id=int(ticker['inst_code']),
+                       instrument_id=int(ticker['inst_code_id']),
                        price=float(data['mid']['c']),
                        source='oanda'
                        ).save()
