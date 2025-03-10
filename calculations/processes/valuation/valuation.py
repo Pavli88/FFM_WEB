@@ -1,15 +1,9 @@
-from weakref import finalize
-
-from portfolio.models import Transaction, TransactionPnl, Holding, Nav, Portfolio, Cash, RGL, UGL, Margin, PortGroup
-from instrument.models import Instruments, Prices, Tickers
+from portfolio.models import Transaction, Holding, Nav, Portfolio, Cash, UGL, PortGroup
+from instrument.models import Instruments, Prices
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
-from django.db import connection
 from datetime import timedelta
-from django.db.models import Q
-from sqlparse.engine.grouping import group
-
 
 class Valuation():
     def __init__(self, portfolio_code, calc_date):

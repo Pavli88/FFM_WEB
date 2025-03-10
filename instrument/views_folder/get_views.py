@@ -1,5 +1,6 @@
 import pandas as pd
 from django.http import JsonResponse
+from django.db.models import Q
 from instrument.models import Instruments, Tickers, Prices
 from app_functions.request_functions import *
 from rest_framework.decorators import api_view, permission_classes
@@ -9,36 +10,41 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_instruments(request):
-    instrument_name = request.GET.get('name', '')  # Default to empty string if not provided
-    countries = request.GET.getlist('country')  # Get multiple values from query params
-    group = request.GET.getlist('group')
-    types = request.GET.getlist('type')
-    currencies = request.GET.getlist('currency')
+    try:
+        instrument_name = request.GET.get('name', '')  # Default to empty string if not provided
+        countries = request.GET.getlist('country')  # Get multiple values from query params
+        group = request.GET.getlist('group')
+        types = request.GET.getlist('type')
+        currencies = request.GET.getlist('currency')
 
-    # Construct filters dynamically
-    filters = {}
+        # Construct filters dynamically using Q objects
+        filters = Q(user=request.user) | Q(user__isnull=True)  # Allow instruments with NULL user or assigned user
 
-    if instrument_name:
-        filters['name__icontains'] = instrument_name  # Case-insensitive search
+        if instrument_name:
+            filters &= Q(name__icontains=instrument_name)  # Case-insensitive search
 
-    if countries:
-        filters['country__in'] = countries
+        if countries:
+            filters &= Q(country__in=countries)
 
-    if group:
-        filters['group__in'] = group
+        if group:
+            filters &= Q(group__in=group)
 
-    if types:
-        filters['type__in'] = types
+        if types:
+            filters &= Q(type__in=types)
 
-    if currencies:
-        filters['currency__in'] = currencies
+        if currencies:
+            filters &= Q(currency__in=currencies)
 
-    filters['user'] = request.user
+        # Query the database
+        results = Instruments.objects.select_related('user').filter(filters).values()
 
-    # Query the database (replace with actual query)
-    results = Instruments.objects.select_related('user').filter(**filters).values()
+        return JsonResponse(list(results), safe=False, status=200)
 
-    return JsonResponse(list(results), safe=False)
+    except Instruments.DoesNotExist:
+        return JsonResponse({'error': 'No instruments found'}, status=404)
+
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
 
 
 def get_broker_tickers(request):

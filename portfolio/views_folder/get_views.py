@@ -105,32 +105,6 @@ def get_open_transactions(request):
         return JsonResponse(l, safe=False)
 
 
-def daily_cashflow_by_type(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-        select trade_date,
-       sum(case when transaction_type = 'Subscription' then net_cashflow else 0 end) as 'Subscription',
-       sum(case when transaction_type = 'Redemption' then net_cashflow else 0 end) as 'Redemption',
-       sum(case when transaction_type = 'Commission' then net_cashflow else 0 end) as 'Commission'
-from portfolio_transaction where sec_group='Cash' and portfolio_code = '{portfolio_code}' group by trade_date order by trade_date;
-        """.format(portfolio_code=request.GET.get("portfolio_code")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        series = []
-        for column in df:
-            if column == 'trade_date':
-                pass
-            else:
-                series.append({'name': column, 'data': df[column].tolist()})
-
-        return JsonResponse({
-            'dates': df['trade_date'].tolist(),
-            'series': series
-        }, safe=False)
-
-
 @csrf_exempt
 def get_nav(request):
     if request.method == "POST":
@@ -146,22 +120,6 @@ def get_nav(request):
         result = [{"date": date, "records": records} for date, records in grouped_data.items()]
 
         return JsonResponse(result, safe=False)
-
-
-def get_total_pnl(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-                          select sum(pnl) as total, sum(cost) as cost, portfolio_code
-from portfolio_nav
-group by portfolio_code order by total desc;
-""")
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        df['net_pnl'] = df['total'] + df['cost']
-        print(df)
-        return JsonResponse(df.to_dict('records'), safe=False)
 
 
 def transactions_pnls(request):
@@ -268,22 +226,6 @@ def get_total_returns(request):
         total_returns = TotalReturn.objects.filter(**filters).order_by('end_date').values()
         return JsonResponse(list(total_returns), safe=False)
 
-def get_perf_dashboard(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""select p.portfolio_name, p.currency, pt.period, pt.total_return from portfolio_totalreturn as pt, portfolio_portfolio as p
-where pt.portfolio_code = p.portfolio_code
-and pt.end_date='{date}';""".format(date=request.GET.get("date")))
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        df['total_return'] = df['total_return'] * 100
-        df = df.pivot_table('total_return',
-                            ['portfolio_name'],
-                            'period').reset_index().fillna(0.0)
-        return JsonResponse(df.to_dict('records'), safe=False)
-
-
 def get_trade_routes(request):
     if request.method == "GET":
         cursor = connection.cursor()
@@ -309,17 +251,6 @@ where pt.portfolio_code = '{portfolio_code}';
         return JsonResponse(df.to_dict('records'), safe=False)
 
 
-def get_monthly_pnl(request):
-    if request.method == "GET":
-        cursor = connection.cursor()
-        cursor.execute("""
-                select sum(pnl) as pnl, any_value(date) as date from portfolio_nav group by year(date), month(date);""")
-
-        row = cursor.fetchall()
-        df = pd.DataFrame(row, columns=[col[0] for col in cursor.description])
-        return JsonResponse(df.to_dict('records'), safe=False)
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_port_groups(request):
@@ -327,7 +258,7 @@ def get_port_groups(request):
     owner = request.user
 
     # Filter PortGroup where the related Portfolio's owner is the logged-in user
-    port_groups = PortGroup.objects.select_related('portfolio').filter(portfolio__owner=owner)
+    port_groups = PortGroup.objects.select_related('portfolio').filter(portfolio__user=owner)
 
     # Format response
     g = [

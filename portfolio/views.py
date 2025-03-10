@@ -62,20 +62,6 @@ def get_cash_holdings(request):
         return JsonResponse(list(cash_holding_data), safe=False)
 
 
-def get_positions(request):
-    print("PORTFOLIO POSITIONS REQUEST")
-
-    if request.method == "GET":
-        portfolio = request.GET.get('portfolio')
-        date = request.GET.get('date')
-        positions = Positions.objects.filter(portfolio_name=portfolio).filter(date=date).values()
-        print("PORTFOLIO:", portfolio)
-        print("DATE:", date)
-        print(positions)
-
-        return JsonResponse(list({}), safe=False)
-
-
 def get_portfolio_nav(request, portfolio_code):
     if request.method == "GET":
         start_date = request.GET.get('start_date')

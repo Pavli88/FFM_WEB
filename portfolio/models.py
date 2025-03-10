@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
-    portfolio_code = models.CharField(max_length=30, unique=True, null=True)
+    portfolio_code = models.CharField(max_length=30, null=True, blank=True)
     portfolio_type = models.CharField(max_length=30, default="")
     status = models.CharField(max_length=30, default="Not Funded")
     currency = models.CharField(max_length=30, default="")
@@ -47,6 +47,7 @@ class TradeRoutes(models.Model):
 
 class Nav(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
     pos_val = models.FloatField(default=0.0)
     cash_val = models.FloatField(default=0.0)
     margin = models.FloatField(default=0.0)
@@ -197,24 +198,7 @@ class TransactionPnl(models.Model):
     date = models.DateField(null=True)
 
 
-class Positions(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
-    quantity = models.FloatField(default=0.0)
-    date = models.DateTimeField(auto_now_add=True)
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
-
 class Cash(models.Model):
-    portfolio_code = models.CharField(max_length=30, default="")
-    type = models.CharField(max_length=30, default="")
-    base_mv = models.FloatField(default=0.0)
-    local_mv = models.FloatField(default=0.0)
-    date = models.DateField(null=True)
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
-
-
-class Margin(models.Model):
-    # types -> Initial Margin, Mark to Mark valuation
     portfolio_code = models.CharField(max_length=30, default="")
     type = models.CharField(max_length=30, default="")
     base_mv = models.FloatField(default=0.0)
@@ -284,6 +268,3 @@ class Process(models.Model):
     portfolio_code = models.CharField(max_length=40, default="")
     date = models.DateTimeField(auto_now_add=True)
     process = models.CharField(max_length=40, default="")
-
-# models.signals.post_save.connect(create_transaction_related_cashflow, sender=Transaction)
-# models.signals.post_delete.connect(calculate_cash_holding_after_delete, sender=Transaction)
