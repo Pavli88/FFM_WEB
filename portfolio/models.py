@@ -2,6 +2,7 @@ from django.db import models
 from datetime import datetime
 from instrument.models import Instruments, Tickers
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 
 class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
@@ -19,6 +20,7 @@ class Portfolio(models.Model):
     manager = models.CharField(max_length=30, default="")
     public = models.BooleanField(default=False)
     trading_allowed = models.BooleanField(default=False)
+    multicurrency_allowed = models.BooleanField(default=False)
     weekend_valuation = models.BooleanField(default=False)
     valuation_frequency = models.CharField(max_length=30, default="Daily")
     calc_holding = models.BooleanField(default=False)
@@ -72,49 +74,148 @@ class Nav(models.Model):
 
 
 class Transaction(models.Model):
+
+    # Must to have fields
     portfolio_code = models.CharField(max_length=30, default="")
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
     security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
-    option = models.CharField(max_length=30, default="")
     quantity = models.FloatField(default=0.0)
-    price = models.FloatField(default=0.0)
+    trade_date = models.DateField(null=True)
+    transaction_type = models.CharField(max_length=30, default="")
+
+    # Optional fields
+    price = models.FloatField(default=0.0)  # Needed -> Inst Tran
+    fx_rate = models.FloatField(default=1.0) # Needed -> Inst Tran
+    open_status = models.CharField(max_length=50, default="Open")  # Needed -> Inst Tran -> Parent
+    transaction_link_code = models.IntegerField(default=0) # Needed -> Inst Tran -> Child
+    margin_rate = models.FloatField(default=0.0) # Ez csak derivativáknál kell
+
+
+    trading_cost = models.FloatField(default=0.0)
+    financing_cost = models.FloatField(default=0.0)
+    account_id = models.IntegerField(null=True)
+    broker_id = models.IntegerField(null=True)
+    broker = models.CharField(max_length=30, default="")
+    settlement_date = models.DateField(null=True)
+    is_active = models.BooleanField(default=True)
+    currency = models.CharField(max_length=30, default="") # Ez az instrumentum Currencyje lesz, nem kell küldeni front endről
+
+    # Calculated fields
+    created_on = models.DateTimeField(auto_now_add=True)
     mv = models.FloatField(default=0.0)
     local_mv = models.FloatField(default=0.0)
     bv = models.FloatField(default=0.0)
     local_bv = models.FloatField(default=0.0)
-    trade_date = models.DateField(null=True)
-    settlement_date = models.DateField(null=True)
-    is_active = models.BooleanField(default=True)
-    created_on = models.DateTimeField(auto_now_add=True)
-    currency = models.CharField(max_length=30, default="")
-    trading_cost = models.FloatField(default=0.0)
-    financing_cost = models.FloatField(default=0.0)
-    transaction_type = models.CharField(max_length=30, default="")
-    transaction_link_code = models.IntegerField(default=0)
-    open_status = models.CharField(max_length=50, default="Open")
-    account_id = models.IntegerField(null=True)
-    broker_id = models.IntegerField(null=True)
-    broker = models.CharField(max_length=30, default="")
     net_cashflow = models.FloatField(default=0.0)
     local_cashflow = models.FloatField(default=0.0)
     margin_balance = models.FloatField(default=0.0)
-    margin_rate = models.FloatField(default=0.0)
-    fx_rate = models.FloatField(default=1.0)
+
+    def new_cash_transaction(self, *args, **kwargs):
+        try:
+            instrument = Instruments.objects.get(id=self.security_id)
+            if instrument.group != 'Cash' and instrument.type != 'Cash':
+                return "Instrument is not a Cash/Cash security"
+
+        except ObjectDoesNotExist:
+            return  "Instrument ID does not exist (" + str(self.security_id) + ")"
+
+        try:
+            portfolio = Portfolio.objects.get(id=self.portfolio_id)
+            if instrument.currency != portfolio.currency and portfolio.multicurrency_allowed is False:
+                return f"Multicurrency is not allowed for portfolio. Port ccy ({portfolio.currency}) Inst ccy ({instrument.currency})"
+        except ObjectDoesNotExist:
+            return "Portfolio ID does not exist (" + str(self.portfolio_id) + ")"
+
+        if self.transaction_link_code == 0:
+            super().save(*args, **kwargs)  # Save once to generate ID
+            self.transaction_link_code = self.id  # Now the ID exists
+
+        multiplier = -1 if self.transaction_type in ['Redemption', 'Interest Paid', 'Commission', 'Financing'] else 1
+
+        # Ensure quantity is not None (avoid TypeError)
+        if self.quantity is not None:
+            self.quantity *= multiplier
+
+        self.currency = instrument.currency
+        self.price = 1
+        self.mv = self.local_mv = self.bv = self.local_bv = self.quantity
+        self.net_cashflow = self.local_cashflow = self.quantity
+        self.open_status = 'Close'
+        self.is_active = False
+
+        super().save(*args, **kwargs)
+
+        Cash(
+            date=self.trade_date,
+            portfolio_code=self.portfolio_code,
+            base_mv=self.net_cashflow,
+            local_mv=self.local_cashflow,
+            type=self.transaction_type,
+            transaction_id=self.id
+        ).save()
+        return "New capital transaction is created"
+
+    def new_parent_transaction(self, *args, **kwargs):
+        try:
+            instrument = Instruments.objects.get(id=self.security_id)
+            if instrument.group == 'Cash':
+                return "Instrument is a Cash security"
+        except ObjectDoesNotExist:
+            return  "Instrument ID does not exist (" + str(self.security_id) + ")"
+
+        if self.transaction_link_code == 0:
+            super().save(*args, **kwargs)  # Save once to generate ID
+            self.transaction_link_code = self.id  # Now the ID exists
+
+        # Here decides on a particular asset class how to calculate mv and bv and cash flows
+        if instrument.group == "CFD":
+            self.derivatives_transaction()
+
+        return "Parent Instrument Transaction is created"
+
+    def new_child_transaction(self, parent_id):
+        try:
+            instrument = Instruments.objects.get(id=self.security_id)
+            if instrument.group == 'Cash':
+                return "Instrument is a Cash security"
+        except ObjectDoesNotExist:
+            return  "Instrument ID does not exist (" + str(self.security_id) + ")"
+
+        # Checking if it is an existing parent transaction
+        try:
+            self.parent_transaction = Transaction.objects.get(id=parent_id)
+        except ObjectDoesNotExist:
+            return  "Parent ID does not exist (" + str(parent_id) + ")"
+
+        self.is_active = False
+        self.open_status = 'Close'
+
+        if self.parent_transaction.transaction_type == 'Purchase':
+            self.transaction_type = 'Sale'
+        if self.parent_transaction.transaction_type == 'Sale':
+            self.transaction_type = 'Purchase'
+
+        return "Child Instrument Transaction"
 
     def save(self, *args, **kwargs):
-        if not self.security:
-            raise ValidationError("Security must be provided.")
+
+        # Amikor elmentek egy uj recordot akkor minden egyes esetbe a megadott instrumentum ID alapjan az adatbázisbol
+        # kinyeri az isntrumentum adatait
 
         instrument = Instruments.objects.get(id=self.security_id)
-        print(self.transaction_link_code, self.id)
+
         if self.transaction_link_code == 0:
+
+            # Ez mondja meg hogy egy parent tranzakció
+
             super().save(*args, **kwargs)
             self.transaction_link_code = self.id
         else:
-            # Linked transaction
+            # Children tranzakció
             self.parent_transaction = Transaction.objects.get(id=self.transaction_link_code)
             self.is_active = False
             self.open_status = 'Close'
+
             if self.parent_transaction.transaction_type == 'Purchase':
                 self.transaction_type = 'Sale'
             if self.parent_transaction.transaction_type == 'Sale':
@@ -128,16 +229,6 @@ class Transaction(models.Model):
             self.save_cashflow()
         if instrument.group == "CFD":
             self.derivatives_transaction()
-
-    def save_cashflow(self):
-        Cash(
-            date=self.trade_date,
-            portfolio_code=self.portfolio_code,
-            base_mv=self.net_cashflow,
-            local_mv=self.local_cashflow,
-            type=self.transaction_type,
-            transaction_id=self.id
-        ).save()
 
     def calculate_pnl(self):
 
@@ -158,7 +249,10 @@ class Transaction(models.Model):
         ).save()
 
     def cash_transaction(self, *args, **kwargs):
-        multiplier = -1 if self.transaction_type in ['Redemption', 'Interest Paid', 'Commission'] else 1
+
+        # This tells how capital cash transactions are calulcated and saved
+
+        multiplier = -1 if self.transaction_type in ['Redemption', 'Interest Paid', 'Commission', 'Financing'] else 1
         self.quantity *= multiplier
         self.price = 1
         self.mv = self.local_mv = self.bv = self.local_bv = self.quantity
@@ -168,10 +262,14 @@ class Transaction(models.Model):
         super().save(*args, **kwargs)
 
     def derivatives_transaction(self, *args, **kwargs):
+
+        # This tells the logic how derivative security transactions are calculated
+
         ticker = Tickers.objects.get(inst_code=self.security_id, source=self.broker)
+        self.margin_rate = ticker.margin
         cf_multiplier = -1 if self.open_status in ['Open'] else 1
         self.quantity *= -1 if self.transaction_type in ['Sale'] else 1
-        self.margin_rate = ticker.margin
+
 
         self.net_cashflow = round(abs(float(self.quantity)) * float(self.price) * (ticker.margin), 5) * float(self.fx_rate) * cf_multiplier
         self.local_cashflow = round(abs(float(self.quantity)) * float(self.price) * (ticker.margin), 5) * cf_multiplier
@@ -189,6 +287,17 @@ class Transaction(models.Model):
 
     def overwrite(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
+    def save_cashflow(self):
+        # this saves the transaction related cashflow to portfolios cash table where cash movements are tracked
+        Cash(
+            date=self.trade_date,
+            portfolio_code=self.portfolio_code,
+            base_mv=self.net_cashflow,
+            local_mv=self.local_cashflow,
+            type=self.transaction_type,
+            transaction_id=self.id
+        ).save()
 
 class TransactionPnl(models.Model):
     transaction_id = models.IntegerField(default=0)
@@ -227,6 +336,7 @@ class PortGroup(models.Model):
 
 class Holding(models.Model):
     portfolio_code = models.CharField(max_length=30)
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
     date = models.DateField(null=True)
     trd = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True)
     inv_num = models.IntegerField(default=0)
@@ -247,6 +357,7 @@ class Holding(models.Model):
 
 class TotalReturn(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
     total_return = models.FloatField(default=0.0)
     end_date = models.DateField(null=True)
     period = models.CharField(max_length=30, default="")

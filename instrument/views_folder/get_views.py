@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def get_instruments(request):
     try:
         instrument_name = request.GET.get('name', '')  # Default to empty string if not provided

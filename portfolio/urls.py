@@ -1,5 +1,4 @@
 from django.urls import path
-from . import views
 from portfolio.views import *
 from portfolio.views_folder import create_views, get_views, update_view, delete_views, calculate_views
 
@@ -8,9 +7,10 @@ calculate_views = [
 ]
 
 create_views = [
-    path('portfolios/new/trade_routing/', create_views.create_trade_routing),
     path('portfolios/new/portfolio/', create_views.create_portfolio),
+    path('portfolios/transactions/new/', create_views.transaction),
     path('portfolios/new/transaction/', create_views.new_transaction),
+    path('portfolios/new/trade_routing/', create_views.create_trade_routing),
     path('portfolios/group/add/', create_views.add_to_portgroup),
 ]
 

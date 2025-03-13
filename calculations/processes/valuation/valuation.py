@@ -33,10 +33,10 @@ class Valuation():
 
     def fetch_transactions(self):
         transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
-                                                                             portfolio_code=self.portfolio_code).exclude(security_id__type='Cash')
+                                                                             portfolio=self.portfolio_data).exclude(security_id__type='Cash')
         transactions_list = [
             {
-                'portfolio_code': self.portfolio_code,
+                'portfolio_code': self.portfolio_code, # This part has to be amended or removed later
                 'date': self.calc_date,
                 'trd_id': transaction.id,
                 'inv_num': transaction.transaction_link_code,
@@ -61,9 +61,9 @@ class Valuation():
     def fetch_instrument_data(self, instrument_code_list):
         return pd.DataFrame(Instruments.objects.filter(id__in=instrument_code_list).values())
 
-    def fetch_previous_valuation(self, previous_date, portfolio_code):
+    def fetch_previous_valuation(self, previous_date, portfolio_id):
         previous_valuations = pd.DataFrame(Holding.objects.filter(date=previous_date,
-                                                                  portfolio_code=portfolio_code).values())
+                                                                  portfolio=portfolio_id).values())
 
         if not previous_valuations.empty:
             previous_positions = previous_valuations[
@@ -104,8 +104,11 @@ class Valuation():
         return self.fx_rates
 
     def fetch_rgl(self):
-        return pd.DataFrame(Cash.objects.filter(date=self.calc_date,
-                                                portfolio_code=self.portfolio_code, type='Trade PnL').values())
+        return pd.DataFrame(Cash.objects.select_related('transaction').filter(date=self.calc_date,
+                                                                              transaction__portfolio=self.portfolio_data,
+                                                                              type='Trade PnL').values())
+        # return pd.DataFrame(Cash.objects.filter(date=self.calc_date,
+        #                                         portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
     def fetch_prices(self, date, instrument_code_list):
         prices_df = pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values())
@@ -137,7 +140,7 @@ class Valuation():
 
     def fx_check(self, row):
         if row['fx_rate'] == 0:
-            self.error_list.append({'portfolio_code': self.portfolio_code,
+            self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                     'date': self.calc_date,
                                     'process': 'Valuation',
                                     'exception': 'Missing FX Rate',
@@ -151,7 +154,7 @@ class Valuation():
             return 1
         else:
             if row['price'] == 0:
-                self.error_list.append({'portfolio_code': self.portfolio_code,
+                self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                      'date': self.calc_date,
                                      'process': 'Valuation',
                                      'exception': 'Missing Price',
@@ -166,7 +169,7 @@ class Valuation():
         # FETCHING----------------------------------------------
 
         # Previous Valuations
-        self.fetch_previous_valuation(previous_date=self.previous_date, portfolio_code=self.portfolio_code)
+        self.fetch_previous_valuation(previous_date=self.previous_date, portfolio_id=self.portfolio_data)
 
         # Current Transactions
         current_transactions = self.fetch_transactions()
@@ -223,14 +226,14 @@ class Valuation():
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
-            print(aggregated_transactions)
+
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
             total_rgl = aggregated_transactions['rgl'].sum()
             total_bv = aggregated_transactions['bv'].sum()
 
             total_margin_df = pd.DataFrame({
-                'portfolio_code': [self.portfolio_code],
+                'portfolio_code': [self.portfolio_code], # this part has to be amaneded or removed later
                 'date': [self.calc_date],
                 'trd_id': [None],
                 'inv_num': [0],
@@ -252,7 +255,7 @@ class Valuation():
 
             if total_margin > 0:
                 contra_df = pd.DataFrame({
-                    'portfolio_code': [self.portfolio_code],
+                    'portfolio_code': [self.portfolio_code], # this part has to be amaneded or removed later
                     'date': [self.calc_date],
                     'trd_id': [None],
                     'inv_num': [0],
@@ -294,7 +297,7 @@ class Valuation():
 
         available_cash_df = pd.DataFrame(
             {
-                'portfolio_code': [self.portfolio_code],
+                'portfolio_code': [self.portfolio_code], # this part has to be amaneded or removed later
                 'date': [self.calc_date],
                 'trd_id': [None],
                 'inv_num': [0],
@@ -370,7 +373,7 @@ class Valuation():
 
     def capital_cash_calculation(self):
         capital_cashflow = pd.DataFrame(Transaction.objects.filter(trade_date=self.calc_date,
-                                                                   portfolio_code=self.portfolio_code,
+                                                                   portfolio=self.portfolio_data,
                                                                    transaction_type__in=['Subscription', 'Redemption',
                                                                                          'Commission', 'Financing']).values())
 
@@ -399,7 +402,7 @@ class Valuation():
             # Check if portfolio_navs has data
             if portfolio_navs.empty:
                 for port_code in expected_portfolios:
-                    self.error_list.append({'portfolio_code': self.portfolio_code,
+                    self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_code,
                                             'date': calc_date,
                                             'process': 'Group Valuation',
                                             'exception': 'Missing Fund Valuation',
@@ -416,7 +419,7 @@ class Valuation():
 
                 if missing_portfolios:
                     for port_code in missing_portfolios:
-                        self.error_list.append({'portfolio_code': self.portfolio_code,
+                        self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                                 'date': calc_date,
                                                 'process': 'Group Valuation',
                                                 'exception': 'Missing Fund Valuation',
@@ -459,7 +462,8 @@ class Valuation():
         # print('REAL', total_realized_pnl, 'UNREAL', total_unrealized_pnl, total_unrealized_pnl + total_realized_pnl , self.calc_date)
 
         try:
-            nav = Nav.objects.get(date=calc_date, portfolio_code=self.portfolio_code)
+            nav = Nav.objects.get(date=calc_date, portfolio_id=self.portfolio_data)
+            nav.portfolio = self.portfolio_data
             nav.cash_val = total_cash
             nav.margin = total_margin
             nav.pos_val = total_asset_val
@@ -478,7 +482,8 @@ class Valuation():
             nav.save()
         except:
             Nav(date=calc_date,
-                portfolio_code=self.portfolio_code,
+                portfolio_code=self.portfolio_code, # this part has to be amaneded or removed later
+                portfolio=self.portfolio_data,
                 pos_val=total_asset_val,
                 cash_val=total_cash,
                 margin=total_margin,
@@ -496,14 +501,14 @@ class Valuation():
                 trade_return=0).save()
 
         if len(self.error_list) == 0:
-            self.response_list.append({'portfolio_code': self.portfolio_code,
+            self.response_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                        'date': calc_date,
                                        'process': 'NAV Valuation',
                                        'exception': '-',
                                        'status': 'Completed',
                                        'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(self.portfolio_data.currency)})
         else:
-            self.response_list.append({'portfolio_code': self.portfolio_code,
+            self.response_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                        'date': calc_date,
                                        'process': 'NAV Valuation',
                                        'exception': 'Incorrect Valuation',
@@ -515,7 +520,7 @@ class Valuation():
         # Delete existing holdings
         Holding.objects.filter(
             date=self.calc_date,
-            portfolio_code=self.portfolio_code,
+            portfolio=self.portfolio_data,
         ).delete()
 
         new_holdings = []
@@ -525,6 +530,7 @@ class Valuation():
             new_holdings.append(
                 Holding(
                     portfolio_code=valuation['portfolio_code'],
+                    portfolio=self.portfolio_data,
                     date=valuation['date'],
                     trd_id=valuation['trd_id'],
                     inv_num=valuation['inv_num'],

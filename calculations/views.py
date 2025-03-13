@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 def valuation(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
         response_list = []
         for portfolio_code in request_body['portfolios']:
             responses = calculate_holdings(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
@@ -23,7 +22,6 @@ def valuation(request):
 def total_return(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
         response_list = []
 
         for portfolio_code in request_body['portfolios']:
