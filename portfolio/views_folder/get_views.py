@@ -72,7 +72,6 @@ def get_portfolio_transactions(request):
                 'broker': transaction.broker,
                 'trade_date': transaction.trade_date,
                 'settlement_date': transaction.settlement_date,
-                'option': transaction.option,
                 'bv': transaction.bv,
                 'local_bv': transaction.local_bv
             })
