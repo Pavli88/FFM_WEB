@@ -54,6 +54,7 @@ def get_portfolio_transactions(request):
                 'name': transaction.security.name,
                 'security_id': transaction.security_id,
                 'portfolio_code': transaction.portfolio_code,
+                'portfolio_id': transaction.portfolio_id,
                 'transaction_type': transaction.transaction_type,
                 'currency': transaction.currency,
                 'open_status': transaction.open_status,

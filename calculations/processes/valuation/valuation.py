@@ -520,7 +520,7 @@ class Valuation():
         # Delete existing holdings
         Holding.objects.filter(
             date=self.calc_date,
-            portfolio=self.portfolio_data,
+            portfolio_id=self.portfolio_data.id,
         ).delete()
 
         new_holdings = []
@@ -530,7 +530,7 @@ class Valuation():
             new_holdings.append(
                 Holding(
                     portfolio_code=valuation['portfolio_code'],
-                    portfolio=self.portfolio_data,
+                    portfolio_id=self.portfolio_data.id,
                     date=valuation['date'],
                     trd_id=valuation['trd_id'],
                     inv_num=valuation['inv_num'],
