@@ -1,7 +1,7 @@
 from django.db import models
 import datetime
-"Restarting migration"
-"python manage.py migrate --fake robots zero"
+from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Trades(models.Model):
@@ -60,3 +60,33 @@ class Exceptions(models.Model):
     creation_date = models.DateTimeField()
     security_id = models.CharField(max_length=100, default="")
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    reset_token = models.CharField(max_length=255, blank=True, null=True)  # Token field
+    token_created_at = models.DateTimeField(blank=True, null=True)  # Token creation timestamp
+    failed_attempts = models.IntegerField(default=0)
+    locked_until = models.DateTimeField(null=True, blank=True)
+
+    def is_reset_token_valid(self, expiry_minutes=30):
+        """Check if the reset token is still valid (default: 60 minutes)"""
+        if not self.token_created_at:
+            return False  # No token created, invalid
+
+        expiry_time = self.token_created_at + timezone.timedelta(minutes=expiry_minutes)
+        return timezone.now() < expiry_time  # Check if token is still valid
+
+    def is_locked(self):
+        return self.locked_until and self.locked_until > timezone.now()
+
+    def reset_failed_attempts(self):
+        self.failed_attempts = 0
+        self.locked_until = None
+        self.save()
+
+    def increment_failed_attempts(self):
+        self.failed_attempts += 1
+        # Lock account for 15 minutes after 5 failed attempts
+        if self.failed_attempts >= 5:
+            self.locked_until = timezone.now() + datetime.timedelta(minutes=15)
+        self.save()

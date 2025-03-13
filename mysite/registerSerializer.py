@@ -22,9 +22,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_password(self, value):
         try:
-            password_validation.validate_password(value)
+            # Ensure Django runs ALL password validators, including your custom one
+            password_validation.validate_password(value, user=None)
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.messages)  # Return list of errors
+            raise serializers.ValidationError(e.messages)  # Return a list of errors
         return value
 
     def create(self, validated_data):

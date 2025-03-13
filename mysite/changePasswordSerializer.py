@@ -3,9 +3,9 @@ from rest_framework import serializers
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(write_only=True, required=True)
-    new_password = serializers.CharField(write_only=True, required=True, min_length=6)
+    new_password = serializers.CharField(write_only=True, required=True)
 
     def validate_new_password(self, value):
-        """Validate password strength using Django's built-in validators"""
-        validate_password(value)  # Enforces strong password rules
+        """Validate password strength using Django's built-in validators, including CustomPasswordValidator."""
+        validate_password(value)  # ✅ Includes all password validators from settings.py
         return value
