@@ -463,7 +463,7 @@ class Valuation():
 
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_id=self.portfolio_data)
-            nav.portfolio = self.portfolio_data
+            nav.portfolio_id = self.portfolio_data.id
             nav.cash_val = total_cash
             nav.margin = total_margin
             nav.pos_val = total_asset_val
@@ -483,7 +483,7 @@ class Valuation():
         except:
             Nav(date=calc_date,
                 portfolio_code=self.portfolio_code, # this part has to be amaneded or removed later
-                portfolio=self.portfolio_data,
+                portfolio_id=self.portfolio_data.id,
                 pos_val=total_asset_val,
                 cash_val=total_cash,
                 margin=total_margin,

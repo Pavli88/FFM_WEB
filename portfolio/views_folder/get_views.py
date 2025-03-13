@@ -107,18 +107,28 @@ def get_open_transactions(request):
 @csrf_exempt
 def get_nav(request):
     if request.method == "POST":
-        request_body = json.loads(request.body.decode('utf-8'))
-        filters = {}
-        for key, value in request_body.items():
-            filters[key] = value
+        try:
+            request_body = json.loads(request.body.decode('utf-8'))
+            filters = {key: value for key, value in request_body.items()}
 
-        navs = pd.DataFrame(Nav.objects.filter(**filters).values())
-        grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
+            # Fetch data from the database
+            navs = pd.DataFrame(Nav.objects.filter(**filters).values())
 
-        # Resulting grouped data as a list of records for each date
-        result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+            if navs.empty:
+                return JsonResponse({"message": "No data found"}, status=404)
 
-        return JsonResponse(result, safe=False)
+            # Group data by date
+            grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
+
+            # Convert to list of dictionaries
+            result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+
+            return JsonResponse(result, safe=False)  # Ensure response is JSON
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 def transactions_pnls(request):
