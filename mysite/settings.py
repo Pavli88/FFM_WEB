@@ -1,5 +1,4 @@
 import os
-import sys
 from django.core.management.utils import get_random_secret_key
 import dj_database_url
 from pathlib import Path
@@ -24,6 +23,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', get_random_secret_key())
 DEBUG = os.getenv('DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = [
+    '127.0.0.1',
     '127.0.0.0',
     'localhost',
     '137.184.111.7',
@@ -49,8 +49,6 @@ if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
 # Other Django settings
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 SECRET_KEY = os.getenv('SECRET_KEY', 'your_default_secret_key')
-
-
 
 # MainApplication definition
 
@@ -89,37 +87,41 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+
 # Configure REST Framework to use JWT
+# Itt lehet beállítani, az endpointok authentikációs logikáját és a folyamatot
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "mysite.authentication.CookieJWTAuthentication",
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 
+# Ezek azok a beállítások, hogy a django backend milyen feltételek mentén dekódolják a bejövő JWT tokeneket és kezelje a JWT tokeneket
+# Valamint a JWT tokenhez kapcsolódó Cookie beállítások is itt történnek meg
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # Short-lived access token
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # Longer-lived refresh token
-    "ROTATE_REFRESH_TOKENS": True,  # Issues new refresh token on refresh
-    "BLACKLIST_AFTER_ROTATION": True,  # Blacklist old refresh tokens
-    "AUTH_HEADER_TYPES": ("Bearer",),  # Token sent in Authorization header
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("ACCESS_TOKEN_LIFETIME", 1))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("REFRESH_TOKEN_LIFETIME", 7))),
+    "ROTATE_REFRESH_TOKENS": os.getenv("ROTATE_REFRESH_TOKENS", "True").lower() in ("true", "1", "yes"),
+    "BLACKLIST_AFTER_ROTATION": os.getenv("BLACKLIST_AFTER_ROTATION", "True").lower() in ("true", "1", "yes"),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_COOKIE": os.getenv("AUTH_COOKIE", "access_token"),
+    "AUTH_COOKIE_HTTP_ONLY": os.getenv("AUTH_COOKIE_HTTP_ONLY", "True").lower() in ("true", "1", "yes"),
+    "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "True").lower() in ("true", "1", "yes"),
+    "AUTH_COOKIE_SAMESITE": os.getenv("AUTH_COOKIE_SAMESITE", "Lax"),
 }
+
 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
-
-CORS_ALLOWED_ORIGINS = [
-    'http://127.0.0.0:8001',
-    'https://137.184.111.7:443',
-    'https://137.184.111.7',
-    "http://localhost:3000",
-    'https://pavliati.pythonanywhere.com',
-    'https://fractalportfolios.com',
-    'http://www.fractalportfolios.com',
-    'https://www.fractalportfolios.com',
-]
+# CORS SETTINGS
+# EZ határozza meg milyen browser cimekről (Origin) fogadhat a Django requesteket
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True").lower() in ("true", "1", "yes")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.getenv("CORS_ALLOWED_ORIGINS") else []
 
 CACHES = {
     'default': {
