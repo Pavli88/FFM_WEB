@@ -1,10 +1,13 @@
 from django.http import JsonResponse
 from portfolio.models import TradeRoutes, PortGroup, Portfolio, Nav, Transaction
+from instrument.models import Instruments, Tickers
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from calculations.processes.valuation.valuation import calculate_holdings
 from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
+from portfolio.portfolio_functions import create_transaction
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -29,7 +32,7 @@ def create_portfolio(request):
         print(body_data)
         user = request.user
 
-        required_fields = ["port_name", "port_code", "port_type", "port_currency", "inception_date"]
+        required_fields = ["port_name", "port_code", "port_type", "currency", "inception_date"]
 
         # Check if all required fields are provided
         missing_fields = [field for field in required_fields if field not in body_data]
@@ -59,7 +62,7 @@ def create_portfolio(request):
             portfolio_name=body_data["port_name"],
             portfolio_code=body_data["port_code"],
             portfolio_type=body_data["port_type"],
-            currency=body_data["port_currency"],
+            currency=body_data["currency"],
             inception_date=inception_date,
             user=user
         )
@@ -96,65 +99,12 @@ def new_transaction(request):
 @api_view(["POST"])
 def transaction(request):
     try:
-        # Parse the request body
-        body_data = json.loads(request.body.decode('utf-8'))
-
-        # Extract transaction_type
-        transaction_type = body_data.get("transaction_type")
-
-        # Define transaction categories
-        CASH_TRANSACTIONS = {"Subscription", "Redemption", "Commission"}
-        INSTRUMENT_TRANSACTIONS = {"Purchase", "Sale"}
-
-        # Determine transaction category
-        if transaction_type in CASH_TRANSACTIONS:
-            category = "Cash Transaction"
-            transaction = Transaction(
-                portfolio_code=body_data["portfolio_code"],
-                portfolio_id=body_data['portfolio_id'],
-                security_id=body_data['security'],
-                quantity=body_data['quantity'],
-                trade_date=body_data['trade_date'],
-                transaction_type=transaction_type,
-            ).new_cash_transaction()
-            print(transaction)
-        elif transaction_type in INSTRUMENT_TRANSACTIONS:
-            category = "Parent Instrument Transaction"
-            transaction = Transaction(
-                portfolio_code=body_data["portfolio_code"],
-                portfolio_id=body_data['portfolio_id'],
-                security_id=body_data['security'],
-                quantity=body_data['quantity'],
-                trade_date=body_data['trade_date'],
-                transaction_type=transaction_type,
-            ).new_parent_transaction(price=body_data['price'])
-        elif transaction_type is None:
-            category = "Child Instrument Transaction"
-            transaction = Transaction(
-                portfolio_code=body_data["portfolio_code"],
-                portfolio_id=body_data['portfolio_id'],
-                security_id=body_data['security'],
-                quantity=body_data['quantity'],
-                trade_date=body_data['trade_date'],
-            ).new_child_transaction(parent_id=body_data['parent_id'])
-            transaction_type='Child Transaction'
-        else:
-            return JsonResponse({"msg": "Invalid transaction type"}, status=400)
-
-        # Simulate saving transaction (you can integrate database logic here)
-        response_data = {
-            "msg": transaction,
-            "category": category,
-            "transaction_type": transaction_type
-        }
-
-        return JsonResponse(response_data, status=201)
-
+        transaction_data = json.loads(request.body.decode('utf-8'))
+        result = create_transaction(transaction_data)
+        status_code = 201 if result.get("status") == "success" else 400
+        return JsonResponse(result, status=status_code)
     except json.JSONDecodeError:
         return JsonResponse({"msg": "Invalid JSON format"}, status=400)
-
-    except Exception as e:
-        return JsonResponse({"msg": f"An error occurred: {str(e)}"}, status=500)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

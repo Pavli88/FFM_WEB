@@ -5,13 +5,12 @@ from accounts.models import BrokerAccounts
 from instrument.models import Instruments, Tickers, Prices
 from portfolio.models import Portfolio, Transaction, Nav, TradeRoutes
 from trade_app.models import Notifications
-from app_functions.request_functions import *
-from django.db import connection
 import pandas as pd
 from broker_apis.oanda import OandaV20
 from datetime import date
 from calculations.processes.valuation.valuation import calculate_holdings
-
+from django.test import Client
+from portfolio.portfolio_functions import create_transaction
 
 class TradeExecution:
     def __init__(self, portfolio_code, account_id, security_id, trade_date):
@@ -46,20 +45,36 @@ class TradeExecution:
         # FX Conversion to Base Currency
         conversion_factor = (float(trade['response']['gainQuoteHomeConversionFactor']) + float(trade['response']['lossQuoteHomeConversionFactor'])) / 2
 
-        Transaction(
-            portfolio_code=self.portfolio.portfolio_code,
-            quantity=quantity,
-            price=trade_price,
-            fx_rate=round(float(conversion_factor), 4),
-            transaction_type=transaction_type,
-            trade_date=self.trade_date,
-            security_id=self.security_id,
-            broker_id=trade['response']['id'],
-            broker=self.account.broker_name,
-            account_id=self.account.id,
-            open_status="Open",
-            is_active=True
-        ).save()
+        transaction = {
+            "portfolio_code": self.portfolio.portfolio_code,
+            "portfolio_id": self.portfolio.id,
+            "security": self.security_id,
+            "quantity": quantity,
+            "price": trade_price,
+            "fx_rate": round(float(conversion_factor), 4),
+            "trade_date": self.trade_date.strftime("%Y-%m-%d"),
+            "transaction_type": transaction_type,
+            "broker": self.account.broker_name,
+            "optional": {"account_id": self.account.id, "is_active": True, "broker_id": trade['response']['id']}
+        }
+
+        result = create_transaction(transaction)
+        print(result)
+        # Transaction(
+        #     portfolio_code=self.portfolio.portfolio_code,
+        #     security_id=self.security_id,
+        #     quantity=quantity,
+        #     price=trade_price,
+        #     fx_rate=round(float(conversion_factor), 4),
+        #     trade_date=self.trade_date,
+        #     transaction_type=transaction_type,
+        #     broker=self.account.broker_name,
+        #
+        #     broker_id=trade['response']['id'],
+        #     account_id=self.account.id,
+        #     open_status="Open",
+        #     is_active=True
+        # ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
                       message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + trade_price,
@@ -99,18 +114,29 @@ class TradeExecution:
         trade_price = trade["price"]
         broker_id = trade['id']
 
-        Transaction(
-            portfolio_code=self.portfolio.portfolio_code,
-            quantity=abs(float(trade['units'])),
-            price=trade_price,
-            trade_date=self.trade_date,
-            security_id=self.security_id,
-            broker_id=broker_id,
-            broker=self.account.broker_name,
-            account_id=self.account.id,
-            transaction_link_code=transaction.id,
-            fx_rate=round(float(conversion_factor), 4),
-        ).save()
+        transaction = {
+            "parent_id": transaction.id,
+            "quantity": abs(float(trade['units'])),
+            "price": trade_price,
+            "fx_rate": round(float(conversion_factor), 4),
+            "trade_date": self.trade_date,
+            "optional": { "broker_id": broker_id }}
+
+        result = create_transaction(transaction)
+        print(result)
+        # Transaction(
+        #     portfolio_code=self.portfolio.portfolio_code,
+        #     security_id=self.security_id,
+        #     quantity=abs(float(trade['units'])),
+        #     price=trade_price,
+        #     fx_rate=round(float(conversion_factor), 4),
+        #     trade_date=self.trade_date,
+        #     broker_id=broker_id,
+        #     broker=self.account.broker_name,
+        #     account_id=self.account.id,
+        #     transaction_link_code=transaction.id,
+        #
+        # ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
                       message=' @ ' + trade_price + ' Broker ID ' + str(broker_id),
