@@ -117,12 +117,13 @@ def get_open_transactions(request):
 
     return JsonResponse(transaction_data, safe=False)
 
-
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_nav(request):
     if request.method == "POST":
         try:
             request_body = json.loads(request.body.decode('utf-8'))
+            print(request_body)
             filters = {key: value for key, value in request_body.items()}
 
             # Fetch data from the database
@@ -190,6 +191,8 @@ def get_holding(request):
         response_df = pd.DataFrame(holdings_list).fillna(0)
         return JsonResponse(response_df.to_dict('records'), safe=False)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_exposures(request):
     if request.method == "GET":
         try:
@@ -249,6 +252,8 @@ def get_total_returns(request):
         total_returns = TotalReturn.objects.filter(**filters).order_by('end_date').values()
         return JsonResponse(list(total_returns), safe=False)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_trade_routes(request):
     if request.method == "GET":
         cursor = connection.cursor()
@@ -328,7 +333,8 @@ def get_position_exposures(request):
         # Log the error if logging is configured
         return JsonResponse({"error": "An unexpected error occurred."}, status=500)
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_child_portfolios(request, portfolio_code):
     if request.method == "GET":
         query = """
@@ -365,7 +371,7 @@ def get_child_portfolios(request, portfolio_code):
         -- Retrieve only Automated portfolios from the hierarchy
         SELECT child_id, child_name, child_type, child_code
         FROM portfolio_hierarchy
-        WHERE child_type = 'Automated' or child_type = 'Trade';
+        WHERE child_type = 'Portfolio';
         """
 
         # Execute query
