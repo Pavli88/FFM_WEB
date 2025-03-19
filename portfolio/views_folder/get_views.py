@@ -78,31 +78,44 @@ def get_portfolio_transactions(request):
             })
         return JsonResponse(l, safe=False)
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_open_transactions(request):
-    if request.method == "GET":
-        print('test')
-        results = Transaction.objects.select_related('security').all().filter(is_active=1)
-        print(results)
-        l = []
-        for transaction in results:
-            l.append({
-                'id': transaction.id,
-                'portfolio_code': transaction.portfolio_code,
-                'name': transaction.security.name,
-                'security_id': transaction.security_id,
-                'sec_group': transaction.security.group,
-                'currency': transaction.currency,
-                'transaction_type': transaction.transaction_type,
-                'quantity': transaction.quantity,
-                'price': transaction.price,
-                'mv': transaction.mv,
-                'account_id': transaction.account_id,
-                'broker_id': transaction.broker_id,
-                'broker': transaction.broker,
-                'trade_date': transaction.trade_date,
-            })
-        return JsonResponse(l, safe=False)
+    # Fetch portfolio IDs for the authenticated user
+    portfolio_ids = Portfolio.objects.filter(
+        user=request.user, portfolio_type="Portfolio"
+    ).values_list('id', flat=True)
+
+    # Fetch active transactions with related security and broker data
+    transactions = Transaction.objects.select_related('security').filter(
+        is_active=True,
+        portfolio_id__in=portfolio_ids,
+        broker_id__isnull=False
+    )
+
+    # Serialize the transactions
+    transaction_data = [
+        {
+            'id': txn.id,
+            'portfolio_code': txn.portfolio_code,
+            'name': txn.security.name if txn.security else None,
+            'security_id': txn.security_id,
+            'sec_group': txn.security.group if txn.security else None,
+            'currency': txn.currency,
+            'transaction_type': txn.transaction_type,
+            'quantity': txn.quantity,
+            'price': txn.price,
+            'mv': txn.mv,
+            'account_id': txn.account_id,
+            'broker_id': txn.broker_id,
+            'broker': txn.broker,
+            'trade_date': txn.trade_date,
+            "margin_balance": txn.margin_balance
+        }
+        for txn in transactions
+    ]
+
+    return JsonResponse(transaction_data, safe=False)
 
 
 @csrf_exempt

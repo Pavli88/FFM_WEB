@@ -10,13 +10,17 @@ from broker_apis.oanda import OandaV20
 from datetime import date
 from calculations.processes.valuation.valuation import calculate_holdings
 from portfolio.portfolio_functions import create_transaction
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 
 class TradeExecution:
-    def __init__(self, portfolio_code, account_id, security_id, trade_date):
+    def __init__(self, portfolio_code, account_id, security_id):
         self.portfolio = Portfolio.objects.get(portfolio_code=portfolio_code)
         self.account = BrokerAccounts.objects.get(id=account_id)
         self.security_id = security_id
-        self.trade_date = trade_date
+        self.trade_date = timezone.now().strftime('%Y-%m-%d')
+
         self.ticker = Tickers.objects.get(inst_code=self.security_id,
                                           source=self.account.broker_name)
 
@@ -51,7 +55,7 @@ class TradeExecution:
             "quantity": quantity,
             "price": trade_price,
             "fx_rate": round(float(conversion_factor), 4),
-            "trade_date": self.trade_date.strftime("%Y-%m-%d"),
+            "trade_date": self.trade_date,
             "transaction_type": transaction_type,
             "broker": self.account.broker_name,
             "optional": {"account_id": self.account.id, "is_active": True, "broker_id": trade['response']['id']}
@@ -81,6 +85,8 @@ class TradeExecution:
         broker_connection = OandaV20(access_token=self.account.access_token,
                                      account_id=self.account.account_number,
                                      environment=self.account.env)
+        print(broker_connection)
+        print(transaction.broker_id)
         if quantity is not None:
             trade = broker_connection.close_out(trd_id=transaction.broker_id, units=quantity)
         else:
@@ -131,7 +137,6 @@ def new_transaction_signal(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
         print(request_body)
-        trade_date = date.today()
 
         # OLD Signal
         # request_body = {'portfolio_code': 'TST',
@@ -154,7 +159,7 @@ def new_transaction_signal(request):
                 execution = TradeExecution(portfolio_code=transaction['portfolio_code'],
                                            account_id=transaction['account_id'],
                                            security=transaction['security'],
-                                           trade_date=trade_date)
+                                           )
                 closed_transactions = pd.DataFrame(Transaction.objects.filter(transaction_link_code=transaction['id']).values())
                 if len(closed_transactions) == 0:
                     closed_out_units = 0
@@ -195,7 +200,7 @@ def new_transaction_signal(request):
         execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
                                    account_id=account_id,
                                    security_id=request_body['security_id'],
-                                   trade_date=trade_date)
+                                   )
 
         if request_body['transaction_type'] == "Close All":
             open_transactions = Transaction.objects.filter(security=request_body['security_id'],
@@ -236,3 +241,44 @@ def new_transaction_signal(request):
                                 quantity=float(request_body['quantity']) * quantity_multiplier)
         # calculate_holdings(portfolio_code=request_body['portfolio_code'], calc_date=trade_date)
         return JsonResponse({}, safe=False)
+
+
+# I will have to review the logic of the trade execution class and rework its functions
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def close_trade_by_id(request):
+    try:
+        # Parse JSON request body
+        request_body = json.loads(request.body.decode('utf-8'))
+        transaction_ids = request_body.get("ids", [])
+
+        # Check if transaction_ids is a valid list
+        if not isinstance(transaction_ids, list) or not transaction_ids:
+            return JsonResponse({"error": "Invalid or missing transaction IDs"}, status=400)
+
+        open_transactions = Transaction.objects.filter(id__in=transaction_ids)
+        for transaction in open_transactions:
+            execution = TradeExecution(portfolio_code=transaction.portfolio_code,
+                                       account_id=transaction.account_id,
+                                       security_id=transaction.security_id,
+                                       )
+
+            execution.close(transaction=transaction)
+
+        # Return response
+        return JsonResponse({
+            "message": f"transactions closed successfully",
+            "closed_transaction_ids": transaction_ids
+        }, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def new_trade(request):
+    return JsonResponse({}, safe=False)
