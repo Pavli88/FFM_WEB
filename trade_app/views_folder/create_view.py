@@ -9,7 +9,6 @@ import pandas as pd
 from broker_apis.oanda import OandaV20
 from datetime import date
 from calculations.processes.valuation.valuation import calculate_holdings
-from django.test import Client
 from portfolio.portfolio_functions import create_transaction
 
 class TradeExecution:
@@ -59,22 +58,6 @@ class TradeExecution:
         }
 
         result = create_transaction(transaction)
-        print(result)
-        # Transaction(
-        #     portfolio_code=self.portfolio.portfolio_code,
-        #     security_id=self.security_id,
-        #     quantity=quantity,
-        #     price=trade_price,
-        #     fx_rate=round(float(conversion_factor), 4),
-        #     trade_date=self.trade_date,
-        #     transaction_type=transaction_type,
-        #     broker=self.account.broker_name,
-        #
-        #     broker_id=trade['response']['id'],
-        #     account_id=self.account.id,
-        #     open_status="Open",
-        #     is_active=True
-        # ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
                       message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + trade_price,
@@ -123,20 +106,6 @@ class TradeExecution:
             "optional": { "broker_id": broker_id }}
 
         result = create_transaction(transaction)
-        print(result)
-        # Transaction(
-        #     portfolio_code=self.portfolio.portfolio_code,
-        #     security_id=self.security_id,
-        #     quantity=abs(float(trade['units'])),
-        #     price=trade_price,
-        #     fx_rate=round(float(conversion_factor), 4),
-        #     trade_date=self.trade_date,
-        #     broker_id=broker_id,
-        #     broker=self.account.broker_name,
-        #     account_id=self.account.id,
-        #     transaction_link_code=transaction.id,
-        #
-        # ).save()
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
                       message=' @ ' + trade_price + ' Broker ID ' + str(broker_id),

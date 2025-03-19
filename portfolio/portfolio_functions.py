@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from portfolio.models import Transaction, Portfolio, Instruments, Tickers
 
 # Define transaction categories
-CASH_TRANSACTIONS = {"Subscription", "Redemption", "Commission"}
+CASH_TRANSACTIONS = {"Subscription", "Redemption", "Commission", "Financing"}
 
 
 def create_transaction(transaction_data):

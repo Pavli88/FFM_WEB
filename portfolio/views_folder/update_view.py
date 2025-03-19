@@ -6,21 +6,40 @@ from app_functions.request_functions import *
 from django.db.models import Q
 from accounts.models import BrokerAccounts
 from instrument.models import Tickers
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.core.exceptions import ObjectDoesNotExist
 
 
-@csrf_exempt
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def update_portfolio(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
+    request_data = request.data
 
-        try:
-            portfolio = Portfolio.objects.get(id=request_data['id'])
-            for key, value in request_data.items():
-                setattr(portfolio, key, value)
-            portfolio.save()
-            return JsonResponse({'response': 'Portfolio is updated'}, safe=False)
-        except:
-            return JsonResponse({'response': 'Error during update'}, safe=False)
+    portfolio_id = request_data.get('id')
+    if not portfolio_id:
+        return JsonResponse({'response': 'Portfolio ID is required'}, status=400)
+
+    try:
+        portfolio = Portfolio.objects.get(id=portfolio_id)
+    except ObjectDoesNotExist:
+        return JsonResponse({'response': 'Portfolio not found'}, status=404)
+
+    # Get all valid model fields
+    valid_fields = {field.name for field in Portfolio._meta.get_fields()}
+
+    # Update only valid fields
+    updated = False
+    for key, value in request_data.items():
+        if key in valid_fields and key != 'id':  # Prevent updating the ID
+            setattr(portfolio, key, value)
+            updated = True
+
+    if updated:
+        portfolio.save()
+        return JsonResponse({'response': 'Portfolio updated successfully'}, status=200)
+    else:
+        return JsonResponse({'response': 'No valid fields to update'}, status=400)
 
 
 @csrf_exempt

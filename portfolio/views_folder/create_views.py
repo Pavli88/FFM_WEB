@@ -97,6 +97,7 @@ def new_transaction(request):
 
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def transaction(request):
     try:
         transaction_data = json.loads(request.body.decode('utf-8'))
