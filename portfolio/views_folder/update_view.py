@@ -2,10 +2,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from portfolio.models import Portfolio, Transaction, TradeRoutes
-from app_functions.request_functions import *
-from django.db.models import Q
-from accounts.models import BrokerAccounts
-from instrument.models import Tickers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist

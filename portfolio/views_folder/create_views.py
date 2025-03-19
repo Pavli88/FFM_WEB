@@ -1,12 +1,10 @@
 from django.http import JsonResponse
 from portfolio.models import TradeRoutes, PortGroup, Portfolio, Nav, Transaction
-from instrument.models import Instruments, Tickers
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from calculations.processes.valuation.valuation import calculate_holdings
 from datetime import datetime
-from django.core.exceptions import ObjectDoesNotExist
 from portfolio.portfolio_functions import create_transaction
 
 @api_view(["POST"])
@@ -25,7 +23,7 @@ def create_trade_routing(request):
 
 
 @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def create_portfolio(request):
     try:
         body_data = json.loads(request.body.decode('utf-8'))
