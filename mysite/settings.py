@@ -123,7 +123,7 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.ge
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
-    "https://fractalportfolios.com"
+    "https://www.fractalportfolios.com"
 ]
 
 CACHES = {
