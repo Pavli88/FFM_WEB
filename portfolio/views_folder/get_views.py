@@ -29,7 +29,8 @@ def get_portfolios(request):
         # Handle errors, such as invalid filters
         return JsonResponse({"error": str(e)}, status=400)
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_portfolio_transactions(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
