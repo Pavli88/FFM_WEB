@@ -81,7 +81,7 @@ class Transaction(models.Model):
     # Must to have fields
     portfolio_code = models.CharField(max_length=30, default="")
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, null=True, blank=True, default=None)
-    security = models.ForeignKey(Instruments, on_delete=models.CASCADE)
+    security = models.ForeignKey(Instruments, on_delete=models.SET_NULL, null=True, blank=True, default=None)
     quantity = models.FloatField(default=0.0)
     trade_date = models.DateField(null=True)
     transaction_type = models.CharField(max_length=30, default="")

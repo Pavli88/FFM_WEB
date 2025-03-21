@@ -236,6 +236,8 @@ def get_user_data(request):
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "is_superuser": user.is_superuser,
+            "is_staff": user.is_staff,
             "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime
         }
         return JsonResponse(user_data, safe=False)
