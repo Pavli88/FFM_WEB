@@ -24,7 +24,7 @@ def exposure_metrics(portfolio_code, pricing_period, end_date):
                     "risk_contribs": []
                 }}
 
-    portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
+    portfolio_holding['weight'] = portfolio_holding['mv'] / portfolio_holding['bv'].abs().sum()
     portfolio_holding['pos_lev'] = portfolio_holding['mv'] / portfolio_holding['bv'].sum()
     leverage = portfolio_holding['mv'].abs().sum()/portfolio_holding['bv'].sum()
     # print(portfolio_holding)

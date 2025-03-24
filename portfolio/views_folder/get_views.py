@@ -190,6 +190,10 @@ def get_holding(request):
             for holding in holdings
         ]
         response_df = pd.DataFrame(holdings_list).fillna(0)
+        print(response_df)
+        response_df['net_weight'] = response_df['mv'] / response_df['mv'].sum()
+        response_df['gross_weight'] = response_df['mv'] / response_df['mv'].abs().sum()
+        response_df['abs_weight'] = response_df['mv'].abs() / response_df['mv'].abs().sum()
         return JsonResponse(response_df.to_dict('records'), safe=False)
 
 @api_view(['GET'])
