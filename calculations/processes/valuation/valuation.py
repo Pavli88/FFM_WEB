@@ -245,7 +245,7 @@ class Valuation():
             aggregated_transactions['bv'] = aggregated_transactions.apply(self.book_value_calc, axis=1)
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
 
-            aggregated_transactions['price_pnl'] = aggregated_transactions.apply(self.price_pnl_calc, axis=1)
+            aggregated_transactions['price_pnl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
             aggregated_transactions['trd_pnl'] = aggregated_transactions['rgl']
             aggregated_transactions['total_pnl'] = aggregated_transactions['trd_pnl'] + aggregated_transactions['price_pnl']
 
