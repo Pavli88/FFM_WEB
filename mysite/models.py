@@ -60,6 +60,11 @@ class Exceptions(models.Model):
     creation_date = models.DateTimeField()
     security_id = models.CharField(max_length=100, default="")
 
+def user_profile_image_path(instance, filename):
+    """Store user profile images in a specific directory"""
+    return f'profile_pics/user_{instance.user.id}/{filename}'
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
@@ -67,6 +72,7 @@ class UserProfile(models.Model):
     token_created_at = models.DateTimeField(blank=True, null=True)  # Token creation timestamp
     failed_attempts = models.IntegerField(default=0)
     locked_until = models.DateTimeField(null=True, blank=True)
+    image = models.ImageField(upload_to=user_profile_image_path, blank=True, null=True)
 
     def is_reset_token_valid(self, expiry_minutes=30):
         """Check if the reset token is still valid (default: 60 minutes)"""
