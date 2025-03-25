@@ -1,5 +1,6 @@
 import json
 from django.contrib.auth.password_validation import validate_password
+from django.core.validators import validate_email
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
@@ -8,21 +9,18 @@ from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 from django.conf import settings
 from django.utils import timezone
-from django_ratelimit.decorators import ratelimit
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .changePasswordSerializer import ChangePasswordSerializer
 from .registerSerializer import RegisterSerializer
 from mysite.tasks import long_running_task
 from mysite.celery import app
+import os
 from mysite.models import UserProfile
 from .resetPasswordSerializer import ResetPasswordConfirmSerializer
-from django.middleware.csrf import get_token
-from django.contrib.auth.decorators import login_required
+from .UserSerializer import UserSerializer
 
 # TASK TEST
 def start_task(request):
@@ -225,11 +223,46 @@ def change_password(request):
     # If serializer validation fails, return the first error message
     return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_email(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method."}, status=400)
+
+    try:
+        # Extract email from request data
+        new_email = request.data.get("email")
+
+        if not new_email:
+            return JsonResponse({"error": "Email is required."}, status=400)
+
+        # Validate email format
+        try:
+            validate_email(new_email)
+        except ValidationError as e:
+            return JsonResponse({"error": str(e)}, status=400)  # Properly return validation error message
+
+        # Check if email already exists
+        if User.objects.filter(email=new_email).exists():
+            return JsonResponse({"error": "Email is already in use."}, status=400)
+
+        # Update email
+        user = request.user
+        user.email = new_email
+        user.save()
+
+        return JsonResponse({"detail": "Email updated successfully."}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_data(request):
     try:
-        user = request.user  # Get the authenticated user
+        user = request.user
+        user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        image_url = request.build_absolute_uri(user_profile.image.url) if user_profile.image else None
         user_data = {
             "id": user.id,
             "username": user.username,
@@ -238,9 +271,65 @@ def get_user_data(request):
             "last_name": user.last_name,
             "is_superuser": user.is_superuser,
             "is_staff": user.is_staff,
+            'image_url': image_url,
             "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime
         }
         return JsonResponse(user_data, safe=False)
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=401)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_profile_picture(request):
+    """Allows users to upload a profile picture"""
+    user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if 'image' not in request.FILES:
+        return JsonResponse({'error': 'No image provided'}, status=400)
+
+    image = request.FILES['image']
+
+    # Delete old image if exists
+    if user_profile.image:
+        old_image_path = os.path.join(settings.MEDIA_ROOT, str(user_profile.image))
+        if os.path.exists(old_image_path):
+            os.remove(old_image_path)
+
+    user_profile.image = image
+    user_profile.save()
+    return JsonResponse({'message': 'Profile picture updated successfully', 'image_url': user_profile.image.url})
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_profile_picture(request):
+    """Allows users to delete their profile picture"""
+    user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if not user_profile.image:
+        return JsonResponse({'error': 'No profile picture to delete'}, status=400)
+
+    image_path = os.path.join(settings.MEDIA_ROOT, str(user_profile.image))
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+    user_profile.image = None
+    user_profile.save()
+
+    return JsonResponse({'message': 'Profile picture deleted successfully'})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_user_profile(request):
+    user = request.user
+    serializer = UserSerializer(user, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        try:
+            serializer.save()
+            return JsonResponse({"message": "Profile updated successfully!"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    # If serializer validation fails, return the first error message
+    return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
