@@ -128,6 +128,25 @@ class Valuation():
         except:
             return row['bv']
 
+    def price_pnl_calc(self, row):
+        if row['mv'] == 0:
+            return 0
+        else:
+            return row['ugl']
+
+    def price_ret_calc(self, row):
+        if row['mv'] == 0:
+            return 0
+        else:
+            if row['group'] == 'Cash':
+                return 0
+
+            if self.calc_date == row['trade_date']:
+                # leverage = row['leverage']
+                return row['price_pnl'] / (row['quantity'] * row['trade_price'])
+            else:
+                prev_bv = row['bv'] - row['ugl']
+                return row['price_pnl'] / prev_bv
 
     def book_value_calc(self, row):
         if row['group'] == 'CFD':
@@ -222,8 +241,14 @@ class Valuation():
             aggregated_transactions['fx_rate'].fillna(0, inplace=True)
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
+
             aggregated_transactions['bv'] = aggregated_transactions.apply(self.book_value_calc, axis=1)
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
+
+            aggregated_transactions['price_pnl'] = aggregated_transactions.apply(self.price_pnl_calc, axis=1)
+            aggregated_transactions['trd_pnl'] = aggregated_transactions['rgl']
+            aggregated_transactions['total_pnl'] = aggregated_transactions['trd_pnl'] + aggregated_transactions['price_pnl']
+
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
 
@@ -246,33 +271,45 @@ class Valuation():
                 'fx_rate': [1],
                 'mv': [total_margin],
                 'bv': [total_margin],
+                'pos_lev': [0.0],
                 'weight': [0.0],
+                'gross_weight': [0.0],
+                'abs_weight': [0.0],
                 'ugl': [0.0],
                 'rgl': [0.0],
                 'margin_rate': [0.0],
-                'margin_req': [0.0]
+                'margin_req': [0.0],
+                'price_pnl': [0.0],
+                'trd_pnl': [0.0],
+                'total_pnl': [0.0],
             })
 
             if total_margin > 0:
                 contra_df = pd.DataFrame({
-                    'portfolio_code': [self.portfolio_code], # this part has to be amaneded or removed later
+                    'portfolio_code': [self.portfolio_code],  # this part has to be amaneded or removed later
                     'date': [self.calc_date],
                     'trd_id': [None],
                     'inv_num': [0],
                     'trade_date': [self.calc_date],
                     'trade_type': ['Contra'],
                     'instrument_id': [self.base_currency_sec_id],
-                    'quantity': [total_bv* -1],
+                    'quantity': [total_bv * -1],
                     'trade_price': [1],
                     'market_price': [1],
                     'fx_rate': [1],
                     'mv': [total_bv * -1],
                     'bv': [total_bv * -1],
+                    'pos_lev': [0.0],
                     'weight': [0.0],
+                    'gross_weight': [0.0],
+                    'abs_weight': [0.0],
                     'ugl': [0.0],
                     'rgl': [0.0],
                     'margin_rate': [0.0],
-                    'margin_req': [0.0]
+                    'margin_req': [0.0],
+                    'price_pnl': [0.0],
+                    'trd_pnl': [0.0],
+                    'total_pnl': [0.0],
                 })
                 aggregation_list = [aggregated_transactions, total_margin_df, contra_df]
             else:
@@ -310,18 +347,27 @@ class Valuation():
                 'fx_rate': [1],
                 'mv': [total_cash],
                 'bv': [total_cash],
+                'pos_lev': [0.0],
                 'weight': [0.0],
+                'gross_weight': [0.0],
+                'abs_weight': [0.0],
                 'ugl': [0.0],
                 'rgl': [0.0],
                 'margin_rate': [0.0],
-                'margin_req': [0.0]
+                'margin_req': [0.0],
+                'price_pnl': [0.0],
+                'trd_pnl': [0.0],
+                'total_pnl': [0.0],
             }
         )
 
         self.final_df = pd.concat([available_cash_df, aggregated_transactions], ignore_index=True)
         self.final_df = self.final_df.replace({np.nan: None})
-        self.final_df['weight'] = self.final_df['mv']/ self.final_df['mv'].sum()
         self.final_df['pos_lev'] = self.final_df['mv'] / self.final_df['bv'].sum()
+        self.final_df['weight'] = self.final_df['mv']/ self.final_df['mv'].sum()
+        self.final_df['gross_weight'] = self.final_df['mv'] / self.final_df['mv'].abs().sum()
+        self.final_df['abs_weight'] = self.final_df['mv'].abs() / self.final_df['mv'].abs().sum()
+
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
 
     def save_ugl(self, valuation_list):
@@ -548,6 +594,11 @@ class Valuation():
                     rgl=valuation['rgl'],
                     ugl=valuation['ugl'],
                     margin_rate=valuation['margin_rate'],
+                    price_pnl=valuation['price_pnl'],
+                    trd_pnl=valuation['trd_pnl'],
+                    total_pnl=valuation['total_pnl'],
+                    gross_weight=valuation['gross_weight'],
+                    abs_weight=valuation['abs_weight'],
                 )
             )
         if new_holdings:

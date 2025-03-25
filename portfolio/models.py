@@ -259,10 +259,27 @@ class Holding(models.Model):
     mv = models.FloatField(default=0.0)
     bv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
+    gross_weight = models.FloatField(default=0.0)
+    abs_weight = models.FloatField(default=0.0)
     pos_lev = models.FloatField(default=0.0)
     ugl = models.FloatField(default=0.0)
     rgl = models.FloatField(default=0.0)
     margin_rate = models.FloatField(default=0.0)
+
+    trade_return = models.FloatField(default=0.0)
+    price_return = models.FloatField(default=0.0)
+    income_return = models.FloatField(default=0.0)
+    fx_return = models.FloatField(default=0.0)
+    total_return = models.FloatField(default=0.0)
+    trd_cont = models.FloatField(default=0.0)
+    price_cont = models.FloatField(default=0.0)
+    inc_cont = models.FloatField(default=0.0)
+    fx_cont = models.FloatField(default=0.0)
+    total_pnl = models.FloatField(default=0.0)
+    trd_pnl = models.FloatField(default=0.0)
+    price_pnl = models.FloatField(default=0.0)
+    income_pnl = models.FloatField(default=0.0)
+    fx_pnl = models.FloatField(default=0.0)
 
 class TotalReturn(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")
@@ -277,11 +294,24 @@ class SecurityReturn(models.Model):
     date = models.DateField()
     security = models.IntegerField(default=0)
     weight = models.FloatField(default=0.0)
+
     trade_return = models.FloatField(default=0.0)
     price_return = models.FloatField(default=0.0)
     income_return = models.FloatField(default=0.0)
     fx_return = models.FloatField(default=0.0)
-    contribution = models.FloatField(default=0.0)
+    total_return = models.FloatField(default=0.0)
+
+    trd_cont = models.FloatField(default=0.0)
+    price_cont = models.FloatField(default=0.0)
+    inc_cont = models.FloatField(default=0.0)
+    fx_cont = models.FloatField(default=0.0)
+
+    total_pnl = models.FloatField(default=0.0)
+    trd_pnl = models.FloatField(default=0.0)
+    price_pnl = models.FloatField(default=0.0)
+    income_pnl = models.FloatField(default=0.0)
+    fx_pnl = models.FloatField(default=0.0)
+
 
 
 class Process(models.Model):

@@ -34,7 +34,7 @@ def get_portfolios(request):
 def get_portfolio_transactions(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
+
         filters = {}
         for key, value in request_body.items():
             if isinstance(value, list):
@@ -186,6 +186,9 @@ def get_holding(request):
                 'pos_lev': holding.pos_lev,
                 'ugl': holding.ugl,
                 'rgl': holding.rgl,
+                'price_pnl': holding.price_pnl,
+                'trd_pnl': holding.trd_pnl,
+                'total_pnl': holding.total_pnl,
             }
             for holding in holdings
         ]
@@ -301,6 +304,7 @@ def get_port_groups(request):
             'parent_id': group.parent_id,
             'portfolio_code': group.portfolio.portfolio_code,
             'portfolio_type': group.portfolio.portfolio_type,
+            'currency': group.portfolio.currency,
         }
         for group in port_groups
     ]
