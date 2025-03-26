@@ -27,6 +27,7 @@ class Valuation():
         self.base_margin_instrument = cash_instruments[cash_instruments['type'] == 'Margin']['id'].values[0]
         self.previous_cash = 0
         self.previous_margin = 0
+        self.previous_contra = 0
         self.previous_ugl = 0
         self.previous_transactions = pd.DataFrame({})
         self.final_df = pd.DataFrame({})
@@ -70,7 +71,7 @@ class Valuation():
                 (previous_valuations['trade_type'] != 'Margin') | previous_valuations['trade_type'] != 'Available Cash']
             self.previous_cash = previous_valuations[previous_valuations['trade_type'] == 'Available Cash']['mv'].sum()
             self.previous_margin = previous_valuations[previous_valuations['trade_type'] == 'Margin']['mv'].sum()
-
+            self.previous_contra = previous_valuations[previous_valuations['trade_type'] == 'Contra']['mv'].sum()
 
             self.previous_transactions = previous_positions[~previous_positions['instrument_id'].isin([self.base_currency_sec_id, self.base_margin_instrument])]
             self.previous_ugl = self.previous_transactions['ugl'].sum()
@@ -121,12 +122,48 @@ class Valuation():
                 'source': []
             })
 
+    # Asset valuation related function
     def ugl_calc(self, row):
         try:
             existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
+            # if existing_trade['beg_quantity'] > 0 and existing_trade['quantity'] == 0:
+            #     return 0
             return row['bv'] - existing_trade['bv'].sum()
         except:
             return row['bv']
+
+    # def ugl_calc(self, row):
+    #     try:
+    #         print(row['trd_id'])
+    #         existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
+    #         print(existing_trade)
+    #         # Checks if this is a closed transaction and the previous transaction is not closed
+    #         if row['quantity'] == 0:
+    #             # If this is a closed it returns
+    #             print('0 quantity')
+    #             return existing_trade['bv'] * -1
+    #         else:
+    #             return row['bv'] - existing_trade['bv'].sum()
+    #     except:
+    #         print('this line because there is no previous transaction')
+    #         return row['bv']
+
+    def trade_pnl_calc(self, row):
+        try:
+            print(row)
+            existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
+
+            value = row['mv'] + existing_trade['mv'].sum()
+            return value
+        except:
+            return 0
+
+    def previous_value(self, row, value):
+        try:
+            existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
+            return existing_trade[value].iloc[0]
+        except:
+            return 0
 
     def price_pnl_calc(self, row):
         if row['mv'] == 0:
@@ -149,12 +186,21 @@ class Valuation():
                 return row['price_pnl'] / prev_bv
 
     def book_value_calc(self, row):
+        # Here comes the logic for other assett types
+
+        # # If this is a fully closed trasaction it is 0
+        if row['quantity'] == 0:
+            return 0
+
         if row['group'] == 'CFD':
             if row['quantity'] > 0:
+                # Purchase trade book value calculation
                 return round((row['price'] - row['trade_price']) * row['quantity'] * row['fx_rate'], 2)
-            else:
+            elif row['quantity'] < 0:
+                # Sale trade book value caluclation
                 return round((row['trade_price'] - row['price']) * abs(row['quantity']) * row['fx_rate'], 2)
         else:
+            # If this is not leveraged trade the book value is equal to the market value
             return row['mv']
 
     def fx_check(self, row):
@@ -193,12 +239,14 @@ class Valuation():
         # Current Transactions
         current_transactions = self.fetch_transactions()
 
+        # Összevonja az előző valuation és az adott periódus tranzakcióit és az rgl t 0 ra állitja
         prev_plus_current = pd.concat([self.previous_transactions, current_transactions], ignore_index=True)
         prev_plus_current['rgl'] = 0.0
 
         # RGL
         rgl_data = self.fetch_rgl()
 
+        # Ha a van jelenlegi tranzakció és rgl adat akkor adja hozzá a táblához. Itt jön be az RGL a táblába
         if not current_transactions.empty and not rgl_data.empty:
             rgl_merge = pd.merge(prev_plus_current, rgl_data[['transaction_id', 'base_mv']], left_on='trd_id', right_on='transaction_id', how='left')
             prev_plus_current['rgl'] = rgl_merge['base_mv'].fillna(prev_plus_current['rgl'])
@@ -206,6 +254,7 @@ class Valuation():
         #  FX
         fx_rates = self.fetch_fx_rates(date=self.calc_date)
 
+        # Ha nem üres az eőző periódus és a jelenlegi tranzakciók akkor kezdi az értékelést
         if not prev_plus_current.empty:
             aggregated_transactions = prev_plus_current.groupby('inv_num', as_index=False).agg({
                 'quantity': 'sum',
@@ -237,24 +286,40 @@ class Valuation():
                                                right_on='rate', how='left')
             aggregated_transactions = pd.merge(aggregated_transactions, prices_df, left_on='instrument_id',
                                                right_on='instrument_id', how='left')
+
+            # Previous Values
+            aggregated_transactions['beg_quantity'] = aggregated_transactions.apply(
+                lambda row: self.previous_value(row, 'quantity'), axis=1)
+            aggregated_transactions['beg_market_price'] = aggregated_transactions.apply(
+                lambda row: self.previous_value(row, 'market_price'), axis=1)
+            aggregated_transactions['beg_mv'] = aggregated_transactions.apply(
+                lambda row: self.previous_value(row, 'mv'), axis=1)
+            aggregated_transactions['beg_bv'] = aggregated_transactions.apply(
+                lambda row: self.previous_value(row, 'bv'), axis=1)
+
             aggregated_transactions['price'].fillna(0, inplace=True)
             aggregated_transactions['fx_rate'].fillna(0, inplace=True)
+
+            # Számolás
+            # Cash papirok áraqzása 1-re
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
+            aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions[
+                'margin_rate']
 
+            aggregated_transactions['trd_pnl'] = aggregated_transactions['rgl'] # Ez duplikált oszlop az RGL el
             aggregated_transactions['bv'] = aggregated_transactions.apply(self.book_value_calc, axis=1)
             aggregated_transactions['ugl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
 
-            aggregated_transactions['price_pnl'] = aggregated_transactions.apply(self.ugl_calc, axis=1)
-            aggregated_transactions['trd_pnl'] = aggregated_transactions['rgl']
-            aggregated_transactions['total_pnl'] = aggregated_transactions['trd_pnl'] + aggregated_transactions['price_pnl']
+            aggregated_transactions['price_pnl'] = aggregated_transactions.apply(self.price_pnl_calc, axis=1)
 
-            aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions['margin_rate']
+            aggregated_transactions['total_pnl'] = aggregated_transactions['trd_pnl'] + aggregated_transactions[
+                'ugl']
+
             aggregated_transactions = aggregated_transactions.drop(columns=['id', 'name', 'group', 'type', 'currency', 'country', 'fx_pair', 'rate', 'price', 'source'])
 
             total_margin = abs(aggregated_transactions['margin_req'].sum())
             total_ugl = aggregated_transactions['ugl'].sum()
-            total_rgl = aggregated_transactions['rgl'].sum()
             total_bv = aggregated_transactions['bv'].sum()
 
             total_margin_df = pd.DataFrame({
@@ -265,11 +330,14 @@ class Valuation():
                 'trade_date': [self.calc_date],
                 'trade_type': ['Margin'],
                 'instrument_id': [self.base_margin_instrument],
+                'beg_quantity': [self.previous_margin],
                 'quantity': [total_margin],
                 'trade_price': [1],
+                'beg_market_price': [1],
                 'market_price': [1],
                 'fx_rate': [1],
                 'mv': [total_margin],
+                'beg_bv': [self.previous_margin],
                 'bv': [total_margin],
                 'pos_lev': [0.0],
                 'weight': [0.0],
@@ -283,7 +351,7 @@ class Valuation():
                 'trd_pnl': [0.0],
                 'total_pnl': [0.0],
             })
-
+            # Mivel lezáródik az ügylet így nincs kontra ezért a realizált teljes értéke cashbe megy
             if total_margin > 0:
                 contra_df = pd.DataFrame({
                     'portfolio_code': [self.portfolio_code],  # this part has to be amaneded or removed later
@@ -293,11 +361,14 @@ class Valuation():
                     'trade_date': [self.calc_date],
                     'trade_type': ['Contra'],
                     'instrument_id': [self.base_currency_sec_id],
+                    'beg_quantity': [self.previous_contra],
                     'quantity': [total_bv * -1],
                     'trade_price': [1],
+                    'beg_market_price': [1],
                     'market_price': [1],
                     'fx_rate': [1],
                     'mv': [total_bv * -1],
+                    'beg_bv': [self.previous_contra],
                     'bv': [total_bv * -1],
                     'pos_lev': [0.0],
                     'weight': [0.0],
@@ -312,8 +383,11 @@ class Valuation():
                     'total_pnl': [0.0],
                 })
                 aggregation_list = [aggregated_transactions, total_margin_df, contra_df]
+                # total_rgl = 0
             else:
                 aggregation_list = [aggregated_transactions, total_margin_df]
+
+            total_rgl = aggregated_transactions['rgl'].sum()
 
             # print(margin_cash_list)
             aggregated_transactions = pd.concat(aggregation_list, ignore_index=True)
@@ -324,13 +398,13 @@ class Valuation():
             total_margin = 0
             total_ugl = 0
             total_rgl = 0
+
         # It will iterate through the final positions based on the sec group type
 
         # CASH VALUATION ----------------------------------
         capital_cash = self.capital_cash_calculation()
         margin_change = self.previous_margin - total_margin
-        # # ugl_change = total_ugl
-        total_cash = self.previous_cash + total_rgl + capital_cash + total_ugl + margin_change
+        total_cash = self.previous_cash + capital_cash + total_ugl + margin_change + total_rgl
 
         available_cash_df = pd.DataFrame(
             {
@@ -341,11 +415,14 @@ class Valuation():
                 'trade_date': [self.calc_date],
                 'trade_type': ['Available Cash'],
                 'instrument_id': [self.base_currency_sec_id],
+                'beg_quantity': [self.previous_cash],
                 'quantity': [total_cash],
                 'trade_price': [1],
+                'beg_market_price': [0.0],
                 'market_price': [1],
                 'fx_rate': [1],
                 'mv': [total_cash],
+                'beg_bv': [self.previous_cash],
                 'bv': [total_cash],
                 'pos_lev': [0.0],
                 'weight': [0.0],
@@ -583,11 +660,14 @@ class Valuation():
                     trade_date=str(valuation['trade_date']),
                     trade_type=valuation['trade_type'],
                     instrument_id=valuation['instrument_id'],
+                    beg_quantity=valuation['beg_quantity'],
                     quantity=round(valuation['quantity'], 4),
                     trade_price=valuation['trade_price'],
+                    beg_market_price=valuation['beg_market_price'],
                     market_price=valuation['market_price'],
                     fx_rate=valuation['fx_rate'],
                     mv=round(valuation['mv'], 4),
+                    beg_bv=valuation['beg_bv'],
                     bv=round(valuation['bv'], 4),
                     weight=valuation['weight'],
                     pos_lev=valuation['pos_lev'],
@@ -609,7 +689,6 @@ class Valuation():
 
     def send_responses(self):
         return self.response_list + self.error_list
-
 
 def calculate_holdings(portfolio_code, calc_date):
     pd.set_option('display.width', 200)

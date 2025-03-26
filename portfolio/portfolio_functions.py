@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from portfolio.models import Transaction, Portfolio, Instruments, Tickers
+from calculations.processes.valuation.valuation import calculate_holdings
 
 # Define transaction categories
 CASH_TRANSACTIONS = {"Subscription", "Redemption", "Commission", "Financing"}
@@ -79,7 +80,7 @@ def create_transaction(transaction_data):
                 currency=instrument.currency,
                 transaction_type=transaction_type
             ).capital_transaction()
-
+            calculate_holdings(portfolio_code=transaction_data["portfolio_code"], calc_date=transaction_data['trade_date'])
             return {"status": "success", "msg": f"New capital transaction ({transaction_type}) created",
                     "category": transaction_category}
 
@@ -153,7 +154,8 @@ def create_transaction(transaction_data):
                 transaction["margin_rate"] = 1
 
             Transaction(**transaction).instrument_transaction()
-
+            calculate_holdings(portfolio_code=transaction["portfolio_code"],
+                               calc_date=transaction['trade_date'])
             return {
                 "status": "success",
                 "msg": f"New parent transaction ({transaction_type}) is created",
@@ -193,7 +195,8 @@ def create_transaction(transaction_data):
                 }
 
             Transaction(**transaction).instrument_transaction(parent=parent_transaction)
-
+            calculate_holdings(portfolio_code=parent_transaction.portfolio_code,
+                               calc_date=transaction_data['trade_date'])
             return {
                 "status": "success",
                 "msg": f"New child transaction ({transaction_type}) is created",

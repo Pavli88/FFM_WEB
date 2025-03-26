@@ -252,11 +252,15 @@ class Holding(models.Model):
     trade_type = models.CharField(max_length=30, default="")
     trade_date = models.DateField(null=True)
     instrument = models.ForeignKey(Instruments, on_delete=models.CASCADE, null=True)
-    quantity = models.FloatField(default=0.0) # -> Needed for valuation
+    beg_quantity = models.FloatField(default=0.0)
+    quantity = models.FloatField(default=0.0)
     trade_price = models.FloatField(default=0.0)
-    market_price = models.FloatField(default=0.0) # -> Needed for valuation
-    fx_rate = models.FloatField(default=0.0) # -> Needed for valuation
+    beg_market_price = models.FloatField(default=0.0)
+    market_price = models.FloatField(default=0.0)
+    fx_rate = models.FloatField(default=0.0)
+    beg_mv = models.FloatField(default=0.0)
     mv = models.FloatField(default=0.0)
+    beg_bv = models.FloatField(default=0.0)
     bv = models.FloatField(default=0.0)
     weight = models.FloatField(default=0.0)
     gross_weight = models.FloatField(default=0.0)
