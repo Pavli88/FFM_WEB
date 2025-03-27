@@ -22,13 +22,12 @@ def delete_transaction(request):
         # calculate_holdings(portfolio_code=portfolio_code, calc_date=date)
         return JsonResponse({'message': 'Transaction is deleted!', 'success': True}, safe=False)
 
-
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def delete_trade_routing(request):
-    if request.method == "POST":
-        request_data = json.loads(request.body.decode('utf-8'))
-        TradeRoutes.objects.get(id=request_data['id']).delete()
-        return JsonResponse({'response': 'Trade Routing is deleted!'}, safe=False)
+    request_data = json.loads(request.body.decode('utf-8'))
+    TradeRoutes.objects.get(id=request_data['id']).delete()
+    return Response({"message": "Trade route is deleted", "success": True}, status=200)
 
 
 @csrf_exempt

@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from portfolio.models import TradeRoutes, PortGroup, Portfolio, Nav, Transaction
+from instrument.models import Tickers
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,13 +14,14 @@ def create_trade_routing(request):
     request_data = json.loads(request.body.decode('utf-8'))
     if TradeRoutes.objects.filter(portfolio_code=request_data['portfolio_code'],
                                   inst_id=request_data['inst_id']).exists():
-        return JsonResponse({'response': 'Security is already mapped to this portfolio'}, safe=False)
+        return JsonResponse({'msg': f"Trade routing already exists for this instrument {request_data['inst_id']} at {request_data['portfolio_code']}"}, status=400)
     else:
+        ticker = Tickers.objects.get(inst_code=request_data['inst_id'], source=request_data['source'])
         TradeRoutes(portfolio_code=request_data['portfolio_code'],
                     inst_id=request_data['inst_id'],
-                    ticker_id=request_data['ticker_id'],
+                    ticker_id=ticker.id,
                     broker_account_id=request_data['broker_account_id']).save()
-        return JsonResponse({'response': 'Security mapping is completed'}, safe=False)
+        return JsonResponse({'msg': "New trade routing is created!"}, status=201)
 
 
 @api_view(["POST"])
