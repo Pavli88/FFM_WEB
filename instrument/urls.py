@@ -13,6 +13,9 @@ get_patterns = [
     path('instruments/get/instruments/', get_views.get_instruments),
     path('instruments/get/price/', get_views.get_prices),
     path('instruments/get/broker/tickers/', get_views.get_broker_tickers),
+    path('users/search/', get_views.search_users),
+    path('portfolios/search/', get_views.search_portfolios),
+
 ]
 
 delete_patterns = [

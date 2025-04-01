@@ -1,11 +1,14 @@
 import pandas as pd
 from django.http import JsonResponse
 from django.db.models import Q
+from django.contrib.auth import get_user_model
+from portfolio.models import Portfolio
 from instrument.models import Instruments, Tickers, Prices
 from app_functions.request_functions import *
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+User = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -65,3 +68,33 @@ def get_prices(request):
         else:
             # print(pd.DataFrame(prices).sort_values('date').to_dict('records'))
             return JsonResponse(pd.DataFrame(prices).sort_values('date').to_dict('records'), safe=False)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    try:
+        query = request.GET.get('q', '')
+        if not query:
+            return JsonResponse([], safe=False)
+
+        users = User.objects.filter(Q(username__istartswith=query)).values('id', 'username')[:10]
+
+        return JsonResponse(list(users), safe=False, status=200)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Error while searching users: {str(e)}'}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_portfolios(request):
+    query = request.GET.get('q', '').lower()
+    if not query:
+        return JsonResponse([], safe=False)
+
+    results = Portfolio.objects.filter(
+        Q(portfolio_name__icontains=query) | Q(portfolio_code__icontains=query),
+        user=request.user
+    ).values('id', 'portfolio_name', 'portfolio_code')[:10]
+
+    return JsonResponse(list(results), safe=False)
