@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
+from .serializers import BrokerAccountSerializer
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -29,6 +30,27 @@ def new_account(request):
         return JsonResponse({"message": "Account is created successfully!"}, status=201)
     else:
         return JsonResponse({"message": "Account already exists in the database!"}, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_account(request, pk):
+    try:
+        body = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    try:
+        account = BrokerAccounts.objects.get(pk=pk)
+    except BrokerAccounts.DoesNotExist:
+        return JsonResponse({'error': 'Account not found'}, status=404)
+
+    serializer = BrokerAccountSerializer(account, data=body)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data, status=200)
+    else:
+        return JsonResponse(serializer.errors, status=400)
 
 
 @api_view(['GET'])
