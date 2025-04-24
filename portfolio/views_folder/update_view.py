@@ -11,7 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 @permission_classes([IsAuthenticated])
 def update_portfolio(request):
     request_data = request.data
-
+    print('UPDATE')
     portfolio_id = request_data.get('id')
     if not portfolio_id:
         return JsonResponse({'response': 'Portfolio ID is required'}, status=400)

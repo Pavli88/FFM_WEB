@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, date
 from datetime import timedelta
+from django.db import connection
 
 class Valuation():
     def __init__(self, portfolio_code, calc_date):
@@ -515,10 +516,55 @@ class Valuation():
             child_portfolio_ids = PortGroup.objects.filter(parent_id=self.portfolio_data.id).values_list(
                 'portfolio_id', flat=True)
 
-            child_portfolios = Portfolio.objects.filter(id__in=child_portfolio_ids).values_list('portfolio_code',
-                                                                                                flat=True)
+            query = """
+                    WITH RECURSIVE portfolio_hierarchy AS (
+                        -- Base case: Select the given Portfolio Group using its portfolio_code
+                        SELECT p.id             AS parent_id, \
+                               p.portfolio_name AS parent_name, \
+                               p.portfolio_type, \
+                               p.portfolio_code, \
+                               p.id             AS child_id, \
+                               p.portfolio_name AS child_name, \
+                               p.portfolio_type AS child_type, \
+                               p.portfolio_code AS child_code
+                        FROM portfolio_portfolio p
+                        WHERE p.portfolio_code = %s -- Parameterized query
+
+                        UNION ALL
+
+                        -- Recursive case: Find all children of the current parent in the hierarchy
+                        SELECT ph.child_id       AS parent_id, \
+                               ph.child_name     AS parent_name, \
+                               ph.child_type     AS portfolio_type, \
+                               ph.child_code     AS portfolio_code, \
+                               p2.id             AS child_id, \
+                               p2.portfolio_name AS child_name, \
+                               p2.portfolio_type AS child_type, \
+                               p2.portfolio_code AS child_code
+                        FROM portfolio_hierarchy ph
+                                 JOIN portfolio_portgroup pr ON ph.child_id = pr.parent_id
+                                 JOIN portfolio_portfolio p2 ON pr.portfolio_id = p2.id)
+                    -- Retrieve only Automated portfolios from the hierarchy
+                    SELECT child_id, child_name, child_type, child_code
+                    FROM portfolio_hierarchy
+                    WHERE child_type = 'Portfolio';
+                    """
+
+            # Execute query
+            with connection.cursor() as cursor:
+                cursor.execute(query, [self.portfolio_data.portfolio_code])  # Prevents SQL injection
+                results = cursor.fetchall()
+
+            # Convert results to a list of dictionaries
+            data = [
+                row[3] for row in results
+            ]
+
+            child_portfolios = Portfolio.objects.filter(portfolio_code__in=child_portfolio_ids).values_list('portfolio_code',
+                                                                                             flat=True)
+
             portfolio_navs = pd.DataFrame(
-                Nav.objects.filter(date=calc_date, portfolio_code__in=child_portfolios).values())
+                Nav.objects.filter(date=calc_date, portfolio_code__in=data).values())
 
             expected_portfolios = set(child_portfolios)
 
@@ -604,6 +650,7 @@ class Valuation():
             nav.total_cf = total_cashflow
             nav.save()
         except:
+
             Nav(date=calc_date,
                 portfolio_code=self.portfolio_code, # this part has to be amaneded or removed later
                 portfolio_id=self.portfolio_data.id,
