@@ -30,13 +30,13 @@ def delete_trade_routing(request):
     return Response({"message": "Trade route is deleted", "success": True}, status=200)
 
 
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def delete_port_group(request):
-    if request.method == "POST":
-        print('DELETE NODE')
-        request_data = json.loads(request.body.decode('utf-8'))
-        PortGroup.objects.get(id=request_data['id']).delete()
-        return JsonResponse({'message': 'Portfolio relationship is deleted!', 'success': True}, safe=False)
+    print('DELETE NODE')
+    request_data = json.loads(request.body.decode('utf-8'))
+    PortGroup.objects.get(parent_id=request_data['parent_id'], portfolio_id=request_data['child_id']).delete()
+    return JsonResponse({'message': 'Portfolio relationship is deleted!', 'success': True}, safe=False)
 
 
 @api_view(["POST"])

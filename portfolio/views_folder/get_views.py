@@ -118,33 +118,31 @@ def get_open_transactions(request):
 
     return JsonResponse(transaction_data, safe=False)
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_nav(request):
-    if request.method == "POST":
-        try:
-            request_body = json.loads(request.body.decode('utf-8'))
-            print(request_body)
-            filters = {key: value for key, value in request_body.items()}
+    try:
+        request_body = json.loads(request.body.decode('utf-8'))
+        filters = {key: value for key, value in request_body.items()}
 
-            # Fetch data from the database
-            navs = pd.DataFrame(Nav.objects.filter(**filters).values())
+        # Fetch data from the database
+        navs = pd.DataFrame(Nav.objects.filter(**filters).values())
 
-            if navs.empty:
-                return JsonResponse({"message": "No data found"}, status=404)
+        if navs.empty:
+            return JsonResponse({"message": "No data found"}, status=404)
 
-            # Group data by date
-            grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
+        # Group data by date
+        grouped_data = navs.groupby('date').apply(lambda x: x.to_dict(orient='records')).to_dict()
 
-            # Convert to list of dictionaries
-            result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+        # Convert to list of dictionaries
+        result = [{"date": date, "records": records} for date, records in grouped_data.items()]
+        return JsonResponse(result, safe=False)  # Ensure response is JSON
 
-            return JsonResponse(result, safe=False)  # Ensure response is JSON
-
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def transactions_pnls(request):
@@ -205,46 +203,52 @@ def get_holding(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_exposures(request):
-    if request.method == "GET":
-        try:
-            # responses = calculate_holdings(portfolio_code=request.GET.get("portfolio_code"), calc_date=request.GET.get("date"))
-            # print(responses)
-            stress_percentage = float(request.GET.get("stress_percentage")) / 100
-            holding_df = pd.read_json(Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
-            nav = Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date=request.GET.get("date")).values()[0]['total']
-            holding_df['contribution'] = (holding_df['unrealized_pnl'] / nav) * 100
-            holding_df['ticked'] = False
-            holding_df['sim_price'] = np.where(holding_df['transaction_type'] == 'Purchase', holding_df['valuation_price'] * (1 - stress_percentage), holding_df['valuation_price'] * (1 + stress_percentage))
-            holding_df['sim_profit'] = np.where(holding_df['transaction_type'] == 'Purchase', (holding_df['sim_price'] - holding_df['trade_price']) * holding_df['ending_pos'] * holding_df['fx_rate'], (holding_df['trade_price'] - holding_df['sim_price']) * holding_df['ending_pos'] * holding_df['fx_rate'])
-            holding_df['sim_contr'] = (holding_df['sim_profit'] / nav) * 100
-            holding_df['sim_contr_amended'] = (holding_df['sim_profit'] / nav) * 100
-            holding_df['sensitivity'] = abs(holding_df['sim_contr']) - abs(holding_df['contribution'])
-            holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round(
-                {'ending_mv': 1,
-                 'base_leverage': 1,
-                 'unrealized_pnl': 2,
-                 'fx_rate': 2,
-                 'trade_price': 4,
-                 'valuation_price': 4,
-                 'contribution': 2,
-                 'sim_contr': 2,
-                 'sim_profit': 2,
-                 'sim_price': 2,
-                 'sensitivity': 2,
-                 'sim_contr_amended': 2
-                 })
-            total_sim_profit = holding_df['sim_profit'].sum()
-            sim_nav = round(nav + total_sim_profit, 2)
-            sim_drawdown = round((nav - sim_nav) / nav, 3) * -100
+    try:
+        stress_percentage = float(request.GET.get("stress_percentage")) / 100
+        holding_df = pd.read_json(
+            Holding.objects.get(date=request.GET.get("date"), portfolio_code=request.GET.get("portfolio_code")).data)
+        nav = \
+        Nav.objects.filter(portfolio_code=request.GET.get("portfolio_code"), date=request.GET.get("date")).values()[0][
+            'total']
+        holding_df['contribution'] = (holding_df['unrealized_pnl'] / nav) * 100
+        holding_df['ticked'] = False
+        holding_df['sim_price'] = np.where(holding_df['transaction_type'] == 'Purchase',
+                                           holding_df['valuation_price'] * (1 - stress_percentage),
+                                           holding_df['valuation_price'] * (1 + stress_percentage))
+        holding_df['sim_profit'] = np.where(holding_df['transaction_type'] == 'Purchase',
+                                            (holding_df['sim_price'] - holding_df['trade_price']) * holding_df[
+                                                'ending_pos'] * holding_df['fx_rate'],
+                                            (holding_df['trade_price'] - holding_df['sim_price']) * holding_df[
+                                                'ending_pos'] * holding_df['fx_rate'])
+        holding_df['sim_contr'] = (holding_df['sim_profit'] / nav) * 100
+        holding_df['sim_contr_amended'] = (holding_df['sim_profit'] / nav) * 100
+        holding_df['sensitivity'] = abs(holding_df['sim_contr']) - abs(holding_df['contribution'])
+        holding_df = holding_df[(holding_df['ending_mv'] > 0.0) & (holding_df['instrument_name'] != 'Cash')].round(
+            {'ending_mv': 1,
+             'base_leverage': 1,
+             'unrealized_pnl': 2,
+             'fx_rate': 2,
+             'trade_price': 4,
+             'valuation_price': 4,
+             'contribution': 2,
+             'sim_contr': 2,
+             'sim_profit': 2,
+             'sim_price': 2,
+             'sensitivity': 2,
+             'sim_contr_amended': 2
+             })
+        total_sim_profit = holding_df['sim_profit'].sum()
+        sim_nav = round(nav + total_sim_profit, 2)
+        sim_drawdown = round((nav - sim_nav) / nav, 3) * -100
 
-            return JsonResponse({
-                'data': holding_df.to_dict('records'),
-                'nav': round(nav, 2),
-                'sim_nav': sim_nav,
-                'sim_dd': round(sim_drawdown, 2)
-            }, safe=False)
-        except Holding.DoesNotExist:
-            return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
+        return JsonResponse({
+            'data': holding_df.to_dict('records'),
+            'nav': round(nav, 2),
+            'sim_nav': sim_nav,
+            'sim_dd': round(sim_drawdown, 2)
+        }, safe=False)
+    except Holding.DoesNotExist:
+        return JsonResponse({'data': [], 'nav': 0.0}, safe=False)
 
 def get_drawdown(request):
     if request.method == "GET":
@@ -302,7 +306,7 @@ def get_port_groups(request):
     # Format response
     g = [
         {
-            'id': group.id,
+            'id': group.portfolio.id,
             'name': group.portfolio.portfolio_name,
             'parent_id': group.parent_id,
             'portfolio_code': group.portfolio.portfolio_code,
