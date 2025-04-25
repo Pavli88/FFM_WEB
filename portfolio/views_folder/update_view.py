@@ -53,19 +53,16 @@ def update_transaction(request):
             return JsonResponse({'response': 'Error during update'}, safe=False)
 
 
-@csrf_exempt
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def update_trade_routing(request):
-    if request.method == "POST":
-        print('UPDATE TRADE ROUTING')
-        request_body = json.loads(request.body.decode('utf-8'))
-        print(request_body)
+    request_body = json.loads(request.body.decode('utf-8'))
+    try:
         trade_route = TradeRoutes.objects.get(id=request_body['id'])
         trade_route.is_active = request_body['is_active']
         trade_route.quantity = request_body['quantity']
         trade_route.broker_account_id = request_body['broker_account_id']
         trade_route.save()
-
-        return JsonResponse({'response': 'Transaction is closed'}, safe=False)
-
-
-
+        return JsonResponse({'message': 'Trade routing is updated'}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': 'Failed to update trade routing'}, safe=False)
