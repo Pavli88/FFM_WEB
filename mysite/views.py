@@ -21,6 +21,7 @@ import os
 from mysite.models import UserProfile
 from .resetPasswordSerializer import ResetPasswordConfirmSerializer
 from .UserSerializer import UserSerializer
+from .models import Follow
 
 # TASK TEST
 def start_task(request):
@@ -272,7 +273,9 @@ def get_user_data(request):
             "is_superuser": user.is_superuser,
             "is_staff": user.is_staff,
             'image_url': image_url,
-            "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),  # Format datetime
+            "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+            "followers_count": user.followers.count(),
+            "following_count": user.following.count(),
         }
         return JsonResponse(user_data, safe=False)
 
@@ -333,3 +336,56 @@ def update_user_profile(request):
 
     # If serializer validation fails, return the first error message
     return JsonResponse({"error": next(iter(serializer.errors.values()))[0]}, status=400)
+
+@api_view(['GET'])
+def public_user_profile(request, username):
+    try:
+        user = User.objects.get(username=username)
+        data = {
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "date_joined": user.date_joined,
+            "image_url": user.profile.image.url if hasattr(user, 'profile') and user.profile.image else None,
+            "followers_count": user.followers.count(),
+            "following_count": user.following.count(),
+        }
+        return JsonResponse(data)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_user(request, username):
+    try:
+        user_to_follow = User.objects.get(username=username)
+        if user_to_follow == request.user:
+            return JsonResponse({"error": "You can't follow yourself."}, status=400)
+
+        Follow.objects.get_or_create(follower=request.user, following=user_to_follow)
+        return JsonResponse({"message": f"You are now following {username}."})
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request, username):
+    try:
+        user_to_unfollow = User.objects.get(username=username)
+        Follow.objects.filter(follower=request.user, following=user_to_unfollow).delete()
+        return JsonResponse({"message": f"You have unfollowed {username}."})
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_following(request, username):
+    try:
+        user = User.objects.get(username=username)
+        is_following = Follow.objects.filter(follower=request.user, following=user).exists()
+        return JsonResponse({"is_following": is_following})
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)

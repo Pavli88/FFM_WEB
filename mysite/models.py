@@ -96,3 +96,14 @@ class UserProfile(models.Model):
         if self.failed_attempts >= 5:
             self.locked_until = timezone.now() + datetime.timedelta(minutes=15)
         self.save()
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateField(default=datetime.date.today)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return f"{self.follower} follows {self.following}"
