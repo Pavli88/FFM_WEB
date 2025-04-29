@@ -30,7 +30,7 @@ general_patterns = [
     path("start-task/", start_task, name="start-task"),
     path("celery-status/", check_celery_status, name="celery-status"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),  # Login
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),  # Refresh token
+    path("api/token/refresh/", cookie_token_refresh, name="token_refresh"),
     path('api/', include('reports.urls')),
     path('api/', include('risk.urls')),
     path('api/', include('signals.urls')),
