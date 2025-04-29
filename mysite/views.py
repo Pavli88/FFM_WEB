@@ -10,9 +10,10 @@ from django.utils.crypto import get_random_string
 from django.conf import settings
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from .changePasswordSerializer import ChangePasswordSerializer
 from .registerSerializer import RegisterSerializer
 from mysite.tasks import long_running_task
@@ -389,3 +390,20 @@ def check_following(request, username):
         return JsonResponse({"is_following": is_following})
     except User.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
+
+@api_view(['POST'])
+def cookie_token_refresh(request):
+    refresh_token = request.COOKIES.get('refresh_token')
+
+    if not refresh_token:
+        return JsonResponse({"detail": "Refresh token not provided."}, status=401)
+
+    serializer = TokenRefreshSerializer(data={"refresh": refresh_token})
+
+    try:
+        serializer.is_valid(raise_exception=True)
+    except TokenError as e:
+        return JsonResponse({"detail": "Invalid or expired refresh token."}, status=401)
+
+    # serializer.validated_data = { "access": "newaccesstoken..." }
+    return JsonResponse(serializer.validated_data, status=200)
