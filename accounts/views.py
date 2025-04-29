@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from .serializers import BrokerAccountSerializer
+from django.forms.models import model_to_dict
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -68,6 +69,89 @@ def get_accounts(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def broker_credentials(request):
+    if request.method == 'GET':
+        filters = {key: value for key, value in request.GET.items() if value}
+        filters['user'] = request.user
+
+        try:
+            accounts = BrokerCredentials.objects.select_related('user', 'broker').filter(**filters)
+            account_list = []
+            for account in accounts:
+                account_data = {
+                    "id": account.id,
+                    "api_token": account.api_token,
+                    "environment": account.environment,
+                    "email": account.email,
+                    "password": account.password,
+                    "broker_id": account.broker.id,
+                    "broker_name": account.broker.broker,
+                    "user": account.user.id,
+                }
+                account_list.append(account_data)
+
+            if not accounts.exists():
+                return JsonResponse({"error": "No broker crendentials were found for the given broker"}, status=404)
+
+            return JsonResponse(account_list, safe=False, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    elif request.method == 'POST':
+        data = request.data
+
+        try:
+            broker_id = data.get("broker")
+            api_token = data.get("api_token")
+            email = data.get("email")
+            password = data.get("password")
+            environment = data.get("environment")
+
+            if not broker_id:
+                return JsonResponse({"error": "Broker is required"}, status=400)
+
+            broker = Brokers.objects.get(pk=broker_id)
+
+            credentials = BrokerCredentials.objects.create(
+                user=request.user,
+                broker=broker,
+                api_token=api_token,
+                email=email,
+                password=password,
+                environment=environment
+            )
+
+            return JsonResponse(model_to_dict(credentials), status=201)
+
+        except Brokers.DoesNotExist:
+            return JsonResponse({"error": "Broker not found"}, status=404)
+        except ValidationError as ve:
+            return JsonResponse({"error": str(ve)}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    elif request.method == 'DELETE':
+        try:
+            credential_id = request.data.get('id')
+
+            if not credential_id:
+                return JsonResponse({"error": "Missing 'id' in request body."}, status=400)
+
+            credential = BrokerCredentials.objects.get(id=credential_id, user=request.user)
+            credential.delete()
+
+            return JsonResponse({"message": "Broker credentials deleted successfully."}, status=200)
+
+        except BrokerCredentials.DoesNotExist:
+            return JsonResponse({"error": "Broker credentials not found."}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return None
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

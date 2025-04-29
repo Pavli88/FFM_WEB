@@ -97,7 +97,7 @@ class Transaction(models.Model):
     trading_cost = models.FloatField(default=0.0)
     financing_cost = models.FloatField(default=0.0)
     account_id = models.IntegerField(null=True)
-    broker_id = models.IntegerField(null=True)
+    broker_id = models.CharField(max_length=100, null=True)
 
     settlement_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
