@@ -1,27 +1,37 @@
+# Standard lib
+import os
 import json
-from django.contrib.auth.password_validation import validate_password
-from django.core.validators import validate_email
-from django.shortcuts import render
-from django.http import JsonResponse
+
+# Django core
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from django.utils.crypto import get_random_string
-from django.conf import settings
+from django.core.validators import validate_email
+from django.shortcuts import render
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from django.utils.crypto import get_random_string
+from django.http import JsonResponse
+
+# Django REST framework
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from .changePasswordSerializer import ChangePasswordSerializer
-from .registerSerializer import RegisterSerializer
+
+# Local app
+from .serializers import (
+    ChangePasswordSerializer,
+    RegisterSerializer,
+    ResetPasswordConfirmSerializer,
+    UserSerializer,
+)
 from mysite.tasks import long_running_task
 from mysite.celery import app
-import os
 from mysite.models import UserProfile
-from .resetPasswordSerializer import ResetPasswordConfirmSerializer
-from .UserSerializer import UserSerializer
 from .models import Follow
 
 # TASK TEST
@@ -68,9 +78,8 @@ def register_user(request):
         response.set_cookie("refresh", str(refresh), httponly=True, secure=True, samesite='Lax')
 
         return response
-    print('serializer errors: ', serializer.errors)
-    print('type: ',type(serializer.errors))
-    return JsonResponse(serializer.errors, status=400)
+    first_error = next(iter(serializer.errors.values()))[0]
+    return JsonResponse({"error": first_error}, status=400)
 
 
 # @permission_classes([IsAuthenticated])
@@ -214,6 +223,7 @@ def change_password(request):
             validate_password(new_password, user)  # Only validate the new password
         except ValidationError as e:
             # If validation fails, return the error message
+
             return JsonResponse({"error": e.messages}, status=400)
 
         # 4️⃣ Successfully change the password
