@@ -29,8 +29,15 @@ class TradeExecution:
         # Account and Broker Credentials
         self.account = BrokerAccounts.objects.get(id=account_id) # -> from here comes the account number
         self.broker = Brokers.objects.get(id=self.account.broker_id)
-        self.broker_credentials = BrokerCredentials.objects.get(broker=self.account.broker) # -> From here comes additional credentials
 
+        try:
+            self.broker_credentials = BrokerCredentials.objects.get(broker=self.account.broker)
+        except BrokerCredentials.DoesNotExist:
+            Notifications(portfolio_code=self.portfolio.portfolio_code,
+                          message='Rejected Trade. Missing Credentials: ' + str(self.broker.broker_code),
+                          sub_message='Missing Credentials',
+                          broker_name='-').save()
+            raise ValueError("Credentials for this broker are missing.")
 
         # Instrument Ticker
         self.ticker = Tickers.objects.get(inst_code=self.security_id,
@@ -196,10 +203,15 @@ def new_transaction_signal(request):
 
         # Initalizing trade execution
         # Account ID determines the broker and the broker account to trade on
-        execution = TradeExecution(portfolio_code=request_body['portfolio_code'],
-                                   account_id=account_id,
-                                   security_id=request_body['security_id'],
-                                   )
+        try:
+            execution = TradeExecution(
+                portfolio_code=request_body['portfolio_code'],
+                account_id=request_body['account_id'],
+                security_id=request_body['security_id']
+            )
+        except ValueError as e:
+            return JsonResponse({'response': str(e)})
+
 
         if request_body['transaction_type'] == "Close All":
             open_transactions = Transaction.objects.filter(security=request_body['security_id'],
