@@ -12,16 +12,28 @@ from portfolio.portfolio_functions import create_transaction
 @permission_classes([IsAuthenticated])
 def create_trade_routing(request):
     request_data = json.loads(request.body.decode('utf-8'))
+
     if TradeRoutes.objects.filter(portfolio_code=request_data['portfolio_code'],
                                   inst_id=request_data['inst_id']).exists():
-        return JsonResponse({'msg': f"Trade routing already exists for this instrument {request_data['inst_id']} at {request_data['portfolio_code']}"}, status=400)
-    else:
-        ticker = Tickers.objects.get(inst_code=request_data['inst_id'], source=request_data['source'])
-        TradeRoutes(portfolio_code=request_data['portfolio_code'],
-                    inst_id=request_data['inst_id'],
-                    ticker_id=ticker.id,
-                    broker_account_id=request_data['broker_account_id']).save()
-        return JsonResponse({'msg': "New trade routing is created!"}, status=201)
+        return JsonResponse({
+            'msg': f"Routing exists for {request_data['inst_id']} at {request_data['portfolio_code']}"},
+            status=400)
+
+    try:
+        ticker = Tickers.objects.get(
+            inst_code=request_data['inst_id'],
+            source=request_data['source']
+        )
+    except Tickers.DoesNotExist:
+        return JsonResponse({
+            'msg': f"No ticker found for instrument {request_data['inst_id']} with source {request_data['source']}."
+        }, status=404)
+
+    TradeRoutes(portfolio_code=request_data['portfolio_code'],
+                inst_id=request_data['inst_id'],
+                ticker_id=ticker.id,
+                broker_account_id=request_data['broker_account_id']).save()
+    return JsonResponse({'msg': "New trade routing is created!"}, status=201)
 
 
 @api_view(["POST"])

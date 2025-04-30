@@ -46,25 +46,69 @@ def new_instrument(request):
         return Response({'error': f'Error occurred: {str(e)}'}, status=500)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_broker_ticker(request):
-    if request.method == "POST":
+    try:
         request_data = json.loads(request.body.decode('utf-8'))
-        ticker_assigned = Tickers.objects.filter(inst_code=request_data['inst_code'], source=request_data['source']).exists()
-        if ticker_assigned:
-            return JsonResponse('Ticker has already been assigned to this security at this broker!', safe=False)
-        try:
-            Tickers(
-                inst_code=request_data['inst_code'],
-                source=request_data['source'],
-                source_ticker=request_data['source_ticker'],
-                margin=request_data['margin']
-            ).save()
-            response = 'Broker ticker is saved!'
-        except:
-            response = 'Broker ticker already exists!'
+        required_fields = ['inst_code', 'source', 'source_ticker', 'margin']
+        missing_fields = [field for field in required_fields if field not in request_data]
 
-        return JsonResponse(response, safe=False)
+        try:
+            instrument = Instruments.objects.get(id=request_data['inst_code'])
+        except Instruments.DoesNotExist:
+            return JsonResponse({"error": "Instrument with the given ID does not exist."}, status=404)
+
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400
+            )
+
+        # Check if the ticker already exists
+        ticker_assigned = Tickers.objects.filter(
+            inst_code=request_data['inst_code'],
+            source=request_data['source']
+        ).exists()
+
+        if ticker_assigned:
+            return JsonResponse(
+                {"error": "Ticker has already been assigned to this security at this broker!"},
+                status=400
+            )
+
+        # Save new ticker
+        ticker = Tickers(
+            inst_code=instrument,
+            source=request_data['source'],
+            source_ticker=request_data['source_ticker'],
+            margin=float(request_data['margin'])
+        )
+        ticker.save()
+
+        return JsonResponse(
+            {"message": "Broker ticker saved successfully!"},
+            status=201
+        )
+
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"error": "Invalid JSON format."},
+            status=400
+        )
+
+    except ValidationError as ve:
+        return JsonResponse(
+            {"error": str(ve)},
+            status=400
+        )
+
+    except Exception as e:
+        print("Unexpected error:", str(e))
+        return JsonResponse(
+            {"error": "An unexpected error occurred."},
+            status=500
+        )
 
 
 @api_view(['POST'])

@@ -1,7 +1,5 @@
-from accounts.models import *
 from accounts.account_functions import *
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +7,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .serializers import BrokerAccountSerializer
 from django.forms.models import model_to_dict
+from broker_apis.capital import CapitalBrokerConnection
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -203,3 +202,65 @@ def delete_broker(request):
     request_data = json.loads(request.body.decode('utf-8'))
     Brokers.objects.get(id=request_data['id']).delete()
     return JsonResponse({'message': 'Broker is deleted'}, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def sync(request):
+    data = request.data
+    print(data)
+
+    if data.get('broker_name') == 'Capital.com':
+        print('CAPITAL')
+
+        # Connect to broker API
+        con = CapitalBrokerConnection(
+            ENV=data['environment'],
+            email=data['email'],
+            api_password=data['password'],
+            api_key=data['api_token']
+        )
+
+        # Fetch accounts from broker
+        accounts = con.get_accounts()
+
+        created_accounts = []
+
+        for account in accounts:
+            print(account)
+
+            account_number = account.get('accountId')
+            print(account_number)
+            if not account_number:
+                continue  # Skip if no account number
+
+            # Check if account already exists for this user and broker
+            existing = BrokerAccounts.objects.filter(
+                account_number=account_number,
+                user=request.user,
+                broker_name=data['broker_name']
+            ).first()
+
+            if existing:
+                print(f"Account {account_number} already exists, skipping.")
+                continue  # Skip if already exists
+
+            # Create new BrokerAccounts record
+            new_account = BrokerAccounts.objects.create(
+                broker_name=data['broker_name'],
+                broker_id=data['broker_id'],
+                account_name=account.get('accountName', ''),
+                account_number=account.get('accountId'),
+                account_type=account.get('accountType', ''),
+                env=data['environment'],
+                currency=account.get('currency', ''),
+                user=request.user,
+            )
+
+            created_accounts.append(new_account.id)
+
+    return JsonResponse({
+        "message": "Sync complete",
+        "created_accounts": created_accounts
+    }, safe=False)
+

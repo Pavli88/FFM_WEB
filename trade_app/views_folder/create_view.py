@@ -1,12 +1,13 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from accounts.models import BrokerAccounts
+from accounts.models import BrokerAccounts, BrokerCredentials, Brokers
 from instrument.models import Instruments, Tickers, Prices
 from portfolio.models import Portfolio, Transaction, Nav, TradeRoutes
 from trade_app.models import Notifications
 import pandas as pd
 from broker_apis.oanda import OandaV20
+from broker_apis.capital import CapitalBrokerConnection
 from datetime import date
 from calculations.processes.valuation.valuation import calculate_holdings
 from portfolio.portfolio_functions import create_transaction
@@ -14,112 +15,110 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 
+BROKER_API_CLASSES = {
+    'oanda': OandaV20,
+    'CPTL': CapitalBrokerConnection,
+}
+
 class TradeExecution:
     def __init__(self, portfolio_code, account_id, security_id):
         self.portfolio = Portfolio.objects.get(portfolio_code=portfolio_code)
-        self.account = BrokerAccounts.objects.get(id=account_id)
         self.security_id = security_id
         self.trade_date = timezone.now().strftime('%Y-%m-%d')
 
-        self.ticker = Tickers.objects.get(inst_code=self.security_id,
-                                          source=self.account.broker_name)
+        # Account and Broker Credentials
+        self.account = BrokerAccounts.objects.get(id=account_id) # -> from here comes the account number
+        self.broker = Brokers.objects.get(id=self.account.broker_id)
+        self.broker_credentials = BrokerCredentials.objects.get(broker=self.account.broker) # -> From here comes additional credentials
 
-        # It has to be selected based on the account ID which connection has to be established
-        self.broker_connection = OandaV20(access_token=self.account.access_token,
-                                          account_id=self.account.account_number,
-                                          environment=self.account.env)
+
+        # Instrument Ticker
+        self.ticker = Tickers.objects.get(inst_code=self.security_id,
+                                          source=self.broker.broker_code)
+
+        # Select Broker API Class
+        broker_api_class = BROKER_API_CLASSES.get(self.broker.broker_code)
+
+        if broker_api_class is None:
+            raise Exception(f"Unsupported broker: {self.broker.broker_code}")
+
+        # Bridge to connect particular API
+        self.broker_connection =  broker_api_class.from_credentials(self.broker_credentials, self.account)
 
     def new_trade(self, transaction_type, quantity):
         multiplier = 1 if transaction_type == "Purchase" else -1
 
-        # # Trade execution at broker
+        # Trade execution at broker
         trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
             Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message=trade['response']['reason'] + ' - ' + transaction_type + ' ' + ' ' + str(quantity),
+                          message=trade['reason'] + ' - ' + transaction_type + ' ' + ' ' + str(quantity),
                           security=self.security_id,
                           sub_message='Rejected',
                           broker_name=self.account.broker_name).save()
-            return {'response': 'Transaction is rejected. Reason: ' + trade['response']['reason']}
+            return {'response': 'Transaction is rejected. Reason: ' + trade['reason']}
 
-        trade_price = trade['response']["price"]
-
-        # FX Conversion to Base Currency
-        conversion_factor = (float(trade['response']['gainQuoteHomeConversionFactor']) + float(trade['response']['lossQuoteHomeConversionFactor'])) / 2
-
+        # Creating transaction at platform
         transaction = {
             "portfolio_code": self.portfolio.portfolio_code,
             "portfolio_id": self.portfolio.id,
             "security": self.security_id,
             "quantity": quantity,
-            "price": trade_price,
-            "fx_rate": round(float(conversion_factor), 4),
+            "price": trade['trade_price'],
+            "fx_rate": round(float(trade['fx_rate']), 4),
             "trade_date": self.trade_date,
             "transaction_type": transaction_type,
-            "broker": self.account.broker_name,
-            "optional": {"account_id": self.account.id, "is_active": True, "broker_id": trade['response']['id']}
+            "broker": self.broker.broker_code, # self.account.broker_name
+            "optional": {"account_id": self.account.id, "is_active": True, "broker_id": trade['broker_id']}
         }
 
-        result = create_transaction(transaction)
+        create_transaction(transaction) # -> Here to add a feature to capture if accounting data was processed sucessfully
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + trade_price,
+                      message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + str(trade['trade_price']),
                       sub_message='Executed',
                       security=self.security_id,
                       broker_name=self.account.broker_name).save()
 
-        self.save_price(trade_price=trade_price)
+        self.save_price(trade_price=trade['trade_price'])
 
     def get_market_price(self):
-        broker_connection = OandaV20(access_token=self.account.access_token,
-                                     account_id=self.account.account_number,
-                                     environment=self.account.env)
-        prices = broker_connection.get_prices(instruments=self.ticker.source_ticker)
+        prices = self.broker_connection.get_prices(instruments=self.ticker.source_ticker)
         bid = prices['bids'][0]['price']
         ask = prices['asks'][0]['price']
         return (float(bid) + float(ask)) / 2
 
     def close(self, transaction, quantity=None):
-        # BROKER SECTION -----------------------------------------------------------------------------------------------
-        broker_connection = OandaV20(access_token=self.account.access_token,
-                                     account_id=self.account.account_number,
-                                     environment=self.account.env)
-        print(broker_connection)
-        print(transaction.broker_id)
+
+        # Close Out
         if quantity is not None:
-            trade = broker_connection.close_out(trd_id=transaction.broker_id, units=quantity)
+            trade = self.broker_connection.close_out(trd_id=transaction.broker_id, units=quantity)
+        # Full Close
         else:
-            trade = broker_connection.close_trade(trd_id=transaction.broker_id)
+            trade = self.broker_connection.close_trade(trd_id=transaction.broker_id)
             transaction.is_active = False
             transaction.overwrite()
 
-        # --------------------------------------------------------------------------------------------------------------
-
-        # FX Conversion to Base Currency
-        conversion_factor = (float(trade['gainQuoteHomeConversionFactor']) + float(trade['lossQuoteHomeConversionFactor'])) / 2
-
-        # Linked transaction creation
-        trade_price = trade["price"]
-        broker_id = trade['id']
-
+        # Creating transaction at platform
         transaction = {
             "parent_id": transaction.id,
             "quantity": abs(float(trade['units'])),
-            "price": trade_price,
-            "fx_rate": round(float(conversion_factor), 4),
+            "price": trade["price"],
+            "fx_rate": round(float(trade["fx_rate"]), 4),
             "trade_date": self.trade_date,
-            "optional": { "broker_id": broker_id }}
+            "optional": { "broker_id": trade['broker_id'] }}
 
-        result = create_transaction(transaction)
+        create_transaction(transaction)
 
         Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=' @ ' + trade_price + ' Broker ID ' + str(broker_id),
+                      message=' @ ' + str(trade["price"]) + ' Broker ID ' + str(trade['broker_id']),
                       sub_message='Close',
                       security=self.security_id,
                       broker_name=self.account.broker_name).save()
 
-        self.save_price(trade_price=trade_price)
+        self.save_price(trade_price=trade["price"])
+
 
     def save_price(self, trade_price):
         try:
