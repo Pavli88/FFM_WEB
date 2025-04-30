@@ -40,8 +40,15 @@ class TradeExecution:
             raise ValueError("Credentials for this broker are missing.")
 
         # Instrument Ticker
-        self.ticker = Tickers.objects.get(inst_code=self.security_id,
-                                          source=self.broker.broker_code)
+        try:
+            self.ticker = Tickers.objects.get(inst_code=self.security_id,
+                                              source=self.broker.broker_code)
+        except Tickers.DoesNotExist:
+            Notifications(portfolio_code=self.portfolio.portfolio_code,
+                          message='Rejected Trade. Missing Ticker: ' + str(self.security_id),
+                          sub_message='Missing Ticker: ' + str(self.broker.broker_code) + ' broker. Security Code: ' + str(self.security_id),
+                          broker_name='-').save()
+            raise ValueError("Ticker for this security is missing at" + str(self.broker.broker_code) + " broker.")
 
         # Select Broker API Class
         broker_api_class = BROKER_API_CLASSES.get(self.broker.broker_code)
