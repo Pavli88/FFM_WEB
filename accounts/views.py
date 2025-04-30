@@ -208,17 +208,16 @@ def delete_broker(request):
 @permission_classes([IsAuthenticated])
 def sync(request):
     data = request.data
-    print(data)
 
     if data.get('broker_name') == 'Capital.com':
-        print('CAPITAL')
 
         # Connect to broker API
         con = CapitalBrokerConnection(
             ENV=data['environment'],
             email=data['email'],
             api_password=data['password'],
-            api_key=data['api_token']
+            api_key=data['api_token'],
+            account_number=''
         )
 
         # Fetch accounts from broker
@@ -227,10 +226,8 @@ def sync(request):
         created_accounts = []
 
         for account in accounts:
-            print(account)
-
             account_number = account.get('accountId')
-            print(account_number)
+
             if not account_number:
                 continue  # Skip if no account number
 
