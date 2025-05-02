@@ -116,6 +116,7 @@ CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
+
 # CORS SETTINGS
 # EZ határozza meg milyen browser cimekről (Origin) fogadhat a Django requesteket
 CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True").lower() in ("true", "1", "yes")
