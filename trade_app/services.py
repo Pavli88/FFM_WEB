@@ -1,11 +1,13 @@
 from accounts.models import BrokerAccounts, BrokerCredentials, Brokers
 from instrument.models import Tickers, Prices
 from portfolio.models import Portfolio
-from trade_app.models import Notifications
+from trade_app.models import Notifications, Order
 from broker_apis.oanda import OandaV20
 from broker_apis.capital import CapitalBrokerConnection
 from portfolio.portfolio_functions import create_transaction
 from django.utils import timezone
+
+# Itt kidolgozni az egyes execution responsokat pl ha nem tudja lezárni, piac zárva van, nincs elég margin stb....
 
 BROKER_API_CLASSES = {
     'oanda': OandaV20,
@@ -25,22 +27,14 @@ class TradeExecution:
         try:
             self.broker_credentials = BrokerCredentials.objects.get(broker=self.account.broker, user=self.account.user)
         except BrokerCredentials.DoesNotExist:
-            Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message='Rejected Trade. Missing Credentials: ' + str(self.broker.broker_code),
-                          sub_message='Missing Credentials',
-                          broker_name='-').save()
-            raise ValueError("Credentials for this broker are missing.")
+            raise ValueError("Missing credentials for broker.")
 
         # Instrument Ticker
         try:
             self.ticker = Tickers.objects.get(inst_code=self.security_id,
                                               source=self.broker.broker_code)
         except Tickers.DoesNotExist:
-            Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message='Rejected Trade. Missing Ticker: ' + str(self.security_id),
-                          sub_message='Missing Ticker: ' + str(self.broker.broker_code) + ' broker. Security Code: ' + str(self.security_id),
-                          broker_name='-').save()
-            raise ValueError("Ticker for this security is missing at" + str(self.broker.broker_code) + " broker.")
+            raise ValueError("Ticker for this security is missing at " + str(self.broker.broker_code) + " broker.")
 
         # Select Broker API Class
         broker_api_class = BROKER_API_CLASSES.get(self.broker.broker_code)
@@ -58,12 +52,7 @@ class TradeExecution:
         trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
                                                            quantity=float(quantity) * multiplier)
         if trade['status'] == 'rejected':
-            Notifications(portfolio_code=self.portfolio.portfolio_code,
-                          message=trade['reason'] + ' - ' + transaction_type + ' ' + ' ' + str(quantity),
-                          security=self.security_id,
-                          sub_message='Rejected',
-                          broker_name=self.account.broker_name).save()
-            return {'response': 'Transaction is rejected. Reason: ' + trade['reason']}
+            return {'message': 'Transaction is rejected. Reason: ' + trade['reason'], 'status': 'REJECTED'}
 
         # Creating transaction at platform
         transaction = {
@@ -81,13 +70,16 @@ class TradeExecution:
 
         create_transaction(transaction) # -> Here to add a feature to capture if accounting data was processed sucessfully
 
-        Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=transaction_type + ' ' + ' ' + str(quantity) + ' @ ' + str(trade['trade_price']),
-                      sub_message='Executed',
-                      security=self.security_id,
-                      broker_name=self.account.broker_name).save()
-
         self.save_price(trade_price=trade['trade_price'])
+
+        return {'message': 'Transaction is executed',
+                'status': 'EXECUTED',
+                'data': {
+                    'broker_order_id': trade['broker_id'],
+                    'executed_price': trade['trade_price'],
+                    'fx_rate': trade['fx_rate'],
+                    'symbol': self.ticker.source_ticker
+                }}
 
     def get_market_price(self):
         prices = self.broker_connection.get_prices(instruments=self.ticker.source_ticker)
@@ -117,13 +109,16 @@ class TradeExecution:
 
         create_transaction(transaction)
 
-        Notifications(portfolio_code=self.portfolio.portfolio_code,
-                      message=' @ ' + str(trade["price"]) + ' Broker ID ' + str(trade['broker_id']),
-                      sub_message='Close',
-                      security=self.security_id,
-                      broker_name=self.account.broker_name).save()
-
         self.save_price(trade_price=trade["price"])
+
+        return {'message': 'Transaction is executed',
+                'status': 'EXECUTED',
+                'data': {
+                    'broker_order_id': trade['broker_id'],
+                    'executed_price': trade['price'],
+                    'fx_rate': round(float(trade["fx_rate"]), 4),
+                    'symbol': self.ticker.source_ticker
+                }}
 
 
     def save_price(self, trade_price):

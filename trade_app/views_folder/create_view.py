@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from portfolio.models import Portfolio, Transaction, Nav, TradeRoutes
-from trade_app.models import Notifications
+from trade_app.models import Notifications, Signal
 import pandas as pd
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -159,11 +159,80 @@ def close_trade_by_id(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def new_trade(request):
-    signal = json.loads(request.body.decode('utf-8'))
-    print(signal)
-    execute_trade_signal.delay(signal)
-    return JsonResponse({"status": "Trade execution started"}, safe=False)
+def trade(request):
+    # IDE KELLENI FOG EGY TOKEN ALAPÚ HITELESITÉSI FOLYAMAT AMI A BEJÖVŐ JEL ALAPJÁN AZONOSITJA AZ ÜGYFELET
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    required_fields = ['portfolio_code', 'security_id', 'transaction_type', 'quantity']
+    missing = [field for field in required_fields if field not in data]
+
+    tx_type = data.get('transaction_type')
+    signal_type = 'OPEN' if tx_type in ['Purchase', 'Sale'] else 'CLOSE'
+    data['type'] = signal_type
+
+    source = 'EXTERNAL' if 'account_id' not in data else 'INTERNAL'
+
+    error_message = ''
+    status = 'PENDING'
+
+    if missing:
+        error_message = f"Missing required fields: {', '.join(missing)}"
+        status = 'FAILED'
+
+    portfolio_data = None
+
+    # Portfolio Validation
+    try:
+        portfolio_data = Portfolio.objects.get(portfolio_code=data.get('portfolio_code'))
+    except Portfolio.DoesNotExist:
+        error_message = "Portfolio does not exist"
+        status = 'FAILED'
+
+    # Trade and Signal Trade Validations
+    if status == 'PENDING':
+        if not portfolio_data.trading_allowed:
+            error_message = "Trading is not allowed for this portfolio."
+            status = 'FAILED'
+        elif source == 'EXTERNAL' and not portfolio_data.allow_external_signals:
+            error_message = "External signals are not allowed for this portfolio."
+            status = 'FAILED'
+
+    # Trade Routing Validation
+    if status == 'PENDING' and source == 'EXTERNAL':
+        try:
+            routing = TradeRoutes.objects.get(
+                portfolio_code=data.get('portfolio_code'),
+                inst_id=data.get('security_id')
+            )
+            data['account_id'] = routing.broker_account_id
+        except TradeRoutes.DoesNotExist:
+            error_message = "Missing trade routing for this security."
+            status = 'FAILED'
+
+    # Signal Creation
+    signal = Signal.objects.create(
+        portfolio=portfolio_data,
+        type=signal_type,
+        raw_data=data,
+        status=status,
+        error_message=error_message,
+        source=source
+    )
+
+    if status == 'PENDING':
+        execute_trade_signal(signal.id) #.delay(signal.id) ezt kell majd átirni ha celerybol fut majd
+
+    return JsonResponse(
+        {'status': status, 'signal_id': signal.id, 'error_message': error_message if status != 'PENDING' else None},
+        status=202 if status == 'PENDING' else 400
+    )
+
+

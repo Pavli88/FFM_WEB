@@ -3,11 +3,13 @@ from django.db import models
 from datetime import datetime
 from instrument.models import Instruments, Tickers
 from django.contrib.auth.models import User
+from django.utils.text import slugify
+import uuid
 from django.core.exceptions import ObjectDoesNotExist
 
 class Portfolio(models.Model):
     portfolio_name = models.CharField(max_length=30, default="")
-    portfolio_code = models.CharField(max_length=30, null=True, blank=True)
+    portfolio_code = models.CharField(max_length=30, unique=True, null=True, blank=True)
     portfolio_type = models.CharField(max_length=30, default="")
     currency = models.CharField(max_length=30, default="")
     inception_date = models.DateField(null=True)
@@ -22,6 +24,7 @@ class Portfolio(models.Model):
     manager = models.CharField(max_length=30, default="")
     public = models.BooleanField(default=False)
     trading_allowed = models.BooleanField(default=False)
+    allow_external_signals = models.BooleanField(default=False)
     multicurrency_allowed = models.BooleanField(default=False)
     weekend_valuation = models.BooleanField(default=False)
     valuation_frequency = models.CharField(max_length=30, default="Daily")
@@ -29,10 +32,27 @@ class Portfolio(models.Model):
     description = models.CharField(max_length=2000, default="")
     pricing_tolerance = models.IntegerField(default=30)
 
+    def generate_unique_portfolio_code(self):
+        base_slug = slugify(self.portfolio_name or "portfolio")
+        base_code = f"u{self.user.id}_{base_slug}"
+        code = base_code
+        counter = 1
+        while Portfolio.objects.filter(portfolio_code=code).exists():
+            code = f"{base_code}_{counter}"
+            counter += 1
+        return code
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
-        self.perf_start_date = self.inception_date
+
+        if is_new and not self.portfolio_code:
+            self.portfolio_code = self.generate_unique_portfolio_code()
+
+        if self.inception_date and not self.perf_start_date:
+            self.perf_start_date = self.inception_date
+
         super().save(*args, **kwargs)
+
         if is_new:
             if self.portfolio_type == 'Business':
                 self.portfolio_code = self.portfolio_code + '_BS'

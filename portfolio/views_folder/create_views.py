@@ -44,7 +44,7 @@ def create_portfolio(request):
         print(body_data)
         user = request.user
 
-        required_fields = ["port_name", "port_code", "port_type", "currency", "inception_date"]
+        required_fields = ["port_name", "port_type", "currency", "inception_date"]
 
         # Check if all required fields are provided
         missing_fields = [field for field in required_fields if field not in body_data]
@@ -63,16 +63,12 @@ def create_portfolio(request):
             return JsonResponse({'msg': "Invalid date format. Use YYYY-MM-DD."}, status=400)
 
         # Check for duplicate portfolio code or name for the user
-        if Portfolio.objects.filter(user=user, portfolio_code=body_data["port_code"]).exists():
-            return JsonResponse({'msg': "Portfolio code already exists for this user!", 'port': 0}, status=400)
-
         if Portfolio.objects.filter(user=user, portfolio_name=body_data["port_name"]).exists():
             return JsonResponse({'msg': "Portfolio name already exists for this user!", 'port': 0}, status=400)
 
         # Create Portfolio
         port = Portfolio(
             portfolio_name=body_data["port_name"],
-            portfolio_code=body_data["port_code"],
             portfolio_type=body_data["port_type"],
             currency=body_data["currency"],
             inception_date=inception_date,

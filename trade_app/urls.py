@@ -5,12 +5,14 @@ from .views_folder import get_views, update_views, create_view, delete_views
 get_patterns = [
     path('trade_page/get/open_trades/<str:environment>/', get_views.get_open_trades),
     path('trade_page/notifications/trade_signals/', get_views.trade_signals),
+    path('trade_page/signals/', get_views.get_signals, name='get_signals'),
+    path('trade_page/orders/', get_views.get_orders, name='get_orders'),
 ]
 
 create_view = [
     path('trade_page/new/signal/', create_view.new_transaction_signal),
     path('trade_page/trade/close/', create_view.close_trade_by_id),
-    path('trade_page/trade/new/', create_view.new_trade),
+    path('trade_page/trade/', create_view.trade),
 ]
 
 update_views = [
