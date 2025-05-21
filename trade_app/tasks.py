@@ -30,7 +30,10 @@ def execute_trade_signal(signal_id):
                 status='FAILED',
                 error_message=str(e)
             )
-            signal_instance.status = 'EXECUTED'
+            signal_status = 'FAILED'
+            error_message = '-'
+            signal_instance.status = signal_status
+            signal_instance.error_message = error_message
             signal_instance.executed_at = timezone.now()
             signal_instance.save()
             return
@@ -41,8 +44,12 @@ def execute_trade_signal(signal_id):
                 is_active=1,
                 portfolio_code=signal['portfolio_code']
             )
+
+            status_list = []
+
             for transaction in open_transactions:
                 response = execution.close(transaction=transaction)
+                status_list.append(response['status'])
                 Order.objects.create(
                     signal=signal_instance,
                     broker_account_id=signal['account_id'],
@@ -58,11 +65,33 @@ def execute_trade_signal(signal_id):
                     error_message=None if response['status'] == 'EXECUTED' else response.get('message', '')
                 )
 
+            if not open_transactions:
+                signal_status = 'REJECTED'
+                error_message = 'There are no open trades to close on the platform.'
+            else:
+                if all(status == 'FAILED' for status in status_list):
+                    signal_status = 'FAILED'
+                    error_message = 'All trade closures failed at broker.'
+                elif all(status == 'EXECUTED' for status in status_list):
+                    signal_status = 'EXECUTED'
+                    error_message = '-'
+                else:
+                    signal_status = 'PARTIALLY EXECUTED'
+                    error_message = 'Some trades executed, some failed.'
+
         elif signal['transaction_type'] == 'Liquidate':
             open_transactions = Transaction.objects.filter(
                 is_active=1,
                 portfolio_code=signal['portfolio_code']
             )
+
+            if not open_transactions:
+                signal_status = 'REJECTED'
+                error_message = 'There are no open trades to liquidate on the platform.'
+            else:
+                signal_status = 'EXECUTED'
+                error_message = '-'
+
             for transaction in open_transactions:
                 execution.close(transaction=transaction)
 
@@ -75,20 +104,6 @@ def execute_trade_signal(signal_id):
             execution.close(transaction=transaction)
 
         else:
-            if 'sl' in signal:
-                latest_nav = Nav.objects.filter(
-                    portfolio_code=signal['portfolio_code']
-                ).order_by('-date').values_list('total', flat=True).first()
-
-                if not latest_nav:
-                    raise ValueError("NAV not found")
-
-                risked_amount = latest_nav * float(signal['risk_perc'])
-                current_price = execution.get_market_price()
-                price_diff = abs(current_price - float(signal['sl']))
-                quantity = str(int(risked_amount / price_diff))
-                signal['quantity'] = quantity
-
             response = execution.new_trade(
                 transaction_type=signal['transaction_type'],
                 quantity=float(signal['quantity'])
@@ -109,7 +124,11 @@ def execute_trade_signal(signal_id):
                 error_message=None if response['status'] == 'EXECUTED' else response.get('message', '')
             )
 
-        signal_instance.status = 'EXECUTED'
+            signal_status = 'EXECUTED'
+            error_message = '-'
+
+        signal_instance.status = signal_status
+        signal_instance.error_message = error_message
         signal_instance.executed_at = timezone.now()
         signal_instance.save()
 

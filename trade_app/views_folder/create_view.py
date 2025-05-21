@@ -185,7 +185,7 @@ def trade(request):
 
     if missing:
         error_message = f"Missing required fields: {', '.join(missing)}"
-        status = 'FAILED'
+        status = 'REJECTED'
 
     portfolio_data = None
 
@@ -194,16 +194,16 @@ def trade(request):
         portfolio_data = Portfolio.objects.get(portfolio_code=data.get('portfolio_code'))
     except Portfolio.DoesNotExist:
         error_message = "Portfolio does not exist"
-        status = 'FAILED'
+        status = 'REJECTED'
 
     # Trade and Signal Trade Validations
     if status == 'PENDING':
         if not portfolio_data.trading_allowed:
             error_message = "Trading is not allowed for this portfolio."
-            status = 'FAILED'
+            status = 'REJECTED'
         elif source == 'EXTERNAL' and not portfolio_data.allow_external_signals:
             error_message = "External signals are not allowed for this portfolio."
-            status = 'FAILED'
+            status = 'REJECTED'
 
     # Trade Routing Validation
     if status == 'PENDING' and source == 'EXTERNAL':
@@ -215,7 +215,7 @@ def trade(request):
             data['account_id'] = routing.broker_account_id
         except TradeRoutes.DoesNotExist:
             error_message = "Missing trade routing for this security."
-            status = 'FAILED'
+            status = 'REJECTED'
 
     # Signal Creation
     signal = Signal.objects.create(

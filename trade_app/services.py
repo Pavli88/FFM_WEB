@@ -112,8 +112,18 @@ class TradeExecution:
         # Full Close
         else:
             trade = self.broker_connection.close_trade(trd_id=transaction.broker_id)
-            transaction.is_active = False
-            transaction.overwrite()
+
+            if trade['status'] == 'accepted':
+                transaction.is_active = False
+                transaction.overwrite()
+
+        if trade['status'] == 'failed':
+            return {'message': trade['reason'] + f" Platform transaction ID {transaction.id}",
+                    'status': 'FAILED',
+                    'data': {
+                        'broker_order_id': trade['broker_id'],
+                        'symbol': self.ticker.source_ticker
+                    }}
 
         # Creating transaction at platform
         transaction = {

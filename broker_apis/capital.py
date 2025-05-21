@@ -189,13 +189,18 @@ class CapitalBrokerConnection:
         self.conn.request("DELETE", f"/api/v1/positions/{trd_id}", payload, headers)
         res = self.conn.getresponse()
         response = json.loads(res.read().decode("utf-8"))
+
+        if 'errorCode' in response:
+            return {'broker_id': '-', 'status': 'failed', 'trade_price': 0, 'fx_rate': 0, 'reason': f"Trade is not open at the broker ({trd_id})"}
+
         deal = self.get_deal_status(deal_reference=response['dealReference'])
 
         return {
             'broker_id': deal['affectedDeals'][0]['dealId'],
             'units': deal['size'],
             'price': deal['level'],
-            'fx_rate': 1
+            'fx_rate': 1,
+            'status': 'accepted'
         }
 
 

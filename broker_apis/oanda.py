@@ -90,10 +90,16 @@ class OandaV20:
 
     def close_trade(self, trd_id):
         r = trades.TradeClose(accountID=self.account_id, tradeID=trd_id)
-        self.api.request(r)
+
+        try:
+            self.api.request(r)
+        except:
+            return {'broker_id': '-', 'status': 'failed', 'trade_price': 0, 'fx_rate': 0, 'reason': f"Trade is not open at the broker ({trd_id})"}
+
         response = r.response
 
         return {
+            'status': 'accepted',
             'broker_id': response['orderFillTransaction']['id'],
             'units': response['orderFillTransaction']['units'],
             'price': response['orderFillTransaction']['price'],

@@ -16,6 +16,8 @@ class Signal(models.Model):
         ('PENDING', 'Pending'),
         ('EXECUTED', 'Executed'),
         ('FAILED', 'Failed'),
+        ('REJECTED', 'Rejected'),
+        ('PARTIALLY EXECUTED', 'Partially Executed'),
     ]
 
     SOURCE_CHOICES = [
