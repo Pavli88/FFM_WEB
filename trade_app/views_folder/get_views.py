@@ -42,7 +42,7 @@ def get_signals(request):
     portfolios = Portfolio.objects.filter(user=user)
     portfolio_codes = portfolios.values_list('portfolio_code', flat=True)
 
-    signals = Signal.objects.filter(portfolio__portfolio_code__in=portfolio_codes).order_by('-created_at')
+    signals = Signal.objects.filter(portfolio__portfolio_code__in=portfolio_codes, created_at__date=request.GET.get('date')).order_by('-created_at')
 
     # Gyűjtsük ki az összes security_id-t
     security_ids = list({

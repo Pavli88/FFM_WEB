@@ -94,6 +94,9 @@ class TradeExecution:
         ask = prices['asks'][0]['price']
         return (float(bid) + float(ask)) / 2
 
+    def position_reconciliation(self):
+        return ''
+
     def close(self, transaction, quantity=None):
 
         # Close Out
