@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from trade_app.views_folder.create_view import TradeExecution
 from trade_app.models import Signal, Order
+from django.db import transaction as db_transaction
 
 # @shared_task(queue='trade_signal', bind=True, max_retries=3) -> itt meg tudom mondani hányszor próbálja újra
 # self et bele kell rakni az argumentumok közé ha celery task lesz
@@ -39,45 +40,46 @@ def execute_trade_signal(signal_id):
             return
 
         if signal['transaction_type'] == "Close All":
-            open_transactions = Transaction.objects.filter(
-                security=signal['security_id'],
-                is_active=1,
-                portfolio_code=signal['portfolio_code']
-            )
-
             status_list = []
 
-            for transaction in open_transactions:
-                response = execution.close(transaction=transaction)
-                status_list.append(response['status'])
-                Order.objects.create(
-                    signal=signal_instance,
-                    broker_account_id=signal['account_id'],
-                    portfolio=signal_instance.portfolio,
-                    security_id=signal['security_id'],
-                    symbol=response['data'].get('symbol', 'N/A'),
-                    side='SELL' if transaction.transaction_type == 'Purchase' else 'BUY',
-                    quantity=signal.get('quantity', 0),
-                    status=response['status'],
-                    executed_price=response['data'].get('executed_price'),
-                    fx_rate=response['data'].get('fx_rate'),
-                    broker_order_id=response['data'].get('broker_order_id'),
-                    error_message=None if response['status'] == 'EXECUTED' else response.get('message', '')
+            with db_transaction.atomic():
+                open_transactions = Transaction.objects.select_for_update().filter(
+                    security=signal['security_id'],
+                    is_active=1,
+                    portfolio_code=signal['portfolio_code']
                 )
 
-            if not open_transactions:
-                signal_status = 'REJECTED'
-                error_message = 'There are no open trades to close on the platform.'
-            else:
-                if all(status == 'FAILED' for status in status_list):
-                    signal_status = 'FAILED'
-                    error_message = 'All trade closures failed at broker.'
-                elif all(status == 'EXECUTED' for status in status_list):
-                    signal_status = 'EXECUTED'
-                    error_message = '-'
+                if not open_transactions:
+                    signal_status = 'REJECTED'
+                    error_message = 'There are no open trades to close on the platform.'
                 else:
-                    signal_status = 'PARTIALLY EXECUTED'
-                    error_message = 'Some trades executed, some failed.'
+                    for transaction in open_transactions:
+                        response = execution.close(transaction=transaction)
+                        status_list.append(response['status'])
+                        Order.objects.create(
+                            signal=signal_instance,
+                            broker_account_id=signal['account_id'],
+                            portfolio=signal_instance.portfolio,
+                            security_id=signal['security_id'],
+                            symbol=response['data'].get('symbol', 'N/A'),
+                            side='SELL' if transaction.transaction_type == 'Purchase' else 'BUY',
+                            quantity=signal.get('quantity', 0),
+                            status=response['status'],
+                            executed_price=response['data'].get('executed_price'),
+                            fx_rate=response['data'].get('fx_rate'),
+                            broker_order_id=response['data'].get('broker_order_id'),
+                            error_message=None if response['status'] == 'EXECUTED' else response.get('message', '')
+                        )
+
+                    if all(status == 'FAILED' for status in status_list):
+                        signal_status = 'FAILED'
+                        error_message = 'All trade closures failed at broker.'
+                    elif all(status == 'EXECUTED' for status in status_list):
+                        signal_status = 'EXECUTED'
+                        error_message = '-'
+                    else:
+                        signal_status = 'PARTIALLY EXECUTED'
+                        error_message = 'Some trades executed, some failed.'
 
         elif signal['transaction_type'] == 'Liquidate':
             open_transactions = Transaction.objects.filter(
