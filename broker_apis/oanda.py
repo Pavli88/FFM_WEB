@@ -58,7 +58,7 @@ class OandaV20:
         r = orders.OrderCreate(self.account_id, data=data)
         self.api.request(r)
         response = r.response
-
+        print(response)
         if list(response.keys())[1] == 'orderFillTransaction':
             print("ACCEPTED TRADE")
             response = response['orderFillTransaction']
@@ -69,7 +69,13 @@ class OandaV20:
             print("REASON:", response['orderCancelTransaction']['reason'])
             response = response['orderCancelTransaction']
             status = 'rejected'
-            return {'reason': response['reason'], 'status': status}
+            if response['reason'] == 'INSUFFICIENT_MARGIN':
+                reason = 'INSUFFICIENT MARGIN'
+            elif response['reason'] == 'MARKET_HALTED':
+                reason = 'MARKET HALTED'
+            else:
+                reason = 'NEW REASON'
+            return {'reason': reason, 'status': status, 'broker_id': response['id']}
         return None
 
     def get_open_trades(self):

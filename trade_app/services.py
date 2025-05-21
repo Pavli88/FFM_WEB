@@ -51,8 +51,15 @@ class TradeExecution:
         # Trade execution at broker
         trade = self.broker_connection.submit_market_order(security=self.ticker.source_ticker,
                                                            quantity=float(quantity) * multiplier)
+        print(trade)
         if trade['status'] == 'rejected':
-            return {'message': 'Transaction is rejected. Reason: ' + trade['reason'], 'status': 'REJECTED'}
+            return {'message': trade['reason'],
+                    'status': 'REJECTED',
+                    'data': {
+                        'broker_order_id': trade['broker_id'],
+                        'symbol': self.ticker.source_ticker
+                    }}
+
 
         # Creating transaction at platform
         transaction = {
