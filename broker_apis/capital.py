@@ -124,17 +124,24 @@ class CapitalBrokerConnection:
         }
         self.conn.request("POST", "/api/v1/positions", payload, headers)
         res = self.conn.getresponse()
-        data = json.loads(res.read().decode("utf-8"))
-        return data['dealReference']
+        return json.loads(res.read().decode("utf-8"))
 
     def submit_market_order(self, security, quantity, sl_price=None):
         self.switch_account()
         response = self.create_position(security=security, quantity=quantity)
-        deal = self.get_deal_status(deal_reference=response)
-        deal_id = deal['affectedDeals'][0]['dealId']
+
+        if 'errorCode' in response:
+            return {'broker_id': '-', 'status': 'failed', 'trade_price': 0, 'fx_rate': 0, 'reason': f"An error occurred during trade execution ({response['errorCode']})"}
+
+        deal = self.get_deal_status(deal_reference=response['dealReference'])
 
         if deal['dealStatus'] == 'ACCEPTED':
+            deal_id = deal['affectedDeals'][0]['dealId']
             return {'broker_id': deal_id, 'status': 'accepted', 'trade_price': deal['level'], 'fx_rate': 1}
+
+        if deal['dealStatus'] == 'REJECTED':
+            deal_id = deal['dealId']
+            return {'broker_id': deal_id, 'status': 'rejected', 'trade_price': deal['level'], 'fx_rate': 0, 'reason': deal['rejectReason']}
 
     def get_single_position(self, deal_id):
         payload = ''
@@ -205,7 +212,7 @@ class CapitalBrokerConnection:
 #     account_number='274430448666751262'
 # )
 # a = con.get_accounts()
-# print(a)
+
 # con.close_position(deal_id="006011e7-0055-311e-0000-000080cb1558")
 
 
@@ -214,6 +221,6 @@ class CapitalBrokerConnection:
 # con.get_all_positions()
 # con.get_session_details()
 # con.create_position()
-# con.submit_market_order(security='EURGBP', quantity=100)
+# con.submit_market_order(security='EURGBP', quantity=1000000000)
 # con.get_deal_status()
 # con.get_single_position(deal_id='00005552-001c-241e-0000-0000806d330a')
