@@ -103,7 +103,29 @@ def execute_trade_signal(signal_id):
 
         elif signal['transaction_type'] == 'Close':
             transaction = Transaction.objects.get(id=signal['id'])
-            execution.close(transaction=transaction)
+
+            if not transaction:
+                signal_status = 'REJECTED'
+                error_message = 'There are no open trades to liquidate on the platform.'
+            else:
+                response  = execution.close(transaction=transaction)
+                signal_status = response['status']
+                error_message = response['message']
+
+                Order.objects.create(
+                    signal=signal_instance,
+                    broker_account_id=signal['account_id'],
+                    portfolio=signal_instance.portfolio,
+                    security_id=signal['security_id'],
+                    symbol=response['data'].get('symbol', 'N/A'),
+                    side='SELL' if transaction.transaction_type == 'Purchase' else 'BUY',
+                    quantity=signal.get('quantity', 0),
+                    status=response['status'],
+                    executed_price=response['data'].get('executed_price'),
+                    fx_rate=response['data'].get('fx_rate'),
+                    broker_order_id=response['data'].get('broker_order_id'),
+                    error_message=None if response['status'] == 'EXECUTED' else response.get('message', '')
+                )
 
         else:
             response = execution.new_trade(
