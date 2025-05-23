@@ -42,6 +42,7 @@ class Valuation():
         self.previous_transactions = pd.DataFrame({})
         self.final_df = pd.DataFrame({})
         self.missing_prices_instrument_id_list = []
+        self.total_nav = 0.0
 
     def fetch_transactions(self):
         transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
@@ -314,12 +315,12 @@ class Valuation():
 
             # Számolás
             # Cash papirok áraqzása 1-re
-            print(self.missing_prices_instrument_id_list)
+            # print(self.missing_prices_instrument_id_list)
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
 
             # Ide jön a missing pricok lekéréséne a brókertől
 
-            print(set(self.missing_prices_instrument_id_list))
+            # print(set(self.missing_prices_instrument_id_list))
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions[
                 'margin_rate']
@@ -645,6 +646,7 @@ class Valuation():
             redemptions = self.redemptions
             total_cashflow = self.subscriptions + self.redemptions
         # print('REAL', total_realized_pnl, 'UNREAL', total_unrealized_pnl, total_unrealized_pnl + total_realized_pnl , self.calc_date)
+        self.total_nav = current_nav
 
         try:
             nav = Nav.objects.get(date=calc_date, portfolio_id=self.portfolio_data)
@@ -756,7 +758,7 @@ class Valuation():
         df = pd.DataFrame(self.error_list)
         df_unique = df.drop_duplicates()
         self.error_list = df_unique.to_dict('records')
-        return self.response_list + self.error_list
+        return self.error_list
 
 def calculate_holdings(portfolio_code, calc_date):
     pd.set_option('display.width', 200)
@@ -764,28 +766,9 @@ def calculate_holdings(portfolio_code, calc_date):
 
     valuation = Valuation(portfolio_code=portfolio_code, calc_date=calc_date)
 
-    if calc_date < valuation.portfolio_data.inception_date and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
-        valuation.add_error_message({'portfolio_code': portfolio_code,
-                                     'date': calc_date,
-                                     'process': 'Valuation',
-                                     'exception': 'Incorrect Valuation Start Date',
-                                     'status': 'Error',
-                                     'comment': 'Valuation start date is less then portfolio inception date: ' + str(valuation.portfolio_data.inception_date)})
-        return valuation.send_responses()
-
-    # Checking if fund is funded
-    if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group' and valuation.portfolio_data.portfolio_type != 'Business':
-        valuation.add_error_message({'portfolio_code': portfolio_code,
-                                     'date': calc_date,
-                                     'process': 'Valuation',
-                                     'exception': 'Not Funded',
-                                     'status': 'Error',
-                                     'comment': 'Portfolio is not funded. Valuation is not possible'})
-        return valuation.send_responses()
-
-    end_date = date(2025, 5, 14)
+    # end_date = date(2025, 5, 14)
     # date.today()
-    while calc_date <= end_date:
+    while calc_date <= date.today():
 
         audit_entry, created = ProcessAudit.objects.update_or_create(
             portfolio=valuation.portfolio_data,
@@ -802,29 +785,54 @@ def calculate_holdings(portfolio_code, calc_date):
         # Deleting previous exceptions
         audit_entry.exceptions.all().delete()
 
-        if valuation.portfolio_data.weekend_valuation is False and (
-                calc_date.weekday() == 6 or calc_date.weekday() == 5):
-            print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
-        else:
-            if valuation.portfolio_data.weekend_valuation is False and calc_date.weekday() == 0:
-                time_back = 3
-            else:
-                time_back = 1
-            previous_date = calc_date - timedelta(days=time_back)
+        skip_processing = False
 
-            if valuation.portfolio_data.portfolio_type == 'Portfolio Group' or valuation.portfolio_data.portfolio_type == 'Business':
-                valuation.nav_calculation(calc_date=calc_date)
+        # Kezdeti csekk hogy elindulhat a valuation
+        if calc_date < valuation.portfolio_data.inception_date and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
+            valuation.add_error_message({'portfolio_code': portfolio_code,
+                                         'date': calc_date,
+                                         'process': 'Valuation',
+                                         'exception': 'Incorrect Valuation Start Date',
+                                         'status': 'Error',
+                                         'comment': 'Valuation start date is less then portfolio inception date: ' + str(
+                                             valuation.portfolio_data.inception_date)})
+            skip_processing = True
+
+        # Checking if fund is funded
+        if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group' and valuation.portfolio_data.portfolio_type != 'Business':
+            valuation.add_error_message({'portfolio_code': portfolio_code,
+                                         'date': calc_date,
+                                         'process': 'Valuation',
+                                         'exception': 'Not Funded',
+                                         'status': 'Error',
+                                         'comment': 'Portfolio is not funded. Valuation is not possible'})
+            skip_processing = True
+
+        # --- VALUATION FUTTATÁSA ---
+        if not skip_processing:
+            if valuation.portfolio_data.weekend_valuation is False and (
+                    calc_date.weekday() == 6 or calc_date.weekday() == 5):
+                print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
             else:
-                valuation.calc_date = calc_date
-                valuation.previous_date = previous_date
-                valuation.asset_valuation()
-                valuation.nav_calculation(calc_date=calc_date)
-        calc_date = calc_date + timedelta(days=1)
+                if valuation.portfolio_data.weekend_valuation is False and calc_date.weekday() == 0:
+                    time_back = 3
+                else:
+                    time_back = 1
+                previous_date = calc_date - timedelta(days=time_back)
+
+                if valuation.portfolio_data.portfolio_type == 'Portfolio Group' or valuation.portfolio_data.portfolio_type == 'Business':
+                    valuation.nav_calculation(calc_date=calc_date)
+                else:
+                    valuation.calc_date = calc_date
+                    valuation.previous_date = previous_date
+                    valuation.asset_valuation()
+                    valuation.nav_calculation(calc_date=calc_date)
+            calc_date = calc_date + timedelta(days=1)
 
 
         # End of process audit
         audit_entry.status = 'Alert' if len(valuation.error_list) > 0 else 'Completed'
-        audit_entry.message = f"{len(valuation.error_list)} issues" if valuation.error_list else "No issues"
+        audit_entry.message = f"{len(valuation.error_list)} issues" if valuation.error_list else f"NAV: {valuation.total_nav} {valuation.base_currency}"
         audit_entry.save()
 
         # Exception generálás
@@ -835,10 +843,13 @@ def calculate_holdings(portfolio_code, calc_date):
                 message=resp['comment'],
                 process_date=resp['date']
             )
-            for resp in valuation.error_list  # csak error_list, ne a response_list egészét!
+            for resp in valuation.send_responses() # csak error_list, ne a response_list egészét!
         ]
 
         if exceptions:
             ProcessException.objects.bulk_create(exceptions)
 
-    return valuation.send_responses()
+        # Exit loop if initial check is not valid
+        if skip_processing:
+            break
+
