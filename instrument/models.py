@@ -41,6 +41,7 @@ class Prices(models.Model):
     price = models.FloatField(default=0.0)
     source = models.CharField(max_length=30, default="")
     date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Tickers(models.Model):

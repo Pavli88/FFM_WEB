@@ -4,6 +4,7 @@ from datetime import datetime
 from instrument.models import Instruments, Tickers
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from accounts.models import BrokerAccounts
 import uuid
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -304,6 +305,14 @@ class Holding(models.Model):
     price_pnl = models.FloatField(default=0.0)
     income_pnl = models.FloatField(default=0.0)
     fx_pnl = models.FloatField(default=0.0)
+    account = models.ForeignKey(
+        BrokerAccounts,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        db_column="account_id"
+    )
 
 class TotalReturn(models.Model):
     portfolio_code = models.CharField(max_length=30, default="")

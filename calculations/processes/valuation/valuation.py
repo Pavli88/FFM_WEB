@@ -6,6 +6,9 @@ from datetime import datetime, date
 from datetime import timedelta
 from django.db import connection
 
+# Beépiteni, hogy ha a valuadion date a jelenlegi dátum akkor nézze meg hogy a legutolsó ár 30 percnél nem öregebb,
+# a igen a user kérje le a brókerétől éd updatelje a price táblát így más tudja használni aki 30 percen belül akar ujra valuationt
+
 class Valuation():
     def __init__(self, portfolio_code, calc_date):
         self.portfolio_code = portfolio_code

@@ -8,6 +8,9 @@ from portfolio.portfolio_functions import create_transaction
 from django.utils import timezone
 
 # Itt kidolgozni az egyes execution responsokat pl ha nem tudja lezárni, piac zárva van, nincs elég margin stb....
+# Berakni a holding táblába, hogy az adott pozíció melyik brókernél van
+# Berakni, hogy az adott pozíció melyik accounton van.
+# Az első account alapján nyissa majd meg a bróker kapcsolatot
 
 BROKER_API_CLASSES = {
     'oanda': OandaV20,
@@ -149,6 +152,8 @@ class TradeExecution:
 
 
     def save_price(self, trade_price):
+        # A megkötött ügylet után automatikusan lementi az utolsó árat az adott instrumentre az adatbázisba
+
         try:
             price = Prices.objects.get(date=self.trade_date, instrument_id=self.security_id)
             price.price = trade_price
