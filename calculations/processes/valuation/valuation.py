@@ -1,13 +1,19 @@
 from portfolio.models import Transaction, Holding, Nav, Portfolio, Cash, UGL, PortGroup
 from instrument.models import Instruments, Prices
+from calculations.models import ProcessAudit, ProcessException
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
 from datetime import timedelta
 from django.db import connection
+from django.utils.timezone import now
 
 # Beépiteni, hogy ha a valuadion date a jelenlegi dátum akkor nézze meg hogy a legutolsó ár 30 percnél nem öregebb,
 # a igen a user kérje le a brókerétől éd updatelje a price táblát így más tudja használni aki 30 percen belül akar ujra valuationt
+
+# Két esetbe kell lekérni a brókertől az árat:
+# 1. Valuation today és 30 percnél öregebb a legutolsó ár
+# 2. Valuation not today but price is missing for that day
 
 class Valuation():
     def __init__(self, portfolio_code, calc_date):
@@ -35,6 +41,7 @@ class Valuation():
         self.previous_ugl = 0
         self.previous_transactions = pd.DataFrame({})
         self.final_df = pd.DataFrame({})
+        self.missing_prices_instrument_id_list = []
 
     def fetch_transactions(self):
         transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
@@ -223,6 +230,7 @@ class Valuation():
             return 1
         else:
             if row['price'] == 0:
+                self.missing_prices_instrument_id_list.append(row['instrument_id'])
                 self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                      'date': self.calc_date,
                                      'process': 'Valuation',
@@ -306,7 +314,12 @@ class Valuation():
 
             # Számolás
             # Cash papirok áraqzása 1-re
+            print(self.missing_prices_instrument_id_list)
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
+
+            # Ide jön a missing pricok lekéréséne a brókertől
+
+            print(set(self.missing_prices_instrument_id_list))
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
             aggregated_transactions['margin_req'] = aggregated_transactions['mv'] * aggregated_transactions[
                 'margin_rate']
@@ -681,7 +694,7 @@ class Valuation():
                                        'status': 'Completed',
                                        'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(self.portfolio_data.currency)})
         else:
-            self.response_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
+            self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
                                        'date': calc_date,
                                        'process': 'NAV Valuation',
                                        'exception': 'Incorrect Valuation',
@@ -729,8 +742,10 @@ class Valuation():
                     total_pnl=valuation['total_pnl'],
                     gross_weight=valuation['gross_weight'],
                     abs_weight=valuation['abs_weight'],
+
                 )
             )
+
         if new_holdings:
             Holding.objects.bulk_create(new_holdings)
 
@@ -738,6 +753,9 @@ class Valuation():
         self.error_list.append(message)
 
     def send_responses(self):
+        df = pd.DataFrame(self.error_list)
+        df_unique = df.drop_duplicates()
+        self.error_list = df_unique.to_dict('records')
         return self.response_list + self.error_list
 
 def calculate_holdings(portfolio_code, calc_date):
@@ -765,7 +783,25 @@ def calculate_holdings(portfolio_code, calc_date):
                                      'comment': 'Portfolio is not funded. Valuation is not possible'})
         return valuation.send_responses()
 
-    while calc_date <= date.today():
+    end_date = date(2025, 5, 14)
+    # date.today()
+    while calc_date <= end_date:
+
+        audit_entry, created = ProcessAudit.objects.update_or_create(
+            portfolio=valuation.portfolio_data,
+            process='Valuation',
+            valuation_date=calc_date,
+            defaults={
+                'status': 'Started',
+                'run_at': now(),
+                'trigger_type': 'Manual',
+                'message': '',
+            }
+        )
+
+        # Deleting previous exceptions
+        audit_entry.exceptions.all().delete()
+
         if valuation.portfolio_data.weekend_valuation is False and (
                 calc_date.weekday() == 6 or calc_date.weekday() == 5):
             print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
@@ -784,4 +820,25 @@ def calculate_holdings(portfolio_code, calc_date):
                 valuation.asset_valuation()
                 valuation.nav_calculation(calc_date=calc_date)
         calc_date = calc_date + timedelta(days=1)
+
+
+        # End of process audit
+        audit_entry.status = 'Alert' if len(valuation.error_list) > 0 else 'Completed'
+        audit_entry.message = f"{len(valuation.error_list)} issues" if valuation.error_list else "No issues"
+        audit_entry.save()
+
+        # Exception generálás
+        exceptions = [
+            ProcessException(
+                audit=audit_entry,
+                exception_type=resp['exception'],
+                message=resp['comment'],
+                process_date=resp['date']
+            )
+            for resp in valuation.error_list  # csak error_list, ne a response_list egészét!
+        ]
+
+        if exceptions:
+            ProcessException.objects.bulk_create(exceptions)
+
     return valuation.send_responses()
