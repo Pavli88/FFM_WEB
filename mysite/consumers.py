@@ -1,23 +1,26 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from mysite.signals import notification_signal
 
-class NotificationConsumer(AsyncWebsocketConsumer):
-    print('WS CONNECT')
+class CoreConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.user = self.scope["user"]
+        print('WS CONNECTED', self.user)
+        await self.channel_layer.group_add(f"user_{self.user.id}", self.channel_name)
         await self.accept()
-        print('WS C')
-        notification_signal.connect(self.send_notification)
 
-    async def disconnect(self, close_code):
-        print('WS DISCONNECT')
-        notification_signal.disconnect(self.send_notification)
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        event_type = data.get("type")
+        payload = data.get("payload")
 
-    async def send_notification(self, **kwargs):
-        print('SEND NOTIFICATION')
-        print(kwargs.get('message'))
+        if event_type == "chat.message":
+            await self.handle_chat(payload)
+        elif event_type == "notification.read":
+            await self.mark_notification_as_read(payload)
+        # stb.
+
+    async def chat_message(self, event):
         await self.send(text_data=json.dumps({
-            'message': 'test'
+            "type": "chat.message",
+            "payload": event["payload"]
         }))

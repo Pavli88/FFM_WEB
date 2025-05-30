@@ -156,6 +156,13 @@ TEMPLATES = [
 
 ASGI_APPLICATION = 'mysite.asgi.application'
 
+# Ezt updatelni redis serverre ha éles
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
 # Database
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', False) == 'True'
 
