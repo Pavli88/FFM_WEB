@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 import json
 from mysite.my_functions.general_functions import *
 from calculations.processes.performance.total_return import total_return_calc
@@ -8,10 +7,13 @@ from datetime import datetime, timedelta
 from calculations.models import ProcessAudit, ProcessException
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework import status
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
-@csrf_exempt
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def valuation(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
@@ -19,10 +21,25 @@ def valuation(request):
         for portfolio_code in request_body['portfolios']:
             calculate_holdings(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
 
+        channel_layer = get_channel_layer()
+        user_id = request.user.id
+
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}",
+            {
+                "type": "process.completed",  # ezt fogja a consumer feldolgozni
+                "payload": {
+                    "message": "Valuation process completed successfully.",
+                    "status": True
+                }
+            }
+        )
+
         return JsonResponse([], safe=False)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def total_return(request):
     if request.method == "POST":
         request_body = json.loads(request.body.decode('utf-8'))
@@ -58,12 +75,21 @@ def total_return(request):
                         for resp in responses:
                             response_list.append(resp)
                         current_date += timedelta(days=1)
-                        #
-        # # for portfolio_code in request_body['portfolios']:
-        #     for period in request_body['periods']:
-        #         responses = total_return_calc(portfolio_code=portfolio_code, period=period, end_date=request_body['date'])
-        #         for resp in responses:
-        #             response_list.append(resp)
+
+        channel_layer = get_channel_layer()
+        user_id = request.user.id
+
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}",
+            {
+                "type": "process.completed",  # ezt fogja a consumer feldolgozni
+                "payload": {
+                    "message": "Total Return calculation completed successfully.",
+                    "status": True
+                }
+            }
+        )
+
         return JsonResponse(response_list, safe=False)
 
 
@@ -75,11 +101,8 @@ def audit_records(request):
         start_date = request.data.get('start_date')
         end_date = request.data.get('end_date')
 
-        if not isinstance(portfolios, list) or not portfolios:
-            return JsonResponse(
-                {'error': 'A „portfolios” mező kötelező, és listát kell tartalmaznia.'},
-                status=400
-            )
+        if not isinstance(portfolios, list) or len(portfolios) == 0:
+            return JsonResponse({'data': []}, status=200)
 
         audits = ProcessAudit.objects.filter(portfolio__portfolio_code__in=portfolios)
 
