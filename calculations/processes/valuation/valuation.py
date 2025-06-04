@@ -7,6 +7,8 @@ from datetime import datetime, date
 from datetime import timedelta
 from django.db import connection
 from django.utils.timezone import now
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 # Beépiteni, hogy ha a valuadion date a jelenlegi dátum akkor nézze meg hogy a legutolsó ár 30 percnél nem öregebb,
 # a igen a user kérje le a brókerétől éd updatelje a price táblát így más tudja használni aki 30 percen belül akar ujra valuationt
@@ -74,19 +76,22 @@ class Valuation():
     def fetch_instrument_data(self, instrument_code_list):
         return pd.DataFrame(Instruments.objects.filter(id__in=instrument_code_list).values())
 
-    def fetch_previous_valuation(self, previous_date, portfolio_id):
-        previous_valuations = pd.DataFrame(Holding.objects.filter(date=previous_date,
-                                                                  portfolio=portfolio_id).values())
+    def fetch_previous_valuation(self):
+        self.previous_valuation = pd.DataFrame(Holding.objects.filter(date=self.previous_date,
+                                                                      portfolio=self.portfolio_data.id).values())
 
-        if not previous_valuations.empty:
-            previous_positions = previous_valuations[
-                (previous_valuations['trade_type'] != 'Margin') | previous_valuations['trade_type'] != 'Available Cash']
-            self.previous_cash = previous_valuations[previous_valuations['trade_type'] == 'Available Cash']['mv'].sum()
-            self.previous_margin = previous_valuations[previous_valuations['trade_type'] == 'Margin']['mv'].sum()
-            self.previous_contra = previous_valuations[previous_valuations['trade_type'] == 'Contra']['mv'].sum()
+        if not self.previous_valuation.empty:
+            previous_positions = self.previous_valuation[
+                (self.previous_valuation['trade_type'] != 'Margin') | self.previous_valuation['trade_type'] != 'Available Cash']
+            self.previous_cash = self.previous_valuation[self.previous_valuation['trade_type'] == 'Available Cash']['mv'].sum()
+            self.previous_margin = self.previous_valuation[self.previous_valuation['trade_type'] == 'Margin']['mv'].sum()
+            self.previous_contra = self.previous_valuation[self.previous_valuation['trade_type'] == 'Contra']['mv'].sum()
 
             self.previous_transactions = previous_positions[~previous_positions['instrument_id'].isin([self.base_currency_sec_id, self.base_margin_instrument])]
             self.previous_ugl = self.previous_transactions['ugl'].sum()
+            return True
+        else:
+            return False
 
     def fetch_fx_rates(self, date):
         fx_data = Prices.objects.select_related('instrument').filter(date=date).filter(instrument__type='FX')
@@ -245,9 +250,8 @@ class Valuation():
         # print('PREVOUS DATE', self.previous_date, 'CURRENT DATE', self.calc_date)
 
         # FETCHING----------------------------------------------
-
-        # Previous Valuations
-        self.fetch_previous_valuation(previous_date=self.previous_date, portfolio_id=self.portfolio_data)
+        # # Previous Valuations
+        # self.fetch_previous_valuation()
 
         # Current Transactions
         current_transactions = self.fetch_transactions()
@@ -760,16 +764,42 @@ class Valuation():
         self.error_list = df_unique.to_dict('records')
         return self.error_list
 
-def calculate_holdings(portfolio_code, calc_date):
+def serialize_exceptions(exceptions):
+    for e in exceptions:
+        if isinstance(e.get("date"), date):
+            e["date"] = e["date"].isoformat()
+    return exceptions
+
+def calculate_holdings(portfolio_code, calc_date, manual_request=False):
+    # CHANNELS LAYER CONNECTION
+    channel_layer = get_channel_layer()
+
     pd.set_option('display.width', 200)
     calc_date = datetime.strptime(str(calc_date), '%Y-%m-%d').date()
 
+    print('')
+    print('REQUEST START DATE', calc_date)
+
     valuation = Valuation(portfolio_code=portfolio_code, calc_date=calc_date)
 
+    user_id = valuation.portfolio_data.user_id
+
+    latest_nav = Nav.objects.filter(portfolio_code=portfolio_code).order_by('-date').first()
+
+    # Ha a legutolsó NAV dátum kisebb mint a kért kezdő dátum akkor a legutolsó NAV tól számolja
+    if latest_nav and latest_nav.date < calc_date:
+        print('NAV IS LESS THAN REQUEST DATE')
+        calc_date = latest_nav.date
+    elif not latest_nav:
+        # Ha nincs NAV akkor a portfolió inditása óta legyen számítás
+        print('NO CALCULATED NAV')
+        calc_date = valuation.portfolio_data.inception_date
+
+    print("CALC RANGE:", calc_date, date.today())
     # end_date = date(2025, 5, 14)
     # date.today()
     while calc_date <= date.today():
-
+        print(calc_date)
         audit_entry, created = ProcessAudit.objects.update_or_create(
             portfolio=valuation.portfolio_data,
             process='Valuation',
@@ -797,6 +827,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                          'comment': 'Valuation start date is less then portfolio inception date: ' + str(
                                              valuation.portfolio_data.inception_date)})
             skip_processing = True
+            error_message = 'Incorrect Valuation Start Date'
 
         # Checking if fund is funded
         if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group' and valuation.portfolio_data.portfolio_type != 'Business':
@@ -807,6 +838,7 @@ def calculate_holdings(portfolio_code, calc_date):
                                          'status': 'Error',
                                          'comment': 'Portfolio is not funded. Valuation is not possible'})
             skip_processing = True
+            error_message = 'Portfolio is not funded'
 
         # --- VALUATION FUTTATÁSA ---
         if not skip_processing:
@@ -818,6 +850,7 @@ def calculate_holdings(portfolio_code, calc_date):
                     time_back = 3
                 else:
                     time_back = 1
+
                 previous_date = calc_date - timedelta(days=time_back)
 
                 if valuation.portfolio_data.portfolio_type == 'Portfolio Group' or valuation.portfolio_data.portfolio_type == 'Business':
@@ -825,14 +858,21 @@ def calculate_holdings(portfolio_code, calc_date):
                 else:
                     valuation.calc_date = calc_date
                     valuation.previous_date = previous_date
+
+                    # Checking if prevous valuation exists
+                    valuation.fetch_previous_valuation()
                     valuation.asset_valuation()
                     valuation.nav_calculation(calc_date=calc_date)
+
             calc_date = calc_date + timedelta(days=1)
 
-
         # End of process audit
-        audit_entry.status = 'Alert' if len(valuation.error_list) > 0 else 'Completed'
-        audit_entry.message = f"{len(valuation.error_list)} issues" if valuation.error_list else f"NAV: {valuation.total_nav} {valuation.base_currency}"
+        if skip_processing:
+            audit_entry.status = 'Error'
+            audit_entry.message = error_message
+        else:
+            audit_entry.status = 'Alert' if len(valuation.error_list) > 0 else 'Completed'
+            audit_entry.message = f"{len(valuation.send_responses())} issues" if valuation.send_responses() else f"NAV: {valuation.total_nav} {valuation.base_currency}"
         audit_entry.save()
 
         # Exception generálás
@@ -849,7 +889,22 @@ def calculate_holdings(portfolio_code, calc_date):
         if exceptions:
             ProcessException.objects.bulk_create(exceptions)
 
+        #Sending Notification if this is a Dashboard request
+        if manual_request == False and len(valuation.send_responses()) > 0:
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user_id}",
+                {
+                    "type": "process.notification",
+                    "payload": {
+                        "process": 'valuation',
+                        "message": "Valuation completed with exceptions.",
+                        "exceptions": serialize_exceptions(valuation.send_responses())
+                    }
+                }
+            )
+
         # Exit loop if initial check is not valid
         if skip_processing:
             break
+
 

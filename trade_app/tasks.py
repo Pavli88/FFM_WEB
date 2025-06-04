@@ -5,6 +5,8 @@ from django.utils import timezone
 from trade_app.views_folder.create_view import TradeExecution
 from trade_app.models import Signal, Order
 from django.db import transaction as db_transaction
+from calculations.processes.valuation.valuation import calculate_holdings
+from datetime import date
 
 # @shared_task(queue='trade_signal', bind=True, max_retries=3) -> itt meg tudom mondani hányszor próbálja újra
 # self et bele kell rakni az argumentumok közé ha celery task lesz

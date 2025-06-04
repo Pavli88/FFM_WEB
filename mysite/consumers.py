@@ -29,3 +29,9 @@ class CoreConsumer(AsyncWebsocketConsumer):
             "type": "chat.message",
             "payload": event["payload"]
         }))
+
+    async def process_notification(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "process.notification",
+            "payload": event["payload"]
+        }))
