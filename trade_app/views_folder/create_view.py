@@ -8,6 +8,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from trade_app.services import TradeExecution
 from trade_app.tasks import execute_trade_signal
+from mysite.functions.celery_functions import is_worker_listening_on_queue
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 @csrf_exempt
 def new_transaction_signal(request):
@@ -228,7 +231,39 @@ def trade(request):
     )
 
     if status == 'PENDING':
-        execute_trade_signal(signal.id) #.delay(signal.id) ezt kell majd átirni ha celerybol fut majd
+
+        channel_layer = get_channel_layer()
+        user_id = portfolio_data.user_id
+
+        if is_worker_listening_on_queue('trade_signal') or signal_type == 'CLOSE':
+            execute_trade_signal.delay(signal.id)
+
+            if signal_type == 'CLOSE':
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{user_id}",
+                    {
+                        "type": "error.notification",
+                        "payload": {
+                            "message": f"{portfolio_data.portfolio_code} Engine is not running. Request is queued.",
+                        }
+                    }
+                )
+
+        else:
+            signal.status = 'FAILED'
+            signal.error_message = "New trade is not accepted. Trading engine is not running"
+            signal.save()
+
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user_id}",
+                {
+                    "type": "error.notification",
+                    "payload": {
+                        "message": f"{portfolio_data.portfolio_code} Rejected trade. Engine is not running.",
+                    }
+                }
+            )
+
 
     return JsonResponse(
         {'status': status, 'signal_id': signal.id, 'error_message': error_message if status != 'PENDING' else None},

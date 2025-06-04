@@ -35,3 +35,9 @@ class CoreConsumer(AsyncWebsocketConsumer):
             "type": "process.notification",
             "payload": event["payload"]
         }))
+
+    async def error_notification(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "error.notification",
+            "payload": event["payload"]
+        }))

@@ -10,11 +10,11 @@ from datetime import date
 
 # @shared_task(queue='trade_signal', bind=True, max_retries=3) -> itt meg tudom mondani hányszor próbálja újra
 # self et bele kell rakni az argumentumok közé ha celery task lesz
-def execute_trade_signal(signal_id):
+@shared_task(queue='trade_signal', bind=True, max_retries=3)
+def execute_trade_signal(self, signal_id):
     try:
         signal_instance = Signal.objects.get(id=signal_id)
         signal = signal_instance.raw_data
-
         try:
             execution = TradeExecution(
                 portfolio_code=signal['portfolio_code'],
@@ -162,4 +162,4 @@ def execute_trade_signal(signal_id):
         signal_instance.status = 'FAILED'
         signal_instance.error_message = str(e)
         signal_instance.save()
-        # raise self.retry(exc=e, countdown=10) -> ez automatikusan ujra probálja a celery ben ha technikai hiba történik
+        raise self.retry(exc=e, countdown=10) #-> ez automatikusan ujra probálja a celery ben ha technikai hiba történik
