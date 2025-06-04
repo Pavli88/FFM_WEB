@@ -235,10 +235,10 @@ def trade(request):
         channel_layer = get_channel_layer()
         user_id = portfolio_data.user_id
 
-        if is_worker_listening_on_queue('trade_signal') or signal_type == 'CLOSE':
+        if is_worker_listening_on_queue('trade_signal') or (is_worker_listening_on_queue('trade_signal') == False and signal_type == 'CLOSE'):
             execute_trade_signal.delay(signal.id)
 
-            if signal_type == 'CLOSE':
+            if is_worker_listening_on_queue('trade_signal') == False and signal_type == 'CLOSE':
                 async_to_sync(channel_layer.group_send)(
                     f"user_{user_id}",
                     {
