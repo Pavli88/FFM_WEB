@@ -121,8 +121,8 @@ def login_user(request):
 @api_view(['POST'])
 def logout_user(request):
     response = JsonResponse({"detail": "Logout successful"})
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    response.delete_cookie("access_token", path="/", samesite="None")
+    response.delete_cookie("refresh_token", path="/", samesite="None")
     return response
 
 
@@ -412,8 +412,16 @@ def cookie_token_refresh(request):
 
     try:
         serializer.is_valid(raise_exception=True)
-    except TokenError as e:
+    except TokenError:
         return JsonResponse({"detail": "Invalid or expired refresh token."}, status=401)
 
-    # serializer.validated_data = { "access": "newaccesstoken..." }
-    return JsonResponse(serializer.validated_data, status=200)
+    response = JsonResponse({"detail": "Access token refreshed"})
+    response.set_cookie(
+        "access_token",
+        serializer.validated_data["access"],
+        httponly=True,
+        secure=True,
+        samesite="None",
+        path="/"
+    )
+    return response
