@@ -34,6 +34,12 @@ from mysite.celery import app
 from mysite.models import UserProfile
 from .models import Follow
 
+from django.http import HttpResponse
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+    return HttpResponse("This won't be reached.")
+
 # TASK TEST
 def start_task(request):
     # Start the Celery task asynchronously

@@ -4,6 +4,8 @@ import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Load environment variables from .env file
 load_dotenv()
@@ -179,6 +181,15 @@ if DEVELOPMENT_MODE:
         }
     }
 else:
+
+    # Error monitoring on SENTRY
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=1.0,  # Teljesítményméréshez (0.0 - 1.0)
+        send_default_pii=True,
+    )
+
     # Production settings - Use DATABASE_URL environment variable
     DATABASE_URL = os.getenv('DATABASE_URL')
     if DATABASE_URL:
