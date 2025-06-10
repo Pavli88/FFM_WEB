@@ -9,6 +9,7 @@ from django.db import connection
 from django.utils.timezone import now
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from calculations.processes.loggers.ProcessAuditLogger import ProcessAuditLogger
 
 # Beépiteni, hogy ha a valuadion date a jelenlegi dátum akkor nézze meg hogy a legutolsó ár 30 percnél nem öregebb,
 # a igen a user kérje le a brókerétől éd updatelje a price táblát így más tudja használni aki 30 percen belül akar ujra valuationt
@@ -18,9 +19,10 @@ from channels.layers import get_channel_layer
 # 2. Valuation not today but price is missing for that day
 
 class Valuation():
-    def __init__(self, portfolio_code, calc_date):
+    def __init__(self, portfolio_code, request_date):
         self.portfolio_code = portfolio_code
-        self.calc_date = calc_date
+        self.request_date = request_date
+        self.calc_date = None
         self.previous_date = None
         self.fx_rates = None
         self.transactions = None
@@ -31,6 +33,7 @@ class Valuation():
         self.response_list = []
         self.error_list = []
         self.portfolio_data = Portfolio.objects.get(portfolio_code=portfolio_code)
+        self.user_id = self.portfolio_data.user_id
         self.base_currency = self.portfolio_data.currency
         self.holding_df = []
         self.instrument_code_list = []
@@ -45,7 +48,58 @@ class Valuation():
         self.final_df = pd.DataFrame({})
         self.missing_prices_instrument_id_list = []
         self.total_nav = 0.0
+        self.skip_processing = False
+        self.error_message = ""
+        self.start_date_type = None
 
+        # Calling portfolio validation during Valuation initialization
+        self.validate_portfolio()
+
+        # Start date beállítása ha a validálás sikeres
+        if self.skip_processing == False:
+            self.set_start_date()
+
+    # VALIDATIONS
+    def validate_portfolio(self):
+        """
+        Ellenőrzi az indulási dátumot és a funding státuszt.
+        Beállítja a self.skip_processing és self.error_message attribútumokat.
+        """
+        self.skip_processing = False
+        self.error_message = ""
+
+        if self.portfolio_data.status == 'Not Funded' and self.portfolio_data.portfolio_type not in ['Portfolio Group',
+                                                                                                     'Business']:
+            self.add_error_message({
+                'portfolio_code': self.portfolio_code,
+                'date': self.request_date,
+                'process': 'Valuation',
+                'exception': 'Not Funded',
+                'status': 'Error',
+                'comment': 'Portfolio is not funded. Valuation is not possible'
+            })
+            self.skip_processing = True
+            self.error_message = 'Portfolio is not funded'
+
+    def set_start_date(self):
+        if self.request_date < self.portfolio_data.inception_date and self.portfolio_data.portfolio_type != 'Portfolio Group':
+            self.calc_date = self.portfolio_data.inception_date
+            self.start_date_type = 'Inception'
+            return
+
+        latest_nav = Nav.objects.filter(portfolio_code=self.portfolio_code).order_by('-date').first()
+
+        if latest_nav and latest_nav.date < self.request_date:
+            self.calc_date = latest_nav.date
+            self.start_date_type = 'Latest NAV Date'
+        elif not latest_nav:
+            self.calc_date = self.portfolio_data.inception_date
+            self.start_date_type = 'No NAV, Inception'
+        else:
+            self.calc_date = self.request_date
+            self.start_date_type = 'Request Date'
+
+    # --- FETCHING SECTIONS ---
     def fetch_transactions(self):
         transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
                                                                              portfolio=self.portfolio_data).exclude(security_id__type='Cash')
@@ -139,6 +193,7 @@ class Valuation():
                 'source': []
             })
 
+    # --- CALCULATION SECTIONS ---
     # Asset valuation related function
     def ugl_calc(self, row):
         try:
@@ -148,22 +203,6 @@ class Valuation():
             return row['bv'] - existing_trade['bv'].sum()
         except:
             return row['bv']
-
-    # def ugl_calc(self, row):
-    #     try:
-    #         print(row['trd_id'])
-    #         existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
-    #         print(existing_trade)
-    #         # Checks if this is a closed transaction and the previous transaction is not closed
-    #         if row['quantity'] == 0:
-    #             # If this is a closed it returns
-    #             print('0 quantity')
-    #             return existing_trade['bv'] * -1
-    #         else:
-    #             return row['bv'] - existing_trade['bv'].sum()
-    #     except:
-    #         print('this line because there is no previous transaction')
-    #         return row['bv']
 
     def trade_pnl_calc(self, row):
         try:
@@ -246,8 +285,9 @@ class Valuation():
                                         })
             return row['price']
 
+    # --- PROCESS SECTION ---
     def asset_valuation(self):
-        # print('PREVOUS DATE', self.previous_date, 'CURRENT DATE', self.calc_date)
+        """This part is responsible for the valuation of the assets."""
 
         # FETCHING----------------------------------------------
         # # Previous Valuations
@@ -323,6 +363,9 @@ class Valuation():
             aggregated_transactions['market_price'] = aggregated_transactions.apply(self.price_cash_security, axis=1)
 
             # Ide jön a missing pricok lekéréséne a brókertől
+
+
+
 
             # print(set(self.missing_prices_instrument_id_list))
             aggregated_transactions['mv'] = round(aggregated_transactions['quantity'] * aggregated_transactions['price'] * aggregated_transactions['fx_rate'], 2)
@@ -755,6 +798,8 @@ class Valuation():
         if new_holdings:
             Holding.objects.bulk_create(new_holdings)
 
+
+    # Messaging
     def add_error_message(self, message):
         self.error_list.append(message)
 
@@ -770,141 +815,83 @@ def serialize_exceptions(exceptions):
             e["date"] = e["date"].isoformat()
     return exceptions
 
-def calculate_holdings(portfolio_code, calc_date, manual_request=False):
-    # CHANNELS LAYER CONNECTION
-    channel_layer = get_channel_layer()
-
+def calculate_holdings(portfolio_code, calc_date=date.today(), manual_request=False):
     pd.set_option('display.width', 200)
+
+    # CHANNELS LAYER CONNECTION ----------------------------------------------------------------------------------------
+    channel_layer = get_channel_layer()
     calc_date = datetime.strptime(str(calc_date), '%Y-%m-%d').date()
+    # ------------------------------------------------------------------------------------------------------------------
 
     print('')
     print('REQUEST START DATE', calc_date)
 
-    valuation = Valuation(portfolio_code=portfolio_code, calc_date=calc_date)
+    valuation = Valuation(portfolio_code=portfolio_code, request_date=calc_date)
 
-    user_id = valuation.portfolio_data.user_id
-
-    latest_nav = Nav.objects.filter(portfolio_code=portfolio_code).order_by('-date').first()
-
-    # Ha a legutolsó NAV dátum kisebb mint a kért kezdő dátum akkor a legutolsó NAV tól számolja
-    if latest_nav and latest_nav.date < calc_date:
-        print('NAV IS LESS THAN REQUEST DATE')
-        calc_date = latest_nav.date
-    elif not latest_nav:
-        # Ha nincs NAV akkor a portfolió inditása óta legyen számítás
-        print('NO CALCULATED NAV')
-        calc_date = valuation.portfolio_data.inception_date
-
-    print("CALC RANGE:", calc_date, date.today())
+    print("CALC RANGE:", valuation.calc_date, date.today(), valuation.start_date_type)
     # end_date = date(2025, 5, 14)
     # date.today()
-    while calc_date <= date.today():
-        print(calc_date)
-        audit_entry, created = ProcessAudit.objects.update_or_create(
-            portfolio=valuation.portfolio_data,
-            process='Valuation',
-            valuation_date=calc_date,
-            defaults={
-                'status': 'Started',
-                'run_at': now(),
-                'trigger_type': 'Manual',
-                'message': '',
-            }
-        )
 
-        # Deleting previous exceptions
-        audit_entry.exceptions.all().delete()
+    if valuation.skip_processing:
+        print('Skipped processing')
+        process_audit_logger = ProcessAuditLogger(process_name='Valuation', portfolio=valuation.portfolio_data, valuation_date=calc_date)
+        process_audit_logger.complete(status='Error', message='Not funded portfolio', exception_list=valuation.send_responses())
+    else:
+        current_iteration_date = valuation.calc_date
+        while current_iteration_date <= date.today():
+            print(current_iteration_date)
 
-        skip_processing = False
+            # New Process Audit
+            process_audit_logger = ProcessAuditLogger(process_name='Valuation',
+                                                      portfolio=valuation.portfolio_data,
+                                                      valuation_date=current_iteration_date)
 
-        # Kezdeti csekk hogy elindulhat a valuation
-        if calc_date < valuation.portfolio_data.inception_date and valuation.portfolio_data.portfolio_type != 'Portfolio Group':
-            valuation.add_error_message({'portfolio_code': portfolio_code,
-                                         'date': calc_date,
-                                         'process': 'Valuation',
-                                         'exception': 'Incorrect Valuation Start Date',
-                                         'status': 'Error',
-                                         'comment': 'Valuation start date is less then portfolio inception date: ' + str(
-                                             valuation.portfolio_data.inception_date)})
-            skip_processing = True
-            error_message = 'Incorrect Valuation Start Date'
-
-        # Checking if fund is funded
-        if valuation.portfolio_data.status == 'Not Funded' and valuation.portfolio_data.portfolio_type != 'Portfolio Group' and valuation.portfolio_data.portfolio_type != 'Business':
-            valuation.add_error_message({'portfolio_code': portfolio_code,
-                                         'date': calc_date,
-                                         'process': 'Valuation',
-                                         'exception': 'Not Funded',
-                                         'status': 'Error',
-                                         'comment': 'Portfolio is not funded. Valuation is not possible'})
-            skip_processing = True
-            error_message = 'Portfolio is not funded'
-
-        # --- VALUATION FUTTATÁSA ---
-        if not skip_processing:
+            # --- VALUATION FUTTATÁSA ---
+            # Check if the current iteration day is weekend and weekend valuation is allowed
             if valuation.portfolio_data.weekend_valuation is False and (
-                    calc_date.weekday() == 6 or calc_date.weekday() == 5):
-                print('---', calc_date, calc_date.strftime('%A'), 'Not calculate')
+                    current_iteration_date.weekday() == 6 or current_iteration_date.weekday() == 5):
+                print('---', current_iteration_date, current_iteration_date.strftime('%A'), 'Not calculate')
             else:
-                if valuation.portfolio_data.weekend_valuation is False and calc_date.weekday() == 0:
+                if valuation.portfolio_data.weekend_valuation is False and current_iteration_date.weekday() == 0:
                     time_back = 3
                 else:
                     time_back = 1
 
-                previous_date = calc_date - timedelta(days=time_back)
+                previous_date = current_iteration_date - timedelta(days=time_back)
 
                 if valuation.portfolio_data.portfolio_type == 'Portfolio Group' or valuation.portfolio_data.portfolio_type == 'Business':
-                    valuation.nav_calculation(calc_date=calc_date)
+                    valuation.nav_calculation(calc_date=current_iteration_date)
                 else:
-                    valuation.calc_date = calc_date
+                    valuation.calc_date = current_iteration_date
                     valuation.previous_date = previous_date
 
                     # Checking if prevous valuation exists
                     valuation.fetch_previous_valuation()
                     valuation.asset_valuation()
-                    valuation.nav_calculation(calc_date=calc_date)
+                    valuation.nav_calculation(calc_date=current_iteration_date)
 
-            calc_date = calc_date + timedelta(days=1)
+            current_iteration_date = current_iteration_date + timedelta(days=1)
 
-        # End of process audit
-        if skip_processing:
-            audit_entry.status = 'Error'
-            audit_entry.message = error_message
-        else:
-            audit_entry.status = 'Alert' if len(valuation.error_list) > 0 else 'Completed'
-            audit_entry.message = f"{len(valuation.send_responses())} issues" if valuation.send_responses() else f"NAV: {valuation.total_nav} {valuation.base_currency}"
-        audit_entry.save()
 
-        # Exception generálás
-        exceptions = [
-            ProcessException(
-                audit=audit_entry,
-                exception_type=resp['exception'],
-                message=resp['comment'],
-                process_date=resp['date']
-            )
-            for resp in valuation.send_responses() # csak error_list, ne a response_list egészét!
-        ]
+            # ----------------------------- End of process audit -----------------------------------------------------
 
-        if exceptions:
-            ProcessException.objects.bulk_create(exceptions)
+            process_audit_logger.complete(status='Alert' if len(valuation.error_list) > 0 else 'Completed',
+                                          message=f"{len(valuation.send_responses())} issues" if valuation.send_responses() else f"NAV: {valuation.total_nav} {valuation.base_currency}",
+                                          exception_list=valuation.send_responses())
 
-        #Sending Notification if this is a Dashboard request
-        if manual_request == False and len(valuation.send_responses()) > 0:
-            async_to_sync(channel_layer.group_send)(
-                f"user_{user_id}",
-                {
-                    "type": "process.notification",
-                    "payload": {
-                        "process": 'valuation',
-                        "message": "Valuation completed with exceptions.",
-                        "exceptions": serialize_exceptions(valuation.send_responses())
+            #Sending Notification if this is a Dashboard request
+            if manual_request == False and len(valuation.send_responses()) > 0:
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{valuation.user_id}",
+                    {
+                        "type": "process.notification",
+                        "payload": {
+                            "process": 'valuation',
+                            "message": "Valuation completed with exceptions.",
+                            "exceptions": serialize_exceptions(valuation.send_responses())
+                        }
                     }
-                }
-            )
+                )
 
-        # Exit loop if initial check is not valid
-        if skip_processing:
-            break
 
 

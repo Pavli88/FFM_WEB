@@ -13,37 +13,33 @@ from django.core.exceptions import ValidationError
 @permission_classes([IsAuthenticated])
 def new_instrument(request):
     try:
-        request_data = request.data  # Use DRF's request.data instead of manually loading JSON
-        user = request.user
-        # Validate required fields
+        data = request.data
+        current_user = request.user
         required_fields = ['name', 'country', 'group', 'type', 'currency']
-        missing_fields = [field for field in required_fields if field not in request_data]
+        missing = [f for f in required_fields if f not in data]
 
-        if missing_fields:
-            return Response({'error': f'Missing fields: {", ".join(missing_fields)}'}, status=400)
+        if missing:
+            return Response({'error': f'Missing fields: {", ".join(missing)}'}, status=400)
 
-        # Create and save instrument
-        instrument, created = Instruments.objects.get_or_create(
-            user=user,
-            name=request_data['name'],
-            defaults={
-                'country': request_data['country'],
-                'group': request_data['group'],
-                'type': request_data['type'],
-                'currency': request_data['currency'],
-            }
+        user_value = None if current_user.is_superuser or current_user.is_staff else current_user
+
+        instrument = Instruments(
+            name=data['name'],
+            country=data['country'],
+            group=data['group'],
+            type=data['type'],
+            currency=data['currency'],
+            user=user_value
         )
+        instrument.save()
 
-        if created:
-            return Response({'message': 'Instrument is saved successfully!'}, status=201)
-        else:
-            return Response({'message': 'Instrument already exists!'}, status=200)
+        return Response({'message': 'Instrument is saved successfully!'}, status=201)
 
     except ValidationError as e:
-        return Response({'error': f'Validation error: {str(e)}'}, status=400)
+        return Response({'error': f'Validation error: {e.messages}'}, status=400)
 
     except Exception as e:
-        return Response({'error': f'Error occurred: {str(e)}'}, status=500)
+        return Response({'error': f'Unexpected error: {str(e)}'}, status=500)
 
 
 @api_view(['POST'])
