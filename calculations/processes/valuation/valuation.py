@@ -1,6 +1,5 @@
 from portfolio.models import Transaction, Holding, Nav, Portfolio, Cash, UGL, PortGroup
 from instrument.models import Instruments, Prices
-from calculations.models import ProcessAudit, ProcessException
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
@@ -60,6 +59,7 @@ class Valuation():
             self.set_start_date()
 
     # VALIDATIONS
+    # IMPLEMENTED
     def validate_portfolio(self):
         """
         Ellenőrzi az indulási dátumot és a funding státuszt.
@@ -81,6 +81,7 @@ class Valuation():
             self.skip_processing = True
             self.error_message = 'Portfolio is not funded'
 
+    # IMPLEMENTED
     def set_start_date(self):
         if self.request_date < self.portfolio_data.inception_date and self.portfolio_data.portfolio_type != 'Portfolio Group':
             self.calc_date = self.portfolio_data.inception_date
@@ -100,6 +101,7 @@ class Valuation():
             self.start_date_type = 'Request Date'
 
     # --- FETCHING SECTIONS ---
+    # IMPLEMENTED
     def fetch_transactions(self):
         transactions = Transaction.objects.select_related('security').filter(trade_date=self.calc_date,
                                                                              portfolio=self.portfolio_data).exclude(security_id__type='Cash')
@@ -127,9 +129,11 @@ class Valuation():
         ]
         return pd.DataFrame(transactions_list)
 
+    # IMPLEMENTED
     def fetch_instrument_data(self, instrument_code_list):
         return pd.DataFrame(Instruments.objects.filter(id__in=instrument_code_list).values())
 
+    # IMPLEMENTED
     def fetch_previous_valuation(self):
         self.previous_valuation = pd.DataFrame(Holding.objects.filter(date=self.previous_date,
                                                                       portfolio=self.portfolio_data.id).values())
@@ -147,6 +151,7 @@ class Valuation():
         else:
             return False
 
+    # IMPLEMENTED
     def fetch_fx_rates(self, date):
         fx_data = Prices.objects.select_related('instrument').filter(date=date).filter(instrument__type='FX')
         base_df = pd.DataFrame({
@@ -175,6 +180,7 @@ class Valuation():
         self.fx_rates = pd.concat([fx_df, reverse_fx_df, base_df], ignore_index=True)
         return self.fx_rates
 
+    # IMPLEMENTED
     def fetch_rgl(self):
         return pd.DataFrame(Cash.objects.select_related('transaction').filter(date=self.calc_date,
                                                                               transaction__portfolio=self.portfolio_data,
@@ -182,6 +188,9 @@ class Valuation():
         # return pd.DataFrame(Cash.objects.filter(date=self.calc_date,
         #                                         portfolio_code=self.portfolio_code, type='Trade PnL').values())
 
+
+    # Context Független
+    # IMPLEMENTED
     def fetch_prices(self, date, instrument_code_list):
         prices_df = pd.DataFrame(Prices.objects.select_related('instrument').filter(date=date).filter(instrument_id__in=instrument_code_list).values())
         if not prices_df.empty:
@@ -195,6 +204,7 @@ class Valuation():
 
     # --- CALCULATION SECTIONS ---
     # Asset valuation related function
+    # IMPLEMENTED
     def ugl_calc(self, row):
         try:
             existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
@@ -204,6 +214,7 @@ class Valuation():
         except:
             return row['bv']
 
+    # IMPLEMENTED
     def trade_pnl_calc(self, row):
         try:
             print(row)
@@ -214,6 +225,7 @@ class Valuation():
         except:
             return 0
 
+    # IMPLEMENTED
     def previous_value(self, row, value):
         try:
             existing_trade = self.previous_transactions[self.previous_transactions['trd_id'] == row['trd_id']]
@@ -221,12 +233,14 @@ class Valuation():
         except:
             return 0
 
+    # IMPLEMENTED
     def price_pnl_calc(self, row):
         if row['mv'] == 0:
             return 0
         else:
             return row['ugl']
 
+    # IMPLEMENTED
     def price_ret_calc(self, row):
         if row['mv'] == 0:
             return 0
@@ -241,6 +255,7 @@ class Valuation():
                 prev_bv = row['bv'] - row['ugl']
                 return row['price_pnl'] / prev_bv
 
+    # IMPLEMENTED
     def book_value_calc(self, row):
         # Here comes the logic for other assett types
 
@@ -259,6 +274,7 @@ class Valuation():
             # If this is not leveraged trade the book value is equal to the market value
             return row['mv']
 
+    # IMPLEMENTED
     def fx_check(self, row):
         if row['fx_rate'] == 0:
             self.error_list.append({'portfolio_code': self.portfolio_data.portfolio_name,
@@ -268,6 +284,7 @@ class Valuation():
                                     'status': 'Error',
                                     'comment': row['fx_pair']})
 
+    # IMPLEMENTED
     def price_cash_security(self, row):
         self.fx_check(row)
 
@@ -286,6 +303,7 @@ class Valuation():
             return row['price']
 
     # --- PROCESS SECTION ---
+    # IMPLEMENTED
     def asset_valuation(self):
         """This part is responsible for the valuation of the assets."""
 
@@ -512,6 +530,7 @@ class Valuation():
 
         self.save_valuation(valuation_list=self.final_df.to_dict('records'))
 
+    # IMPLEMENTED
     def save_ugl(self, valuation_list):
 
         # Gather Holding objects to update existing records
@@ -574,6 +593,8 @@ class Valuation():
             self.redemptions = capital_cashflow[capital_cashflow['transaction_type'] == 'Redemption']['mv'].sum()
             return capital_cashflow['mv'].sum()
 
+    # NAV CLASS
+    # IMPLEMENTED
     def nav_calculation(self, calc_date):
 
         if self.portfolio_data.portfolio_type == 'Portfolio Group' or self.portfolio_data.portfolio_type == 'Business':
@@ -751,6 +772,8 @@ class Valuation():
                                        'comment': 'NAV ' + str(round(current_nav, 2)) + ' ' + str(
                                            self.portfolio_data.currency)})
 
+    # IMPLEMENTED -> ASSET VALUATION CLASS
+    # IMPLEMENTED
     def save_valuation(self, valuation_list):
         # Delete existing holdings
         Holding.objects.filter(
@@ -799,10 +822,13 @@ class Valuation():
             Holding.objects.bulk_create(new_holdings)
 
 
-    # Messaging
+    # IMPLEMENTED
+    # IMPLEMENTED
     def add_error_message(self, message):
         self.error_list.append(message)
 
+    # IMPLEMENTED
+    # IMPLEMENTED
     def send_responses(self):
         df = pd.DataFrame(self.error_list)
         df_unique = df.drop_duplicates()

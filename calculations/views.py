@@ -2,7 +2,6 @@ from django.http import JsonResponse
 import json
 from mysite.my_functions.general_functions import *
 from calculations.processes.performance.total_return import total_return_calc
-from calculations.processes.valuation.valuation import calculate_holdings
 from datetime import datetime, timedelta
 from calculations.models import ProcessAudit, ProcessException
 from rest_framework.decorators import api_view, permission_classes
@@ -10,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-
+from calculations.processes.valuation.services import portfolio_valuation
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -19,7 +18,7 @@ def valuation(request):
         request_body = json.loads(request.body.decode('utf-8'))
 
         for portfolio_code in request_body['portfolios']:
-            calculate_holdings(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
+            portfolio_valuation(portfolio_code=portfolio_code, calc_date=request_body['start_date'])
 
         channel_layer = get_channel_layer()
         user_id = request.user.id
