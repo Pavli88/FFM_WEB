@@ -410,13 +410,20 @@ def get_child_portfolios(request, portfolio_code):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_holding_history(request):
+
     portfolio_list = request.data.get("portfolio_list", [])
     instrument_ids = request.data.get("instrument_ids", [])
-    columns = request.data.get("columns", [])
+    requested_columns = request.data.get("columns", [])
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
 
-    if not instrument_ids or not columns or not start_date or not end_date:
+    CALCULATED_COLUMNS = {
+        "qty_chg": ("quantity", "beg_quantity", lambda q, bq: q - bq),
+        # További példák:
+        # "pnl_ratio": ("total_pnl", "mv", lambda pnl, mv: pnl / mv if mv != 0 else 0),
+    }
+
+    if not instrument_ids or not requested_columns or not start_date or not end_date:
         return JsonResponse({"error": "Missing required fields."}, status=400)
 
     try:
@@ -425,56 +432,72 @@ def get_holding_history(request):
     except ValueError:
         return JsonResponse({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
 
-    # Összes dátum a periódusban
+    # Dátum lista
     all_dates = []
     current = start_date
     while current <= end_date:
         all_dates.append(current.strftime("%Y-%m-%d"))
         current += timedelta(days=1)
 
-    # Lekérdezés aggregálva instrument_id + dátum szerint
+    # Oszlopok szétválogatása
+    real_columns = []
+    calc_columns = {}
+    for col in requested_columns:
+        if col in CALCULATED_COLUMNS:
+            deps = CALCULATED_COLUMNS[col][:2]
+            calc_columns[col] = CALCULATED_COLUMNS[col]
+            real_columns.extend(deps)
+        else:
+            real_columns.append(col)
+
+    real_columns = list(set(real_columns))  # egyediek
+
+    # Lekérdezés
     qs = Holding.objects.filter(
         portfolio_code__in=portfolio_list,
         instrument_id__in=instrument_ids,
         date__range=[start_date, end_date]
     ).values("instrument_id", "date").annotate(
-        **{metric: Sum(metric) for metric in columns}
+        **{metric: Sum(metric) for metric in real_columns}
     ).order_by("instrument_id", "date")
 
-    # ID ➝ name map
+    # ID ➝ name
     instrument_map = {
         inst.id: inst.name for inst in Instruments.objects.filter(id__in=instrument_ids)
     }
 
-    # Inicializált üres struktúra minden dátummal
+    # Alap struktúra
     data = {}
     for instr_id, name in instrument_map.items():
         data[name] = {}
-        for metric in columns:
-            # Minden napra 0 alapértelmezés
-            data[name][metric] = [{"date": d, "value": 0} for d in all_dates]
+        for col in requested_columns:
+            data[name][col] = [{"date": d, "value": 0} for d in all_dates]
 
-    # Feltöltés a lekérdezés alapján
-    date_index = {d: i for i, d in enumerate(all_dates)}  # gyors indexelés
+    date_index = {d: i for i, d in enumerate(all_dates)}
 
     for row in qs:
         instr_name = instrument_map.get(row["instrument_id"])
         date_str = row["date"].strftime("%Y-%m-%d")
         if instr_name not in data:
-            continue  # biztos ami biztos
+            continue
+        idx = date_index[date_str]
 
-        for metric in columns:
-            val = row.get(metric, 0)
-            idx = date_index[date_str]
-            data[instr_name][metric][idx]["value"] = val
+        # Egyszerű oszlopok
+        for col in requested_columns:
+            if col in CALCULATED_COLUMNS:
+                field1, field2, func = CALCULATED_COLUMNS[col]
+                val = func(row.get(field1, 0), row.get(field2, 0))
+            else:
+                val = row.get(col, 0)
+            data[instr_name][col][idx]["value"] = round(val, 6)
 
     response = {
         "meta": {
             "start_date": str(start_date),
             "end_date": str(end_date),
             "instruments": [{"id": k, "name": v} for k, v in instrument_map.items()],
-            "metrics": columns,
-            "dates": all_dates
+            "metrics": requested_columns,
+            "dates": all_dates,
         },
         "data": data
     }
