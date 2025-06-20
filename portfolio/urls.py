@@ -26,6 +26,7 @@ get_views = [
     path('portfolios/get/trade_routes/', get_views.get_trade_routes),
     path('portfolios/get/port_groups/', get_views.get_port_groups),
     path('portfolios/get/position_exposures/', get_views.get_position_exposures),
+    path('portfolios/get/holding_history/', get_views.get_holding_history),
     path('portfolios/group/<str:portfolio_code>/', get_views.get_child_portfolios),
 ]
 
@@ -33,6 +34,7 @@ update_views = [
     path('portfolios/update/portfolio/', update_view.update_portfolio),
     path('portfolios/update/transaction/', update_view.update_transaction),
     path('portfolios/update/trade_routing/', update_view.update_trade_routing),
+    path('portfolios/update/label/', update_view.update_label),
 ]
 
 delete_views = [

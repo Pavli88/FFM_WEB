@@ -4,6 +4,7 @@ import pandas as pd
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Sum
 from django.views.decorators.http import require_GET
 from portfolio.models import Portfolio, Transaction, Holding, Nav, TradeRoutes, PortGroup, TotalReturn
 from calculations.processes.risk.drawdown import calculate_drawdowns
@@ -12,7 +13,8 @@ from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-
+from instrument.models import Instruments
+from collections import defaultdict
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -163,6 +165,7 @@ def get_holding(request):
 
         holdings_list = [
             {
+                'id': holding.id,
                 'portfolio_code': holding.portfolio_code,
                 'date': holding.date,
                 'trd_id': holding.trd_id,
@@ -190,6 +193,7 @@ def get_holding(request):
                 'price_pnl': holding.price_pnl,
                 'trd_pnl': holding.trd_pnl,
                 'total_pnl': holding.total_pnl,
+                'label_color': holding.label_color,
             }
             for holding in holdings
         ]
@@ -402,6 +406,80 @@ def get_child_portfolios(request, portfolio_code):
         print(data)
         # Return JSON response
         return JsonResponse({"child_portfolios": data}, safe=False)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_holding_history(request):
+    portfolio_list = request.data.get("portfolio_list", [])
+    instrument_ids = request.data.get("instrument_ids", [])
+    columns = request.data.get("columns", [])
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+
+    if not instrument_ids or not columns or not start_date or not end_date:
+        return JsonResponse({"error": "Missing required fields."}, status=400)
+
+    try:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+
+    # Összes dátum a periódusban
+    all_dates = []
+    current = start_date
+    while current <= end_date:
+        all_dates.append(current.strftime("%Y-%m-%d"))
+        current += timedelta(days=1)
+
+    # Lekérdezés aggregálva instrument_id + dátum szerint
+    qs = Holding.objects.filter(
+        portfolio_code__in=portfolio_list,
+        instrument_id__in=instrument_ids,
+        date__range=[start_date, end_date]
+    ).values("instrument_id", "date").annotate(
+        **{metric: Sum(metric) for metric in columns}
+    ).order_by("instrument_id", "date")
+
+    # ID ➝ name map
+    instrument_map = {
+        inst.id: inst.name for inst in Instruments.objects.filter(id__in=instrument_ids)
+    }
+
+    # Inicializált üres struktúra minden dátummal
+    data = {}
+    for instr_id, name in instrument_map.items():
+        data[name] = {}
+        for metric in columns:
+            # Minden napra 0 alapértelmezés
+            data[name][metric] = [{"date": d, "value": 0} for d in all_dates]
+
+    # Feltöltés a lekérdezés alapján
+    date_index = {d: i for i, d in enumerate(all_dates)}  # gyors indexelés
+
+    for row in qs:
+        instr_name = instrument_map.get(row["instrument_id"])
+        date_str = row["date"].strftime("%Y-%m-%d")
+        if instr_name not in data:
+            continue  # biztos ami biztos
+
+        for metric in columns:
+            val = row.get(metric, 0)
+            idx = date_index[date_str]
+            data[instr_name][metric][idx]["value"] = val
+
+    response = {
+        "meta": {
+            "start_date": str(start_date),
+            "end_date": str(end_date),
+            "instruments": [{"id": k, "name": v} for k, v in instrument_map.items()],
+            "metrics": columns,
+            "dates": all_dates
+        },
+        "data": data
+    }
+
+    return JsonResponse(response, safe=False)
 
 # from django.db.models import Sum, Case, When, F
 

@@ -305,6 +305,7 @@ class Holding(models.Model):
     price_pnl = models.FloatField(default=0.0)
     income_pnl = models.FloatField(default=0.0)
     fx_pnl = models.FloatField(default=0.0)
+    label_color = models.CharField(max_length=10, null=True, blank=True, default=None)
     account = models.ForeignKey(
         BrokerAccounts,
         on_delete=models.SET_NULL,
